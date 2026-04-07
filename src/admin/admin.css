@@ -1,0 +1,6 @@
+/* Admin Specific Global Styles & Overrides */
+
+/* You can define admin specific custom CSS here */
+.admin-layout {
+  min-height: 100vh;
+}

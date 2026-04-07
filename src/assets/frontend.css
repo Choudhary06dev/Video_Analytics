@@ -1,0 +1,6 @@
+/* Frontend Specific Global Styles & Overrides */
+
+/* You can define frontend specific custom CSS here */
+.frontend-layout {
+  min-height: 100vh;
+}
