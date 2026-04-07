@@ -1,19 +1,21 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 
-// Layout & Pages
-import AdminDashboard from './admin/AdminDashboard';
-import FrontendHome from './pages/FrontendHome';
+// Layout
+import AppLayout from './layouts/AppLayout';
+
+// Pages
+import Dashboard from './pages/Dashboard';
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* Frontend Routes */}
-        <Route path="/" element={<FrontendHome />} />
-        
-        {/* Admin Routes */}
-        <Route path="/admin/*" element={<AdminDashboard />} />
+        {/* App Layout wraps all pages */}
+        <Route element={<AppLayout />}>
+          <Route path="/" element={<Dashboard />} />
+          {/* Future pages go here */}
+        </Route>
 
         {/* Fallback */}
         <Route path="*" element={<Navigate to="/" replace />} />
@@ -23,4 +25,3 @@ function App() {
 }
 
 export default App;
-

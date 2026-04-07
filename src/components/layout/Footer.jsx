@@ -1,5 +1,5 @@
 import React from 'react';
-import { DASHBOARD_CONFIG } from '../../../config';
+import { DASHBOARD_CONFIG } from '../../config';
 
 export default function Footer() {
   return (

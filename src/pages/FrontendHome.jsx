@@ -19,10 +19,10 @@ export default function FrontendHome() {
           <a href="#" className="font-medium text-slate-600 hover:text-indigo-600">Features</a>
           <a href="#" className="font-medium text-slate-600 hover:text-indigo-600">Pricing</a>
           <Link 
-            to="/admin"
+            to="/dashboard"
             className="bg-indigo-600 text-white px-5 py-2.5 rounded-full font-semibold hover:bg-indigo-700 transition-colors flex items-center gap-2 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
           >
-            Admin Dashboard <ArrowRight className="w-4 h-4" />
+            View Dashboard <ArrowRight className="w-4 h-4" />
           </Link>
         </div>
       </nav>

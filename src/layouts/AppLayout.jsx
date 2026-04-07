@@ -1,19 +1,15 @@
 import React, { useState } from 'react';
+import { Outlet } from 'react-router-dom';
 
-// Import Admin Specific CSS
-import './admin.css';
+// Import CSS
+import './Layout.css';
 
 // Layout Components
-import Sidebar from './components/layout/Sidebar';
-import Header from './components/layout/Header';
-import Footer from './components/layout/Footer';
+import Sidebar from '../components/layout/Sidebar';
+import Header from '../components/layout/Header';
+import Footer from '../components/layout/Footer';
 
-// Dashboard Components
-import KPICards from './components/dashboard/KPICards';
-import CameraGrid from './components/dashboard/CameraGrid';
-import AnalyticsChart from './components/dashboard/AnalyticsChart';
-
-export default function AdminDashboard() {
+export default function AppLayout() {
   const [isSidebarOpen, setSidebarOpen] = useState(true);
 
   return (
@@ -43,16 +39,8 @@ export default function AdminDashboard() {
         <div className="flex-1 overflow-x-hidden overflow-y-auto bg-slate-50 flex flex-col">
           <main className="flex-1 p-4 sm:p-8">
             
-            {/* KPI Cards Section */}
-            <KPICards />
-
-            {/* Bottom Grid: Cameras & Charts */}
-            <div className="grid lg:grid-cols-3 gap-8">
-              <CameraGrid />
-              <div className="lg:col-span-1 min-h-[350px]">
-                <AnalyticsChart />
-              </div>
-            </div>
+            {/* The current route's page will render here */}
+            <Outlet />
 
           </main>
           

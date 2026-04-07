@@ -1,4 +1,5 @@
 import React from 'react';
+import { NavLink } from 'react-router-dom';
 import { 
   LayoutDashboard, 
   Video, 
@@ -25,25 +26,30 @@ export default function Sidebar({ isSidebarOpen }) {
       
       <nav className="flex-1 px-3 py-6 space-y-1 overflow-y-auto">
         {[
-          { name: 'Dashboard', icon: LayoutDashboard, active: true },
-          { name: 'Live Feeds', icon: Video },
-          { name: 'AI Scenarios', icon: Activity },
-          { name: 'Alerts', icon: ShieldAlert },
-          { name: 'Settings', icon: Settings },
+          { name: 'Dashboard', icon: LayoutDashboard, path: '/' },
+          { name: 'Live Feeds', icon: Video, path: '/live' },
+          { name: 'AI Scenarios', icon: Activity, path: '/scenarios' },
+          { name: 'Alerts', icon: ShieldAlert, path: '/alerts' },
+          { name: 'Settings', icon: Settings, path: '/settings' },
         ].map((item, index) => (
-          <a
+          <NavLink
             key={index}
-            href="#"
-            className={`flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200 group
-              ${item.active 
+            to={item.path}
+            className={({ isActive }) => `flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200 group
+              ${isActive 
                 ? 'bg-indigo-50 text-indigo-700 font-medium' 
-                : 'text-slate-500 hover:bg-slate-50 hover:text-indigo-600'}`}
+                : 'text-slate-500 hover:bg-slate-50 hover:text-indigo-600'}`
+            }
           >
-            <item.icon className={`w-5 h-5 ${item.active ? 'text-indigo-600' : 'text-slate-400 group-hover:text-indigo-500'}`} />
-            <span className={`whitespace-nowrap transition-all duration-300 ${!isSidebarOpen && 'md:hidden'}`}>
-              {item.name}
-            </span>
-          </a>
+            {({ isActive }) => (
+              <>
+                <item.icon className={`w-5 h-5 ${isActive ? 'text-indigo-600' : 'text-slate-400 group-hover:text-indigo-500'}`} />
+                <span className={`whitespace-nowrap transition-all duration-300 ${!isSidebarOpen && 'md:hidden'}`}>
+                  {item.name}
+                </span>
+              </>
+            )}
+          </NavLink>
         ))}
       </nav>
 
@@ -53,7 +59,7 @@ export default function Sidebar({ isSidebarOpen }) {
             <User className="w-5 h-5" />
           </div>
           <div className={`transition-all duration-300 ${!isSidebarOpen && 'md:hidden'}`}>
-            <p className="text-sm font-semibold text-slate-800">Admin User</p>
+            <p className="text-sm font-semibold text-slate-800">User</p>
             <p className="text-xs text-slate-500">System Operator</p>
           </div>
         </div>

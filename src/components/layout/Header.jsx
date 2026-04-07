@@ -1,6 +1,6 @@
 import React from 'react';
 import { Menu, Search, Bell, ChevronDown } from 'lucide-react';
-import { DASHBOARD_CONFIG } from '../../../config';
+import { DASHBOARD_CONFIG } from '../../config';
 
 export default function Header({ isSidebarOpen, setSidebarOpen }) {
   return (
@@ -34,7 +34,7 @@ export default function Header({ isSidebarOpen, setSidebarOpen }) {
           <span className="absolute top-1.5 right-2 w-2 h-2 bg-rose-500 rounded-full border-2 border-white"></span>
         </button>
         <button className="flex items-center gap-1 p-1 pr-2 rounded-full border border-slate-200 hover:bg-slate-50 transition-colors">
-          <img src="https://ui-avatars.com/api/?name=Admin+User&background=6366f1&color=fff" alt="User" className="w-7 h-7 rounded-full" />
+          <img src="https://ui-avatars.com/api/?name=User&background=6366f1&color=fff" alt="User" className="w-7 h-7 rounded-full" />
           <ChevronDown className="w-4 h-4 text-slate-500" />
         </button>
       </div>
