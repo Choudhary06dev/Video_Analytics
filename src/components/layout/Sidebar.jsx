@@ -83,17 +83,6 @@ export default function Sidebar({ isSidebarOpen }) {
           {renderNavLinks(analyticsMenu)}
         </div>
       </nav>
-
-      <div className={`mt-auto flex items-center gap-4 py-4 px-5 bg-bg border border-border rounded-2xl shrink-0 ${!isSidebarOpen && 'md:justify-center md:px-2'}`}>
-        <div className="w-11 h-11 rounded-xl bg-accent flex items-center justify-center text-white font-extrabold shrink-0">
-          AD
-        </div>
-        <div className={`flex-1 transition-all duration-300 overflow-hidden ${!isSidebarOpen && 'md:hidden'}`}>
-          <div className="text-[0.85rem] font-extrabold text-text-dark whitespace-nowrap">Admin User</div>
-          <div className="text-[0.65rem] text-text-gray whitespace-nowrap">System Supervisor</div>
-        </div>
-        <LogOut className={`w-4.5 h-4.5 text-text-gray cursor-pointer hover:text-danger shrink-0 ${!isSidebarOpen && 'md:hidden'}`} />
-      </div>
     </aside>
   );
 }
