@@ -1,12 +1,12 @@
 import React from 'react';
-import { 
-  AreaChart, 
-  Area, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
-  ResponsiveContainer 
+import {
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer
 } from 'recharts';
 
 export default function AnalyticsChart() {
@@ -29,38 +29,38 @@ export default function AnalyticsChart() {
           Live
         </div>
       </div>
-      
+
       <div className="flex-1 w-full min-h-[280px]">
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={analyticsData} margin={{ top: 10, right: 10, left: -25, bottom: 0 }}>
             <defs>
               <linearGradient id="colorDetections" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="var(--color-accent)" stopOpacity={0.1}/>
-                <stop offset="95%" stopColor="var(--color-accent)" stopOpacity={0}/>
+                <stop offset="5%" stopColor="var(--color-accent)" stopOpacity={0.1} />
+                <stop offset="95%" stopColor="var(--color-accent)" stopOpacity={0} />
               </linearGradient>
               <linearGradient id="colorAlerts" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="var(--color-danger)" stopOpacity={0.1}/>
-                <stop offset="95%" stopColor="var(--color-danger)" stopOpacity={0}/>
+                <stop offset="5%" stopColor="var(--color-danger)" stopOpacity={0.1} />
+                <stop offset="95%" stopColor="var(--color-danger)" stopOpacity={0} />
               </linearGradient>
             </defs>
             <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--color-border)" />
-            <XAxis 
-              dataKey="time" 
-              axisLine={false} 
-              tickLine={false} 
-              tick={{fill: 'var(--color-text-gray)', fontSize: 12, fontWeight: 500}} 
-              dy={10} 
+            <XAxis
+              dataKey="time"
+              axisLine={false}
+              tickLine={false}
+              tick={{ fill: 'var(--color-text-gray)', fontSize: 12, fontWeight: 500 }}
+              dy={10}
             />
-            <YAxis 
-              axisLine={false} 
-              tickLine={false} 
-              tick={{fill: 'var(--color-text-gray)', fontSize: 12, fontWeight: 500}} 
+            <YAxis
+              axisLine={false}
+              tickLine={false}
+              tick={{ fill: 'var(--color-text-gray)', fontSize: 12, fontWeight: 500 }}
             />
-            <Tooltip 
-              contentStyle={{ 
-                backgroundColor: 'rgba(255, 255, 255, 0.98)', 
-                borderRadius: '12px', 
-                border: '1px solid var(--color-border)', 
+            <Tooltip
+              contentStyle={{
+                backgroundColor: 'rgba(255, 255, 255, 0.98)',
+                borderRadius: '12px',
+                border: '1px solid var(--color-border)',
                 boxShadow: '0 4px 20px -2px rgba(0, 0, 0, 0.05)',
                 color: 'var(--color-text-gray)'
               }}
@@ -68,24 +68,24 @@ export default function AnalyticsChart() {
               labelStyle={{ fontSize: '13px', fontWeight: '700', color: 'var(--color-text-dark)', marginBottom: '4px' }}
               cursor={{ stroke: 'var(--color-border)', strokeWidth: 1 }}
             />
-            <Area 
-              type="monotone" 
-              dataKey="detections" 
+            <Area
+              type="monotone"
+              dataKey="detections"
               name="Detections/min"
-              stroke="var(--color-accent)" 
-              strokeWidth={3} 
-              fillOpacity={1} 
-              fill="url(#colorDetections)" 
+              stroke="var(--color-accent)"
+              strokeWidth={3}
+              fillOpacity={1}
+              fill="url(#colorDetections)"
               animationDuration={1500}
             />
-            <Area 
-              type="monotone" 
-              dataKey="alerts" 
+            <Area
+              type="monotone"
+              dataKey="alerts"
               name="Active Alerts"
-              stroke="var(--color-danger)" 
-              strokeWidth={2} 
-              fillOpacity={1} 
-              fill="url(#colorAlerts)" 
+              stroke="var(--color-danger)"
+              strokeWidth={2}
+              fillOpacity={1}
+              fill="url(#colorAlerts)"
               animationDuration={2000}
             />
           </AreaChart>
