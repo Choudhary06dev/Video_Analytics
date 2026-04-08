@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Camera, Shield, Activity, ArrowRight } from 'lucide-react';
-import { DASHBOARD_CONFIG } from '../config';
+import { APP_CONFIG } from '../config';
 
 // Import isolated frontend CSS
 import '../assets/frontend.css';
@@ -13,7 +13,7 @@ export default function FrontendHome() {
       <nav className="h-20 bg-white border-b border-slate-200 flex items-center px-8 lg:px-24">
         <div className="flex items-center gap-3 text-indigo-700 font-bold">
           <Camera className="w-8 h-8" />
-          <span className="text-2xl tracking-tight">{DASHBOARD_CONFIG.PROJECT_NAME}</span>
+          <span className="text-2xl tracking-tight">{APP_CONFIG.PROJECT_NAME}</span>
         </div>
         <div className="ml-auto flex items-center gap-6">
           <a href="#" className="font-medium text-slate-600 hover:text-indigo-600">Features</a>

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Menu, Search, Bell, ChevronDown } from 'lucide-react';
-import { DASHBOARD_CONFIG } from '../../config';
+import { APP_CONFIG } from '../../config';
 
 export default function Header({ isSidebarOpen, setSidebarOpen }) {
   return (
@@ -13,7 +13,7 @@ export default function Header({ isSidebarOpen, setSidebarOpen }) {
           <Menu className="w-5 h-5" />
         </button>
         <h1 className="text-xl font-semibold text-slate-800 hidden sm:block truncate">
-          {DASHBOARD_CONFIG.PROJECT_NAME} 
+          {APP_CONFIG.PROJECT_NAME} 
           <span className="text-xs ml-2 px-2 py-1 rounded-md bg-indigo-50 text-indigo-600 border border-indigo-100 align-middle">
             PRO
           </span>

@@ -1,68 +1,98 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { 
-  LayoutDashboard, 
-  Video, 
-  Activity, 
-  ShieldAlert, 
-  Settings, 
-  User, 
-  Camera 
+import { APP_CONFIG } from '../../config';
+import {
+  LayoutDashboard,
+  Radio,
+  Brain,
+  Users,
+  ClipboardList,
+  Cpu,
+  Bell,
+  LogOut,
+  BrainCircuit,
+  GraduationCap
 } from 'lucide-react';
 
 export default function Sidebar({ isSidebarOpen }) {
-  return (
-    <aside 
-      className={`${isSidebarOpen ? 'w-64 translate-x-0' : 'w-20 -translate-x-full md:translate-x-0'} 
-      transition-all duration-300 ease-in-out fixed md:relative z-50 h-full bg-white border-r border-slate-200 flex flex-col shadow-[4px_0_24px_rgba(0,0,0,0.02)]`}
-    >
-      <div className="h-16 flex items-center justify-center border-b border-slate-100 px-4 shrink-0">
-        <div className={`flex items-center gap-3 text-indigo-700 font-bold transition-all ${isSidebarOpen ? 'opacity-100' : 'opacity-0 md:opacity-100 md:scale-0'}`}>
-          <Camera className="w-7 h-7" />
-          <span className="text-lg tracking-tight truncate">Vision AI</span>
-        </div>
-        {!isSidebarOpen && <Camera className="hidden md:block w-7 h-7 text-indigo-700 absolute" />}
-      </div>
-      
-      <nav className="flex-1 px-3 py-6 space-y-1 overflow-y-auto">
-        {[
-          { name: 'Dashboard', icon: LayoutDashboard, path: '/' },
-          { name: 'Live Feeds', icon: Video, path: '/live' },
-          { name: 'AI Scenarios', icon: Activity, path: '/scenarios' },
-          { name: 'Alerts', icon: ShieldAlert, path: '/alerts' },
-          { name: 'Settings', icon: Settings, path: '/settings' },
-        ].map((item, index) => (
+  const mainMenu = [
+    { name: 'Command Hub', icon: LayoutDashboard, path: '/' },
+    { name: 'Neural Stream', icon: Radio, path: '/neural-stream' },
+    { name: 'AI Scenarios', icon: Brain, path: '/scenarios' },
+    { name: 'Staff Roster', icon: Users, path: '/roster' },
+    { name: 'Activity Vault', icon: ClipboardList, path: '/vault' },
+  ];
+
+  const analyticsMenu = [
+    { name: 'System Health', icon: Cpu, path: '/health' },
+    { name: 'AI Training', icon: GraduationCap, path: '/training' },
+    { name: 'Crisis Alerts', icon: Bell, path: '/alerts' },
+  ];
+
+  const renderNavLinks = (items) => (
+    <ul className="flex flex-col gap-1">
+      {items.map((item, index) => (
+        <li key={index}>
           <NavLink
-            key={index}
             to={item.path}
-            className={({ isActive }) => `flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200 group
-              ${isActive 
-                ? 'bg-indigo-50 text-indigo-700 font-medium' 
-                : 'text-slate-500 hover:bg-slate-50 hover:text-indigo-600'}`
+            className={({ isActive }) => `flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer transition-all duration-200 group backdrop-blur-sm
+              ${isActive
+                ? 'bg-accent-soft/70 text-accent font-bold shadow-[0_1px_3px_rgba(0,0,0,0.02)]'
+                : 'text-text-gray font-semibold hover:bg-accent-soft/40 hover:text-accent'
+              }`
             }
           >
             {({ isActive }) => (
               <>
-                <item.icon className={`w-5 h-5 ${isActive ? 'text-indigo-600' : 'text-slate-400 group-hover:text-indigo-500'}`} />
-                <span className={`whitespace-nowrap transition-all duration-300 ${!isSidebarOpen && 'md:hidden'}`}>
+                <item.icon className="w-4.5 h-4.5 shrink-0" />
+                <span className={`text-[0.82rem] transition-all duration-300 ${!isSidebarOpen && 'md:hidden'}`}>
                   {item.name}
                 </span>
               </>
             )}
           </NavLink>
-        ))}
+        </li>
+      ))}
+    </ul>
+  );
+
+  return (
+    <aside
+      className={`${isSidebarOpen ? 'w-[240px] translate-x-0' : 'w-20 -translate-x-full md:translate-x-0'} 
+      transition-all duration-300 ease-in-out fixed md:relative z-50 h-full bg-card border-r border-border flex flex-col pt-5 px-5 pb-9`}
+    >
+      <div className="flex items-center gap-3 font-extrabold text-accent mb-6 shrink-0 h-10">
+        <BrainCircuit className="w-9 h-9 shrink-0" />
+        <span className={`transition-all duration-300 leading-tight text-[1.1rem] ${isSidebarOpen ? 'opacity-100' : 'opacity-0 md:opacity-100 md:scale-0'}`}>
+          {APP_CONFIG.PROJECT_NAME.replace(/^Video\s+/i, '')}
+        </span>
+      </div>
+
+      <nav className="flex-1 overflow-y-auto w-full scrollbar-none flex flex-col gap-6">
+        <div>
+          <div className={`text-[0.65rem] text-text-gray font-extrabold uppercase tracking-[1.5px] mb-2 px-2.5 ${!isSidebarOpen && 'md:hidden'}`}>
+            Main Matrix
+          </div>
+          {renderNavLinks(mainMenu)}
+        </div>
+
+        <div>
+          <div className={`text-[0.65rem] text-text-gray font-extrabold uppercase tracking-[1.5px] mb-2 px-2.5 ${!isSidebarOpen && 'md:hidden'}`}>
+            Analytics Hub
+          </div>
+          {renderNavLinks(analyticsMenu)}
+        </div>
       </nav>
 
-      <div className="p-4 border-t border-slate-100 shrink-0">
-        <div className={`flex items-center gap-3 ${!isSidebarOpen && 'md:justify-center'}`}>
-          <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-indigo-500 to-blue-400 flex items-center justify-center text-white shrink-0 shadow-md">
-            <User className="w-5 h-5" />
-          </div>
-          <div className={`transition-all duration-300 ${!isSidebarOpen && 'md:hidden'}`}>
-            <p className="text-sm font-semibold text-slate-800">User</p>
-            <p className="text-xs text-slate-500">System Operator</p>
-          </div>
+      <div className={`mt-auto flex items-center gap-4 py-4 px-5 bg-bg border border-border rounded-2xl shrink-0 ${!isSidebarOpen && 'md:justify-center md:px-2'}`}>
+        <div className="w-11 h-11 rounded-xl bg-accent flex items-center justify-center text-white font-extrabold shrink-0">
+          AD
         </div>
+        <div className={`flex-1 transition-all duration-300 overflow-hidden ${!isSidebarOpen && 'md:hidden'}`}>
+          <div className="text-[0.85rem] font-extrabold text-text-dark whitespace-nowrap">Admin User</div>
+          <div className="text-[0.65rem] text-text-gray whitespace-nowrap">System Supervisor</div>
+        </div>
+        <LogOut className={`w-4.5 h-4.5 text-text-gray cursor-pointer hover:text-danger shrink-0 ${!isSidebarOpen && 'md:hidden'}`} />
       </div>
     </aside>
   );
