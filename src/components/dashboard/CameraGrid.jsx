@@ -1,247 +1,360 @@
 import React, { useEffect, useState } from 'react';
-import { Maximize2, Activity, ShieldCheck, AlertTriangle } from 'lucide-react';
+import { Maximize2, Activity, ShieldCheck, AlertTriangle, Eye, Radio } from 'lucide-react';
 
 const CAMERAS = [
   {
-    id: 1,
-    name: "ICU West Entrance",
-    image: "https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?auto=format&fit=crop&q=80",
+    id: 1, name: 'ICU West Entrance',
+    image: 'https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?auto=format&fit=crop&q=80',
     fields: [
-      { label: "Authorized Staff", value: "Maria Santos", valueColor: "text-accent" },
-      { label: "Task Detected", value: "Hand Hygiene", valueColor: "text-success" }
+      { label: 'Authorized Staff', value: 'Maria Santos', color: '#0ea5e9' },
+      { label: 'Task Detected',   value: 'Hand Hygiene',  color: '#22c55e' },
     ],
     tags: [
-      { text: "98% AI Conf.", bg: "bg-accent/10", color: "text-accent" },
-      { text: "Bio-Secure", bg: "bg-success/10", color: "text-success" }
+      { text: '98% Conf.',   bg: 'rgba(14,165,233,0.15)', color: '#0ea5e9' },
+      { text: 'Bio-Secure',  bg: 'rgba(34,197,94,0.15)',  color: '#22c55e' },
     ],
-    stats: [
-      { label: "Detected Objects", value: "12" },
-      { label: "Motion Index", value: "0.14" }
-    ],
-    alertMode: false
+    stats: [{ label: 'Objects', value: '12' }, { label: 'Motion', value: '0.14' }],
+    alertMode: false,
   },
   {
-    id: 2,
-    name: "Main Lobby Central",
-    image: "https://images.unsplash.com/photo-1516549655169-df83a0774514?auto=format&fit=crop&q=80",
+    id: 2, name: 'Main Lobby Central',
+    image: 'https://images.unsplash.com/photo-1516549655169-df83a0774514?auto=format&fit=crop&q=80',
     fields: [
-      { label: "Security Personnel", value: "John Rivera", valueColor: "text-accent" },
-      { label: "Movement Pattern", value: "Patrol Check", valueColor: "text-accent" }
+      { label: 'Security', value: 'John Rivera',  color: '#0ea5e9' },
+      { label: 'Pattern',  value: 'Patrol Check', color: '#0ea5e9' },
     ],
     tags: [
-      { text: "94% AI Conf.", bg: "bg-accent/10", color: "text-accent" },
-      { text: "Verified Area", bg: "bg-success/10", color: "text-success" }
+      { text: '94% Conf.',    bg: 'rgba(14,165,233,0.15)', color: '#0ea5e9' },
+      { text: 'Verified Area', bg: 'rgba(34,197,94,0.15)', color: '#22c55e' },
     ],
-    stats: [
-      { label: "Detected Objects", value: "18" },
-      { label: "Motion Index", value: "0.42" }
-    ],
-    alertMode: false
+    stats: [{ label: 'Objects', value: '18' }, { label: 'Motion', value: '0.42' }],
+    alertMode: false,
   },
   {
-    id: 3,
-    name: "Emergency Bay Exterior",
-    image: "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&q=80&w=800",
+    id: 3, name: 'Emergency Bay Exterior',
+    image: 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&q=80&w=800',
     fields: [
-      { label: "Operational State", value: "Critical Watch", valueColor: "text-warning" },
-      { label: "Response Priority", value: "VITAL", valueColor: "text-danger" }
+      { label: 'State',    value: 'Critical Watch', color: '#f59e0b' },
+      { label: 'Priority', value: 'VITAL',           color: '#ef4444' },
     ],
-    tags: [
-      { text: "Threat Alert", bg: "bg-danger/20", color: "text-danger" }
-    ],
-    stats: [
-      { label: "Active Alerts", value: "2" },
-      { label: "Queue Length", value: "5" }
-    ],
-    alertMode: true
+    tags: [{ text: 'Threat Alert', bg: 'rgba(239,68,68,0.2)', color: '#ef4444' }],
+    stats: [{ label: 'Alerts', value: '2' }, { label: 'Queue', value: '5' }],
+    alertMode: true,
   },
   {
-    id: 4,
-    name: "Supply Hallway B",
-    image: "https://images.unsplash.com/photo-1551076805-e1869033e561?auto=format&fit=crop&q=80",
+    id: 4, name: 'Supply Hallway B',
+    image: 'https://images.unsplash.com/photo-1551076805-e1869033e561?auto=format&fit=crop&q=80',
     fields: [
-      { label: "Janitorial Staff", value: "Tom Wilson", valueColor: "text-accent" },
-      { label: "Maintenance Task", value: "Janitorial", valueColor: "text-warning" }
+      { label: 'Staff',  value: 'Tom Wilson', color: '#0ea5e9' },
+      { label: 'Task',   value: 'Janitorial',  color: '#f59e0b' },
     ],
     tags: [
-      { text: "91% AI Conf.", bg: "bg-accent/10", color: "text-accent" },
-      { text: "Zone Clear", bg: "bg-success/10", color: "text-success" }
+      { text: '91% Conf.', bg: 'rgba(14,165,233,0.15)', color: '#0ea5e9' },
+      { text: 'Zone Clear', bg: 'rgba(34,197,94,0.15)', color: '#22c55e' },
     ],
-    stats: [
-      { label: "Detected Objects", value: "8" },
-      { label: "Motion Index", value: "0.21" }
-    ],
-    alertMode: false
+    stats: [{ label: 'Objects', value: '8' }, { label: 'Motion', value: '0.21' }],
+    alertMode: false,
   },
   {
-    id: 5,
-    name: "Secure Research Lab Alpha",
-    image: "https://images.unsplash.com/photo-1516574187841-cb9cc2ca948b?auto=format&fit=crop&q=80&w=800",
+    id: 5, name: 'Secure Research Lab α',
+    image: 'https://images.unsplash.com/photo-1516574187841-cb9cc2ca948b?auto=format&fit=crop&q=80&w=800',
     fields: [
-      { label: "Authenticated Head", value: "Lisa Chen", valueColor: "text-accent" },
-      { label: "Access Protocol", value: "L-3 Grant", valueColor: "text-success" }
+      { label: 'Auth Head',  value: 'Lisa Chen', color: '#0ea5e9' },
+      { label: 'Access',     value: 'L-3 Grant', color: '#22c55e' },
     ],
     tags: [
-      { text: "99% AI Conf.", bg: "bg-accent/10", color: "text-accent" },
-      { text: "Locked Down", bg: "bg-success/10", color: "text-success" }
+      { text: '99% Conf.',   bg: 'rgba(14,165,233,0.15)', color: '#0ea5e9' },
+      { text: 'Locked Down', bg: 'rgba(34,197,94,0.15)',  color: '#22c55e' },
     ],
-    stats: [
-      { label: "Detected Objects", value: "15" },
-      { label: "Motion Index", value: "0.08" }
-    ],
-    alertMode: false
+    stats: [{ label: 'Objects', value: '15' }, { label: 'Motion', value: '0.08' }],
+    alertMode: false,
   },
   {
-    id: 6,
-    name: "Perimeter Sector 7",
-    image: "https://images.unsplash.com/photo-1553413077-190dd305871c?auto=format&fit=crop&q=80",
+    id: 6, name: 'Perimeter Sector 7',
+    image: 'https://images.unsplash.com/photo-1553413077-190dd305871c?auto=format&fit=crop&q=80',
     fields: [
-      { label: "Global Status", value: "Deep Scanning", valueColor: "text-accent" },
-      { label: "External Threats", value: "Zero (0)", valueColor: "text-success" }
+      { label: 'Status',  value: 'Deep Scanning', color: '#0ea5e9' },
+      { label: 'Threats', value: 'Zero (0)',       color: '#22c55e' },
     ],
-    tags: [
-      { text: "Perimeter Safe", bg: "bg-success/10", color: "text-success" }
-    ],
-    stats: [
-      { label: "Detected Objects", value: "6" },
-      { label: "Motion Index", value: "0.00" }
-    ],
-    alertMode: false
-  }
+    tags: [{ text: 'Perimeter Safe', bg: 'rgba(34,197,94,0.15)', color: '#22c55e' }],
+    stats: [{ label: 'Objects', value: '6' }, { label: 'Motion', value: '0.00' }],
+    alertMode: false,
+  },
 ];
 
-export default function CameraGrid() {
-  const [skeletons, setSkeletons] = useState({});
+function CameraCard({ cam }) {
+  const [hovered, setHovered] = useState(false);
+  const [dots, setDots] = useState([]);
+  const [expanded, setExpanded] = useState(false);
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      const newSkeletons = {};
-      CAMERAS.forEach(cam => {
-        const dots = [];
-        // Group dots into 2 skeletal bodies
-        for(let person=0; person<2; person++) {
-          const offsetX = 20 + Math.random() * 60;
-          const offsetY = 30 + Math.random() * 40;
-          for (let i = 0; i < 6; i++) {
-            dots.push({
-              id: `${person}-${i}`,
-              top: `${offsetY + (i % 3) * 10}%`,
-              left: `${offsetX + (i < 3 ? 0 : 5)}%`,
-              group: person
-            });
-          }
+    const iv = setInterval(() => {
+      const newDots = [];
+      for (let p = 0; p < 2; p++) {
+        const ox = 20 + Math.random() * 60;
+        const oy = 30 + Math.random() * 40;
+        for (let i = 0; i < 5; i++) {
+          newDots.push({
+            id: `${p}-${i}`,
+            top: `${oy + (i % 3) * 10}%`,
+            left: `${ox + (i < 3 ? 0 : 5)}%`,
+          });
         }
-        newSkeletons[cam.id] = dots;
-      });
-      setSkeletons(newSkeletons);
-    }, 200);
-
-    return () => clearInterval(interval);
+      }
+      setDots(newDots);
+    }, 250);
+    return () => clearInterval(iv);
   }, []);
 
   return (
-    <div className="bg-card/50 backdrop-blur-[10px] rounded-[32px] border border-border p-4 md:p-5 shadow-premium">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-4">
+    <>
+      <div
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
+        style={{
+          borderRadius: 20,
+          overflow: 'hidden',
+          aspectRatio: '16/9',
+          position: 'relative',
+          cursor: 'pointer',
+          border: cam.alertMode
+            ? '2px solid rgba(239,68,68,0.6)'
+            : hovered
+            ? '2px solid rgba(14,165,233,0.5)'
+            : '2px solid transparent',
+          boxShadow: cam.alertMode
+            ? '0 0 24px rgba(239,68,68,0.35)'
+            : hovered
+            ? '0 20px 50px -12px rgba(0,0,0,0.35)'
+            : '0 4px 16px rgba(0,0,0,0.15)',
+          transform: hovered ? 'translateY(-6px) scale(1.01)' : 'translateY(0) scale(1)',
+          transition: 'all 0.4s cubic-bezier(0.34,1.56,0.64,1)',
+          background: '#000',
+        }}
+      >
+        {/* Camera image */}
+        <img
+          src={cam.image} alt={cam.name}
+          style={{
+            width: '100%', height: '100%', objectFit: 'cover',
+            opacity: hovered ? 0.55 : 0.88,
+            transform: hovered ? 'scale(1.08)' : 'scale(1)',
+            transition: 'all 0.6s ease',
+          }}
+        />
+
+        {/* Scan-line overlay */}
+        <div className="absolute inset-0 pointer-events-none" style={{
+          backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.03) 2px, rgba(0,0,0,0.03) 4px)',
+          opacity: 0.5,
+        }} />
+
+        {/* Alert pulse border for critical cams */}
+        {cam.alertMode && (
+          <div style={{
+            position: 'absolute', inset: 0, borderRadius: 18,
+            border: '2px solid rgba(239,68,68,0.8)',
+            animation: 'alertPulse 1.2s ease-in-out infinite',
+            pointerEvents: 'none',
+          }} />
+        )}
+
+        {/* Top HUD */}
+        <div style={{
+          position: 'absolute', top: 0, left: 0, right: 0,
+          padding: '14px 14px 32px',
+          background: 'linear-gradient(to bottom, rgba(0,0,0,0.85) 0%, transparent 100%)',
+          display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start',
+        }}>
+          <div>
+            <div style={{ color: 'rgba(255,255,255,0.45)', fontSize: 10, fontWeight: 700, letterSpacing: 2, textTransform: 'uppercase' }}>
+              Stream-{String(cam.id).padStart(2,'0')}
+            </div>
+            <div style={{ color: '#fff', fontSize: 13, fontWeight: 900, letterSpacing: -0.3 }}>{cam.name}</div>
+          </div>
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: 5,
+            background: cam.alertMode ? 'rgba(239,68,68,0.9)' : 'rgba(0,0,0,0.6)',
+            backdropFilter: 'blur(8px)',
+            borderRadius: 8, padding: '3px 8px',
+            fontSize: 10, fontWeight: 900, color: '#fff',
+            border: cam.alertMode ? '1px solid rgba(239,68,68,0.4)' : '1px solid rgba(255,255,255,0.1)',
+          }}>
+            {cam.alertMode
+              ? <AlertTriangle style={{ width: 11, height: 11 }} />
+              : <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#4ade80', display: 'inline-block', boxShadow: '0 0 6px #4ade80', animation: 'pulse 1.5s infinite' }} />
+            }
+            {cam.alertMode ? 'CRITICAL' : 'LIVE'}
+          </div>
+        </div>
+
+        {/* AI tracking dots */}
+        <div className="absolute inset-0 pointer-events-none z-10" style={{ overflow: 'hidden' }}>
+          {dots.map(dot => (
+            <div
+              key={dot.id}
+              style={{
+                position: 'absolute',
+                top: dot.top, left: dot.left,
+                width: 7, height: 7,
+                borderRadius: '50%',
+                background: cam.alertMode ? '#ef4444' : '#0ea5e9',
+                border: '1.5px solid rgba(255,255,255,0.8)',
+                boxShadow: `0 0 8px ${cam.alertMode ? '#ef4444' : '#38bdf8'}`,
+                transition: 'top 0.25s ease, left 0.25s ease',
+              }}
+            />
+          ))}
+        </div>
+
+        {/* Hover overlay panel */}
+        <div style={{
+          position: 'absolute', bottom: 0, left: 0, right: 0,
+          padding: '12px',
+          transform: hovered ? 'translateY(0)' : 'translateY(110%)',
+          transition: 'transform 0.4s cubic-bezier(0.34,1.10,0.64,1)',
+          zIndex: 20,
+        }}>
+          <div style={{
+            background: 'rgba(15,23,42,0.85)',
+            backdropFilter: 'blur(12px)',
+            border: '1px solid rgba(255,255,255,0.1)',
+            borderRadius: 14, padding: '10px 12px',
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+              <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
+                {cam.tags.map((t, i) => (
+                  <span key={i} style={{
+                    background: t.bg, color: t.color,
+                    border: `1px solid ${t.color}30`,
+                    fontSize: 9, fontWeight: 900,
+                    padding: '2px 7px', borderRadius: 6, textTransform: 'uppercase',
+                  }}>
+                    {t.text}
+                  </span>
+                ))}
+              </div>
+              <button
+                onClick={() => setExpanded(true)}
+                style={{
+                  background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.2)',
+                  borderRadius: 7, padding: 5, color: '#fff', cursor: 'pointer',
+                  transition: 'background 0.2s',
+                }}
+                onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.3)'}
+                onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.15)'}
+              >
+                <Maximize2 style={{ width: 12, height: 12 }} />
+              </button>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+              {cam.fields.map((f, i) => (
+                <div key={i}>
+                  <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: 9, fontWeight: 700, textTransform: 'uppercase' }}>{f.label}</div>
+                  <div style={{ color: f.color, fontSize: 11, fontWeight: 900 }}>{f.value}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Side stats on hover */}
+        <div style={{
+          position: 'absolute', top: '50%', right: 0,
+          transform: `translateY(-50%) translateX(${hovered ? '-44px' : '8px'})`,
+          opacity: hovered ? 1 : 0,
+          display: 'flex', flexDirection: 'column', gap: 5,
+          transition: 'all 0.4s ease', zIndex: 30,
+        }}>
+          {cam.stats.map((s, i) => (
+            <div key={i} style={{
+              background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)',
+              border: '1px solid rgba(255,255,255,0.1)',
+              borderRadius: 8, padding: '4px 8px',
+              display: 'flex', flexDirection: 'column', alignItems: 'center', minWidth: 48,
+            }}>
+              <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: 8, fontWeight: 700, textTransform: 'uppercase' }}>{s.label}</span>
+              <span style={{ color: '#fff', fontSize: 11, fontWeight: 900 }}>{s.value}</span>
+            </div>
+          ))}
+        </div>
+
+        <style>{`
+          @keyframes alertPulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+        `}</style>
+      </div>
+
+      {/* Expanded modal */}
+      {expanded && (
+        <div
+          onClick={() => setExpanded(false)}
+          style={{
+            position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)',
+            backdropFilter: 'blur(12px)', zIndex: 1000,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            animation: 'fadeInModal 0.25s ease',
+          }}
+        >
+          <div onClick={e => e.stopPropagation()} style={{
+            width: '80vw', maxWidth: 900, borderRadius: 20, overflow: 'hidden',
+            border: '1px solid rgba(255,255,255,0.1)', position: 'relative',
+          }}>
+            <img src={cam.image} alt={cam.name} style={{ width: '100%', display: 'block', maxHeight: '70vh', objectFit: 'cover' }} />
+            <div style={{ position: 'absolute', top: 16, left: 16, color: '#fff', fontWeight: 900, fontSize: 18 }}>{cam.name}</div>
+            <button onClick={() => setExpanded(false)} style={{
+              position: 'absolute', top: 12, right: 12,
+              background: 'rgba(0,0,0,0.6)', color: '#fff', border: 'none',
+              borderRadius: 8, padding: '4px 10px', cursor: 'pointer', fontSize: 13, fontWeight: 700,
+            }}>✕ Close</button>
+          </div>
+          <style>{`@keyframes fadeInModal{from{opacity:0}to{opacity:1}}`}</style>
+        </div>
+      )}
+    </>
+  );
+}
+
+export default function CameraGrid() {
+  return (
+    <div
+      style={{
+        background: 'rgba(255,255,255,0.97)',
+        borderRadius: 28, border: '1px solid #e2e8f0',
+        boxShadow: '0 4px 30px -8px rgba(0,0,0,0.07)',
+        padding: '22px',
+      }}
+    >
+      {/* Header */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-5 gap-3">
         <div>
-          <h3 className="text-[1.1rem] font-black text-text-dark uppercase tracking-tight flex items-center gap-2">
-            <Activity className="w-5 h-5 text-accent" />
+          <h3 className="text-[1.05rem] font-black text-slate-800 flex items-center gap-2">
+            <Eye className="w-4 h-4 text-sky-500" />
             Neural Feed Matrix
           </h3>
-          <p className="text-[0.7rem] text-text-gray font-bold opacity-60">SENTINEL AI ENGINE V4.2 ACTIVE</p>
+          <p className="text-[0.7rem] text-slate-400 font-semibold">Sentinel AI Engine v4.2 · hover to inspect · click ⤢ to expand</p>
         </div>
-        <div className="flex flex-wrap gap-2 items-center">
-          <div className="flex items-center gap-1.5 bg-accent/10 text-accent px-3 py-1 rounded-full text-[0.65rem] font-black border border-accent/20">
-            <div className="w-1.5 h-1.5 bg-accent rounded-full animate-pulse" />
+        <div className="flex flex-wrap gap-2">
+          <div style={{ background: '#f0f9ff', border: '1px solid #bae6fd', color: '#0369a1' }}
+            className="flex items-center gap-1.5 px-3 py-1 rounded-full text-[0.65rem] font-black">
+            <Radio className="w-3 h-3" />
             6 STREAMS SYNCED
           </div>
-          <div className="bg-success/10 text-success px-3 py-1 rounded-full text-[0.65rem] font-black border border-success/20 flex items-center gap-1.5">
+          <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', color: '#15803d' }}
+            className="flex items-center gap-1.5 px-3 py-1 rounded-full text-[0.65rem] font-black">
             <ShieldCheck className="w-3.5 h-3.5" />
-            ENCRYPTED AES-256
+            AES-256 ENCRYPTED
+          </div>
+          <div style={{ background: '#fef2f2', border: '1px solid #fecaca', color: '#ef4444' }}
+            className="flex items-center gap-1.5 px-3 py-1 rounded-full text-[0.65rem] font-black animate-pulse">
+            <AlertTriangle className="w-3 h-3" />
+            1 ALERT ACTIVE
           </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-        {CAMERAS.map((cam) => (
-          <div 
-            key={cam.id} 
-            className={`group relative rounded-[20px] aspect-[16/9] overflow-hidden bg-black border-[3px] transition-all duration-500 hover:-translate-y-1.5 hover:shadow-[0_20px_50px_-15px_rgba(0,0,0,0.3)]
-            ${cam.alertMode ? 'border-danger/40 animate-pulse' : 'border-transparent hover:border-accent/40'}`}
-          >
-            {/* Camera Basemap */}
-            <img 
-              src={cam.image} 
-              alt={cam.name}
-              className="w-full h-full object-cover opacity-90 transition-all duration-700 group-hover:scale-110 group-hover:brightness-50"
-            />
-
-            {/* AI HUD OVERLAY */}
-            <div className="absolute inset-x-0 top-0 p-4 bg-gradient-to-b from-black/80 to-transparent pointer-events-none flex justify-between items-start">
-              <div className="flex flex-col gap-0.5">
-                <span className="text-[0.65rem] font-bold text-white/50 tracking-widest uppercase">Stream-{cam.id.toString().padStart(2, '0')}</span>
-                <span className="text-[0.8rem] font-black text-white tracking-tight">{cam.name}</span>
-              </div>
-              <div className={`px-2 py-1 rounded-md text-[0.55rem] font-black flex items-center gap-1 ${cam.alertMode ? 'bg-danger text-white' : 'bg-black/60 text-white/80'}`}>
-                {cam.alertMode ? <AlertTriangle className="w-3 h-3" /> : <div className="w-1.5 h-1.5 bg-success rounded-full animate-pulse" />}
-                {cam.alertMode ? 'CRITICAL ALERT' : 'LIVE'}
-              </div>
-            </div>
-
-            {/* AI Skeleton Grid */}
-            <div className="absolute inset-0 pointer-events-none z-10 overflow-hidden">
-               {/* Scanline Effect */}
-              <div className="absolute inset-0 opacity-10 group-hover:opacity-20 animate-scanline transition-opacity duration-500">
-                <div className="h-full w-full bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] bg-[length:100%_2px,3px_100%]" />
-              </div>
-
-              {(skeletons[cam.id] || []).map(dot => (
-                <div 
-                  key={dot.id}
-                  className={`absolute w-1.5 h-1.5 border-[1px] rounded-full shadow-[0_0_8px_currentColor] transition-all duration-300
-                  ${cam.alertMode ? 'bg-danger border-white text-danger' : 'bg-accent border-white text-accent'}`}
-                  style={{ top: dot.top, left: dot.left }}
-                />
-              ))}
-            </div>
-
-            {/* Interaction Layer (Bottom) */}
-            <div className="absolute inset-x-0 bottom-0 p-4 translate-y-full group-hover:translate-y-0 transition-transform duration-500 ease-out z-20">
-              <div className="bg-white/10 backdrop-blur-md border border-white/20 p-3 rounded-2xl flex flex-col gap-2">
-                <div className="flex justify-between items-center">
-                  <div className="flex gap-1.5">
-                    {cam.tags.map((tag, i) => (
-                      <span key={i} className={`text-[0.55rem] ${tag.bg} backdrop-blur-md border border-white/10 px-2 py-0.5 rounded-md font-black uppercase ${tag.color}`}>
-                        {tag.text}
-                      </span>
-                    ))}
-                  </div>
-                  <button className="p-1.5 bg-white/20 hover:bg-white text-white hover:text-black rounded-lg transition-colors cursor-pointer">
-                    <Maximize2 className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-                
-                <div className="grid grid-cols-2 gap-2 mt-1">
-                  {cam.fields.map((field, i) => (
-                    <div key={i} className="flex flex-col">
-                      <span className="text-[0.5rem] font-bold text-white/50 uppercase">{field.label}</span>
-                      <span className={`text-[0.65rem] font-black truncate ${field.valueColor}`}>{field.value}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* Peripheral Stats */}
-            <div className="absolute top-1/2 -right-2 transform -translate-y-1/2 flex flex-col gap-1.5 opacity-0 group-hover:opacity-100 transition-all duration-500 translate-x-2 group-hover:-translate-x-4 z-30">
-              {cam.stats.map((stat, i) => (
-                <div key={i} className="bg-black/80 backdrop-blur-xl border border-white/10 px-2 py-1 rounded-lg flex flex-col items-center min-w-[50px]">
-                   <span className="text-[0.4rem] font-bold text-white/40 uppercase leading-tight">{stat.label.split(' ')[0]}</span>
-                   <span className="text-[0.65rem] font-black text-white leading-tight">{stat.value}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        ))}
+      {/* Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {CAMERAS.map(cam => <CameraCard key={cam.id} cam={cam} />)}
       </div>
     </div>
   );
