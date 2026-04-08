@@ -1,95 +1,194 @@
-import React from 'react';
-import { 
-  AreaChart, 
-  Area, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
-  ResponsiveContainer 
+import React, { useState, useEffect, useCallback } from 'react';
+import {
+  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
+  ResponsiveContainer, Legend
 } from 'recharts';
+import { Activity, RefreshCw, TrendingUp } from 'lucide-react';
+
+const generatePoint = (base, variance) =>
+  Math.max(0, Math.round(base + (Math.random() - 0.5) * variance));
+
+const INITIAL = [
+  { time: '10:00', detections: 42, alerts: 2, resolved: 1 },
+  { time: '10:05', detections: 38, alerts: 1, resolved: 0 },
+  { time: '10:10', detections: 55, alerts: 4, resolved: 3 },
+  { time: '10:15', detections: 45, alerts: 2, resolved: 2 },
+  { time: '10:20', detections: 60, alerts: 5, resolved: 4 },
+  { time: '10:25', detections: 48, alerts: 1, resolved: 1 },
+  { time: '10:30', detections: 52, alerts: 3, resolved: 2 },
+];
+
+const CustomTooltip = ({ active, payload, label }) => {
+  if (!active || !payload?.length) return null;
+  return (
+    <div style={{
+      background: 'rgba(15,23,42,0.95)',
+      border: '1px solid rgba(14,165,233,0.3)',
+      borderRadius: 14,
+      padding: '10px 16px',
+      backdropFilter: 'blur(12px)',
+      boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
+    }}>
+      <p style={{ color: '#94a3b8', fontSize: 11, fontWeight: 700, marginBottom: 6, letterSpacing: 1 }}>
+        {label}
+      </p>
+      {payload.map((p, i) => (
+        <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 3 }}>
+          <div style={{ width: 8, height: 8, borderRadius: '50%', background: p.color }} />
+          <span style={{ color: '#cbd5e1', fontSize: 12, fontWeight: 600 }}>{p.name}:</span>
+          <span style={{ color: '#f8fafc', fontSize: 13, fontWeight: 800 }}>{p.value}</span>
+        </div>
+      ))}
+    </div>
+  );
+};
 
 export default function AnalyticsChart() {
-  const analyticsData = [
-    { time: '10:00', detections: 42, alerts: 2 },
-    { time: '10:05', detections: 38, alerts: 1 },
-    { time: '10:10', detections: 55, alerts: 4 },
-    { time: '10:15', detections: 45, alerts: 2 },
-    { time: '10:20', detections: 60, alerts: 5 },
-    { time: '10:25', detections: 48, alerts: 1 },
-    { time: '10:30', detections: 52, alerts: 3 },
+  const [data, setData] = useState(INITIAL);
+  const [hidden, setHidden] = useState({ alerts: false, resolved: false });
+  const [refreshing, setRefreshing] = useState(false);
+  const [totalDetections, setTotalDetections] = useState(340);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const now = new Date();
+      const label = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      const newPoint = {
+        time: label,
+        detections: generatePoint(50, 25),
+        alerts: generatePoint(3, 4),
+        resolved: generatePoint(2, 3),
+      };
+      setData(prev => {
+        const next = [...prev.slice(-6), newPoint];
+        return next;
+      });
+      setTotalDetections(p => p + newPoint.detections);
+    }, 3000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const handleRefresh = useCallback(() => {
+    setRefreshing(true);
+    setTimeout(() => setRefreshing(false), 800);
+  }, []);
+
+  const toggleSeries = (key) =>
+    setHidden(prev => ({ ...prev, [key]: !prev[key] }));
+
+  const SERIES = [
+    { key: 'detections', name: 'Detections/min', color: '#0ea5e9', gradId: 'gDet' },
+    { key: 'alerts', name: 'Active Alerts', color: '#ef4444', gradId: 'gAlert' },
+    { key: 'resolved', name: 'Resolved', color: '#22c55e', gradId: 'gRes' },
   ];
 
   return (
-    <div className="bg-card rounded-3xl p-6 md:p-8 border border-border shadow-premium w-full transition-all duration-300 hover:shadow-[0_8px_32px_-8px_rgba(0,0,0,0.12)] flex flex-col h-full">
-      <div className="flex justify-between items-center mb-5 shrink-0">
-        <h3 className="text-[1.1rem] font-bold text-text-dark m-0">Real-time Detection Analytics</h3>
-        <div className="flex items-center gap-1.5 px-2.5 py-1 text-[0.7rem] font-bold tracking-wide">
-          <span className="w-1 h-1 bg-success rounded-full animate-[pulse_1.5s_infinite]" />
-          Live
+    <div
+      style={{ background: 'rgba(255,255,255,0.97)', borderRadius: 28, padding: '24px 28px', border: '1px solid #e2e8f0', boxShadow: '0 4px 30px -8px rgba(0,0,0,0.07)' }}
+      className="w-full flex flex-col h-full transition-shadow duration-300 hover:shadow-[0_12px_40px_-10px_rgba(14,165,233,0.15)]"
+    >
+      {/* Header */}
+      <div className="flex justify-between items-start mb-5 shrink-0 flex-wrap gap-3">
+        <div>
+          <h3 className="text-[1.05rem] font-black text-slate-800 flex items-center gap-2">
+            <Activity className="w-4 h-4 text-sky-500" />
+            Real-time Detection Analytics
+          </h3>
+          <p className="text-[0.7rem] text-slate-400 font-semibold mt-0.5">
+            Auto-refreshing every 3s &nbsp;·&nbsp; Total: <span className="text-sky-500 font-black">{totalDetections.toLocaleString()}</span>
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          {/* Series toggles */}
+          {SERIES.map(s => (
+            <button
+              key={s.key}
+              onClick={() => toggleSeries(s.key)}
+              style={{
+                border: `1.5px solid ${hidden[s.key] ? '#e2e8f0' : s.color + '50'}`,
+                background: hidden[s.key] ? '#f8fafc' : s.color + '12',
+                color: hidden[s.key] ? '#94a3b8' : s.color,
+              }}
+              className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[0.6rem] font-bold transition-all duration-200 cursor-pointer"
+            >
+              <span style={{ background: hidden[s.key] ? '#cbd5e1' : s.color }}
+                className="w-1.5 h-1.5 rounded-full inline-block" />
+              {s.name.split('/')[0].split(' ')[0]}
+            </button>
+          ))}
+          <button
+            onClick={handleRefresh}
+            className="p-1.5 rounded-lg bg-sky-50 text-sky-500 hover:bg-sky-500 hover:text-white transition-all duration-200 cursor-pointer"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''}`} />
+          </button>
+          <div className="flex items-center gap-1.5 px-2.5 py-1 text-[0.7rem] font-bold text-emerald-600 bg-emerald-50 border border-emerald-100 rounded-full">
+            <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
+            LIVE
+          </div>
         </div>
       </div>
-      
-      <div className="flex-1 w-full min-h-[280px]">
+
+      {/* Chart */}
+      <div className="flex-1 w-full min-h-[240px]">
         <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={analyticsData} margin={{ top: 10, right: 10, left: -25, bottom: 0 }}>
+          <AreaChart data={data} margin={{ top: 10, right: 8, left: -22, bottom: 0 }}>
             <defs>
-              <linearGradient id="colorDetections" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="var(--color-accent)" stopOpacity={0.1}/>
-                <stop offset="95%" stopColor="var(--color-accent)" stopOpacity={0}/>
-              </linearGradient>
-              <linearGradient id="colorAlerts" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="var(--color-danger)" stopOpacity={0.1}/>
-                <stop offset="95%" stopColor="var(--color-danger)" stopOpacity={0}/>
-              </linearGradient>
+              {SERIES.map(s => (
+                <linearGradient key={s.gradId} id={s.gradId} x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor={s.color} stopOpacity={0.18} />
+                  <stop offset="95%" stopColor={s.color} stopOpacity={0} />
+                </linearGradient>
+              ))}
             </defs>
-            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--color-border)" />
-            <XAxis 
-              dataKey="time" 
-              axisLine={false} 
-              tickLine={false} 
-              tick={{fill: 'var(--color-text-gray)', fontSize: 12, fontWeight: 500}} 
-              dy={10} 
+            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+            <XAxis
+              dataKey="time"
+              axisLine={false}
+              tickLine={false}
+              tick={{ fill: '#94a3b8', fontSize: 11, fontWeight: 600 }}
+              dy={8}
             />
-            <YAxis 
-              axisLine={false} 
-              tickLine={false} 
-              tick={{fill: 'var(--color-text-gray)', fontSize: 12, fontWeight: 500}} 
+            <YAxis
+              axisLine={false}
+              tickLine={false}
+              tick={{ fill: '#94a3b8', fontSize: 11, fontWeight: 600 }}
             />
-            <Tooltip 
-              contentStyle={{ 
-                backgroundColor: 'rgba(255, 255, 255, 0.98)', 
-                borderRadius: '12px', 
-                border: '1px solid var(--color-border)', 
-                boxShadow: '0 4px 20px -2px rgba(0, 0, 0, 0.05)',
-                color: 'var(--color-text-gray)'
-              }}
-              itemStyle={{ fontSize: '12px', fontWeight: '500' }}
-              labelStyle={{ fontSize: '13px', fontWeight: '700', color: 'var(--color-text-dark)', marginBottom: '4px' }}
-              cursor={{ stroke: 'var(--color-border)', strokeWidth: 1 }}
-            />
-            <Area 
-              type="monotone" 
-              dataKey="detections" 
-              name="Detections/min"
-              stroke="var(--color-accent)" 
-              strokeWidth={3} 
-              fillOpacity={1} 
-              fill="url(#colorDetections)" 
-              animationDuration={1500}
-            />
-            <Area 
-              type="monotone" 
-              dataKey="alerts" 
-              name="Active Alerts"
-              stroke="var(--color-danger)" 
-              strokeWidth={2} 
-              fillOpacity={1} 
-              fill="url(#colorAlerts)" 
-              animationDuration={2000}
-            />
+            <Tooltip content={<CustomTooltip />} />
+            {SERIES.map(s => (
+              <Area
+                key={s.key}
+                type="monotone"
+                dataKey={hidden[s.key] ? null : s.key}
+                name={s.name}
+                stroke={s.color}
+                strokeWidth={2.5}
+                fillOpacity={1}
+                fill={`url(#${s.gradId})`}
+                dot={{ fill: s.color, r: 3, strokeWidth: 0 }}
+                activeDot={{ r: 5, fill: s.color, stroke: '#fff', strokeWidth: 2 }}
+                animationDuration={800}
+                hide={hidden[s.key]}
+              />
+            ))}
           </AreaChart>
         </ResponsiveContainer>
+      </div>
+
+      {/* Bottom stat row */}
+      <div className="flex gap-3 mt-4 shrink-0">
+        {[
+          { label: 'Peak Today', value: '72', icon: TrendingUp, color: '#0ea5e9' },
+          { label: 'Avg/hr', value: '51.2', icon: Activity, color: '#8b5cf6' },
+        ].map((s, i) => (
+          <div key={i} className="flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-50 border border-slate-100 flex-1">
+            <s.icon className="w-3.5 h-3.5" style={{ color: s.color }} />
+            <div>
+              <div className="text-[0.6rem] text-slate-400 font-bold uppercase tracking-wider">{s.label}</div>
+              <div className="text-[0.9rem] font-black" style={{ color: s.color }}>{s.value}</div>
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );
