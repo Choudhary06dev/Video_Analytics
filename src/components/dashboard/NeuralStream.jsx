@@ -1,5 +1,4 @@
 import React, { useEffect, useState, useRef } from 'react';
-
 const SECTORS = ["ICU-Zone-A", "Reception", "Emergency-B", "Ward-A", "Lab-1", "Perimeter", "Hallway-B", "Research-Lab"];
 const ACTIONS = [
   "Movement Detected",
