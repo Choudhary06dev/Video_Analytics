@@ -7,6 +7,7 @@ import {
   Target, Gauge, RefreshCw, Calendar, MapPin, User, FileText, X, Hash,
   ArrowUpDown, MoreHorizontal, ExternalLink, Copy, Maximize2, Filter
 } from 'lucide-react';
+import { useTheme } from '../context/ThemeContext';
 
 /* ═══════════════════════════════════════════════════════════════════════════════
    GLOBAL CSS
@@ -160,6 +161,7 @@ function ConfidenceRing({ value, size=44 }) {
 }
 
 function StatusDonut({ stats, size=140 }) {
+  const { isDark } = useTheme();
   const data = [
     {key:'completed',value:stats.completed,color:'#22c55e'},
     {key:'in-progress',value:stats.inProgress,color:'#6366f1'},
@@ -184,7 +186,7 @@ function StatusDonut({ stats, size=140 }) {
         })}
       </svg>
       <div style={{position:'absolute',inset:0,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center'}}>
-        <div style={{fontSize:28,fontWeight:900,color:'#0f172a',lineHeight:1,fontFamily:'JetBrains Mono,monospace'}}>{total}</div>
+        <div style={{fontSize:28,fontWeight:900,color:isDark ? '#f8fafc' : '#0f172a',lineHeight:1,fontFamily:'JetBrains Mono,monospace'}}>{total}</div>
         <div style={{fontSize:9,fontWeight:700,color:'#94a3b8',textTransform:'uppercase',letterSpacing:1.5,marginTop:3}}>Total</div>
       </div>
     </div>
@@ -192,6 +194,7 @@ function StatusDonut({ stats, size=140 }) {
 }
 
 function HeatmapBlock() {
+  const { isDark } = useTheme();
   const HOURS=Array.from({length:24},(_,i)=>i);
   const DAYS=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
   const [cells]=useState(()=>DAYS.map(()=>HOURS.map(()=>randInt(0,100))));
@@ -223,10 +226,10 @@ function HeatmapBlock() {
         </div>
       ))}
       {tip&&(
-        <div style={{position:'absolute',top:-34,left:'50%',transform:'translateX(-50%)',background:'#0f172a',
+        <div style={{position:'absolute',top:-34,left:'50%',transform:'translateX(-50%)',background:isDark?'#1e293b':'#0f172a',
           color:'#f8fafc',padding:'5px 12px',borderRadius:8,fontSize:10,fontWeight:700,whiteSpace:'nowrap',
           boxShadow:'0 8px 24px rgba(0,0,0,.3)',zIndex:10,fontFamily:'JetBrains Mono,monospace',
-          border:'1px solid rgba(14,165,233,.3)'}}>
+          border:`1px solid ${isDark?'rgba(14,165,233,.4)':'rgba(14,165,233,.3)'}`}}>
           {DAYS[tip.d]} {tip.h.toString().padStart(2,'0')}:00 — <span style={{color:'#38bdf8'}}>{tip.v} events</span>
         </div>
       )}
@@ -242,6 +245,7 @@ function HeatmapBlock() {
 }
 
 function TimelineChart() {
+  const { isDark } = useTheme();
   const [data]=useState(()=>Array.from({length:24},(_,i)=>({
     hour:i, completed:randInt(5,25), flagged:randInt(0,5), inProgress:randInt(2,12),
   })));
@@ -281,6 +285,7 @@ function ActivityRow({ act, idx, onSelect, isSelected }) {
   const catColor = CATEGORY_COLOR[act.task.category] || '#64748b';
   const StatusIcon = sm.icon;
   const pri = PRIORITY_META[act.priority];
+  const { isDark } = useTheme();
 
   useEffect(() => {
     const t=setTimeout(()=>setMounted(true), Math.min(idx*30,300));
@@ -334,11 +339,11 @@ function ActivityRow({ act, idx, onSelect, isSelected }) {
               fontSize:11,fontWeight:900,flexShrink:0,transition:'all 0.25s',
               boxShadow:`0 3px 12px ${act.worker.color}30`,
             }}>{act.worker.avatar}</div>
-            <div style={{position:'absolute',bottom:-1,right:-1,width:10,height:10,borderRadius:'50%',background:'#22c55e',border:'2px solid #fff'}}/>
+            <div style={{position:'absolute',bottom:-1,right:-1,width:10,height:10,borderRadius:'50%',background:'#22c55e',border:`2px solid ${isDark ? '#111827' : '#fff'}`}}/>
           </div>
           <div>
-            <div style={{fontSize:13,fontWeight:700,color:'#1e293b',lineHeight:1.2}}>{act.worker.name}</div>
-            <div style={{fontSize:9,color:'#94a3b8',fontWeight:600,marginTop:1}}>{act.worker.role} · {act.worker.dept}</div>
+            <div style={{fontSize:13,fontWeight:700,color:isDark ? '#f1f5f9' : '#1e293b',lineHeight:1.2}}>{act.worker.name}</div>
+            <div style={{fontSize:9,color:isDark ? '#94a3b8' : '#94a3b8',fontWeight:600,marginTop:1}}>{act.worker.role} · {act.worker.dept}</div>
           </div>
         </div>
 
@@ -430,23 +435,23 @@ function ActivityRow({ act, idx, onSelect, isSelected }) {
               {label:'Duration',value:act.duration,icon:<Clock size={13}/>,color:'#ec4899',sub:'Task time'},
             ].map((d,i)=>(
               <div key={i} style={{
-                background:'rgba(255,255,255,.9)',borderRadius:14,padding:'12px 14px',
-                border:'1px solid rgba(0,0,0,.05)',display:'flex',alignItems:'center',gap:10,
+                background:isDark?'rgba(255,255,255,.05)':'rgba(255,255,255,.9)',borderRadius:14,padding:'12px 14px',
+                border:`1px solid ${isDark?'rgba(255,255,255,.1)':'rgba(0,0,0,.05)'}`,display:'flex',alignItems:'center',gap:10,
                 transition:'all 0.2s',cursor:'default',
               }}
                 onMouseEnter={e=>{e.currentTarget.style.transform='translateY(-2px)';e.currentTarget.style.boxShadow=`0 6px 20px ${d.color}12`;}}
                 onMouseLeave={e=>{e.currentTarget.style.transform='none';e.currentTarget.style.boxShadow='none';}}>
                 <div style={{width:32,height:32,borderRadius:10,background:`${d.color}0C`,color:d.color,display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,border:`1px solid ${d.color}15`}}>{d.icon}</div>
                 <div>
-                  <div style={{fontSize:8,color:'#94a3b8',fontWeight:700,textTransform:'uppercase',letterSpacing:1}}>{d.label}</div>
-                  <div style={{fontSize:15,fontWeight:900,color:'#1e293b',lineHeight:1.2,fontFamily:'JetBrains Mono,monospace'}}>{d.value}</div>
+                  <div style={{fontSize:8,color:isDark?'#94a3b8':'#94a3b8',fontWeight:700,textTransform:'uppercase',letterSpacing:1}}>{d.label}</div>
+                  <div style={{fontSize:15,fontWeight:900,color:isDark?'#f1f5f9':'#1e293b',lineHeight:1.2,fontFamily:'JetBrains Mono,monospace'}}>{d.value}</div>
                   <div style={{fontSize:8,color:d.color,fontWeight:700,marginTop:1}}>{d.sub}</div>
                 </div>
               </div>
             ))}
           </div>
           {/* Notes row */}
-          <div style={{display:'flex',alignItems:'center',gap:10,padding:'10px 14px',background:'rgba(0,0,0,.02)',borderRadius:10,border:'1px solid rgba(0,0,0,.04)'}}>
+          <div style={{display:'flex',alignItems:'center',gap:10,padding:'10px 14px',background:isDark?'rgba(255,255,255,.02)':'rgba(0,0,0,.02)',borderRadius:10,border:`1px solid ${isDark?'rgba(255,255,255,.05)':'rgba(0,0,0,.04)'}`}}>
             <FileText size={13} style={{color:'#64748b',flexShrink:0}}/>
             <span style={{fontSize:11,color:'#475569',fontWeight:600,flex:1}}>{act.notes}</span>
             <button style={{fontSize:10,fontWeight:700,color:'#0ea5e9',background:'rgba(14,165,233,.06)',border:'1px solid rgba(14,165,233,.12)',padding:'4px 10px',borderRadius:6,cursor:'pointer',display:'flex',alignItems:'center',gap:4,transition:'all 0.2s'}}
@@ -480,6 +485,14 @@ export default function ActivityVault() {
   const [loaded, setLoaded] = useState(false);
   const counterRef = useRef(200);
   const ITEMS_PER_PAGE = 15;
+  const { isDark } = useTheme();
+  const cardBg = isDark ? '#111827' : '#fff';
+  const cardBorder = isDark ? 'rgba(255,255,255,.06)' : 'rgba(0,0,0,.06)';
+  const textPrimary = isDark ? '#f1f5f9' : '#1e293b';
+  const textSecondary = isDark ? '#94a3b8' : '#475569';
+  const textMuted = isDark ? '#64748b' : '#94a3b8';
+  const surfaceBg = isDark ? '#1e293b' : '#f8fafc';
+  const surfaceBg2 = isDark ? '#0f172a' : '#fafbfc';
 
   // Inject CSS
   useEffect(()=>{
@@ -635,11 +648,11 @@ export default function ActivityVault() {
       {/* ═══════════════ INSIGHTS ROW ═══════════════ */}
       <div style={{display:'grid',gridTemplateColumns:'160px 1fr 1fr',gap:16,marginBottom:20}}>
         {/* Donut */}
-        <div style={{background:'#fff',borderRadius:22,border:'1px solid rgba(0,0,0,.06)',padding:'20px 16px',display:'flex',flexDirection:'column',alignItems:'center',boxShadow:'0 2px 16px rgba(0,0,0,.04)'}}>
+        <div style={{background:cardBg,borderRadius:22,border:`1px solid ${cardBorder}`,padding:'20px 16px',display:'flex',flexDirection:'column',alignItems:'center',boxShadow:'0 2px 16px rgba(0,0,0,.04)'}}>
           <StatusDonut stats={stats} size={120}/>
           <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:4,marginTop:12,width:'100%'}}>
             {Object.entries(STATUS_META).map(([k,v])=>(
-              <div key={k} style={{display:'flex',alignItems:'center',gap:4,fontSize:9,fontWeight:700,color:'#475569'}}>
+              <div key={k} style={{display:'flex',alignItems:'center',gap:4,fontSize:9,fontWeight:700,color:textSecondary}}>
                 <div style={{width:7,height:7,borderRadius:'50%',background:v.color,flexShrink:0}}/>{v.label}
               </div>
             ))}
@@ -647,10 +660,10 @@ export default function ActivityVault() {
         </div>
 
         {/* Timeline chart */}
-        <div style={{background:'#fff',borderRadius:22,border:'1px solid rgba(0,0,0,.06)',padding:'20px 24px',boxShadow:'0 2px 16px rgba(0,0,0,.04)'}}>
+        <div style={{background:cardBg,borderRadius:22,border:`1px solid ${cardBorder}`,padding:'20px 24px',boxShadow:'0 2px 16px rgba(0,0,0,.04)'}}>
           <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:12}}>
             <div>
-              <div style={{fontSize:14,fontWeight:800,color:'#1e293b',display:'flex',alignItems:'center',gap:6}}><BarChart3 size={14} style={{color:'#0ea5e9'}}/>Hourly Activity Timeline</div>
+              <div style={{fontSize:14,fontWeight:800,color:textPrimary,display:'flex',alignItems:'center',gap:6}}><BarChart3 size={14} style={{color:'#0ea5e9'}}/>Hourly Activity Timeline</div>
               <div style={{fontSize:10,color:'#94a3b8',fontWeight:600,marginTop:2}}>Events distribution over 24 hours</div>
             </div>
             <div style={{fontSize:9,fontWeight:800,color:'#0ea5e9',background:'rgba(14,165,233,.06)',padding:'4px 10px',borderRadius:99,border:'1px solid rgba(14,165,233,.12)',fontFamily:'JetBrains Mono,monospace'}}>TODAY</div>
@@ -666,10 +679,10 @@ export default function ActivityVault() {
         </div>
 
         {/* Heatmap */}
-        <div style={{background:'#fff',borderRadius:22,border:'1px solid rgba(0,0,0,.06)',padding:'20px 24px',boxShadow:'0 2px 16px rgba(0,0,0,.04)'}}>
+        <div style={{background:cardBg,borderRadius:22,border:`1px solid ${cardBorder}`,padding:'20px 24px',boxShadow:'0 2px 16px rgba(0,0,0,.04)'}}>
           <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:12}}>
             <div>
-              <div style={{fontSize:14,fontWeight:800,color:'#1e293b',display:'flex',alignItems:'center',gap:6}}><Layers size={14} style={{color:'#8b5cf6'}}/>Weekly Heatmap</div>
+              <div style={{fontSize:14,fontWeight:800,color:textPrimary,display:'flex',alignItems:'center',gap:6}}><Layers size={14} style={{color:'#8b5cf6'}}/>Weekly Heatmap</div>
               <div style={{fontSize:10,color:'#94a3b8',fontWeight:600,marginTop:2}}>Event density per hour</div>
             </div>
             <div style={{fontSize:9,fontWeight:800,color:'#8b5cf6',background:'rgba(139,92,246,.06)',padding:'4px 10px',borderRadius:99,border:'1px solid rgba(139,92,246,.12)',fontFamily:'JetBrains Mono,monospace'}}>7 DAYS</div>
@@ -679,7 +692,7 @@ export default function ActivityVault() {
       </div>
 
       {/* ═══════════════ TABLE CARD ═══════════════ */}
-      <div style={{background:'#fff',borderRadius:24,border:'1px solid rgba(0,0,0,.06)',boxShadow:'0 4px 30px rgba(0,0,0,.05)',overflow:'hidden'}}>
+      <div style={{background:cardBg,borderRadius:24,border:`1px solid ${cardBorder}`,boxShadow:'0 4px 30px rgba(0,0,0,.05)',overflow:'hidden'}}>
 
         {/* Toolbar */}
         <div style={{padding:'16px 28px',borderBottom:'1px solid rgba(0,0,0,.05)',display:'flex',alignItems:'center',justifyContent:'space-between',gap:16,flexWrap:'wrap'}}>
@@ -690,9 +703,9 @@ export default function ActivityVault() {
               <input
                 type="text" placeholder="Search by ID, worker, task, zone..." value={searchQuery}
                 onChange={e=>setSearchQuery(e.target.value)}
-                style={{width:'100%',padding:'10px 12px 10px 36px',border:'1.5px solid #e2e8f0',borderRadius:12,fontSize:13,fontWeight:600,outline:'none',color:'#1e293b',background:'#f8fafc',transition:'all 0.2s',fontFamily:'Outfit,sans-serif'}}
+                style={{width:'100%',padding:'10px 12px 10px 36px',border:`1.5px solid ${isDark?'#334155':'#e2e8f0'}`,borderRadius:12,fontSize:13,fontWeight:600,outline:'none',color:textPrimary,background:surfaceBg,transition:'all 0.2s',fontFamily:'Outfit,sans-serif'}}
                 onFocus={e=>e.target.style.borderColor='#0ea5e9'}
-                onBlur={e=>e.target.style.borderColor='#e2e8f0'}
+                onBlur={e=>e.target.style.borderColor=isDark?'#334155':'#e2e8f0'}
               />
               {searchQuery&&(
                 <button onClick={()=>setSearchQuery('')} style={{position:'absolute',right:10,top:'50%',transform:'translateY(-50%)',background:'none',border:'none',cursor:'pointer',color:'#94a3b8',padding:2}}>
@@ -700,9 +713,9 @@ export default function ActivityVault() {
                 </button>
               )}
             </div>
-            <button style={{display:'flex',alignItems:'center',gap:5,padding:'10px 16px',borderRadius:12,cursor:'pointer',border:'1.5px solid #e2e8f0',background:'#fff',color:'#475569',fontSize:12,fontWeight:700,transition:'all 0.2s',whiteSpace:'nowrap'}}
+            <button style={{display:'flex',alignItems:'center',gap:5,padding:'10px 16px',borderRadius:12,cursor:'pointer',border:`1.5px solid ${isDark?'#334155':'#e2e8f0'}`,background:cardBg,color:textSecondary,fontSize:12,fontWeight:700,transition:'all 0.2s',whiteSpace:'nowrap'}}
               onMouseEnter={e=>{e.currentTarget.style.borderColor='#0ea5e9';e.currentTarget.style.color='#0ea5e9';}}
-              onMouseLeave={e=>{e.currentTarget.style.borderColor='#e2e8f0';e.currentTarget.style.color='#475569';}}>
+              onMouseLeave={e=>{e.currentTarget.style.borderColor=isDark?'#334155':'#e2e8f0';e.currentTarget.style.color=textSecondary;}}>
               <SlidersHorizontal size={13}/>Advanced Filter
             </button>
           </div>
@@ -723,7 +736,7 @@ export default function ActivityVault() {
         </div>
 
         {/* Tabs */}
-        <div style={{display:'flex',alignItems:'center',gap:2,padding:'0 28px',borderBottom:'1px solid rgba(0,0,0,.05)',background:'#fafbfc'}}>
+        <div style={{display:'flex',alignItems:'center',gap:2,padding:'0 28px',borderBottom:`1px solid ${isDark?'rgba(255,255,255,.05)':'rgba(0,0,0,.05)'}`,background:surfaceBg2}}>
           {TABS.map(tab=>{
             const active=tab===activeTab;
             const s=TAB_STATUS[tab];
@@ -736,14 +749,14 @@ export default function ActivityVault() {
                 fontSize:13,fontWeight:active?800:600,transition:'all 0.2s',
               }}>
                 {tab}
-                <span style={{background:active?color:'#e2e8f0',color:active?'#fff':'#94a3b8',borderRadius:99,padding:'1px 8px',fontSize:10,fontWeight:800,minWidth:20,textAlign:'center',boxShadow:active?`0 2px 8px ${color}30`:'none',transition:'all 0.2s'}}>{cnt}</span>
+                <span style={{background:active?color:(isDark?'#334155':'#e2e8f0'),color:active?'#fff':(isDark?'#94a3b8':'#94a3b8'),borderRadius:99,padding:'1px 8px',fontSize:10,fontWeight:800,minWidth:20,textAlign:'center',boxShadow:active?`0 2px 8px ${color}30`:'none',transition:'all 0.2s'}}>{cnt}</span>
               </button>
             );
           })}
         </div>
 
         {/* Table header */}
-        <div style={{display:'flex',alignItems:'center',gap:16,padding:'10px 28px',background:'linear-gradient(90deg,#f8fafc,#f1f5f9)',borderBottom:'1px solid rgba(0,0,0,.04)'}}>
+        <div style={{display:'flex',alignItems:'center',gap:16,padding:'10px 28px',background:isDark?'linear-gradient(90deg,#1e293b,#111827)':'linear-gradient(90deg,#f8fafc,#f1f5f9)',borderBottom:`1px solid ${isDark?'rgba(255,255,255,.04)':'rgba(0,0,0,.04)'}`}}>
           <div style={{width:18,flexShrink:0}}>
             <div onClick={selectAll} style={{width:18,height:18,borderRadius:6,cursor:'pointer',border:`2px solid ${selectedIds.size>0?'#0ea5e9':'#d1d5db'}`,background:selectedIds.size>0?'#0ea5e9':'transparent',display:'flex',alignItems:'center',justifyContent:'center',transition:'all 0.15s'}}>
               {selectedIds.size>0&&<CheckCircle2 size={11} color="#fff"/>}
@@ -775,17 +788,17 @@ export default function ActivityVault() {
         </div>
 
         {/* Pagination */}
-        <div style={{padding:'16px 28px',borderTop:'1px solid rgba(0,0,0,.05)',display:'flex',justifyContent:'space-between',alignItems:'center',background:'#fafbfc'}}>
+        <div style={{padding:'16px 28px',borderTop:`1px solid ${isDark?'rgba(255,255,255,.05)':'rgba(0,0,0,.05)'}`,display:'flex',justifyContent:'space-between',alignItems:'center',background:surfaceBg2}}>
           <div style={{display:'flex',alignItems:'center',gap:8}}>
-            <span style={{fontSize:12,color:'#64748b',fontWeight:600}}>Page</span>
-            <span style={{fontSize:13,fontWeight:900,color:'#1e293b',fontFamily:'JetBrains Mono,monospace'}}>{currentPage}</span>
-            <span style={{fontSize:12,color:'#64748b',fontWeight:600}}>of {totalPages}</span>
+            <span style={{fontSize:12,color:textSecondary,fontWeight:600}}>Page</span>
+            <span style={{fontSize:13,fontWeight:900,color:textPrimary,fontFamily:'JetBrains Mono,monospace'}}>{currentPage}</span>
+            <span style={{fontSize:12,color:textSecondary,fontWeight:600}}>of {totalPages}</span>
           </div>
           <div style={{display:'flex',alignItems:'center',gap:2}}>
             <button onClick={()=>setCurrentPage(p=>Math.max(1,p-1))} disabled={currentPage===1}
-              style={{width:36,height:36,borderRadius:10,border:'1.5px solid #e2e8f0',background:'#fff',display:'flex',alignItems:'center',justifyContent:'center',cursor:currentPage===1?'default':'pointer',opacity:currentPage===1?.35:1,transition:'all 0.2s',color:'#475569'}}
+              style={{width:36,height:36,borderRadius:10,border:`1.5px solid ${isDark?'#334155':'#e2e8f0'}`,background:cardBg,display:'flex',alignItems:'center',justifyContent:'center',cursor:currentPage===1?'default':'pointer',opacity:currentPage===1?.35:1,transition:'all 0.2s',color:textSecondary}}
               onMouseEnter={e=>{if(currentPage>1){e.currentTarget.style.borderColor='#0ea5e9';e.currentTarget.style.color='#0ea5e9';}}}
-              onMouseLeave={e=>{e.currentTarget.style.borderColor='#e2e8f0';e.currentTarget.style.color='#475569';}}>
+              onMouseLeave={e=>{e.currentTarget.style.borderColor=isDark?'#334155':'#e2e8f0';e.currentTarget.style.color=textSecondary;}}>
               <ChevronLeft size={16}/>
             </button>
             {Array.from({length:Math.min(totalPages,7)},(_,i)=>{
@@ -803,7 +816,7 @@ export default function ActivityVault() {
                   transition:'all 0.2s',boxShadow:page===currentPage?'0 4px 12px rgba(14,165,233,.3)':'none',
                   fontFamily:'JetBrains Mono,monospace',
                 }}
-                  onMouseEnter={e=>{if(page!==currentPage)e.currentTarget.style.background='#f1f5f9';}}
+                  onMouseEnter={e=>{if(page!==currentPage)e.currentTarget.style.background=isDark?'rgba(255,255,255,.05)':'#f1f5f9';}}
                   onMouseLeave={e=>{if(page!==currentPage)e.currentTarget.style.background='transparent';}}>
                   {page}
                 </button>
@@ -816,9 +829,9 @@ export default function ActivityVault() {
               </>
             )}
             <button onClick={()=>setCurrentPage(p=>Math.min(totalPages,p+1))} disabled={currentPage===totalPages}
-              style={{width:36,height:36,borderRadius:10,border:'1.5px solid #e2e8f0',background:'#fff',display:'flex',alignItems:'center',justifyContent:'center',cursor:currentPage===totalPages?'default':'pointer',opacity:currentPage===totalPages?.35:1,transition:'all 0.2s',color:'#475569'}}
+              style={{width:36,height:36,borderRadius:10,border:`1.5px solid ${isDark?'#334155':'#e2e8f0'}`,background:cardBg,display:'flex',alignItems:'center',justifyContent:'center',cursor:currentPage===totalPages?'default':'pointer',opacity:currentPage===totalPages?.35:1,transition:'all 0.2s',color:textSecondary}}
               onMouseEnter={e=>{if(currentPage<totalPages){e.currentTarget.style.borderColor='#0ea5e9';e.currentTarget.style.color='#0ea5e9';}}}
-              onMouseLeave={e=>{e.currentTarget.style.borderColor='#e2e8f0';e.currentTarget.style.color='#475569';}}>
+              onMouseLeave={e=>{e.currentTarget.style.borderColor=isDark?'#334155':'#e2e8f0';e.currentTarget.style.color=textSecondary;}}>
               <ChevronRight size={16}/>
             </button>
           </div>
@@ -844,7 +857,7 @@ export default function ActivityVault() {
         <div style={{display:'flex',alignItems:'center',gap:14}}>
           <div style={{display:'flex',alignItems:'center',gap:4}}>
             {[...Array(5)].map((_,i)=>(
-              <div key={i} style={{width:3,height:10+i*3,borderRadius:99,background:`rgba(14,165,233,${.15+i*.18})`,animation:'vpPulse 1s ease-in-out infinite',animationDelay:`${i*.12}s`}}/>
+              <div key={i} style={{width:3,height:10+i*3,borderRadius:99,background:`rgba(14,165,233,${.15+i*.18})`,animationName:'vpPulse',animationDuration:'1s',animationTimingFunction:'ease-in-out',animationIterationCount:'infinite',animationDelay:`${i*.12}s`}}/>
             ))}
           </div>
           <div style={{fontSize:11,fontWeight:800,color:'#4ade80',background:'rgba(34,197,94,.1)',padding:'5px 14px',borderRadius:99,border:'1px solid rgba(34,197,94,.2)',display:'flex',alignItems:'center',gap:6}}>

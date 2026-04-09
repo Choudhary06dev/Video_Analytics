@@ -55,28 +55,22 @@ export default function FacilityHeatmap() {
 
   return (
     <div
-      style={{
-        background: 'rgba(255,255,255,0.97)',
-        borderRadius: 28,
-        border: '1px solid #e2e8f0',
-        boxShadow: '0 4px 30px -8px rgba(0,0,0,0.07)',
-      }}
-      className="h-full flex flex-col w-full p-6 transition-shadow duration-300 hover:shadow-[0_12px_40px_-10px_rgba(249,115,22,0.12)]"
+      className="h-full flex flex-col w-full p-6 transition-shadow duration-300 hover:shadow-[0_12px_40px_-10px_rgba(249,115,22,0.12)] bg-card rounded-[28px] border border-border shadow-premium"
     >
       {/* Header */}
       <div className="flex justify-between items-start mb-5 shrink-0 flex-wrap gap-3">
         <div>
-          <h3 className="text-[1.05rem] font-black text-slate-800 flex items-center gap-2">
+          <h3 className="text-[1.05rem] font-black text-text-dark flex items-center gap-2">
             <Map className="w-4 h-4 text-orange-500" />
             Facility Heatmap
           </h3>
-          <p className="text-[0.7rem] text-slate-400 font-semibold mt-0.5">
+          <p className="text-[0.7rem] text-text-gray font-semibold mt-0.5">
             Activity density by sector · Avg: <span className="font-black text-orange-500">{avgActivity}%</span>
           </p>
         </div>
         <div className="flex items-center gap-2">
           {/* Legend */}
-          <div className="flex items-center gap-1.5 text-[0.6rem] font-bold text-slate-400">
+          <div className="flex items-center gap-1.5 text-[0.6rem] font-bold text-text-gray">
             <span>Low</span>
             {['#f1f5f9','#bae6fd','#38bdf8','#f97316','#ef4444'].map((c, i) => (
               <div key={i} style={{ background: c, width: 14, height: 14, borderRadius: 4, boxShadow: i > 2 ? `0 0 4px ${c}80` : 'none' }} />
@@ -107,7 +101,7 @@ export default function FacilityHeatmap() {
       <div className="flex-1 flex flex-col justify-center gap-2 relative">
         {SECTORS.map((sector, i) => (
           <div key={sector} className="flex items-center gap-2">
-            <div className="w-[72px] text-[0.68rem] font-bold text-slate-500 text-right shrink-0 truncate">
+            <div className="w-[72px] text-[0.68rem] font-bold text-text-gray text-right shrink-0 truncate">
               {sector}
             </div>
             <div className="flex-1 flex gap-1">
@@ -128,7 +122,10 @@ export default function FacilityHeatmap() {
                       transform: tooltip?.sector === sector && tooltip?.j === j ? 'scale(1.4)' : 'scale(1)',
                       transition: 'all 0.25s cubic-bezier(0.34,1.56,0.64,1)',
                       cursor: 'crosshair',
-                      animation: isHot ? 'heatPulse 2s ease-in-out infinite' : 'none',
+                      animationName: isHot ? 'heatPulse' : 'none',
+                      animationDuration: '2s',
+                      animationTimingFunction: 'ease-in-out',
+                      animationIterationCount: 'infinite',
                       animationDelay: `${(i * COLS + j) % 6 * 0.3}s`,
                     }}
                     title={`${sector} — Zone ${j + 1}: ${Math.round(val)}% activity`}
@@ -172,12 +169,11 @@ export default function FacilityHeatmap() {
 
       {/* Footer */}
       <div
-        style={{ background: '#f8fafc', borderRadius: 14, border: '1px solid #e2e8f0' }}
-        className="mt-4 p-3 flex justify-between items-center shrink-0"
+        className="mt-4 p-3 flex justify-between items-center shrink-0 bg-surface rounded-[14px] border border-border"
       >
-        <div className="text-[0.72rem] text-slate-500">
-          <span className="font-black text-slate-700">Peak:</span> 2:00 PM – 4:00 PM
-          <span className="ml-3 text-slate-400 font-medium">
+        <div className="text-[0.72rem] text-text-gray">
+          <span className="font-black text-text-dark">Peak:</span> 2:00 PM – 4:00 PM
+          <span className="ml-3 text-text-gray font-medium">
             Updated {lastRefresh.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
           </span>
         </div>

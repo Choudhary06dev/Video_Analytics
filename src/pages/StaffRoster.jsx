@@ -108,8 +108,8 @@ export default function StaffRoster() {
               </div>
             </div>
           </div>
-          <div className="flex-1 w-full">
-            <ResponsiveContainer width="100%" height="100%">
+          <div className="w-full h-[320px] relative min-w-0">
+            <ResponsiveContainer width="100%" height="100%" debounce={50}>
               <ComposedChart data={CHART_DATA} margin={{ top: 0, right: 0, left: -25, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--color-border)" />
                 <XAxis 

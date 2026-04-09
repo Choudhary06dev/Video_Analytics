@@ -1,5 +1,6 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { ThemeProvider } from './context/ThemeContext';
 
 // Layout
 import AppLayout from './layouts/AppLayout';
@@ -17,25 +18,27 @@ import Settings from './pages/Settings';
 
 function App() {
   return (
-    <BrowserRouter>
-      <Routes>
-        {/* App Layout wraps all pages */}
-        <Route element={<AppLayout />}>
-          <Route path="/" element={<Dashboard />} />
-          <Route path="/neural-stream" element={<NeuralStream />} />
-          <Route path="/scenarios" element={<AIScenarios />} />
-          <Route path="/roster" element={<StaffRoster />} />
-          <Route path="/vault" element={<ActivityVault />} />
-          <Route path="/health" element={<SystemHealth />} />
-          <Route path="/training" element={<AITraining />} />
-          <Route path="/alerts" element={<Alerts />} />
-          <Route path="/settings" element={<Settings />} />
-        </Route>
+    <ThemeProvider>
+      <BrowserRouter>
+        <Routes>
+          {/* App Layout wraps all pages */}
+          <Route element={<AppLayout />}>
+            <Route path="/" element={<Dashboard />} />
+            <Route path="/neural-stream" element={<NeuralStream />} />
+            <Route path="/scenarios" element={<AIScenarios />} />
+            <Route path="/roster" element={<StaffRoster />} />
+            <Route path="/vault" element={<ActivityVault />} />
+            <Route path="/health" element={<SystemHealth />} />
+            <Route path="/training" element={<AITraining />} />
+            <Route path="/alerts" element={<Alerts />} />
+            <Route path="/settings" element={<Settings />} />
+          </Route>
 
-        {/* Fallback */}
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </BrowserRouter>
+          {/* Fallback */}
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </BrowserRouter>
+    </ThemeProvider>
   );
 }
 

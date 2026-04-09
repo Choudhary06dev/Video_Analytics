@@ -82,21 +82,15 @@ export default function PerformanceMetrics() {
 
       {/* ── Detection Count Chart ── */}
       <div
-        style={{
-          background: 'rgba(255,255,255,0.97)',
-          borderRadius: 28,
-          border: '1px solid #e2e8f0',
-          boxShadow: '0 4px 30px -8px rgba(0,0,0,0.07)',
-        }}
-        className="flex flex-col h-[380px] p-6 transition-shadow hover:shadow-[0_12px_40px_-10px_rgba(14,165,233,0.14)]"
+        className="flex flex-col h-[380px] p-6 transition-shadow hover:shadow-[0_12px_40px_-10px_rgba(14,165,233,0.14)] bg-card rounded-[28px] border border-border shadow-premium"
       >
         <div className="flex justify-between items-start mb-5 shrink-0">
           <div>
-            <h3 className="text-[1.05rem] font-black text-slate-800 flex items-center gap-2">
+            <h3 className="text-[1.05rem] font-black text-text-dark flex items-center gap-2">
               <BarChart2 className="w-4 h-4 text-sky-500" />
               Detection Count (24h)
             </h3>
-            <p className="text-[0.7rem] text-slate-400 font-semibold mt-0.5">
+            <p className="text-[0.7rem] text-text-gray font-semibold mt-0.5">
               Total: <span className="text-sky-500 font-black">{totalDetections}</span> events
             </p>
           </div>
@@ -118,8 +112,8 @@ export default function PerformanceMetrics() {
           </div>
         </div>
 
-        <div className="flex-1 w-full">
-          <ResponsiveContainer width="100%" height="100%">
+        <div className="w-full h-[280px] relative min-w-0">
+          <ResponsiveContainer width="100%" height="100%" debounce={50}>
             {viewMode === 'line' ? (
               <LineChart data={detData} margin={{ top: 4, right: 8, left: -22, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
@@ -176,21 +170,15 @@ export default function PerformanceMetrics() {
 
       {/* ── Camera Performance Chart ── */}
       <div
-        style={{
-          background: 'rgba(255,255,255,0.97)',
-          borderRadius: 28,
-          border: '1px solid #e2e8f0',
-          boxShadow: '0 4px 30px -8px rgba(0,0,0,0.07)',
-        }}
-        className="flex flex-col h-[380px] p-6 transition-shadow hover:shadow-[0_12px_40px_-10px_rgba(34,197,94,0.14)]"
+        className="flex flex-col h-[380px] p-6 transition-shadow hover:shadow-[0_12px_40px_-10px_rgba(34,197,94,0.14)] bg-card rounded-[28px] border border-border shadow-premium"
       >
         <div className="flex justify-between items-start mb-5 shrink-0">
           <div>
-            <h3 className="text-[1.05rem] font-black text-slate-800 flex items-center gap-2">
+            <h3 className="text-[1.05rem] font-black text-text-dark flex items-center gap-2">
               <Camera className="w-4 h-4 text-emerald-500" />
               Camera Performance
             </h3>
-            <p className="text-[0.7rem] text-slate-400 font-semibold mt-0.5">
+            <p className="text-[0.7rem] text-text-gray font-semibold mt-0.5">
               Avg: <span className="text-emerald-500 font-black">{avgCam}%</span>
               {offlineCount > 0
                 ? <span className="ml-2 text-amber-500 font-black">{offlineCount} degraded</span>
@@ -214,8 +202,8 @@ export default function PerformanceMetrics() {
           </div>
         </div>
 
-        <div className="flex-1 w-full">
-          <ResponsiveContainer width="100%" height="100%">
+        <div className="w-full h-[280px] relative min-w-0">
+          <ResponsiveContainer width="100%" height="100%" debounce={50}>
             <BarChart data={camData} margin={{ top: 4, right: 8, left: -22, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
               <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 11, fontWeight: 600 }} />

@@ -15,14 +15,42 @@
   --color-danger: #ef4444;
   --color-warning: #f59e0b;
   --color-border: #e2e8f0;
+  --color-surface: #f1f5f9;
+  --color-card-hover: #f8fafc;
 
   --shadow-premium: 0 4px 20px -2px rgba(0, 0, 0, 0.05);
+}
+
+/* ── Dark Theme Overrides ── */
+.dark {
+  --color-bg: #0b1120;
+  --color-card: #111827;
+  --color-accent: #38bdf8;
+  --color-accent-soft: rgba(56, 189, 248, 0.12);
+  --color-text-dark: #f1f5f9;
+  --color-text-gray: #94a3b8;
+  --color-success: #34d399;
+  --color-danger: #f87171;
+  --color-warning: #fbbf24;
+  --color-border: #1e293b;
+  --color-surface: #1e293b;
+  --color-card-hover: #1e293b;
+
+  --shadow-premium: 0 4px 20px -2px rgba(0, 0, 0, 0.3);
 }
 
 @layer base {
   body {
     @apply bg-bg text-text-dark font-sans;
   }
+}
+
+/* Smooth transition for theme changes - scoped to avoid breaking keyframe animations */
+:root {
+  transition: color 0.25s ease-out, background-color 0.25s ease-out;
+}
+.dark {
+  transition: color 0.25s ease-out, background-color 0.25s ease-out;
 }
 
 @layer utilities {

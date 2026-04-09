@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Video, Package, AlertCircle, Target, Zap, Cloud, TrendingUp, TrendingDown, RefreshCw } from 'lucide-react';
+import { useTheme } from '../../context/ThemeContext';
 
 function useCountUp(target, duration = 1200) {
   const [count, setCount] = useState(0);
@@ -89,6 +90,7 @@ function KPICard({ stat, index }) {
   const count = useCountUp(stat.rawValue, 1000 + index * 150);
   const [hovered, setHovered] = useState(false);
   const [clicked, setClicked] = useState(false);
+  const { isDark } = useTheme();
 
   const handleClick = () => {
     setClicked(true);
@@ -101,13 +103,13 @@ function KPICard({ stat, index }) {
       onMouseLeave={() => setHovered(false)}
       onClick={handleClick}
       style={{
-        background: hovered
-          ? `linear-gradient(135deg, rgba(255,255,255,0.98) 0%, rgba(255,255,255,0.92) 100%)`
-          : 'rgba(255,255,255,0.95)',
-        borderColor: hovered ? stat.accent : 'rgba(226,232,240,0.8)',
+        background: isDark
+          ? (hovered ? 'rgba(30,41,59,0.95)' : 'rgba(17,24,39,0.95)')
+          : (hovered ? 'rgba(255,255,255,0.98)' : 'rgba(255,255,255,0.95)'),
+        borderColor: hovered ? stat.accent : (isDark ? 'rgba(30,41,59,0.8)' : 'rgba(226,232,240,0.8)'),
         boxShadow: hovered
           ? `0 20px 60px -10px ${stat.glow}, 0 0 0 1px ${stat.accent}22`
-          : '0 4px 20px -2px rgba(0,0,0,0.05)',
+          : isDark ? '0 4px 20px -2px rgba(0,0,0,0.3)' : '0 4px 20px -2px rgba(0,0,0,0.05)',
         transform: clicked ? 'scale(0.97)' : hovered ? 'translateY(-6px)' : 'translateY(0)',
         transition: 'all 0.35s cubic-bezier(0.34,1.56,0.64,1)',
         cursor: 'pointer',
@@ -151,8 +153,8 @@ function KPICard({ stat, index }) {
           <div
             className={`flex items-center gap-1 text-[0.6rem] font-bold px-2.5 py-1 rounded-full border transition-all duration-300 ${
               stat.trendUp
-                ? 'bg-emerald-50 text-emerald-600 border-emerald-100'
-                : 'bg-red-50 text-red-500 border-red-100'
+                ? isDark ? 'bg-emerald-900/30 text-emerald-400 border-emerald-800' : 'bg-emerald-50 text-emerald-600 border-emerald-100'
+                : isDark ? 'bg-red-900/30 text-red-400 border-red-800' : 'bg-red-50 text-red-500 border-red-100'
             }`}
           >
             {stat.trendUp ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
@@ -170,16 +172,16 @@ function KPICard({ stat, index }) {
               {count}{stat.unit}
             </span>
             {stat.total && (
-              <span className="text-[0.9rem] font-bold text-slate-300">{stat.total}</span>
+              <span className="text-[0.9rem] font-bold text-text-gray">{stat.total}</span>
             )}
           </div>
-          <div className="text-[0.7rem] text-slate-500 font-bold uppercase tracking-widest mt-1">
+          <div className="text-[0.7rem] text-text-gray font-bold uppercase tracking-widest mt-1">
             {stat.label}
           </div>
         </div>
 
         {/* Bottom separator + trend text */}
-        <div className="pt-2 border-t border-slate-100 text-[0.62rem] text-slate-400 font-medium flex items-center gap-1.5">
+        <div className="pt-2 border-t border-border text-[0.62rem] text-text-gray font-medium flex items-center gap-1.5">
           <RefreshCw className="w-2.5 h-2.5 opacity-50" />
           {stat.trend}
         </div>

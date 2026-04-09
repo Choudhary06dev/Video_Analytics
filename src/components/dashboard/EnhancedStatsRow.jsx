@@ -116,7 +116,10 @@ function StatCard({ stat, index }) {
             background: stat.sparkle,
             top: `${20 + i * 25}%`,
             right: `${10 + i * 8}%`,
-            animation: `float${i} 1.5s ease-in-out infinite`,
+            animationName: `float${i}`,
+            animationDuration: '1.5s',
+            animationTimingFunction: 'ease-in-out',
+            animationIterationCount: 'infinite',
             animationDelay: `${i * 0.3}s`,
             opacity: 0.6,
           }}

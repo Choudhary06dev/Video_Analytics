@@ -9,11 +9,12 @@ import {
   TrendingDown, Users, Lock, Unlock, AlertTriangle
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useTheme } from '../../context/ThemeContext';
 
 /* ═══════════════════════════════════════════════════════════════════════════════
    CSS KEYFRAMES & STYLES
    ═══════════════════════════════════════════════════════════════════════════════ */
-const VAULT_CSS = `
+const getVaultCSS = (isDark) => `
 @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap');
 
 @keyframes vaultPulse    { 0%,100%{opacity:.5} 50%{opacity:1} }
@@ -28,7 +29,7 @@ const VAULT_CSS = `
 @keyframes vaultBeam     { 0%{opacity:0;transform:scaleX(0) translateX(-50%)} 50%{opacity:1} 100%{opacity:0;transform:scaleX(1) translateX(50%)} }
 @keyframes vaultCountup  { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
 @keyframes vaultDot      { 0%,80%,100%{transform:scale(0)} 40%{transform:scale(1)} }
-@keyframes vaultBorderPulse { 0%,100%{border-color:rgba(6,182,212,.12)} 50%{border-color:rgba(6,182,212,.3)} }
+@keyframes vaultBorderPulse { 0%,100%{border-color:${isDark ? 'rgba(6,182,212,.2)' : 'rgba(6,182,212,.12)'}} 50%{border-color:rgba(6,182,212,.3)} }
 @keyframes vaultOrb      { 0%{transform:translate(0,0) scale(1)} 33%{transform:translate(20px,-15px) scale(1.05)} 66%{transform:translate(-10px,10px) scale(.95)} 100%{transform:translate(0,0) scale(1)} }
 @keyframes vaultLineMove { 0%{background-position:-200% 0} 100%{background-position:200% 0} }
 @keyframes vaultFlash    { 0%,100%{opacity:0} 10%,90%{opacity:1} }
@@ -39,7 +40,7 @@ const VAULT_CSS = `
 }
 .vault-card:hover {
   transform: translateY(-3px);
-  box-shadow: 0 16px 40px rgba(0,0,0,.1), 0 0 0 1px rgba(6,182,212,.15);
+  box-shadow: ${isDark ? '0 16px 48px rgba(0,0,0,.4)' : '0 16px 40px rgba(0,0,0,.1)'}, 0 0 0 1px rgba(6,182,212,${isDark?'.25':'.15'});
 }
 .vault-row {
   transition: all 0.2s cubic-bezier(.4,0,.2,1);
@@ -49,7 +50,7 @@ const VAULT_CSS = `
   content:'';
   position:absolute;
   inset:0;
-  background:linear-gradient(90deg,transparent,rgba(6,182,212,.04),transparent);
+  background:linear-gradient(90deg,transparent,rgba(6,182,212,${isDark?'.08':'.04'}),transparent);
   opacity:0;
   transition:opacity 0.2s;
   pointer-events:none;
@@ -77,10 +78,10 @@ const VAULT_CSS = `
 
 .vault-scrollbar::-webkit-scrollbar { width:4px; height:4px; }
 .vault-scrollbar::-webkit-scrollbar-track { background:transparent; }
-.vault-scrollbar::-webkit-scrollbar-thumb { background:rgba(6,182,212,.2); border-radius:99px; }
-.vault-scrollbar::-webkit-scrollbar-thumb:hover { background:rgba(6,182,212,.45); }
+.vault-scrollbar::-webkit-scrollbar-thumb { background:rgba(6,182,212,${isDark?'.3':'.2'}); border-radius:99px; }
+.vault-scrollbar::-webkit-scrollbar-thumb:hover { background:rgba(6,182,212,${isDark?'.6':'.45'}); }
 
-.vault-input::placeholder { color:rgba(100,116,139,.5); }
+.vault-input::placeholder { color:rgba(148,163,184,${isDark?'.4':'.5'}); }
 .vault-input:focus { outline:none; }
 
 .vault-stat-card {
@@ -93,7 +94,7 @@ const VAULT_CSS = `
   position:absolute;
   top:0;left:-100%;
   width:60%;height:100%;
-  background:linear-gradient(90deg,transparent,rgba(255,255,255,.04),transparent);
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,${isDark?'.08':'.04'}),transparent);
   transition:left 0.5s;
 }
 .vault-stat-card:hover::before { left:150%; }
@@ -230,6 +231,7 @@ function ConfidenceRing({ value, size=44 }) {
 
 // ── Status Donut ──
 function StatusDonut({ stats, size=130 }) {
+  const { isDark } = useTheme();
   const data = [
     { key:'completed',   value:stats.completed,  color:'#10b981' },
     { key:'in-progress', value:stats.inProgress,  color:'#6366f1' },
@@ -244,7 +246,7 @@ function StatusDonut({ stats, size=130 }) {
   return (
     <div style={{position:'relative',width:size,height:size}}>
       <svg width={size} height={size} style={{transform:'rotate(-90deg)'}}>
-        <circle cx={cx} cy={cy} r={r} fill="none" stroke="rgba(15,23,42,.05)" strokeWidth={12}/>
+        <circle cx={cx} cy={cy} r={r} fill="none" stroke={isDark ? 'rgba(255,255,255,.05)' : 'rgba(15,23,42,.05)'} strokeWidth={12}/>
         {data.map((d,i) => {
           const dash = (d.value/total)*c;
           const isH = hovered===d.key;
@@ -271,13 +273,13 @@ function StatusDonut({ stats, size=130 }) {
         alignItems:'center',justifyContent:'center',gap:2,
       }}>
         <div style={{
-          fontSize:26,fontWeight:900,color:'#0f172a',lineHeight:1,
+          fontSize:26,fontWeight:900,color:isDark ? '#f8fafc' : '#0f172a',lineHeight:1,
           fontFamily:'JetBrains Mono,monospace',
           transition:'all 0.3s',
         }}>
           {hovered ? data.find(d=>d.key===hovered)?.value ?? total : total}
         </div>
-        <div style={{fontSize:8,fontWeight:700,color:'#94a3b8',textTransform:'uppercase',letterSpacing:1.5}}>
+        <div style={{fontSize:8,fontWeight:700,color:isDark ? '#94a3b8' : '#94a3b8',textTransform:'uppercase',letterSpacing:1.5}}>
           {hovered ? STATUS_META[hovered]?.label : 'Records'}
         </div>
       </div>
@@ -320,7 +322,7 @@ function HeatmapBlock() {
           onClick={() => setSelectedDay(selectedDay===di?null:di)}
         >
           <div style={{
-            width:24,fontSize:8,color:selectedDay===di?'#06b6d4':'#64748b',
+            width:24,fontSize:8,color:selectedDay===di?'#06b6d4':(isDark ? '#94a3b8' : '#64748b'),
             fontWeight:800,fontFamily:'JetBrains Mono,monospace',transition:'color 0.2s',
           }}>
             {DAYS[di]}
@@ -343,7 +345,7 @@ function HeatmapBlock() {
       {tip && (
         <div style={{
           position:'absolute', top:-38, left:'50%', transform:'translateX(-50%)',
-          background:'#0f172a', color:'#f8fafc', padding:'5px 12px',
+          background:isDark ? '#1e293b' : '#0f172a', color:'#f8fafc', padding:'5px 12px',
           borderRadius:10, fontSize:10, fontWeight:700, whiteSpace:'nowrap',
           boxShadow:'0 8px 24px rgba(0,0,0,.4)', zIndex:50,
           fontFamily:'JetBrains Mono,monospace',
@@ -368,6 +370,7 @@ function HeatmapBlock() {
 
 // ── Category Breakdown ──
 function CategoryBreakdown({ activities }) {
+  const { isDark } = useTheme();
   const counts = {};
   activities.forEach(a => { const c=a.task.category; counts[c]=(counts[c]||0)+1; });
   const total = activities.length||1;
@@ -396,7 +399,7 @@ function CategoryBreakdown({ activities }) {
                 }}>
                   <CatIcon size={11} style={{color:col}}/>
                 </div>
-                <span style={{fontSize:11,fontWeight:700,color:isH?'#1e293b':'#475569',textTransform:'capitalize',transition:'color 0.2s'}}>{cat}</span>
+                <span style={{fontSize:11,fontWeight:700,color:isH?(isDark ? '#38bdf8' : '#1e293b'):(isDark ? '#94a3b8' : '#475569'),textTransform:'capitalize',transition:'color 0.2s'}}>{cat}</span>
               </div>
               <div style={{display:'flex',alignItems:'center',gap:5}}>
                 <span style={{fontSize:9,fontWeight:700,color:'#94a3b8'}}>{pct}%</span>
@@ -450,6 +453,7 @@ function ThreatBadge({ level }) {
 
 // ── Activity Row ──
 function ActivityRow({ act, idx, isNew }) {
+  const { isDark } = useTheme();
   const [expanded, setExpanded] = useState(false);
   const [mounted, setMounted] = useState(false);
   const sm = STATUS_META[act.status];
@@ -474,7 +478,7 @@ function ActivityRow({ act, idx, isNew }) {
         style={{
           cursor:'pointer',display:'flex',alignItems:'center',
           padding:'13px 20px',gap:12,
-          borderBottom:`1px solid rgba(15,23,42,.04)`,
+          borderBottom:`1px solid ${isDark ? 'rgba(255,255,255,.05)' : 'rgba(15,23,42,.04)'}`,
           background: isNew
             ? 'linear-gradient(90deg,rgba(6,182,212,.05),rgba(99,102,241,.03),transparent)'
             : expanded ? 'rgba(6,182,212,.025)' : 'transparent',
@@ -537,12 +541,12 @@ function ActivityRow({ act, idx, isNew }) {
               position:'absolute',bottom:-1,right:-1,
               width:9,height:9,borderRadius:'50%',
               background:act.worker.status==='active'?'#10b981':act.worker.status==='busy'?'#f59e0b':'#94a3b8',
-              border:'2px solid #fff',
+               border:`2px solid ${isDark ? '#111827' : '#fff'}`,
             }}/>
           </div>
           <div>
-            <div style={{fontSize:12,fontWeight:700,color:'#1e293b',lineHeight:1.2}}>{act.worker.name}</div>
-            <div style={{fontSize:9,color:'#94a3b8',fontWeight:600,marginTop:1}}>{act.worker.role}</div>
+            <div style={{fontSize:12,fontWeight:700,color:isDark ? '#f1f5f9' : '#1e293b',lineHeight:1.2}}>{act.worker.name}</div>
+            <div style={{fontSize:9,color:isDark ? '#94a3b8' : '#94a3b8',fontWeight:600,marginTop:1}}>{act.worker.role}</div>
           </div>
         </div>
 
@@ -556,7 +560,7 @@ function ActivityRow({ act, idx, isNew }) {
             {act.task.icon}
           </div>
           <div style={{minWidth:0}}>
-            <div style={{fontSize:12,fontWeight:700,color:'#334155',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{act.task.name}</div>
+            <div style={{fontSize:12,fontWeight:700,color:isDark ? '#f1f5f9' : '#334155',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{act.task.name}</div>
             <div style={{display:'flex',alignItems:'center',gap:5,marginTop:3}}>
               <div style={{
                 fontSize:7.5,fontWeight:800,color:catColor,
@@ -574,7 +578,7 @@ function ActivityRow({ act, idx, isNew }) {
         <div style={{width:115,flexShrink:0}}>
           <div style={{display:'flex',alignItems:'center',gap:4}}>
             <Camera size={9} style={{color:'#94a3b8'}}/>
-            <span style={{fontSize:11,fontWeight:700,color:'#475569'}}>{act.zone}</span>
+            <span style={{fontSize:11,fontWeight:700,color:isDark ? '#94a3b8' : '#475569'}}>{act.zone}</span>
           </div>
           <div style={{fontSize:9,color:'#94a3b8',fontWeight:600,marginTop:2,fontFamily:'JetBrains Mono,monospace'}}>
             {act.camId}
@@ -611,7 +615,7 @@ function ActivityRow({ act, idx, isNew }) {
 
         {/* Time */}
         <div style={{width:62,flexShrink:0,textAlign:'right'}}>
-          <div style={{fontSize:11,fontWeight:700,color:'#334155'}}>{act.timeAgo}</div>
+          <div style={{fontSize:11,fontWeight:700,color:isDark ? '#f1f5f9' : '#334155'}}>{act.timeAgo}</div>
           <div style={{fontSize:9,color:'#94a3b8',fontWeight:600,fontFamily:'JetBrains Mono,monospace',marginTop:1}}>{act.timestamp}</div>
         </div>
       </div>
@@ -650,8 +654,8 @@ function ActivityRow({ act, idx, isNew }) {
                 border:`1px solid ${d.color}18`,
               }}>{d.icon}</div>
               <div>
-                <div style={{fontSize:7.5,color:'#94a3b8',fontWeight:700,textTransform:'uppercase',letterSpacing:1}}>{d.label}</div>
-                <div style={{fontSize:14,fontWeight:900,color:'#1e293b',lineHeight:1.2,fontFamily:'JetBrains Mono,monospace'}}>{d.value}</div>
+                <div style={{fontSize:7.5,color:isDark ? '#64748b' : '#94a3b8',fontWeight:700,textTransform:'uppercase',letterSpacing:1}}>{d.label}</div>
+                <div style={{fontSize:14,fontWeight:900,color:isDark ? '#f1f5f9' : '#1e293b',lineHeight:1.2,fontFamily:'JetBrains Mono,monospace'}}>{d.value}</div>
                 <div style={{fontSize:8,color:d.color,fontWeight:700,marginTop:1}}>{d.sub}</div>
               </div>
             </div>
@@ -734,12 +738,18 @@ export default function ActivityVault() {
   const notifTimerRef = useRef(null);
 
   useEffect(() => {
-    if (document.getElementById('vault-css')) return;
-    const s = document.createElement('style');
-    s.id='vault-css'; s.textContent=VAULT_CSS;
-    document.head.appendChild(s);
-    return () => document.getElementById('vault-css')?.remove();
-  }, []);
+    let s = document.getElementById('vault-css');
+    if (!s) {
+      s = document.createElement('style');
+      s.id = 'vault-css';
+      document.head.appendChild(s);
+    }
+    s.textContent = getVaultCSS(isDark);
+    return () => {
+      // We don't necessarily want to remove it on every re-render of isDark,
+      // but let's keep it clean on unmount.
+    };
+  }, [isDark]);
 
   useEffect(() => {
     setActivities(Array.from({length:14},(_,i) => makeActivity(i)));
@@ -1042,9 +1052,9 @@ export default function ActivityVault() {
                   </div>
                 )}
               </div>
-              <div style={{fontSize:22,fontWeight:900,color:'#f8fafc',lineHeight:1,fontFamily:'JetBrains Mono,monospace'}}>{value}</div>
-              <div style={{fontSize:9,fontWeight:700,color:'#475569',textTransform:'uppercase',letterSpacing:.9,marginTop:4}}>{label}</div>
-              <div style={{fontSize:9,color:'#334155',fontWeight:600,marginTop:1}}>{sub}</div>
+              <div style={{fontSize:22,fontWeight:900,color:isDark ? '#f8fafc' : '#0f172a',lineHeight:1,fontFamily:'JetBrains Mono,monospace'}}>{value}</div>
+              <div style={{fontSize:9,fontWeight:700,color:isDark ? '#94a3b8' : '#475569',textTransform:'uppercase',letterSpacing:.9,marginTop:4}}>{label}</div>
+              <div style={{fontSize:9,color:isDark ? '#64748b' : '#334155',fontWeight:600,marginTop:1}}>{sub}</div>
             </div>
           ))}
         </div>
@@ -1057,8 +1067,8 @@ export default function ActivityVault() {
       <div style={{
         display:'flex',alignItems:'center',gap:2,
         padding:'10px 20px',
-        borderBottom:'1px solid rgba(15,23,42,.05)',
-        background:'rgba(248,250,252,.9)',
+        borderBottom:`1px solid ${isDark ? 'rgba(255,255,255,.05)' : 'rgba(15,23,42,.05)'}`,
+        background:isDark ? '#111827' : 'rgba(248,250,252,.9)',
         backdropFilter:'blur(10px)',
         overflowX:'auto',
       }}>
@@ -1075,9 +1085,9 @@ export default function ActivityVault() {
               style={{
                 display:'flex',alignItems:'center',gap:6,
                 padding:'7px 15px',borderRadius:10,cursor:'pointer',
-                border:active?`1px solid ${color}25`:'1px solid transparent',
+                border:active?`1px solid ${color}25`:(isDark ? '1px solid rgba(255,255,255,.05)' : '1px solid transparent'),
                 background:active?`${color}08`:'transparent',
-                color:active?color:'#64748b',
+                color:active?color:(isDark ? '#94a3b8' : '#64748b'),
                 fontSize:12,fontWeight:active?800:600,
                 transition:'all 0.2s',whiteSpace:'nowrap',
               }}>
@@ -1113,8 +1123,8 @@ export default function ActivityVault() {
       <div style={{
         display:'flex',alignItems:'center',gap:12,
         padding:'8px 20px',
-        background:'linear-gradient(90deg,#f8fafc,#f1f5f9)',
-        borderBottom:'1px solid rgba(15,23,42,.04)',
+        background:isDark ? 'linear-gradient(90deg,#1e293b,#111827)' : 'linear-gradient(90deg,#f8fafc,#f1f5f9)',
+        borderBottom:`1px solid ${isDark ? 'rgba(255,255,255,.04)' : 'rgba(15,23,42,.04)'}`,
       }}>
         <div style={{width:13}}/>
         {[
@@ -1128,7 +1138,7 @@ export default function ActivityVault() {
         ].map((col,i) => (
           <div key={i} style={{
             width:col.width,flex:col.flex||undefined,flexShrink:col.flex?undefined:0,
-            fontSize:8.5,fontWeight:800,color:'#94a3b8',
+            fontSize:8.5,fontWeight:800,color:isDark?'#64748b':'#94a3b8',
             textTransform:'uppercase',letterSpacing:1.3,
             textAlign:col.align||'left',
             fontFamily:'JetBrains Mono,monospace',
@@ -1138,32 +1148,32 @@ export default function ActivityVault() {
 
       {/* ═══ ROWS ═══ */}
       <div className="vault-scrollbar" style={{maxHeight:440,overflowY:'auto',scrollbarWidth:'thin'}}>
-        {filtered.length===0 ? (
-          <div style={{padding:'56px 24px',textAlign:'center'}}>
-            <div style={{fontSize:36,marginBottom:10,opacity:.3}}>🔍</div>
-            <div style={{fontSize:13,fontWeight:800,color:'#94a3b8'}}>No records found</div>
-            <div style={{fontSize:11,color:'#cbd5e1',marginTop:4,fontWeight:600}}>Try adjusting your search or filter</div>
-          </div>
-        ) : (
-          filtered.slice(0,15).map((act,i) => (
-            <ActivityRow key={act.id} act={act} idx={i} isNew={newIds.has(act.id)}/>
-          ))
-        )}
+          {filtered.length===0 ? (
+            <div style={{padding:'56px 24px',textAlign:'center'}}>
+              <div style={{fontSize:36,marginBottom:10,opacity:.3}}>🔍</div>
+              <div style={{fontSize:13,fontWeight:800,color:isDark?'#64748b':'#94a3b8'}}>No records found</div>
+              <div style={{fontSize:11,color:isDark?'#475569':'#cbd5e1',marginTop:4,fontWeight:600}}>Try adjusting your search or filter</div>
+            </div>
+          ) : (
+            filtered.slice(0,15).map((act,i) => (
+              <ActivityRow key={act.id} act={act} idx={i} isNew={newIds.has(act.id)}/>
+            ))
+          )}
       </div>
 
       {/* ═══ INSIGHTS PANEL ═══ */}
       <div style={{
-        borderTop:'1px solid rgba(15,23,42,.05)',
+        borderTop:`1px solid ${isDark ? 'rgba(255,255,255,.05)' : 'rgba(15,23,42,.05)'}`,
         display:'grid',gridTemplateColumns:'auto 1fr 230px',
-        background:'linear-gradient(135deg,#f8fafc,#f1f5f9)',
+        background:isDark ? 'linear-gradient(135deg,#111827,#0f172a)' : 'linear-gradient(135deg,#f8fafc,#f1f5f9)',
       }}>
         {/* Donut */}
-        <div style={{padding:'22px 26px',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',borderRight:'1px solid rgba(15,23,42,.04)'}}>
+        <div style={{padding:'22px 26px',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',borderRight:`1px solid ${isDark ? 'rgba(255,255,255,.04)' : 'rgba(15,23,42,.04)'}`}}>
           <StatusDonut stats={stats} size={120}/>
           <div style={{fontSize:9.5,fontWeight:700,color:'#94a3b8',textTransform:'uppercase',letterSpacing:1.2,marginTop:10}}>Distribution</div>
           <div style={{display:'flex',gap:6,marginTop:8,flexWrap:'wrap',justifyContent:'center'}}>
             {Object.entries(STATUS_META).map(([k,v]) => (
-              <div key={k} style={{display:'flex',alignItems:'center',gap:4,fontSize:8.5,fontWeight:700,color:'#475569'}}>
+              <div key={k} style={{display:'flex',alignItems:'center',gap:4,fontSize:8.5,fontWeight:700,color:isDark ? '#94a3b8' : '#475569'}}>
                 <div style={{width:7,height:7,borderRadius:2,background:v.color}}/>
                 {v.label}
               </div>
@@ -1172,14 +1182,14 @@ export default function ActivityVault() {
         </div>
 
         {/* Heatmap */}
-        <div style={{padding:'20px 24px',borderRight:'1px solid rgba(15,23,42,.04)'}}>
+        <div style={{padding:'20px 24px',borderRight:`1px solid ${isDark ? 'rgba(255,255,255,.04)' : 'rgba(15,23,42,.04)'}`}}>
           <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:12}}>
             <div>
-              <div style={{fontSize:13,fontWeight:800,color:'#1e293b',display:'flex',alignItems:'center',gap:6}}>
+              <div style={{fontSize:13,fontWeight:800,color:isDark ? '#f8fafc' : '#1e293b',display:'flex',alignItems:'center',gap:6}}>
                 <BarChart3 size={13} style={{color:'#06b6d4'}}/>
                 Weekly Heatmap
               </div>
-              <div style={{fontSize:9.5,color:'#94a3b8',fontWeight:600,marginTop:2}}>Event density — click to isolate day</div>
+              <div style={{fontSize:9.5,color:isDark ? '#64748b' : '#94a3b8',fontWeight:600,marginTop:2}}>Event density — click to isolate day</div>
             </div>
             <div style={{
               fontSize:9,fontWeight:800,color:'#06b6d4',
@@ -1193,11 +1203,11 @@ export default function ActivityVault() {
 
         {/* Categories */}
         <div style={{padding:'20px 20px'}}>
-          <div style={{fontSize:13,fontWeight:800,color:'#1e293b',marginBottom:2,display:'flex',alignItems:'center',gap:6}}>
+          <div style={{fontSize:13,fontWeight:800,color:isDark ? '#f8fafc' : '#1e293b',marginBottom:2,display:'flex',alignItems:'center',gap:6}}>
             <Layers size={13} style={{color:'#8b5cf6'}}/>
             Categories
           </div>
-          <div style={{fontSize:9.5,color:'#94a3b8',fontWeight:600,marginBottom:13}}>Task distribution</div>
+          <div style={{fontSize:9.5,color:isDark ? '#64748b' : '#94a3b8',fontWeight:600,marginBottom:13}}>Task distribution</div>
           <CategoryBreakdown activities={activities}/>
         </div>
       </div>
@@ -1205,7 +1215,7 @@ export default function ActivityVault() {
       {/* ═══ FOOTER ═══ */}
       <div style={{
         padding:'14px 24px',position:'relative',overflow:'hidden',
-        background:'linear-gradient(135deg,#020617 0%,#0f172a 100%)',
+        background:isDark ? '#020617' : 'linear-gradient(135deg,#020617 0%,#0f172a 100%)',
         display:'flex',alignItems:'center',justifyContent:'space-between',
       }}>
         <div style={{
@@ -1238,8 +1248,11 @@ export default function ActivityVault() {
               <div key={i} style={{
                 width:2.5,height:10+i*3,borderRadius:99,
                 background:`rgba(6,182,212,${0.15+i*0.17})`,
-                animation:'vaultPulse 1s ease-in-out infinite',
-                animationDelay:`${i*0.12}s`,
+                animationName: 'vaultPulse',
+                animationDuration: '1s',
+                animationTimingFunction: 'ease-in-out',
+                animationIterationCount: 'infinite',
+                animationDelay: `${i * 0.12}s`,
               }}/>
             ))}
           </div>

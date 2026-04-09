@@ -326,21 +326,16 @@ function CameraCard({ cam }) {
 export default function CameraGrid() {
   return (
     <div
-      style={{
-        background: 'rgba(255,255,255,0.97)',
-        borderRadius: 28, border: '1px solid #e2e8f0',
-        boxShadow: '0 4px 30px -8px rgba(0,0,0,0.07)',
-        padding: '22px',
-      }}
+      className="bg-card rounded-[28px] border border-border shadow-premium p-[22px]"
     >
       {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-5 gap-3">
         <div>
-          <h3 className="text-[1.05rem] font-black text-slate-800 flex items-center gap-2">
+          <h3 className="text-[1.05rem] font-black text-text-dark flex items-center gap-2">
             <Eye className="w-4 h-4 text-sky-500" />
             Neural Feed Matrix
           </h3>
-          <p className="text-[0.7rem] text-slate-400 font-semibold">Sentinel AI Engine v4.2 · hover to inspect · click ⤢ to expand</p>
+          <p className="text-[0.7rem] text-text-gray font-semibold">Sentinel AI Engine v4.2 · hover to inspect · click ⤢ to expand</p>
         </div>
         <div className="flex flex-wrap gap-2">
           <div style={{ background: '#f0f9ff', border: '1px solid #bae6fd', color: '#0369a1' }}

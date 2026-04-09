@@ -83,14 +83,14 @@ export default function NeuralStream() {
   return (
     <div className="flex flex-col gap-6 p-4 max-w-[1600px] mx-auto min-h-screen bg-bg">
       {/* ADVANCED HUD HEADER */}
-      <div className="flex justify-between items-center bg-white p-6 rounded-[32px] border border-border shadow-sm">
+      <div className="flex justify-between items-center bg-card p-6 rounded-[32px] border border-border shadow-sm">
         <div>
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 bg-accent rounded-2xl flex items-center justify-center text-white shadow-lg shadow-accent/20">
               <Radio className="w-6 h-6 animate-pulse" />
             </div>
             <div>
-              <h1 className="text-[1.8rem] font-black text-[#1e293b] tracking-tight uppercase leading-none">Neural Live Matrix</h1>
+              <h1 className="text-[1.8rem] font-black text-text-dark tracking-tight uppercase leading-none">Neural Live Matrix</h1>
               <div className="flex items-center gap-3 mt-1.5 font-bold text-[0.7rem] text-text-gray uppercase tracking-widest opacity-60">
                  <span>SENTINEL ENGINE v4.2</span>
                  <span className="w-1 h-1 bg-current rounded-full" />
@@ -109,13 +109,13 @@ export default function NeuralStream() {
                 key={n} 
                 onClick={() => setPlaybackSpeed(n)}
                 className={`px-5 py-2.5 rounded-xl font-black text-[0.8rem] transition-all
-                ${playbackSpeed === n ? 'bg-white text-accent shadow-sm' : 'text-text-gray hover:text-accent'}`}
+                ${playbackSpeed === n ? 'bg-card text-accent shadow-sm' : 'text-text-gray hover:text-accent'}`}
               >
                 {n}x
               </button>
             ))}
           </div>
-          <button className="w-12 h-12 bg-white border border-border rounded-2xl flex items-center justify-center text-text-gray hover:text-accent shadow-sm transition-all hover:rotate-90">
+          <button className="w-12 h-12 bg-card border border-border rounded-2xl flex items-center justify-center text-text-gray hover:text-accent shadow-sm transition-all hover:rotate-90">
             <Settings className="w-6 h-6" />
           </button>
         </div>
@@ -218,13 +218,13 @@ export default function NeuralStream() {
         </div>
 
         {/* INTEGRATED SIDEBAR INTELLIGENCE */}
-        <div className="w-[380px] bg-white rounded-[40px] border border-border shadow-premium flex flex-col p-8 h-fit min-h-[750px] sticky top-4">
+        <div className="w-[380px] bg-card rounded-[40px] border border-border shadow-premium flex flex-col p-8 h-fit min-h-[750px] sticky top-4">
           <div className="flex items-center justify-between mb-8">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-accent/10 text-accent rounded-xl">
                  <BarChart2 className="w-5 h-5" />
               </div>
-              <h2 className="text-[1.3rem] font-black text-[#1e293b] tracking-tight uppercase leading-none">Neural Events</h2>
+              <h2 className="text-[1.3rem] font-black text-text-dark tracking-tight uppercase leading-none">Neural Events</h2>
             </div>
             <div className="px-3 py-1 bg-accent/10 text-accent border border-accent/20 rounded-full text-[0.6rem] font-black animate-pulse flex items-center gap-1.5">
                <div className="w-1.5 h-1.5 bg-accent rounded-full" />
@@ -237,7 +237,7 @@ export default function NeuralStream() {
               <div 
                 key={log.id} 
                 className={`flex gap-5 p-5 rounded-[24px] transition-all duration-500 border group animate-in slide-in-from-right-4 fade-in duration-500
-                ${highlightCam === log.camera.replace('CAM-', '') ? 'bg-accent/5 border-accent/30 shadow-md scale-[1.02]' : 'bg-[#f8fafc] border-border hover:bg-white hover:shadow-lg'}`}
+                ${highlightCam === log.camera.replace('CAM-', '') ? 'bg-accent/5 border-accent/30 shadow-md scale-[1.02]' : 'bg-surface border-border hover:bg-card hover:shadow-lg'}`}
               >
                 <div className={`w-12 h-12 rounded-2xl ${log.dot} flex-shrink-0 opacity-40 shadow-sm flex items-center justify-center text-white`}>
                    <Target className="w-6 h-6 opacity-60" />
@@ -247,7 +247,7 @@ export default function NeuralStream() {
                     <span className={`text-[0.7rem] font-black tracking-widest uppercase ${log.color}`}>{log.type}</span>
                     <span className="text-[0.6rem] font-bold text-text-gray opacity-40 font-mono">{log.timestamp}</span>
                   </div>
-                  <div className="text-[0.95rem] font-black text-[#1e293b] flex items-center gap-2">
+                  <div className="text-[0.95rem] font-black text-text-dark flex items-center gap-2">
                     {log.camera} 
                     <ChevronRight className="w-4 h-4 text-text-gray opacity-30" />
                     <span className="text-accent text-[0.85rem] flex items-center gap-1">
@@ -262,7 +262,7 @@ export default function NeuralStream() {
           {/* SYSTEM INTEGRITY PANEL */}
           <div className="mt-8 pt-8 border-t border-border space-y-6">
              <div>
-               <div className="flex justify-between items-center text-[0.75rem] font-black text-[#1e293b] uppercase tracking-wider mb-2.5">
+               <div className="flex justify-between items-center text-[0.75rem] font-black text-text-dark uppercase tracking-wider mb-2.5">
                   <div className="flex items-center gap-2">
                      <Wifi className="w-4 h-4 text-accent" />
                      Stream Buffer
@@ -278,11 +278,11 @@ export default function NeuralStream() {
              </div>
 
              <div className="grid grid-cols-2 gap-4">
-                <div className="bg-[#f8fafc] p-4 rounded-2xl border border-border">
+                <div className="bg-surface p-4 rounded-2xl border border-border">
                    <div className="text-[0.55rem] font-black text-text-gray uppercase tracking-widest mb-1 opacity-60">Avg Latency</div>
                    <div className="text-[1.1rem] font-black text-accent">42<span className="text-[0.7rem] ml-0.5">MS</span></div>
                 </div>
-                <div className="bg-[#f8fafc] p-4 rounded-2xl border border-border">
+                <div className="bg-surface p-4 rounded-2xl border border-border">
                    <div className="text-[0.55rem] font-black text-text-gray uppercase tracking-widest mb-1 opacity-60">Active Objects</div>
                    <div className="text-[1.1rem] font-black text-accent">14<span className="text-[0.7rem] ml-0.5">IDS</span></div>
                 </div>

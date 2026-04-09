@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ShieldAlert, AlertTriangle, Info, ArrowRight, X, Bell, CheckCircle2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useTheme } from '../../context/ThemeContext';
 
 const TYPE_CONFIG = {
   critical: {
@@ -10,6 +11,7 @@ const TYPE_CONFIG = {
     iconBg: 'rgba(239,68,68,0.12)',
     iconColor: '#ef4444',
     badge: { bg: '#fef2f2', text: '#ef4444', border: '#fecaca', label: 'CRITICAL' },
+    badgeDark: { bg: 'rgba(239,68,68,0.15)', text: '#f87171', border: 'rgba(239,68,68,0.3)' },
   },
   warning: {
     icon: AlertTriangle,
@@ -18,6 +20,7 @@ const TYPE_CONFIG = {
     iconBg: 'rgba(245,158,11,0.12)',
     iconColor: '#f59e0b',
     badge: { bg: '#fffbeb', text: '#d97706', border: '#fde68a', label: 'WARNING' },
+    badgeDark: { bg: 'rgba(245,158,11,0.15)', text: '#fbbf24', border: 'rgba(245,158,11,0.3)' },
   },
   info: {
     icon: Info,
@@ -26,6 +29,7 @@ const TYPE_CONFIG = {
     iconBg: 'rgba(14,165,233,0.10)',
     iconColor: '#0ea5e9',
     badge: { bg: '#f0f9ff', text: '#0ea5e9', border: '#bae6fd', label: 'INFO' },
+    badgeDark: { bg: 'rgba(14,165,233,0.15)', text: '#38bdf8', border: 'rgba(14,165,233,0.3)' },
   },
 };
 
@@ -46,11 +50,14 @@ function AlertRow({ alert, onDismiss }) {
   const cfg = TYPE_CONFIG[alert.type];
   const [hovered, setHovered] = useState(false);
   const [dismissed, setDismissed] = useState(false);
+  const { isDark } = useTheme();
 
   const handleDismiss = () => {
     setDismissed(true);
     setTimeout(() => onDismiss(alert.id), 350);
   };
+
+  const badge = isDark ? { ...cfg.badge, ...cfg.badgeDark } : cfg.badge;
 
   return (
     <div
@@ -72,7 +79,6 @@ function AlertRow({ alert, onDismiss }) {
         style={{
           background: cfg.iconBg,
           border: `1px solid ${cfg.border}`,
-          transform: alert.type === 'critical' ? undefined : undefined,
         }}
         className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${
           alert.type === 'critical' ? 'animate-pulse' : ''
@@ -84,29 +90,29 @@ function AlertRow({ alert, onDismiss }) {
       {/* Content */}
       <div className="flex-1 min-w-0">
         <div className="flex justify-between items-start gap-2 mb-0.5">
-          <p className="text-[0.82rem] font-bold text-slate-800 truncate">{alert.message}</p>
+          <p className="text-[0.82rem] font-bold text-text-dark truncate">{alert.message}</p>
           <div className="flex items-center gap-1.5 shrink-0">
             <span
               style={{
-                background: cfg.badge.bg,
-                color: cfg.badge.text,
-                border: `1px solid ${cfg.badge.border}`,
+                background: badge.bg,
+                color: badge.text,
+                border: `1px solid ${badge.border}`,
               }}
               className="text-[0.55rem] font-black px-1.5 py-0.5 rounded-full tracking-wide"
             >
-              {cfg.badge.label}
+              {badge.label}
             </span>
             {hovered && (
               <button
                 onClick={handleDismiss}
-                className="p-0.5 rounded-md bg-slate-100 hover:bg-red-100 text-slate-400 hover:text-red-500 transition-colors cursor-pointer"
+                className="p-0.5 rounded-md bg-surface hover:bg-danger/10 text-text-gray hover:text-danger transition-colors cursor-pointer"
               >
                 <X className="w-3 h-3" />
               </button>
             )}
           </div>
         </div>
-        <div className="flex items-center gap-2 text-[0.68rem] text-slate-400 font-medium">
+        <div className="flex items-center gap-2 text-[0.68rem] text-text-gray font-medium">
           <span className="font-semibold" style={{ color: cfg.iconColor }}>{alert.location}</span>
           <span>·</span>
           <span>{alert.time}</span>
@@ -120,6 +126,7 @@ export default function RecentAlerts() {
   const [alerts, setAlerts] = useState(INITIAL_ALERTS);
   const [incomingIdx, setIncomingIdx] = useState(0);
   const [newAlert, setNewAlert] = useState(null);
+  const { isDark } = useTheme();
 
   useEffect(() => {
     const iv = setInterval(() => {
@@ -141,31 +148,23 @@ export default function RecentAlerts() {
   const criticalCount = alerts.filter(a => a.type === 'critical').length;
 
   return (
-    <div
-      style={{
-        background: 'rgba(255,255,255,0.97)',
-        borderRadius: 24,
-        border: '1px solid #e2e8f0',
-        boxShadow: '0 4px 24px -6px rgba(0,0,0,0.06)',
-      }}
-      className="h-full flex flex-col overflow-hidden"
-    >
+    <div className="h-full flex flex-col overflow-hidden bg-card rounded-[24px] border border-border shadow-premium">
       {/* Header */}
-      <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between shrink-0">
+      <div className="px-5 py-4 border-b border-border flex items-center justify-between shrink-0">
         <div className="flex items-center gap-2.5">
           <div className="relative">
-            <Bell className="w-4.5 h-4.5 text-slate-700" />
+            <Bell className="w-4.5 h-4.5 text-text-dark" />
             {criticalCount > 0 && (
-              <span className="absolute -top-1.5 -right-1.5 w-3.5 h-3.5 bg-red-500 text-white text-[0.45rem] font-black rounded-full flex items-center justify-center animate-bounce">
+              <span className="absolute -top-1.5 -right-1.5 w-3.5 h-3.5 bg-danger text-white text-[0.45rem] font-black rounded-full flex items-center justify-center animate-bounce">
                 {criticalCount}
               </span>
             )}
           </div>
-          <h2 className="text-[1rem] font-black text-slate-800">Recent Activity</h2>
+          <h2 className="text-[1rem] font-black text-text-dark">Recent Activity</h2>
         </div>
         <Link
           to="/alerts"
-          className="text-[0.7rem] font-bold text-sky-600 hover:text-sky-700 flex items-center gap-1 group transition-colors"
+          className="text-[0.7rem] font-bold text-accent hover:opacity-80 flex items-center gap-1 group transition-colors"
         >
           View All <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
         </Link>
@@ -184,15 +183,15 @@ export default function RecentAlerts() {
           <style>{`@keyframes slideDownBanner { from{transform:translateY(-100%);opacity:0} to{transform:translateY(0);opacity:1} }`}</style>
           <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
           <span style={{ color: TYPE_CONFIG[newAlert.type].iconColor }}>NEW:</span>
-          <span className="text-slate-700">{newAlert.message}</span>
-          <span className="text-slate-400 ml-auto">{newAlert.location}</span>
+          <span className="text-text-dark">{newAlert.message}</span>
+          <span className="text-text-gray ml-auto">{newAlert.location}</span>
         </div>
       )}
 
       {/* Alert list */}
-      <div className="flex-1 overflow-y-auto divide-y divide-slate-50">
+      <div className="flex-1 overflow-y-auto divide-y divide-border/50">
         {alerts.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-12 gap-2 text-slate-300">
+          <div className="flex flex-col items-center justify-center py-12 gap-2 text-text-gray">
             <CheckCircle2 className="w-8 h-8" />
             <span className="text-sm font-bold">All Clear</span>
           </div>
@@ -202,7 +201,7 @@ export default function RecentAlerts() {
       </div>
 
       {/* Footer status pill */}
-      <div className="p-4 bg-slate-50/60 border-t border-slate-100 shrink-0">
+      <div className="p-4 bg-surface/60 border-t border-border shrink-0">
         <div
           style={{
             background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)',

@@ -4,6 +4,7 @@ import {
   User, Phone, Flame, Car, Truck, Video, Baby, Ban, Building, Mountain,
   Activity, Package, ShieldAlert, RefreshCw, Filter,
 } from 'lucide-react';
+import { useTheme } from '../../context/ThemeContext';
 
 const SCENARIOS = [
   { id: 1,  name: 'Unauthorized Entry',        icon: Lock,          cat: 'security' },
@@ -84,6 +85,7 @@ function ScenarioCard({ s, onSelect }) {
   const cfg = STATUS_CFG[s.status];
   const catColor = CAT_COLORS[s.cat] || '#94a3b8';
   const [hovered, setHovered] = useState(false);
+  const { isDark } = useTheme();
 
   return (
     <div
@@ -91,9 +93,9 @@ function ScenarioCard({ s, onSelect }) {
       onMouseLeave={() => setHovered(false)}
       onClick={() => onSelect(s)}
       style={{
-        background: '#fff',
+        background: isDark ? '#111827' : '#fff',
         borderRadius: 18,
-        border: `1.5px solid ${hovered ? catColor + '50' : '#f1f5f9'}`,
+        border: `1.5px solid ${hovered ? catColor + '50' : (isDark ? '#1e293b' : '#f1f5f9')}`,
         boxShadow: hovered
           ? `0 16px 40px -10px ${catColor}30, ${s.status === 'critical' ? cfg.glow : 'none'}`
           : s.status === 'critical'
@@ -110,7 +112,7 @@ function ScenarioCard({ s, onSelect }) {
       <div style={{ height: 80, overflow: 'hidden', position: 'relative' }}>
         <div style={{
           position: 'absolute', inset: 0, zIndex: 1,
-          background: 'linear-gradient(to top, #fff 0%, transparent 60%)',
+          background: `linear-gradient(to top, ${isDark ? '#111827' : '#fff'} 0%, transparent 60%)`,
         }} />
         <img
           src={s.image} alt={s.name}
@@ -137,7 +139,7 @@ function ScenarioCard({ s, onSelect }) {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginTop: -22, marginBottom: 10 }}>
           <div style={{
             width: 44, height: 44, borderRadius: '50%',
-            background: '#fff',
+            background: isDark ? '#111827' : '#fff',
             border: `2.5px solid ${cfg.ring}`,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             boxShadow: `0 4px 12px ${cfg.ring}40`,
@@ -159,7 +161,7 @@ function ScenarioCard({ s, onSelect }) {
 
         {/* Name */}
         <div style={{
-          fontSize: 12, fontWeight: 800, color: hovered ? catColor : '#1e293b',
+          fontSize: 12, fontWeight: 800, color: hovered ? catColor : (isDark ? '#f1f5f9' : '#1e293b'),
           marginBottom: 10, lineHeight: 1.3, minHeight: 32,
           transition: 'color 0.3s ease',
         }}>
@@ -168,9 +170,9 @@ function ScenarioCard({ s, onSelect }) {
 
         {/* Stats */}
         <div style={{
-          background: '#f8fafc', borderRadius: 10, padding: '8px 10px',
+          background: isDark ? '#1e293b' : '#f8fafc', borderRadius: 10, padding: '8px 10px',
           display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-          border: '1px solid #f1f5f9',
+          border: `1px solid ${isDark ? '#334155' : '#f1f5f9'}`,
         }}>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 4 }}>
             <span style={{ fontSize: 20, fontWeight: 900, color: cfg.color, lineHeight: 1 }}>{s.count}</span>
@@ -234,23 +236,16 @@ export default function AIScenarioGrid() {
 
   return (
     <div
-      style={{
-        background: 'rgba(255,255,255,0.97)',
-        borderRadius: 28,
-        border: '1px solid #e2e8f0',
-        boxShadow: '0 4px 30px -8px rgba(0,0,0,0.07)',
-        padding: '28px 28px',
-        marginTop: 32,
-      }}
+      className="bg-card rounded-[28px] border border-border shadow-premium p-7 mt-8"
     >
       {/* Header */}
       <div className="flex flex-wrap justify-between items-start gap-4 mb-6">
         <div>
-          <h3 className="text-[1.1rem] font-black text-slate-800 flex items-center gap-2">
+          <h3 className="text-[1.1rem] font-black text-text-dark flex items-center gap-2">
             <ShieldAlert className="w-4.5 h-4.5 text-sky-500" />
             Video Analytics Scenarios
           </h3>
-          <p className="text-[0.7rem] text-slate-400 font-semibold mt-0.5">
+          <p className="text-[0.7rem] text-text-gray font-semibold mt-0.5">
             Monitoring <span className="text-sky-500 font-black">21</span> event categories
             {criticalCount > 0 && (
               <span className="ml-2 px-2 py-0.5 bg-red-50 text-red-500 border border-red-100 rounded-full text-[0.6rem] font-black animate-pulse">
@@ -287,7 +282,7 @@ export default function AIScenarioGrid() {
 
       {/* Filter tabs */}
       <div className="flex gap-2 mb-6 flex-wrap">
-        <Filter className="w-4 h-4 text-slate-400 self-center" />
+        <Filter className="w-4 h-4 text-text-gray self-center" />
         {FILTERS.map(f => {
           const active = filter === f;
           const count = f === 'all' ? data.length

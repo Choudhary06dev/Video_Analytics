@@ -34,7 +34,7 @@ function MetricBar({ metric, loaded }) {
       <div className="flex justify-between items-center mb-2">
         <div className="flex items-center gap-2">
           <div style={{ width: 8, height: 8, borderRadius: '50%', background: metric.color, boxShadow: `0 0 6px ${metric.color}` }} />
-          <span className="text-[0.75rem] font-bold text-slate-500 tracking-widest">{metric.label}</span>
+          <span className="text-[0.75rem] font-bold text-text-gray tracking-widest">{metric.label}</span>
         </div>
         <span className="text-[0.95rem] font-black transition-all duration-500" style={{ color: metric.color }}>
           {value.toFixed(1)}%
@@ -74,12 +74,11 @@ export default function ConfidencePanel() {
 
   return (
     <div
-      style={{ background: 'rgba(255,255,255,0.97)', borderRadius: 28, padding: '24px 24px', border: '1px solid #e2e8f0', boxShadow: '0 4px 30px -8px rgba(0,0,0,0.07)' }}
-      className="w-full transition-shadow duration-300 hover:shadow-[0_12px_40px_-10px_rgba(139,92,246,0.15)]"
+      className="w-full transition-shadow duration-300 hover:shadow-[0_12px_40px_-10px_rgba(139,92,246,0.15)] bg-card rounded-[28px] p-6 border border-border shadow-premium"
     >
       {/* Header */}
       <div className="flex items-center justify-between mb-5">
-        <h3 className="text-[1.05rem] font-black text-slate-800 flex items-center gap-2">
+        <h3 className="text-[1.05rem] font-black text-text-dark flex items-center gap-2">
           <Cpu className="w-4 h-4 text-violet-500" />
           Detection Confidence
         </h3>
@@ -129,13 +128,13 @@ export default function ConfidencePanel() {
           </svg>
 
           <div className="flex flex-col gap-1">
-            <span className="text-[0.65rem] font-bold text-slate-400 uppercase tracking-widest">Avg Confidence</span>
+            <span className="text-[0.65rem] font-bold text-text-gray uppercase tracking-widest">Avg Confidence</span>
             <div className="text-[1.9rem] font-black text-violet-600 leading-none">{avgVal}%</div>
             <div className="flex items-center gap-1 text-[0.7rem] font-bold text-emerald-500 mt-1">
               <TrendingUp className="w-3 h-3" />
               ↑ 2.1% from yesterday
             </div>
-            <div className="flex items-center gap-1 text-[0.6rem] text-slate-400 font-semibold mt-0.5">
+            <div className="flex items-center gap-1 text-[0.6rem] text-text-gray font-semibold mt-0.5">
               <Activity className="w-3 h-3" />
               Updates every 2.5s
             </div>
