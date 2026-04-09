@@ -7,6 +7,7 @@ import NeuralStream from '../components/dashboard/NeuralStream';
 import FacilityHeatmap from '../components/dashboard/FacilityHeatmap';
 import PerformanceMetrics from '../components/dashboard/PerformanceMetrics';
 import EnhancedStatsRow from '../components/dashboard/EnhancedStatsRow';
+import ActivityVault from '../components/dashboard/ActivityVault';
 import { RefreshCw } from 'lucide-react';
 
 export default function Dashboard() {
@@ -20,7 +21,7 @@ export default function Dashboard() {
         <div>
           <h2 className="text-[1.8rem] font-black text-text-dark mb-1 tracking-tight uppercase">Command Hub</h2>
           <div className="text-[0.9rem] text-text-gray font-semibold flex items-center gap-2">
-            Real-time AI Video Intelligence & Analytics 
+            Real-time AI Video Intelligence & Analytics
             <span className="w-1 h-1 bg-text-gray rounded-full opacity-30" />
             V1.0.4
           </div>
@@ -65,6 +66,7 @@ export default function Dashboard() {
           <FacilityHeatmap />
         </div>
       </div>
+
     </div>
   );
 }
