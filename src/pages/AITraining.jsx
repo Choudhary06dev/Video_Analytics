@@ -259,7 +259,7 @@ export default function AITraining() {
           <div className="h-[200px] overflow-y-auto text-accent/90 text-[0.85rem] leading-8 custom-scrollbar relative z-10">
             {logs.map((log, i) => (
               <div key={i} className="flex gap-4">
-                <span className="text-white/10 select-none">[{i+482}]</span>
+                <span className="text-white/60 select-none">[{i+482}]</span>
                 <p className="animate-in fade-in slide-in-from-left-2 duration-300 transition-all group-hover:text-white/80">{log}</p>
               </div>
             ))}

@@ -90,19 +90,26 @@ function CameraCard({ cam }) {
   useEffect(() => {
     const iv = setInterval(() => {
       const newDots = [];
+      // Simulate 2 tracked objects with 6 dots each (2x3 grid)
       for (let p = 0; p < 2; p++) {
-        const ox = 20 + Math.random() * 60;
-        const oy = 30 + Math.random() * 40;
-        for (let i = 0; i < 5; i++) {
-          newDots.push({
-            id: `${p}-${i}`,
-            top: `${oy + (i % 3) * 10}%`,
-            left: `${ox + (i < 3 ? 0 : 5)}%`,
-          });
+        const ox = 15 + Math.random() * 70;
+        const oy = 20 + Math.random() * 50;
+        const spacingX = 5;
+        const spacingY = 8;
+
+        // 6 dots pattern (2 columns, 3 rows)
+        for (let row = 0; row < 3; row++) {
+          for (let col = 0; col < 2; col++) {
+            newDots.push({
+              id: `${p}-${row}-${col}`,
+              top: `${oy + row * spacingY}%`,
+              left: `${ox + col * spacingX}%`,
+            });
+          }
         }
       }
       setDots(newDots);
-    }, 250);
+    }, 1500); // Significant slowdown
     return () => clearInterval(iv);
   }, []);
 
@@ -196,12 +203,13 @@ function CameraCard({ cam }) {
               style={{
                 position: 'absolute',
                 top: dot.top, left: dot.left,
-                width: 7, height: 7,
+                width: 6, height: 6,
                 borderRadius: '50%',
                 background: cam.alertMode ? '#ef4444' : '#0ea5e9',
-                border: '1.5px solid rgba(255,255,255,0.8)',
-                boxShadow: `0 0 8px ${cam.alertMode ? '#ef4444' : '#38bdf8'}`,
-                transition: 'top 0.25s ease, left 0.25s ease',
+                border: '1.5px solid rgba(255,255,255,0.9)',
+                boxShadow: `0 0 10px ${cam.alertMode ? '#ef4444' : '#38bdf8'}`,
+                transition: 'top 1s ease-in-out, left 1s ease-in-out',
+                animation: 'dotPulse 2s infinite ease-in-out',
               }}
             />
           ))}
@@ -281,6 +289,7 @@ function CameraCard({ cam }) {
 
         <style>{`
           @keyframes alertPulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+          @keyframes dotPulse { 0%,100%{transform:scale(1); opacity:1} 50%{transform:scale(1.3); opacity:0.7} }
         `}</style>
       </div>
 

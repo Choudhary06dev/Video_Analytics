@@ -59,11 +59,11 @@ export default function Sidebar({ isSidebarOpen }) {
   return (
     <aside
       className={`${isSidebarOpen ? 'w-[240px] translate-x-0' : 'w-20 -translate-x-full md:translate-x-0'} 
-      transition-all duration-300 ease-in-out fixed md:relative z-50 h-full bg-card border-r border-border flex flex-col pt-5 px-5 pb-9`}
+      transition-all duration-200 ease-in-out fixed md:relative z-50 h-full bg-card border-r border-border flex flex-col pt-5 px-5 pb-9 overflow-hidden`}
     >
       <div className="flex items-center gap-3 font-extrabold text-accent mb-6 shrink-0 h-10">
         <BrainCircuit className="w-9 h-9 shrink-0" />
-        <span className={`transition-all duration-300 leading-tight text-[1.1rem] ${isSidebarOpen ? 'opacity-100' : 'opacity-0 md:opacity-100 md:scale-0'}`}>
+        <span className={`transition-all duration-200 leading-tight text-[1.1rem] ${isSidebarOpen ? 'opacity-100' : 'opacity-0 md:opacity-100 md:scale-0'}`}>
           {APP_CONFIG.PROJECT_NAME.replace(/^Video\s+/i, '')}
         </span>
       </div>

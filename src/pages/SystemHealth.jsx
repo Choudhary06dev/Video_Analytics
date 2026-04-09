@@ -1,23 +1,23 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { 
-  Cpu, 
-  Activity, 
-  HardDrive, 
-  Globe, 
-  ShieldCheck, 
+import {
+  Cpu,
+  Activity,
+  HardDrive,
+  Globe,
+  ShieldCheck,
   Database,
   Terminal,
   AlertCircle,
   CheckCircle2,
   RefreshCw
 } from 'lucide-react';
-import { 
-  LineChart, 
-  Line, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
   ResponsiveContainer,
   AreaChart,
   Area
@@ -64,12 +64,12 @@ export default function SystemHealth() {
       const batch = Math.floor(Math.random() * 168);
       const boxLoss = (0.12 + Math.random() * 0.01).toFixed(4);
       const newLog = `> [${time}] [Batch ${batch}/168] box_loss: ${boxLoss} | sync_ok`;
-      
+
       setLogs(prev => {
         const next = [...prev, newLog];
         if (next.length > 20) next.shift();
         return next;
-        });
+      });
     }, 2000);
 
     return () => clearInterval(interval);
@@ -137,18 +137,18 @@ export default function SystemHealth() {
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={SYSTEM_CHART_DATA} margin={{ top: 0, right: 10, left: -25, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--color-border)" />
-                <XAxis 
-                  dataKey="time" 
-                  axisLine={false} 
-                  tickLine={false} 
-                  tick={{fill: 'var(--color-text-gray)', fontSize: 13, fontWeight: 600}} 
+                <XAxis
+                  dataKey="time"
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fill: 'var(--color-text-gray)', fontSize: 13, fontWeight: 600 }}
                 />
-                <YAxis 
-                  axisLine={false} 
-                  tickLine={false} 
-                  tick={{fill: 'var(--color-text-gray)', fontSize: 13, fontWeight: 600}} 
+                <YAxis
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fill: 'var(--color-text-gray)', fontSize: 13, fontWeight: 600 }}
                 />
-                <Tooltip 
+                <Tooltip
                   contentStyle={{ borderRadius: '16px', border: '1px solid var(--color-border)', boxShadow: '0 10px 30px rgba(0,0,0,0.05)' }}
                 />
                 <Line type="monotone" dataKey="cpu" stroke="var(--color-accent)" strokeWidth={4} dot={false} tension={0.4} />
@@ -169,7 +169,7 @@ export default function SystemHealth() {
                   <span className={`text-[0.95rem] font-black ${sector.score >= 95 ? 'text-success' : 'text-accent'}`}>{sector.score}%</span>
                 </div>
                 <div className="h-2 bg-bg rounded-full overflow-hidden border border-border">
-                  <div 
+                  <div
                     className={`h-full rounded-full transition-all duration-[1.5s] ease-out ${sector.score >= 95 ? 'bg-success' : 'bg-accent'}`}
                     style={{ width: `${sector.score}%` }}
                   />
@@ -198,7 +198,7 @@ export default function SystemHealth() {
         <div className="h-[250px] overflow-y-auto text-accent/80 text-[0.85rem] leading-7 custom-scrollbar lowercase">
           {logs.map((log, i) => (
             <div key={i} className="flex gap-4">
-              <span className="text-text-gray/40 select-none">[{i+102}]</span>
+              <span className="text-white/60 select-none">[{i + 102}]</span>
               <p className="animate-in fade-in slide-in-from-left-2 duration-300">{log}</p>
             </div>
           ))}
