@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Maximize2, Activity, ShieldCheck, AlertTriangle, Eye, Radio } from 'lucide-react';
+import CameraFeed from './CameraFeed';
 
 const CAMERAS = [
   {
@@ -140,15 +141,19 @@ function CameraCard({ cam }) {
         }}
       >
         {/* Camera image */}
-        <img
-          src={cam.image} alt={cam.name}
-          style={{
-            width: '100%', height: '100%', objectFit: 'cover',
-            opacity: hovered ? 0.55 : 0.88,
-            transform: hovered ? 'scale(1.08)' : 'scale(1)',
-            transition: 'all 0.6s ease',
-          }}
-        />
+        {cam.id === 1 ? (
+          <CameraFeed streamUrl="http://localhost:8000/video_feed" />
+        ) : (
+          <img
+            src={cam.image} alt={cam.name}
+            style={{
+              width: '100%', height: '100%', objectFit: 'cover',
+              opacity: hovered ? 0.55 : 0.88,
+              transform: hovered ? 'scale(1.08)' : 'scale(1)',
+              transition: 'all 0.6s ease',
+            }}
+          />
+        )}
 
         {/* Scan-line overlay */}
         <div className="absolute inset-0 pointer-events-none" style={{

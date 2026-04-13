@@ -10,6 +10,7 @@ import {
   Lock,
   Wifi
 } from 'lucide-react';
+import CameraFeed from '../components/dashboard/CameraFeed';
 
 const CAMERAS = [
   { id: '01', status: 'bg-warning', img: 'https://images.unsplash.com/photo-1558002038-1055907df827', name: 'ICU ENTRANCE' },
@@ -154,11 +155,15 @@ export default function NeuralStream() {
 
                 {/* VISUAL FEED */}
                 <div className="absolute inset-0 bg-[#0f172a]">
-                  <img 
-                    src={`${cam.img}?auto=format&fit=crop&q=80&w=800`} 
-                    className={`w-full h-full object-cover transition-all duration-1000 ${isActive ? 'opacity-100' : 'opacity-80 group-hover:opacity-100'}`}
-                    alt="Stream"
-                  />
+                  {isActive && cam.id === '01' ? (
+                    <CameraFeed streamUrl="http://localhost:8000/video_feed" />
+                  ) : (
+                    <img 
+                      src={`${cam.img}?auto=format&fit=crop&q=80&w=800`} 
+                      className={`w-full h-full object-cover transition-all duration-1000 ${isActive ? 'opacity-100' : 'opacity-80 group-hover:opacity-100'}`}
+                      alt="Stream"
+                    />
+                  )}
                   
                   {/* ADVANCED AI OVERlays */}
                   <div className="absolute inset-0 pointer-events-none">
