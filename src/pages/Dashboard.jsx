@@ -7,7 +7,6 @@ import NeuralStream from '../components/dashboard/NeuralStream';
 import FacilityHeatmap from '../components/dashboard/FacilityHeatmap';
 import PerformanceMetrics from '../components/dashboard/PerformanceMetrics';
 import EnhancedStatsRow from '../components/dashboard/EnhancedStatsRow';
-import ActivityVault from '../components/dashboard/ActivityVault';
 import { RefreshCw } from 'lucide-react';
 
 export default function Dashboard() {
