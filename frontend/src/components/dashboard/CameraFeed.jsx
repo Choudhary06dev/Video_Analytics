@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Camera, CameraOff, Loader2, RefreshCw } from 'lucide-react';
 
-export default function CameraFeed({ streamUrl = 'http://localhost:8000/video_feed' }) {
+export default function CameraFeed({ 
+  streamUrl = 'http://localhost:8000/video_feed', 
+  hideOverlay = false 
+}) {
   const [status, setStatus] = useState('connecting'); // connecting, streaming, error
   const [errorCount, setErrorCount] = useState(0);
 
@@ -63,13 +66,14 @@ export default function CameraFeed({ streamUrl = 'http://localhost:8000/video_fe
         </div>
       )}
 
-      {/* Overlay UI */}
-      <div className="absolute top-4 left-4 z-10 flex items-center gap-2 px-3 py-1.5 bg-card/80 backdrop-blur-md border border-border rounded-full shadow-lg">
-        <div className={`w-2 h-2 rounded-full ${status === 'streaming' ? 'bg-success animate-pulse' : 'bg-danger'}`} />
-        <span className="text-[0.65rem] font-black uppercase tracking-widest text-text-dark">
-          {status === 'streaming' ? 'Neural Network Active' : 'Offline'}
-        </span>
-      </div>
+      {!hideOverlay && (
+        <div className="absolute top-4 left-4 z-10 flex items-center gap-2 px-3 py-1.5 bg-card/80 backdrop-blur-md border border-border rounded-full shadow-lg">
+          <div className={`w-2 h-2 rounded-full ${status === 'streaming' ? 'bg-success animate-pulse' : 'bg-danger'}`} />
+          <span className="text-[0.65rem] font-black uppercase tracking-widest text-text-dark">
+            {status === 'streaming' ? 'Neural Network Active' : 'Offline'}
+          </span>
+        </div>
+      )}
 
       <div className="absolute bottom-4 right-4 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
         <div className="p-2 bg-card/80 backdrop-blur-md border border-border rounded-xl shadow-lg">

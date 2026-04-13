@@ -200,9 +200,34 @@ function KPICard({ stat, index }) {
 }
 
 export default function KPICards() {
+  const [intel, setIntel] = useState({ person_count: 0, objects: [] });
+
+  useEffect(() => {
+    const fetchIntel = async () => {
+      try {
+        const response = await fetch('http://localhost:8000/intelligence');
+        const data = await response.json();
+        setIntel(data);
+      } catch (err) {
+        console.error("Failed to fetch intelligence:", err);
+      }
+    };
+
+    const interval = setInterval(fetchIntel, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const dynamicConfig = [...CARD_CONFIG];
+  // Update "Objects Logged" with real count
+  dynamicConfig[1] = {
+    ...dynamicConfig[1],
+    rawValue: 342 + intel.person_count, // Start with historical + real-time
+    trend: `+${intel.person_count} Active`
+  };
+
   return (
     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-      {CARD_CONFIG.map((stat, i) => (
+      {dynamicConfig.map((stat, i) => (
         <KPICard key={i} stat={stat} index={i} />
       ))}
     </div>

@@ -142,7 +142,7 @@ function CameraCard({ cam }) {
       >
         {/* Camera image */}
         {cam.id === 1 ? (
-          <CameraFeed streamUrl="http://localhost:8000/video_feed" />
+          <CameraFeed streamUrl="http://localhost:8000/video_feed" hideOverlay={true} />
         ) : (
           <img
             src={cam.image} alt={cam.name}

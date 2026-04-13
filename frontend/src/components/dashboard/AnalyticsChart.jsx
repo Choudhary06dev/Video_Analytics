@@ -52,21 +52,33 @@ export default function AnalyticsChart() {
   const { isDark } = useTheme();
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      const now = new Date();
-      const label = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-      const newPoint = {
-        time: label,
-        detections: generatePoint(50, 25),
-        alerts: generatePoint(3, 4),
-        resolved: generatePoint(2, 3),
-      };
-      setData(prev => {
-        const next = [...prev.slice(-6), newPoint];
-        return next;
-      });
-      setTotalDetections(p => p + newPoint.detections);
-    }, 3000);
+    const fetchIntel = async () => {
+      try {
+        const response = await fetch('http://localhost:8000/intelligence');
+        const data = await response.json();
+        
+        const now = new Date();
+        const label = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        
+        const newPoint = {
+          time: label,
+          detections: data.person_count,
+          alerts: data.person_count > 5 ? 1 : 0, // Simple logic based on count
+          resolved: 0,
+        };
+
+        setData(prev => {
+          const next = [...prev.slice(-14), newPoint]; // Keep last 15 points
+          return next;
+        });
+        
+        setTotalDetections(prev => prev + data.person_count);
+      } catch (err) {
+        console.error("Failed to fetch intelligence:", err);
+      }
+    };
+
+    const interval = setInterval(fetchIntel, 2000);
     return () => clearInterval(interval);
   }, []);
 
