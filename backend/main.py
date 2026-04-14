@@ -251,6 +251,101 @@ def get_all_users(session: Session = Depends(get_session), admin_data: dict = De
         })
     return result
 
+class RoleUpdate(BaseModel):
+    role_name: str
+
+@app.put("/admin/users/{user_id}/role")
+def update_user_role(user_id: int, role_data: RoleUpdate, session: Session = Depends(get_session), admin_data: dict = Depends(verify_super_admin)):
+    user = session.get(User, user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+        
+    if user.id == admin_data.get("id"):
+        raise HTTPException(status_code=400, detail="Cannot change your own role")
+        
+    role = session.exec(select(Role).where(Role.name == role_data.role_name)).first()
+    if not role:
+        raise HTTPException(status_code=400, detail="Invalid role specified")
+        
+    user.role_id = role.id
+    session.add(user)
+    session.commit()
+    return {"message": "Role updated successfully", "new_role": role.name}
+
+class AdminUserCreate(BaseModel):
+    full_name: str
+    email: str
+    password: str
+    role_name: str
+
+@app.post("/admin/users")
+def create_user_by_admin(user_data: AdminUserCreate, session: Session = Depends(get_session), admin_data: dict = Depends(verify_super_admin)):
+    existing = session.exec(select(User).where(User.email == user_data.email)).first()
+    if existing:
+        raise HTTPException(status_code=400, detail="Email already registered")
+        
+    role = session.exec(select(Role).where(Role.name == user_data.role_name)).first()
+    if not role:
+        raise HTTPException(status_code=400, detail="Invalid role specified")
+        
+    try:
+        new_user = User(
+            full_name=user_data.full_name,
+            email=user_data.email,
+            hashed_password=get_password_hash(user_data.password),
+            role_id=role.id
+        )
+        session.add(new_user)
+        session.commit()
+        session.refresh(new_user)
+        return {"message": "User created successfully", "user_id": new_user.id, "role": role.name}
+    except Exception as e:
+        print(f"Admin Registration Error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Database Error: {str(e)}")
+
+class AdminUserUpdate(BaseModel):
+    full_name: str | None = None
+    email: str | None = None
+    password: str | None = None
+    role_name: str | None = None
+
+@app.put("/admin/users/{user_id}")
+def update_user_by_admin(user_id: int, user_data: AdminUserUpdate, session: Session = Depends(get_session), admin_data: dict = Depends(verify_super_admin)):
+    user = session.get(User, user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+        
+    # Security: If user is changing their own role, block it if it's not super_admin or something?
+    # Actually, let's just allow editing name/email for anyone.
+    
+    if user_data.full_name:
+        user.full_name = user_data.full_name
+        
+    if user_data.email:
+        # Check if email is taken by others
+        existing = session.exec(select(User).where(User.email == user_data.email, User.id != user_id)).first()
+        if existing:
+            raise HTTPException(status_code=400, detail="Email already taken by another node")
+        user.email = user_data.email
+        
+    if user_data.password:
+        user.hashed_password = get_password_hash(user_data.password)
+        
+    if user_data.role_name:
+        # Prevent self-demotion from Super Admin to avoid system lockouts
+        if user.id == admin_data.get("id") and user_data.role_name != "super_admin":
+             raise HTTPException(status_code=400, detail="Safety Lock: You cannot revoke your own Super Admin access level.")
+             
+        role = session.exec(select(Role).where(Role.name == user_data.role_name)).first()
+        if not role:
+            raise HTTPException(status_code=400, detail="Invalid role specified")
+        user.role_id = role.id
+        
+    session.add(user)
+    session.commit()
+    session.refresh(user)
+    return {"message": "User updated successfully", "id": user.id}
+
 @app.delete("/admin/users/{user_id}")
 def delete_user(user_id: int, session: Session = Depends(get_session), admin_data: dict = Depends(verify_super_admin)):
     user = session.get(User, user_id)
