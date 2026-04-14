@@ -11,10 +11,14 @@ import {
   Bell,
   LogOut,
   BrainCircuit,
-  GraduationCap
+  GraduationCap,
+  ShieldAlert
 } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
 
 export default function Sidebar({ isSidebarOpen }) {
+  const { role } = useAuth();
+  
   const mainMenu = [
     { name: 'Command Hub', icon: LayoutDashboard, path: '/' },
     { name: 'Neural Stream', icon: Radio, path: '/neural-stream' },
@@ -29,9 +33,13 @@ export default function Sidebar({ isSidebarOpen }) {
     { name: 'Crisis Alerts', icon: Bell, path: '/alerts' },
   ];
 
+  const adminMenu = [
+    { name: 'Admin Hub', icon: ShieldAlert, path: '/admin-hub', reqRole: 'super_admin' }
+  ];
+
   const renderNavLinks = (items) => (
     <ul className="flex flex-col gap-1">
-      {items.map((item, index) => (
+      {items.filter(item => !item.reqRole || (item.reqRole === 'super_admin' && role === 'super_admin')).map((item, index) => (
         <li key={index}>
           <NavLink
             to={item.path}
@@ -44,8 +52,8 @@ export default function Sidebar({ isSidebarOpen }) {
           >
             {({ isActive }) => (
               <>
-                <item.icon className="w-4.5 h-4.5 shrink-0" />
-                <span className={`text-[0.82rem] transition-all duration-300 ${!isSidebarOpen && 'md:hidden'}`}>
+                <item.icon className={`w-4.5 h-4.5 shrink-0 ${item.name === 'Admin Hub' ? 'text-danger' : ''}`} />
+                <span className={`text-[0.82rem] transition-all duration-300 ${!isSidebarOpen && 'md:hidden'} ${item.name === 'Admin Hub' ? 'text-danger font-black tracking-widest uppercase text-[9px]' : ''}`}>
                   {item.name}
                 </span>
               </>
@@ -82,6 +90,16 @@ export default function Sidebar({ isSidebarOpen }) {
           </div>
           {renderNavLinks(analyticsMenu)}
         </div>
+
+        {role === 'super_admin' && (
+          <div className="mt-4 border-t border-danger/10 pt-4">
+            <div className={`text-[0.65rem] text-danger/80 font-black uppercase tracking-[2px] mb-2 px-2.5 flex items-center gap-2 ${!isSidebarOpen && 'md:hidden'}`}>
+                <div className="w-1.5 h-1.5 bg-danger rounded-full animate-pulse"></div>
+                Restricted System
+            </div>
+            {renderNavLinks(adminMenu)}
+          </div>
+        )}
       </nav>
     </aside>
   );

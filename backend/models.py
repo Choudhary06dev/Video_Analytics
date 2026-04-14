@@ -3,24 +3,25 @@ from datetime import datetime
 from typing import Optional, List, Dict
 import json
 
-class FrontEndUser(SQLModel, table=True):
+class Role(SQLModel, table=True):
     """
-    Model for regular frontend users.
+    Model for defining access roles (e.g., super_admin, admin, operator).
+    """
+    id: Optional[int] = Field(default=None, primary_key=True)
+    name: str = Field(index=True, unique=True)
+    description: Optional[str] = Field(default=None)
+
+
+class User(SQLModel, table=True):
+    """
+    Unified User model handling all accounts based on their Role.
     """
     id: Optional[int] = Field(default=None, primary_key=True)
     full_name: str
     email: str = Field(index=True, unique=True)
     hashed_password: str
+    role_id: int = Field(default=3, foreign_key="role.id") # Default 3 assumes 'operator'
     created_at: datetime = Field(default_factory=datetime.now)
-
-class AdminUser(SQLModel, table=True):
-    """
-    Model for platform administrators.
-    """
-    id: Optional[int] = Field(default=None, primary_key=True)
-    username: str = Field(index=True, unique=True)
-    hashed_password: str
-    is_super_admin: bool = Field(default=False)
 
 class DetectionEvent(SQLModel, table=True):
     """

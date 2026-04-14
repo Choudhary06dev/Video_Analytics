@@ -1,13 +1,17 @@
 from sqlmodel import create_engine, Session, SQLModel
-import os
 from urllib.parse import quote_plus
+import os
+from dotenv import load_dotenv
 
-# Database configuration
-DB_USER = "postgres"
-DB_PASSWORD = quote_plus("Amjad@186699") # URL encode to handle '@' in password
-DB_HOST = "localhost"
-DB_PORT = "5432"
-DB_NAME = "video_analytics"
+# Load environment variables
+load_dotenv()
+
+# Database configuration from .env
+DB_USER = os.getenv("DB_USER", "postgres")
+DB_PASSWORD = quote_plus(os.getenv("DB_PASSWORD", ""))
+DB_HOST = os.getenv("DB_HOST", "localhost")
+DB_PORT = os.getenv("DB_PORT", "5432")
+DB_NAME = os.getenv("DB_NAME", "video_analytics")
 
 DATABASE_URL = f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
 

@@ -21,6 +21,7 @@ import SystemHealth from './pages/SystemHealth';
 import AITraining from './pages/AITraining';
 import Alerts from './pages/Alerts';
 import Settings from './pages/Settings';
+import AdminHub from './pages/AdminHub';
 
 function App() {
   return (
@@ -44,6 +45,13 @@ function App() {
                 <Route path="/training" element={<AITraining />} />
                 <Route path="/alerts" element={<Alerts />} />
                 <Route path="/settings" element={<Settings />} />
+              </Route>
+            </Route>
+
+            {/* Super Admin Restricted Routes */}
+            <Route element={<ProtectedRoute allowedRoles={['super_admin']} />}>
+              <Route element={<AppLayout />}>
+                <Route path="/admin-hub" element={<AdminHub />} />
               </Route>
             </Route>
 

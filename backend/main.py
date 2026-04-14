@@ -8,16 +8,27 @@ import threading
 from fastapi import BackgroundTasks, Depends
 from sqlmodel import Session, select
 from database import init_db, get_session, engine
-from models import DetectionEvent, FrontEndUser, AdminUser
+from models import DetectionEvent, User, Role
 from datetime import datetime
 from contextlib import asynccontextmanager
-from security import get_password_hash, verify_password, create_access_token
+from security import get_password_hash, verify_password, create_access_token, decode_access_token
 from pydantic import BaseModel
+from fastapi import Header, HTTPException
+
+def init_roles():
+    with Session(engine) as session:
+        roles = ["super_admin", "admin", "operator"]
+        for idx, role_name in enumerate(roles, start=1):
+            existing = session.get(Role, idx)
+            if not existing:
+                session.add(Role(id=idx, name=role_name))
+        session.commit()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Startup: Initialize the database
+    # Startup: Initialize the database and roles
     init_db()
+    init_roles()
     yield
     # Shutdown logic (if any) can go here
 
@@ -175,16 +186,17 @@ class Token(BaseModel):
 @app.post("/auth/register")
 def register_user(user_data: UserRegister, session: Session = Depends(get_session)):
     # Check if user exists
-    existing = session.exec(select(FrontEndUser).where(FrontEndUser.email == user_data.email)).first()
+    existing = session.exec(select(User).where(User.email == user_data.email)).first()
     if existing:
         from fastapi import HTTPException
         raise HTTPException(status_code=400, detail="Email already registered")
     
     try:
-        new_user = FrontEndUser(
+        new_user = User(
             full_name=user_data.full_name,
             email=user_data.email,
-            hashed_password=get_password_hash(user_data.password)
+            hashed_password=get_password_hash(user_data.password),
+            role_id=3 # Default to operator
         )
         session.add(new_user)
         session.commit()
@@ -197,17 +209,59 @@ def register_user(user_data: UserRegister, session: Session = Depends(get_sessio
 
 @app.post("/auth/login", response_model=Token)
 def login_user(login_data: UserLogin, session: Session = Depends(get_session)):
-    user = session.exec(select(FrontEndUser).where(FrontEndUser.email == login_data.email)).first()
+    user = session.exec(select(User).where(User.email == login_data.email)).first()
     if not user or not verify_password(login_data.password, user.hashed_password):
         from fastapi import HTTPException
         raise HTTPException(status_code=401, detail="Invalid email or password")
     
-    access_token = create_access_token(data={"sub": user.email, "id": user.id})
+    # Fetch the role name
+    role = session.get(Role, user.role_id)
+    role_name = role.name if role else "operator"
+    
+    access_token = create_access_token(data={"sub": user.email, "id": user.id, "role": role_name})
     return {
         "access_token": access_token, 
         "token_type": "bearer",
-        "user": {"id": user.id, "email": user.email, "name": user.full_name}
+        "user": {"id": user.id, "email": user.email, "name": user.full_name, "role": role_name}
     }
+
+# --- ADMIN ENDPOINTS ---
+
+def verify_super_admin(authorization: str = Header(None)):
+    if not authorization or not authorization.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Unauthorized")
+    token = authorization.split(" ")[1]
+    payload = decode_access_token(token)
+    if not payload or payload.get("role") != "super_admin":
+        raise HTTPException(status_code=403, detail="Forbidden: Super Admin access required")
+    return payload
+
+@app.get("/admin/users")
+def get_all_users(session: Session = Depends(get_session), admin_data: dict = Depends(verify_super_admin)):
+    users = session.exec(select(User)).all()
+    result = []
+    for u in users:
+        role_obj = session.get(Role, u.role_id)
+        result.append({
+            "id": u.id,
+            "full_name": u.full_name,
+            "email": u.email,
+            "role": role_obj.name if role_obj else "unknown",
+            "created_at": u.created_at
+        })
+    return result
+
+@app.delete("/admin/users/{user_id}")
+def delete_user(user_id: int, session: Session = Depends(get_session), admin_data: dict = Depends(verify_super_admin)):
+    user = session.get(User, user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    if user.id == admin_data.get("id"):
+        raise HTTPException(status_code=400, detail="Cannot delete your own super admin account")
+    
+    session.delete(user)
+    session.commit()
+    return {"message": "User deleted successfully"}
 
 if __name__ == "__main__":
     import uvicorn
