@@ -1,12 +1,18 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider } from './context/ThemeContext';
+import { AuthProvider } from './context/AuthContext';
 
 // Layout
 import AppLayout from './layouts/AppLayout';
 
+// Components
+import ProtectedRoute from './components/ProtectedRoute';
+
 // Pages
 import Dashboard from './pages/Dashboard';
+import LoginPage from './pages/LoginPage';
+import RegisterPage from './pages/RegisterPage';
 import NeuralStream from './pages/NeuralStream';
 import AIScenarios from './pages/AIScenarios';
 import StaffRoster from './pages/StaffRoster';
@@ -19,25 +25,33 @@ import Settings from './pages/Settings';
 function App() {
   return (
     <ThemeProvider>
-      <BrowserRouter>
-        <Routes>
-          {/* App Layout wraps all pages */}
-          <Route element={<AppLayout />}>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/neural-stream" element={<NeuralStream />} />
-            <Route path="/scenarios" element={<AIScenarios />} />
-            <Route path="/roster" element={<StaffRoster />} />
-            <Route path="/vault" element={<ActivityVault />} />
-            <Route path="/health" element={<SystemHealth />} />
-            <Route path="/training" element={<AITraining />} />
-            <Route path="/alerts" element={<Alerts />} />
-            <Route path="/settings" element={<Settings />} />
-          </Route>
+      <AuthProvider>
+        <BrowserRouter>
+          <Routes>
+            {/* Public Routes */}
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/register" element={<RegisterPage />} />
 
-          {/* Fallback */}
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </BrowserRouter>
+            {/* Private Protected Routes */}
+            <Route element={<ProtectedRoute />}>
+              <Route element={<AppLayout />}>
+                <Route path="/" element={<Dashboard />} />
+                <Route path="/neural-stream" element={<NeuralStream />} />
+                <Route path="/scenarios" element={<AIScenarios />} />
+                <Route path="/roster" element={<StaffRoster />} />
+                <Route path="/vault" element={<ActivityVault />} />
+                <Route path="/health" element={<SystemHealth />} />
+                <Route path="/training" element={<AITraining />} />
+                <Route path="/alerts" element={<Alerts />} />
+                <Route path="/settings" element={<Settings />} />
+              </Route>
+            </Route>
+
+            {/* Fallback */}
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </BrowserRouter>
+      </AuthProvider>
     </ThemeProvider>
   );
 }

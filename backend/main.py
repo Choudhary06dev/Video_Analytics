@@ -5,8 +5,23 @@ import cv2
 import time
 from ultralytics import YOLO
 import threading
+from fastapi import BackgroundTasks, Depends
+from sqlmodel import Session, select
+from database import init_db, get_session, engine
+from models import DetectionEvent, FrontEndUser, AdminUser
+from datetime import datetime
+from contextlib import asynccontextmanager
+from security import get_password_hash, verify_password, create_access_token
+from pydantic import BaseModel
 
-app = FastAPI()
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup: Initialize the database
+    init_db()
+    yield
+    # Shutdown logic (if any) can go here
+
+app = FastAPI(lifespan=lifespan)
 
 # Enable CORS for frontend integration
 app.add_middleware(
@@ -18,8 +33,11 @@ app.add_middleware(
 )
 
 # Initialize YOLOv8 Nano model (lightweight for CPU)
-# Note: On first run, this will download the 'yolov8n.pt' weight file (~6MB)
 model = YOLO("yolov8n.pt")
+
+# Configuration
+LOG_INTERVAL = 3.0  # Seconds between database logs for same object types
+last_log_time = 0
 
 # Global state to share detection data between video thread and API endpoints
 latest_intelligence = {
@@ -31,11 +49,24 @@ latest_intelligence = {
 class VideoCamera:
     def __init__(self):
         self.video = cv2.VideoCapture(0)
+        self.last_log_time = 0
         
     def __del__(self):
         self.video.release()
 
-    def get_frame(self):
+    def log_detection(self, object_class: str, confidence: float, metadata: dict):
+        """Background task to save detection to database"""
+        with Session(engine) as session:
+            event = DetectionEvent(
+                camera_id=1,
+                object_class=object_class,
+                confidence=float(confidence),
+                metadata_json=metadata
+            )
+            session.add(event)
+            session.commit()
+
+    def get_frame(self, background_tasks: BackgroundTasks = None):
         success, frame = self.video.read()
         if not success:
             return None
@@ -69,6 +100,19 @@ class VideoCamera:
         latest_intelligence["objects"] = list(set(objects_detected))
         latest_intelligence["last_update"] = time.time()
         
+        # --- DATABASE LOGGING (with Throttling) ---
+        current_time = time.time()
+        if (current_time - self.last_log_time) > LOG_INTERVAL:
+            if person_count > 0 and background_tasks:
+                # Log the detection in the background
+                background_tasks.add_task(
+                    self.log_detection, 
+                    "person", 
+                    0.8, # Simplified confidence for now
+                    {"count": person_count}
+                )
+                self.last_log_time = current_time
+
         # Add a custom HUD overlay
         cv2.putText(annotated_frame, f"NEURAL ENGINE ACTIVE | PERSONS: {person_count}", (20, 40), 
                     cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
@@ -77,9 +121,9 @@ class VideoCamera:
         ret, jpeg = cv2.imencode('.jpg', annotated_frame)
         return jpeg.tobytes()
 
-def gen(camera):
+def gen(camera, background_tasks):
     while True:
-        frame = camera.get_frame()
+        frame = camera.get_frame(background_tasks)
         if frame is None:
             time.sleep(1)
             continue
@@ -92,8 +136,8 @@ def read_root():
     return {"status": "AI Analytics Backend Online", "ai_model": "YOLOv8 Nano"}
 
 @app.get("/video_feed")
-def video_feed():
-    return StreamingResponse(gen(VideoCamera()), 
+def video_feed(background_tasks: BackgroundTasks):
+    return StreamingResponse(gen(VideoCamera(), background_tasks), 
                              media_type="multipart/x-mixed-replace; boundary=frame")
 
 @app.get("/intelligence")
@@ -104,6 +148,66 @@ def get_intelligence():
 @app.get("/health")
 def health_check():
     return {"status": "healthy", "model_loaded": True}
+
+@app.get("/logs")
+def get_logs(session: Session = Depends(get_session)):
+    """Fetch the latest 50 detection logs for the dashboard"""
+    statement = select(DetectionEvent).order_by(DetectionEvent.timestamp.desc()).limit(50)
+    results = session.exec(statement).all()
+    return results
+
+# --- AUTHENTICATION ENDPOINTS ---
+
+class UserRegister(BaseModel):
+    full_name: str
+    email: str
+    password: str
+
+class UserLogin(BaseModel):
+    email: str
+    password: str
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str
+    user: dict
+
+@app.post("/auth/register")
+def register_user(user_data: UserRegister, session: Session = Depends(get_session)):
+    # Check if user exists
+    existing = session.exec(select(FrontEndUser).where(FrontEndUser.email == user_data.email)).first()
+    if existing:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=400, detail="Email already registered")
+    
+    try:
+        new_user = FrontEndUser(
+            full_name=user_data.full_name,
+            email=user_data.email,
+            hashed_password=get_password_hash(user_data.password)
+        )
+        session.add(new_user)
+        session.commit()
+        session.refresh(new_user)
+        return {"message": "User created successfully", "user_id": new_user.id}
+    except Exception as e:
+        from fastapi import HTTPException
+        print(f"Registration Error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Database Error: {str(e)}")
+
+@app.post("/auth/login", response_model=Token)
+def login_user(login_data: UserLogin, session: Session = Depends(get_session)):
+    user = session.exec(select(FrontEndUser).where(FrontEndUser.email == login_data.email)).first()
+    if not user or not verify_password(login_data.password, user.hashed_password):
+        from fastapi import HTTPException
+        raise HTTPException(status_code=401, detail="Invalid email or password")
+    
+    access_token = create_access_token(data={"sub": user.email, "id": user.id})
+    return {
+        "access_token": access_token, 
+        "token_type": "bearer",
+        "user": {"id": user.id, "email": user.email, "name": user.full_name}
+    }
 
 if __name__ == "__main__":
     import uvicorn

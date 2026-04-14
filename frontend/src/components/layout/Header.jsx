@@ -7,6 +7,8 @@ import {
 } from 'lucide-react';
 import { APP_CONFIG } from '../../config';
 import { useTheme } from '../../context/ThemeContext';
+import { useAuth } from '../../context/AuthContext';
+import { LogOut } from 'lucide-react';
 
 const SEARCH_INDEX = [
   // Pages
@@ -34,12 +36,15 @@ const SEARCH_INDEX = [
 
 export default function Header({ isSidebarOpen, setSidebarOpen }) {
   const { isDark, toggleTheme } = useTheme();
+  const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [showResults, setShowResults] = useState(false);
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [results, setResults] = useState([]);
   const [activeIndex, setActiveIndex] = useState(-1);
   const searchRef = useRef(null);
+  const profileRef = useRef(null);
 
   useEffect(() => {
     if (searchQuery.trim().length > 0) {
@@ -61,10 +66,18 @@ export default function Header({ isSidebarOpen, setSidebarOpen }) {
       if (searchRef.current && !searchRef.current.contains(event.target)) {
         setShowResults(false);
       }
+      if (profileRef.current && !profileRef.current.contains(event.target)) {
+        setShowProfileMenu(false);
+      }
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
 
   const handleKeyDown = (e) => {
     if (!showResults) return;
@@ -199,10 +212,44 @@ export default function Header({ isSidebarOpen, setSidebarOpen }) {
           <Bell className="w-5 h-5" />
           <span className="absolute top-1.5 right-2 w-2 h-2 bg-danger rounded-full border-2 border-card shadow-sm"></span>
         </button>
-        <button className="flex items-center gap-1 p-1 pr-2 rounded-full border border-border hover:bg-surface transition-colors">
-          <img src="https://ui-avatars.com/api/?name=User&background=6366f1&color=fff" alt="User" className="w-7 h-7 rounded-full shadow-sm" />
-          <ChevronDown className="w-4 h-4 text-text-gray" />
-        </button>
+        
+        <div className="relative" ref={profileRef}>
+          <button 
+            onClick={() => setShowProfileMenu(!showProfileMenu)}
+            className={`flex items-center gap-2 p-1 pr-3 rounded-full border transition-all ${showProfileMenu ? 'bg-accent-soft border-accent/20' : 'border-border hover:bg-surface'}`}
+          >
+            <img src={`https://ui-avatars.com/api/?name=${user?.name || 'User'}&background=06b6d4&color=fff&bold=true`} alt="User" className="w-8 h-8 rounded-full shadow-sm ring-2 ring-white/5" />
+            <div className="hidden lg:flex flex-col items-start -space-y-1">
+               <span className="text-[11px] font-black text-text-dark uppercase tracking-tight">{user?.name || 'Operator'}</span>
+               <span className="text-[9px] font-bold text-text-gray uppercase tracking-widest opacity-60">Level 1 Access</span>
+            </div>
+            <ChevronDown className={`w-3.5 h-3.5 text-text-gray transition-transform duration-300 ${showProfileMenu ? 'rotate-180 text-accent' : ''}`} />
+          </button>
+
+          {showProfileMenu && (
+            <div className="absolute top-full right-0 mt-2 w-56 bg-card border border-border rounded-2xl shadow-premium overflow-hidden z-[60] animate-in fade-in slide-in-from-top-2 duration-200">
+               <div className="p-4 border-b border-border bg-surface/30">
+                  <div className="text-xs font-black text-text-dark uppercase tracking-wider mb-0.5">{user?.name}</div>
+                  <div className="text-[10px] text-text-gray font-medium truncate">{user?.email}</div>
+               </div>
+               <div className="p-2">
+                  <button className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-surface text-text-gray transition-all">
+                     <Settings className="w-4 h-4" />
+                     <span className="text-xs font-bold">Profile Settings</span>
+                  </button>
+                  <button 
+                    onClick={handleLogout}
+                    className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-danger/5 text-danger transition-all group"
+                  >
+                     <div className="p-1.5 rounded-lg bg-danger/10 group-hover:bg-danger group-hover:text-white transition-all">
+                        <LogOut className="w-4 h-4" />
+                     </div>
+                     <span className="text-xs font-bold">Terminate Session</span>
+                  </button>
+               </div>
+            </div>
+          )}
+        </div>
       </div>
     </header>
   );
