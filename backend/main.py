@@ -1,19 +1,27 @@
-from fastapi import FastAPI, Response
-from fastapi.responses import StreamingResponse
-from fastapi.middleware.cors import CORSMiddleware
-import cv2
-import time
-from ultralytics import YOLO
-import threading
-from fastapi import BackgroundTasks, Depends
-from sqlmodel import Session, select
-from database import init_db, get_session, engine
-from models import DetectionEvent, User, Role
-from datetime import datetime
 from contextlib import asynccontextmanager
-from security import get_password_hash, verify_password, create_access_token, decode_access_token
+from datetime import datetime
+from typing import Dict
+import time
+
+import cv2
+from fastapi import BackgroundTasks, Depends, FastAPI, Header, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
-from fastapi import Header, HTTPException
+from sqlmodel import Session, select
+from ultralytics import YOLO
+
+from config import settings
+from database import engine, get_session, init_db
+from models import DetectionEvent, Role, User
+from security import (
+    create_access_token,
+    decode_access_token,
+    get_authorization_token,
+    get_password_hash,
+    verify_password,
+)
+
 
 def init_roles():
     with Session(engine) as session:
@@ -24,17 +32,15 @@ def init_roles():
                 session.add(Role(id=idx, name=role_name))
         session.commit()
 
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Startup: Initialize the database and roles
     init_db()
     init_roles()
     yield
-    # Shutdown logic (if any) can go here
+
 
 app = FastAPI(lifespan=lifespan)
-
-# Enable CORS for frontend integration
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -43,94 +49,100 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Initialize YOLOv8 Nano model (lightweight for CPU)
 model = YOLO("yolov8n.pt")
 
-# Configuration
-LOG_INTERVAL = 3.0  # Seconds between database logs for same object types
-last_log_time = 0
-
-# Global state to share detection data between video thread and API endpoints
-latest_intelligence = {
+latest_intelligence: Dict[str, object] = {
     "person_count": 0,
     "last_update": time.time(),
-    "objects": []
+    "objects": [],
 }
 
 class VideoCamera:
     def __init__(self):
-        self.video = cv2.VideoCapture(0)
-        self.last_log_time = 0
-        
-    def __del__(self):
-        self.video.release()
+        source = settings.CAMERA_SOURCE
+        if isinstance(source, str) and source.isdigit():
+            source = int(source)
+        self.video = cv2.VideoCapture(source)
+        self.last_log_time = 0.0
+
+    def release(self):
+        if self.video is not None and self.video.isOpened():
+            self.video.release()
 
     def log_detection(self, object_class: str, confidence: float, metadata: dict):
-        """Background task to save detection to database"""
         with Session(engine) as session:
             event = DetectionEvent(
                 camera_id=1,
                 object_class=object_class,
                 confidence=float(confidence),
-                metadata_json=metadata
+                metadata_json=metadata,
             )
             session.add(event)
             session.commit()
 
     def get_frame(self, background_tasks: BackgroundTasks = None):
-        success, frame = self.video.read()
-        if not success:
+        if not self.video.isOpened():
             return None
-        
-        # --- AI INFERENCE ---
-        # Run YOLOv8 on the frame
-        # conf=0.5 means only objects with 50%+ confidence are shown
+
+        success, frame = self.video.read()
+        if not success or frame is None:
+            return None
+
         results = model.predict(frame, conf=0.5, verbose=False)
-        
-        # Extract metadata
         person_count = 0
-        objects_detected = []
-        
+        detected_objects = []
+        highest_person_confidence = 0.0
+
         if results and len(results) > 0:
-            # results[0].plot() draws boxes and labels on the frame automatically
             annotated_frame = results[0].plot()
-            
-            # Count persons specifically for the dashboard KPI
             for box in results[0].boxes:
-                class_id = int(box.cls[0])
+                class_id = int(box.cls[0]) if hasattr(box.cls, "__getitem__") else int(box.cls)
                 label = results[0].names[class_id]
-                objects_detected.append(label)
-                if label == 'person':
+                confidence = (
+                    float(box.conf[0]) if hasattr(box.conf, "__getitem__") else float(box.conf)
+                )
+                detected_objects.append({"label": label, "confidence": confidence})
+                if label == "person":
                     person_count += 1
+                    highest_person_confidence = max(highest_person_confidence, confidence)
         else:
             annotated_frame = frame
 
-        # Update global intelligence state
-        global latest_intelligence
         latest_intelligence["person_count"] = person_count
-        latest_intelligence["objects"] = list(set(objects_detected))
+        latest_intelligence["objects"] = sorted({item["label"] for item in detected_objects})
         latest_intelligence["last_update"] = time.time()
-        
-        # --- DATABASE LOGGING (with Throttling) ---
+
         current_time = time.time()
-        if (current_time - self.last_log_time) > LOG_INTERVAL:
-            if person_count > 0 and background_tasks:
-                # Log the detection in the background
+        if (current_time - self.last_log_time) > settings.LOG_INTERVAL_SECONDS:
+            if person_count > 0 and background_tasks is not None:
                 background_tasks.add_task(
-                    self.log_detection, 
-                    "person", 
-                    0.8, # Simplified confidence for now
-                    {"count": person_count}
+                    self.log_detection,
+                    "person",
+                    highest_person_confidence,
+                    {
+                        "count": person_count,
+                        "objects": detected_objects,
+                        "timestamp": datetime.now().isoformat(),
+                    },
                 )
                 self.last_log_time = current_time
 
-        # Add a custom HUD overlay
-        cv2.putText(annotated_frame, f"NEURAL ENGINE ACTIVE | PERSONS: {person_count}", (20, 40), 
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
-        
-        # Encode as JPEG
-        ret, jpeg = cv2.imencode('.jpg', annotated_frame)
-        return jpeg.tobytes()
+        cv2.putText(
+            annotated_frame,
+            f"NEURAL ENGINE ACTIVE | PERSONS: {person_count}",
+            (20, 40),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            0.7,
+            (0, 255, 0),
+            2,
+        )
+
+        ret, jpeg = cv2.imencode(".jpg", annotated_frame)
+        return jpeg.tobytes() if ret else None
+
+
+camera = VideoCamera()
+
 
 def gen(camera, background_tasks):
     while True:
@@ -138,34 +150,66 @@ def gen(camera, background_tasks):
         if frame is None:
             time.sleep(1)
             continue
-            
-        yield (b'--frame\r\n'
-               b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n\r\n')
+
+        yield (
+            b"--frame\r\n"
+            b"Content-Type: image/jpeg\r\n\r\n"
+            + frame
+            + b"\r\n\r\n"
+        )
+
+
+def get_current_user(token: str = Depends(get_authorization_token)):
+    payload = decode_access_token(token)
+    if not payload:
+        raise HTTPException(status_code=401, detail="Invalid or expired token")
+    return payload
+
+
+def verify_super_admin(current_user: dict = Depends(get_current_user)):
+    if current_user.get("role") != "super_admin":
+        raise HTTPException(status_code=403, detail="Forbidden: Super Admin access required")
+    return current_user
+
+
+@app.on_event("shutdown")
+def shutdown_event():
+    camera.release()
+
 
 @app.get("/")
 def read_root():
     return {"status": "AI Analytics Backend Online", "ai_model": "YOLOv8 Nano"}
 
+
 @app.get("/video_feed")
 def video_feed(background_tasks: BackgroundTasks):
-    return StreamingResponse(gen(VideoCamera(), background_tasks), 
-                             media_type="multipart/x-mixed-replace; boundary=frame")
+    return StreamingResponse(
+        gen(camera, background_tasks),
+        media_type="multipart/x-mixed-replace; boundary=frame",
+    )
+
 
 @app.get("/intelligence")
 def get_intelligence():
-    """Endpoint for frontend to pull real-time detection counts"""
     return latest_intelligence
+
 
 @app.get("/health")
 def health_check():
-    return {"status": "healthy", "model_loaded": True}
+    return {
+        "status": "healthy",
+        "model_loaded": model is not None,
+        "camera_open": camera.video.isOpened() if camera is not None else False,
+    }
+
 
 @app.get("/logs")
 def get_logs(session: Session = Depends(get_session)):
-    """Fetch the latest 50 detection logs for the dashboard"""
     statement = select(DetectionEvent).order_by(DetectionEvent.timestamp.desc()).limit(50)
     results = session.exec(statement).all()
     return results
+
 
 # --- AUTHENTICATION ENDPOINTS ---
 
@@ -225,16 +269,25 @@ def login_user(login_data: UserLogin, session: Session = Depends(get_session)):
         "user": {"id": user.id, "email": user.email, "name": user.full_name, "role": role_name}
     }
 
+
+def get_current_user(token: str = Depends(get_authorization_token)):
+    payload = decode_access_token(token)
+    if not payload:
+        raise HTTPException(status_code=401, detail="Invalid or expired token")
+    return payload
+
+
+@app.get("/auth/me")
+def read_current_user(current_user: dict = Depends(get_current_user)):
+    return {"user": current_user}
+
+
 # --- ADMIN ENDPOINTS ---
 
-def verify_super_admin(authorization: str = Header(None)):
-    if not authorization or not authorization.startswith("Bearer "):
-        raise HTTPException(status_code=401, detail="Unauthorized")
-    token = authorization.split(" ")[1]
-    payload = decode_access_token(token)
-    if not payload or payload.get("role") != "super_admin":
+def verify_super_admin(current_user: dict = Depends(get_current_user)):
+    if current_user.get("role") != "super_admin":
         raise HTTPException(status_code=403, detail="Forbidden: Super Admin access required")
-    return payload
+    return current_user
 
 @app.get("/admin/users")
 def get_all_users(session: Session = Depends(get_session), admin_data: dict = Depends(verify_super_admin)):

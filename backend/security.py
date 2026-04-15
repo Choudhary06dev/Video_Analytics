@@ -1,19 +1,18 @@
 from datetime import datetime, timedelta
-from typing import Optional, Union
+from typing import Optional
 from jose import JWTError, jwt
 from passlib.context import CryptContext
-import os
-from dotenv import load_dotenv
+from fastapi import Header, HTTPException
+from config import settings
 
-# Load environment variables
-load_dotenv()
-
-# Configuration from .env
-SECRET_KEY = os.getenv("SECRET_KEY", "9a2b3c4d5e6f7g8h9i0j1k2l3m4n5o6p")
-ALGORITHM = os.getenv("ALGORITHM", "HS256")
-ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "1440")) # Default 24 Hours
-
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+# Use pbkdf2_sha256 as the default hashing scheme for long passwords,
+# while still allowing verification of existing bcrypt hashes.
+pbkdf2_context = CryptContext(schemes=["pbkdf2_sha256"], deprecated="auto")
+pwd_context = CryptContext(
+    schemes=["pbkdf2_sha256", "bcrypt"],
+    default="pbkdf2_sha256",
+    deprecated="auto"
+)
 
 def verify_password(plain_password, hashed_password):
     """Checks if a plain password matches a hashed password."""
@@ -21,23 +20,37 @@ def verify_password(plain_password, hashed_password):
 
 def get_password_hash(password):
     """Generates a salt and hashes a password."""
-    return pwd_context.hash(password)
+    try:
+        return pwd_context.hash(password)
+    except ValueError as exc:
+        if "72 bytes" in str(exc):
+            return pbkdf2_context.hash(password)
+        raise
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     """Creates a JWT access token."""
     to_encode = data.copy()
-    if expires_delta:
-        expire = datetime.now() + expires_delta
-    else:
-        expire = datetime.now() + timedelta(minutes=15)
+    if expires_delta is None:
+        expires_delta = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+    expire = datetime.now() + expires_delta
     to_encode.update({"exp": expire})
-    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
-    return encoded_jwt
+    return jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
 
 def decode_access_token(token: str):
     """Decodes and validates a JWT token."""
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
         return payload
     except JWTError:
         return None
+
+def get_authorization_token(authorization: str = Header(None)) -> str:
+    if not authorization or not authorization.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Authorization header missing or invalid")
+    return authorization.split(" ", 1)[1].strip()
+
+def verify_token(token: str):
+    payload = decode_access_token(token)
+    if not payload:
+        raise HTTPException(status_code=401, detail="Invalid or expired token")
+    return payload
