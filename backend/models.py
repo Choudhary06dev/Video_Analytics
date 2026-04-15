@@ -20,7 +20,7 @@ class User(SQLModel, table=True):
     full_name: str
     email: str = Field(index=True, unique=True)
     hashed_password: str
-    role_id: int = Field(default=3, foreign_key="role.id") # Default 3 assumes 'operator'
+    role_id: int = Field(default=3) # Default 3 assumes 'operator' (1=super_admin, 2=admin, 3=operator)
     created_at: datetime = Field(default_factory=datetime.now)
 
 class DetectionEvent(SQLModel, table=True):
