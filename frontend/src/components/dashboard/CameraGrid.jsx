@@ -7,7 +7,7 @@ const CAMERAS = [
     id: 1, name: 'ICU West Entrance',
     image: 'https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?auto=format&fit=crop&q=80',
     fields: [
-      { label: 'Authorized Staff', value: 'Maria Santos', color: '#0ea5e9' },
+      { label: 'Authorized Staff', value: 'Ahmed Hassan', color: '#0ea5e9' },
       { label: 'Task Detected',   value: 'Hand Hygiene',  color: '#22c55e' },
     ],
     tags: [
@@ -21,7 +21,7 @@ const CAMERAS = [
     id: 2, name: 'Main Lobby Central',
     image: 'https://images.unsplash.com/photo-1516549655169-df83a0774514?auto=format&fit=crop&q=80',
     fields: [
-      { label: 'Security', value: 'John Rivera',  color: '#0ea5e9' },
+      { label: 'Security', value: 'Muhammad Bilal',  color: '#0ea5e9' },
       { label: 'Pattern',  value: 'Patrol Check', color: '#0ea5e9' },
     ],
     tags: [
@@ -46,7 +46,7 @@ const CAMERAS = [
     id: 4, name: 'Supply Hallway B',
     image: 'https://images.unsplash.com/photo-1551076805-e1869033e561?auto=format&fit=crop&q=80',
     fields: [
-      { label: 'Staff',  value: 'Tom Wilson', color: '#0ea5e9' },
+      { label: 'Staff',  value: 'Usman Sheikh', color: '#0ea5e9' },
       { label: 'Task',   value: 'Janitorial',  color: '#f59e0b' },
     ],
     tags: [
@@ -60,7 +60,7 @@ const CAMERAS = [
     id: 5, name: 'Secure Research Lab α',
     image: 'https://images.unsplash.com/photo-1516574187841-cb9cc2ca948b?auto=format&fit=crop&q=80&w=800',
     fields: [
-      { label: 'Auth Head',  value: 'Lisa Chen', color: '#0ea5e9' },
+      { label: 'Auth Head',  value: 'Zainab Ali', color: '#0ea5e9' },
       { label: 'Access',     value: 'L-3 Grant', color: '#22c55e' },
     ],
     tags: [

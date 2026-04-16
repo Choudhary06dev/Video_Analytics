@@ -119,12 +119,12 @@ const TASK_TYPES = [
   { name:'Sanitization',   category:'cleaning',   icon:'✨', risk: 'low' },
 ];
 const WORKERS = [
-  { name:'Maria Santos', role:'Security Lead', avatar:'MS', color:'#8b5cf6', status:'active' },
-  { name:'John Rivera',  role:'AI Operator',   avatar:'JR', color:'#06b6d4', status:'active' },
-  { name:'Tom Wilson',   role:'Facility Mgr',  avatar:'TW', color:'#10b981', status:'busy' },
-  { name:'Lisa Chen',    role:'Health Tech',   avatar:'LC', color:'#f59e0b', status:'active' },
-  { name:'Robert Fox',   role:'Guard',         avatar:'RF', color:'#ef4444', status:'away' },
-  { name:'Sarah Miller', role:'Supervisor',    avatar:'SM', color:'#ec4899', status:'active' },
+  { name:'Ahmed Hassan',  role:'Security Lead', avatar:'AH', color:'#8b5cf6', status:'active' },
+  { name:'Fatima Bibi',   role:'AI Operator',   avatar:'FB', color:'#06b6d4', status:'active' },
+  { name:'Muhammad Bilal',role:'Facility Mgr',  avatar:'MB', color:'#10b981', status:'busy' },
+  { name:'Zainab Ali',    role:'Health Tech',   avatar:'ZA', color:'#f59e0b', status:'active' },
+  { name:'Usman Sheikh',  role:'Guard',         avatar:'US', color:'#ef4444', status:'away' },
+  { name:'Aisha Malik',   role:'Supervisor',    avatar:'AM', color:'#ec4899', status:'active' },
 ];
 const STATUS_META = {
   completed:     { label:'Completed',   color:'#10b981', bg:'rgba(16,185,129,.1)',  glow:'rgba(16,185,129,.3)',  border:'rgba(16,185,129,.2)', icon:CheckCircle2 },

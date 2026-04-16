@@ -38,12 +38,12 @@ const CHART_DATA = [
 ];
 
 const STAFF_MEMBERS = [
-  { id: 'STF-001', name: 'Maria Santos', role: 'Head Supervisor', shift: 'Morning', status: 'on-duty', avatar: 'MS' },
-  { id: 'STF-002', name: 'John Rivera', role: 'Security Lead', shift: 'Afternoon', status: 'on-duty', avatar: 'JR' },
-  { id: 'STF-003', name: 'Tom Wilson', role: 'Floor monitor', shift: 'Night', status: 'on-break', avatar: 'TW' },
-  { id: 'STF-004', name: 'Lisa Chen', role: 'Access Control', shift: 'Morning', status: 'on-duty', avatar: 'LC' },
-  { id: 'STF-005', name: 'Robert Fox', role: 'Technician', shift: 'On-Call', status: 'off-duty', avatar: 'RF' },
-  { id: 'STF-006', name: 'Sarah Miller', role: 'Front Desk', shift: 'Morning', status: 'on-duty', avatar: 'SM' },
+  { id: 'STF-001', name: 'Ali Raza', role: 'Head Supervisor', shift: 'Morning', status: 'on-duty', avatar: 'AR' },
+  { id: 'STF-002', name: 'Mehak Fatima', role: 'Security Lead', shift: 'Afternoon', status: 'on-duty', avatar: 'MF' },
+  { id: 'STF-003', name: 'Zeeshan Ahmed', role: 'Floor monitor', shift: 'Night', status: 'on-break', avatar: 'ZA' },
+  { id: 'STF-004', name: 'Hina Kousar', role: 'Access Control', shift: 'Morning', status: 'on-duty', avatar: 'HK' },
+  { id: 'STF-005', name: 'Omer Farooq', role: 'Technician', shift: 'On-Call', status: 'off-duty', avatar: 'OF' },
+  { id: 'STF-006', name: 'Mariam Nawaz', role: 'Front Desk', shift: 'Morning', status: 'on-duty', avatar: 'MN' },
 ];
 
 export default function StaffRoster() {

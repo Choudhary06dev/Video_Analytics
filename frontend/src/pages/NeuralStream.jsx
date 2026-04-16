@@ -1,361 +1,386 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { 
-  Radio, 
-  Shield, 
-  Cpu, 
+import {
+  Radio,
+  Shield,
+  Cpu,
   Settings,
   ChevronRight,
   Target,
   BarChart2,
   Lock,
-  Wifi
+  Wifi,
+  Activity,
+  Filter,
+  Crosshair,
+  Phone,
+  Car,
+  Package,
+  Flame,
+  AlertTriangle,
+  Users,
+  AlertCircle
 } from 'lucide-react';
+
+const SCENARIO_UI = {
+  'Unauthorized Entry - Restricted Area': { icon: Lock, color: 'text-blue-500', bg: 'bg-blue-500/10' },
+  'Weapon Detection (Gun/Knife)': { icon: Crosshair, color: 'text-rose-500', bg: 'bg-rose-500/15' },
+  'Mobile Phone Usage - Restricted': { icon: Phone, color: 'text-amber-500', bg: 'bg-amber-500/10' },
+  'Vehicle Observation': { icon: Car, color: 'text-indigo-500', bg: 'bg-indigo-500/10' },
+  'Object Left Unattended': { icon: Package, color: 'text-slate-500', bg: 'bg-slate-500/10' },
+  'Fire / Smoke Detection': { icon: Flame, color: 'text-orange-500', bg: 'bg-orange-500/15' },
+  'Aggressive Behaviour Detection': { icon: AlertTriangle, color: 'text-rose-600', bg: 'bg-rose-600/10' },
+  'Multiple Persons - Single Access': { icon: Target, color: 'text-blue-400', bg: 'bg-blue-400/10' },
+  'Default': { icon: Target, color: 'text-slate-400', bg: 'bg-slate-400/10' }
+};
 import CameraFeed from '../components/dashboard/CameraFeed';
 
 const CAMERAS = [
-  { id: '01', status: 'bg-warning', img: 'https://images.unsplash.com/photo-1558002038-1055907df827', name: 'ICU ENTRANCE' },
-  { id: '02', status: 'bg-success', img: 'https://images.unsplash.com/photo-1516549655169-df83a0774514', name: 'MAIN RECEPTION' },
-  { id: '03', status: 'bg-warning', img: 'https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d', name: 'EMERGENCY BAY' },
-  { id: '04', status: 'bg-success', img: 'https://images.unsplash.com/photo-1551076805-e1869033e561', name: 'SUPPLY CLOSET' },
-  { id: '05', status: 'bg-warning', img: 'https://images.unsplash.com/photo-1516574187841-cb9cc2ca948b', name: 'LAB SECTOR A' },
-  { id: '06', status: 'bg-success', img: 'https://images.unsplash.com/photo-1553413077-190dd305871c', name: 'NORTH PERIMETER' },
+  { id: '01', status: 'bg-emerald-500', img: 'https://images.unsplash.com/photo-1558002038-1055907df827', name: 'ICU ENTRANCE' },
+  { id: '02', status: 'bg-emerald-500', img: 'https://images.unsplash.com/photo-1516549655169-df83a0774514', name: 'MAIN RECEPTION' },
+  { id: '03', status: 'bg-emerald-500', img: 'https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d', name: 'EMERGENCY BAY' },
+  { id: '04', status: 'bg-emerald-500', img: 'https://images.unsplash.com/photo-1551076805-e1869033e561', name: 'SUPPLY CLOSET' },
+  { id: '05', status: 'bg-emerald-500', img: 'https://images.unsplash.com/photo-1516574187841-cb9cc2ca948b', name: 'LAB SECTOR A' },
+  { id: '06', status: 'bg-emerald-500', img: 'https://images.unsplash.com/photo-1553413077-190dd305871c', name: 'NORTH PERIMETER' },
 ];
 
 export default function NeuralStream() {
   const [logs, setLogs] = useState([]);
   const [activeCamera, setActiveCamera] = useState('01');
-  const [playbackSpeed, setPlaybackSpeed] = useState(1);
+  const [isGlobalView, setIsGlobalView] = useState(false);
   const [highlightCam, setHighlightCam] = useState(null);
-  const [boxPositions, setBoxPositions] = useState({});
   const [intel, setIntel] = useState({ person_count: 0, objects: [] });
   const [filterHours, setFilterHours] = useState(1);
-  const [summary, setSummary] = useState({ total_persons: 0, count: 0, object_breakdown: {} });
+  const [summary, setSummary] = useState({
+    total_persons: 0,
+    total_weapons: 0,
+    total_vehicles: 0,
+    count: 0,
+    threat_level: 'Normal',
+    status_message: 'Security posture stable',
+    object_breakdown: {}
+  });
+  const [loadingLogs, setLoadingLogs] = useState(false);
 
   const fetchLogsData = useCallback(async () => {
     try {
-      const [logsRes, summaryRes] = await Promise.all([
-        fetch(`http://localhost:8000/logs?hours=${filterHours}`),
-        fetch(`http://localhost:8000/logs/summary?hours=${filterHours}`)
-      ]);
-      
+      const camId = isGlobalView ? '' : `&camera_id=${parseInt(activeCamera)}`;
+      const timestamp = Date.now();
+      const logsRes = await fetch(`http://localhost:8000/logs?hours=${filterHours}${camId}&t=${timestamp}`);
+
       if (logsRes.ok) {
         const logsData = await logsRes.json();
         if (Array.isArray(logsData)) {
-          setLogs(logsData.slice(0, 20).map(log => ({
-            id: log.id,
-            type: `${log.object_class.toUpperCase()} DETECTED`,
-            color: log.object_class === 'person' ? 'text-blue-500' : 'text-accent',
-            dot: log.object_class === 'person' ? 'bg-blue-300' : 'bg-accent/40',
-            camera: `CAM-${log.camera_id.toString().padStart(2, '0')}`,
-            confidence: `${(log.confidence * 100).toFixed(1)}% Conf.`,
-            timestamp: new Date(log.timestamp).toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' })
-          })));
-        }
-      }
+          setLogs(logsData.slice(0, 50).map(log => {
+            const scenario = SCENARIO_UI[log.object_class] || SCENARIO_UI['Default'];
+            const isAlert = log.metadata_json?.is_alert || false;
+            const detail = log.metadata_json?.detail || log.object_class.toUpperCase();
 
-      if (summaryRes.ok) {
-        const summaryData = await summaryRes.json();
-        if (summaryData && typeof summaryData === 'object' && !summaryData.detail) {
-          setSummary(summaryData);
+            return {
+              id: log.id,
+              type: detail,
+              icon: scenario.icon,
+              color: scenario.color,
+              bg: isAlert ? 'bg-rose-500/20' : scenario.bg,
+              iconColor: isAlert ? 'text-rose-600' : scenario.color,
+              isAlert: isAlert,
+              camera: `CAM-${log.camera_id.toString().padStart(2, '0')}`,
+              confidence: `${(log.confidence * 100).toFixed(1)}%`,
+              timestamp: new Date(log.timestamp).toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' })
+            };
+          }));
         }
       }
     } catch (err) {
       console.error("Failed to fetch logs:", err);
+    } finally {
+      setLoadingLogs(false);
     }
-  }, [filterHours]);
+  }, [filterHours, activeCamera, isGlobalView]);
 
-  // Fetch initial logs and stats
+  // [REMOVED EFFECT: Consolidating into one reliable poller below]
+
+  // 🚀 Ultra-Reliable Sync Engine (Recursive Timeout Pattern)
   useEffect(() => {
-    fetchLogsData();
-    const interval = setInterval(fetchLogsData, 5000);
-    return () => clearInterval(interval);
+    let intelTimeout;
+    let logsTimeout;
+    let isActive = true;
+
+    const pollIntel = async () => {
+      if (!isActive) return;
+      try {
+        const timestamp = Date.now();
+        const camIdParam = isGlobalView ? '' : `&camera_id=${parseInt(activeCamera)}`;
+        
+        const [intelRes, summaryRes] = await Promise.all([
+          fetch(`http://localhost:8000/intelligence?t=${timestamp}`).then(r => r.json()),
+          fetch(`http://localhost:8000/logs/summary?hours=${filterHours}${camIdParam}&t=${timestamp}`).then(r => r.json())
+        ]);
+
+        if (intelRes && !intelRes.detail) setIntel(intelRes);
+        if (summaryRes && !summaryRes.detail) setSummary(summaryRes);
+      } catch (e) {}
+      intelTimeout = setTimeout(pollIntel, 1000);
+    };
+
+    const pollLogs = async () => {
+      if (!isActive) return;
+      try {
+        await fetchLogsData();
+      } catch (e) {}
+      logsTimeout = setTimeout(pollLogs, 2000);
+    };
+
+    // Start heartbeat
+    pollIntel();
+    pollLogs();
+
+    return () => {
+      isActive = false;
+      clearTimeout(intelTimeout);
+      clearTimeout(logsTimeout);
+    };
   }, [fetchLogsData]);
 
-  // Poll backend for real-time intelligence (Active UI)
-  useEffect(() => {
-    const fetchIntel = async () => {
-      try {
-        const response = await fetch('http://localhost:8000/intelligence');
-        const data = await response.json();
-        
-        // Visual highlight if person count increases
-        if (data.person_count > intel.person_count) {
-          setHighlightCam('01');
-          setTimeout(() => setHighlightCam(null), 1000);
-          // Immediately fetch logs to show new entry
-          fetchLogsData();
-        }
-        
-        setIntel(data);
-      } catch (err) {
-        console.error("Failed to fetch intelligence:", err);
-      }
-    };
-
-    const interval = setInterval(fetchIntel, 1000);
-    return () => clearInterval(interval);
-  }, [intel.person_count, fetchLogsData]);
-
-  // Update bounding box positions (Visual Simulation for other cams, real for active)
-  useEffect(() => {
-    const updatePositions = () => {
-      const newPos = {};
-      CAMERAS.forEach(cam => {
-        if (cam.id === '01' && intel.person_count > 0) {
-          newPos[cam.id] = { x: 40, y: 30, conf: 99.1 };
-        } else {
-          newPos[cam.id] = {
-            x: 20 + Math.random() * 50,
-            y: 30 + Math.random() * 40,
-            conf: (94 + Math.random() * 5.9).toFixed(1)
-          };
-        }
-      });
-      setBoxPositions(newPos);
-    };
-
-    const interval = setInterval(updatePositions, 3000 / playbackSpeed);
-    updatePositions();
-    return () => clearInterval(interval);
-  }, [playbackSpeed, intel.person_count]);
-
   return (
-    <div className="flex flex-col gap-6 p-4 max-w-[1600px] mx-auto min-h-screen bg-bg">
-      {/* ADVANCED HUD HEADER */}
-      <div className="flex justify-between items-center bg-card p-6 rounded-[32px] border border-border shadow-sm">
-        <div>
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-accent rounded-2xl flex items-center justify-center text-white shadow-lg shadow-accent/20">
-              <Radio className="w-6 h-6 animate-pulse" />
-            </div>
-            <div>
-              <h1 className="text-[1.8rem] font-black text-text-dark tracking-tight uppercase leading-none">Neural Live Matrix</h1>
-              <div className="flex items-center gap-3 mt-1.5 font-bold text-[0.7rem] text-text-gray uppercase tracking-widest opacity-60">
-                 <span>SENTINEL ENGINE v4.2</span>
-                 <span className="w-1 h-1 bg-current rounded-full" />
-                 <span>6.4 TFLOPS Processing</span>
-                 <span className="w-1 h-1 bg-current rounded-full" />
-                 <span className="text-accent">ENCRYPTED</span>
+    <div className="flex flex-col gap-6 p-6 min-h-screen bg-bg font-sans transition-colors duration-300">
+      {/* HEADER */}
+      <div className="flex justify-between items-center bg-card p-6 rounded-2xl border border-border shadow-premium">
+        <div className="flex items-center gap-5">
+          <div className="w-12 h-12 bg-accent rounded-xl flex items-center justify-center text-white shadow-lg shadow-accent/20">
+            <Radio className="w-6 h-6 animate-pulse" />
+          </div>
+          <div>
+            <div className="flex items-center gap-3 mb-1">
+              <h1 className="text-2xl font-bold text-text-dark tracking-tight">Command Hub</h1>
+              <div className="px-2 py-0.5 bg-success/10 text-success border border-success/20 rounded text-[0.6rem] font-bold tracking-widest flex items-center gap-1.5 uppercase">
+                <div className="relative flex">
+                  <div className="w-1.5 h-1.5 bg-success rounded-full animate-ping absolute opacity-75" />
+                  <div className="w-1.5 h-1.5 bg-success rounded-full" />
+                </div>
+                Live Stream Active
               </div>
             </div>
+            <div className="flex items-center gap-3 text-xs text-text-gray font-medium font-sans">
+              <span className="flex items-center gap-1.5"><Cpu className="w-3.5 h-3.5" /> Engine v4.8</span>
+              <span className="w-1 h-1 bg-border rounded-full" />
+              <span className="text-accent">Sync: 99.9%</span>
+            </div>
           </div>
-        </div>
-        
-        <div className="flex items-center gap-4">
-          <div className="flex bg-bg p-1 rounded-2xl border border-border">
-            {[1, 2, 4, 6].map(n => (
-              <button 
-                key={n} 
-                onClick={() => setPlaybackSpeed(n)}
-                className={`px-5 py-2.5 rounded-xl font-black text-[0.8rem] transition-all
-                ${playbackSpeed === n ? 'bg-card text-accent shadow-sm' : 'text-text-gray hover:text-accent'}`}
-              >
-                {n}x
-              </button>
-            ))}
-          </div>
-          <button className="w-12 h-12 bg-card border border-border rounded-2xl flex items-center justify-center text-text-gray hover:text-accent shadow-sm transition-all hover:rotate-90">
-            <Settings className="w-6 h-6" />
-          </button>
         </div>
       </div>
 
-      <div className="flex gap-8 items-start">
-        {/* ADVANCED CAMERA GRID */}
-        <div className="flex-1 grid grid-cols-3 gap-6">
+      <div className="flex gap-6 items-start h-[calc(100vh-140px)]">
+        {/* CAMERA MATRIX */}
+        <div className="flex-1 grid grid-cols-2 lg:grid-cols-3 gap-4 h-full content-start overflow-y-auto pr-2 custom-scrollbar">
           {CAMERAS.map((cam) => {
             const isActive = activeCamera === cam.id;
             const isDetected = highlightCam === cam.id;
-            const pos = boxPositions[cam.id] || { x: 30, y: 40, conf: 98.4 };
 
             return (
-              <div 
-                key={cam.id} 
-                onClick={() => setActiveCamera(cam.id)}
-                className={`relative aspect-[16/10] rounded-[32px] overflow-hidden border-[6px] transition-all duration-500 cursor-pointer bg-black group
-                ${isActive ? 'border-accent shadow-2xl scale-[1.03] z-10' : 'border-transparent shadow-premium hover:border-accent/30'}
-                ${isDetected ? 'ring-4 ring-accent/40 ring-offset-4 animate-[pulse_1s_infinite]' : ''}`}
+              <div
+                key={cam.id}
+                onClick={() => {
+                  setActiveCamera(cam.id);
+                  setIsGlobalView(false);
+                }}
+                className={`relative aspect-video rounded-xl overflow-hidden transition-all duration-300 cursor-pointer bg-card group border
+                ${isActive ? 'border-accent shadow-[0_12px_24px_-8px_rgba(59,130,246,0.3)] ring-2 ring-accent/10' : 'border-border hover:border-accent/40'}
+                ${isDetected ? 'ring-4 ring-accent/10 animate-pulse' : ''}`}
               >
-                {/* HUD CAMERA INFO */}
-                <div className="absolute inset-x-0 top-0 p-5 z-20 flex justify-between items-start pointer-events-none">
-                  <div className="flex flex-col gap-1">
-                    <div className="flex items-center gap-2 px-3 py-1.5 bg-[#1e293b]/90 backdrop-blur-md rounded-lg text-[0.6rem] font-black text-white uppercase tracking-wider border border-white/10">
-                      <span className={`w-1.5 h-1.5 rounded-full ${cam.status} animate-pulse`} />
-                      {cam.name}
-                    </div>
-                    <div className="text-[0.55rem] font-bold text-white/40 ml-1 tracking-tighter">BITRATE: 4.2 MBPS</div>
-                  </div>
-                  <div className="flex items-center gap-2 px-3 py-1.5 bg-accent rounded-lg text-[0.6rem] font-black text-white shadow-lg shadow-accent/20">
-                    <Cpu className="w-3.5 h-3.5" />
-                    AI ACTIVE
+                {/* CLEAN HUD OVERLAY */}
+                <div className="absolute top-3 left-3 z-20 flex flex-col gap-2 pointer-events-none transition-opacity duration-300">
+                  <div className="flex items-center gap-2 px-2.5 py-1.5 bg-card/90 backdrop-blur-md rounded-lg text-[0.65rem] font-bold text-text-dark uppercase tracking-wider border border-border shadow-sm">
+                    <span className={`w-1.5 h-1.5 rounded-full ${cam.status}`} />
+                    {cam.name}
                   </div>
                 </div>
 
-                {/* VISUAL FEED */}
-                <div className="absolute inset-0 bg-[#0f172a]">
+                <div className="absolute bottom-3 left-3 z-20 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                  <div className="flex items-center gap-1.5 px-2 py-1 bg-card/90 backdrop-blur-md rounded text-[0.6rem] font-medium text-text-gray border border-border shadow-sm">
+                    <Wifi className="w-3 h-3" /> 12ms
+                  </div>
+                </div>
+
+                <div className="absolute inset-0 bg-surface">
                   {isActive && cam.id === '01' ? (
-                    <CameraFeed streamUrl="http://localhost:8000/video_feed" />
+                    <CameraFeed streamUrl="http://localhost:8000/video_feed" hideOverlay={true} />
                   ) : (
-                    <img 
-                      src={`${cam.img}?auto=format&fit=crop&q=80&w=800`} 
-                      className={`w-full h-full object-cover transition-all duration-1000 ${isActive ? 'opacity-100' : 'opacity-80 group-hover:opacity-100'}`}
+                    <img
+                      src={`${cam.img}?auto=format&fit=crop&q=80&w=800`}
+                      className={`w-full h-full object-cover transition-all duration-700 ${isActive ? 'opacity-100' : 'opacity-80 group-hover:opacity-100 scale-100 group-hover:scale-105'}`}
                       alt="Stream"
                     />
                   )}
-                  
-                  {/* ADVANCED AI OVERlays */}
-                  <div className="absolute inset-0 pointer-events-none">
-                    {/* Floating Bounding Box */}
-                    <div 
-                      className="absolute border-2 border-accent border-dashed transition-all duration-[3000ms] ease-in-out shadow-[0_0_15px_rgba(14,165,233,0.3)] flex flex-col items-center justify-center"
-                      style={{ 
-                        top: `${pos.y}%`, 
-                        left: `${pos.x}%`, 
-                        width: '20%', 
-                        height: '40%' 
-                      }}
-                    >
-                      <div className="absolute top-0 left-0 w-2 h-2 border-l-2 border-t-2 border-white" />
-                      <div className="absolute top-0 right-0 w-2 h-2 border-r-2 border-t-2 border-white" />
-                      <div className="absolute bottom-0 left-0 w-2 h-2 border-l-2 border-b-2 border-white" />
-                      <div className="absolute bottom-0 right-0 w-2 h-2 border-r-2 border-b-2 border-white" />
-                      
-                      {/* Detection Tag */}
-                      <div className="absolute top-[-22px] left-[-2px] flex items-center gap-1 bg-accent text-white text-[0.55rem] font-black px-2 py-0.5 rounded shadow-lg transition-all duration-500">
-                         <Target className="w-2.5 h-2.5" />
-                         PE_{cam.id} ({pos.conf}%)
-                      </div>
-
-                      {/* Micro-Telemetry on Box */}
-                      <div className="absolute -right-12 top-0 text-[0.45rem] font-mono text-white/50 space-y-0.5">
-                         <div>ID_32442</div>
-                         <div>TRACKING: ON</div>
-                         <div>INF: 12ms</div>
-                      </div>
-                    </div>
-
-                    {/* Hud Corner Brackets (for active) */}
-                    {isActive && (
-                      <div className="absolute inset-4 border border-white/5 pointer-events-none">
-                        <div className="absolute top-0 left-0 w-8 h-px bg-white/30" />
-                        <div className="absolute top-0 left-0 w-px h-8 bg-white/30" />
-                        <div className="absolute bottom-0 right-0 w-8 h-px bg-white/30" />
-                        <div className="absolute bottom-0 right-0 w-px h-8 bg-white/30" />
-                      </div>
-                    )}
-                  </div>
-
-                  {/* High-Tech Scanlines */}
-                  <div className="absolute inset-0 opacity-15 pointer-events-none animate-scanline bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.2)_50%)] bg-[length:100%_2px]" />
-                </div>
-                
-                {/* Peripheral Data */}
-                <div className="absolute bottom-4 right-4 flex gap-1 z-20">
-                   <div className="w-1.5 h-1.5 bg-success rounded-full" />
-                   <div className="w-1.5 h-1.5 bg-success/40 rounded-full" />
-                   <div className="w-1.5 h-1.5 bg-success/20 rounded-full" />
+                  {/* Subtle Grid Overlay */}
+                  <div className="absolute inset-0 opacity-[0.05] pointer-events-none dark:invert" style={{ backgroundImage: 'linear-gradient(#000 1px, transparent 1px), linear-gradient(90deg, #000 1px, transparent 1px)', backgroundSize: '30px 30px' }} />
                 </div>
               </div>
             );
           })}
         </div>
 
-        {/* INTEGRATED SIDEBAR INTELLIGENCE */}
-        <div className="w-[380px] bg-card rounded-[40px] border border-border shadow-premium flex flex-col p-8 h-fit min-h-[750px] sticky top-4">
-          <div className="flex flex-col gap-6 mb-8">
-            <div className="flex items-center justify-between">
+        {/* CLEAN SIDEBAR */}
+        <div className="w-[380px] bg-card rounded-2xl border border-border shadow-premium flex flex-col h-full overflow-hidden shrink-0">
+          <div className="p-5 border-b border-border">
+            <div className="flex items-center justify-between mb-5">
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-accent/10 text-accent rounded-xl">
-                   <BarChart2 className="w-5 h-5" />
+                <div className="p-2 bg-accent/10 text-accent rounded-lg border border-accent/20">
+                  <Activity className="w-5 h-5" />
                 </div>
-                <h2 className="text-[1.3rem] font-black text-text-dark tracking-tight uppercase leading-none">Neural Events</h2>
-              </div>
-              <div className="px-3 py-1 bg-accent/10 text-accent border border-accent/20 rounded-full text-[0.6rem] font-black animate-pulse flex items-center gap-1.5">
-                 <div className="w-1.5 h-1.5 bg-accent rounded-full" />
-                 LIVE
+                <div>
+                  <div className="flex items-center gap-2 mb-0.5">
+                    <h2 className="text-lg font-bold text-text-dark tracking-tight">Intelligence Logs</h2>
+                    <div className="flex items-center gap-1.5 px-2 py-0.5 bg-emerald-500/10 rounded-full border border-emerald-500/20">
+                      <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                      <span className="text-[0.6rem] font-bold text-emerald-600 uppercase tracking-tighter">Live Sync</span>
+                    </div>
+                  </div>
+                  <p className="text-[0.65rem] font-medium text-text-gray uppercase tracking-widest">{isGlobalView ? 'System Wide' : `Selected: CAM-0${activeCamera}`}</p>
+                </div>
               </div>
             </div>
 
-            {/* FILTER BUTTONS */}
-            <div className="flex bg-bg p-1 rounded-2xl border border-border">
-              {[
-                { label: '1H', val: 1 },
-                { label: '24H', val: 24 },
-                { label: '7D', val: 168 }
-              ].map(f => (
-                <button 
-                  key={f.val} 
-                  onClick={() => setFilterHours(f.val)}
-                  className={`flex-1 py-2 rounded-xl font-black text-[0.65rem] transition-all
-                  ${filterHours === f.val ? 'bg-card text-accent shadow-sm' : 'text-text-gray hover:text-accent'}`}
-                >
-                  {f.label}
-                </button>
-              ))}
+            {/* FILTER UI */}
+            <div className="flex gap-2">
+              <button
+                onClick={() => setIsGlobalView(!isGlobalView)}
+                className={`p-2 rounded-lg text-xs font-semibold transition-all border
+                ${isGlobalView ? 'bg-accent text-white border-accent' : 'bg-surface text-text-gray border-border hover:border-accent/40'}`}
+                title="Toggle Global View"
+              >
+                <Filter className="w-4 h-4" />
+              </button>
+              <div className="flex flex-1 bg-surface p-1 rounded-lg border border-border">
+                {[
+                  { label: '1H', val: 1 },
+                  { label: '24H', val: 24 },
+                  { label: '7D', val: 168 }
+                ].map(f => (
+                  <button
+                    key={f.val}
+                    onClick={() => { setFilterHours(f.val); }}
+                    className={`flex-1 py-1.5 rounded-md font-bold text-[0.7rem] transition-all
+                    ${filterHours === f.val ? 'bg-card text-accent shadow-premium border border-border' : 'text-text-gray hover:text-text-dark'}`}
+                  >
+                    {f.label}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
 
-          <div className="flex-1 space-y-4 overflow-y-auto pr-1 max-h-[400px] custom-scrollbar">
-            {logs.length > 0 ? logs.map((log) => (
-              <div 
-                key={log.id} 
-                className={`flex gap-5 p-5 rounded-[24px] transition-all duration-500 border group animate-in slide-in-from-right-4 fade-in duration-500
-                ${highlightCam === log.camera.replace('CAM-', '') ? 'bg-accent/5 border-accent/30 shadow-md scale-[1.02]' : 'bg-surface border-border hover:bg-card hover:shadow-lg'}`}
+          {/* LOG ENTRIES */}
+          <div className="flex-1 overflow-y-auto p-3 space-y-2 custom-scrollbar bg-surface/30">
+            {loadingLogs ? (
+              <div className="py-20 text-center flex flex-col items-center">
+                <div className="w-6 h-6 border-2 border-accent/20 border-t-accent rounded-full animate-spin mb-3"></div>
+                <div className="text-xs text-text-gray uppercase tracking-widest font-bold">Fetching Logs...</div>
+              </div>
+            ) : logs.length > 0 ? logs.map((log) => (
+              <div
+                key={log.id}
+                className={`flex gap-3 p-3 rounded-xl transition-all duration-200 border bg-card hover:bg-card-hover hover:border-accent/30 hover:shadow-premium
+                ${highlightCam === log.camera.replace('CAM-', '') ? 'border-accent shadow-[0_0_15px_rgba(59,130,246,0.1)]' : 'border-border/50'}
+                ${log.isAlert ? 'border-rose-500/50 shadow-[0_0_12px_rgba(244,63,94,0.15)] ring-1 ring-rose-500/20 animate-pulse' : ''}`}
               >
-                <div className={`w-12 h-12 rounded-2xl ${log.dot} flex-shrink-0 opacity-40 shadow-sm flex items-center justify-center text-white`}>
-                   <Target className="w-6 h-6 opacity-60" />
+                <div className={`w-10 h-10 rounded-lg ${log.bg} shrink-0 flex items-center justify-center border border-border/10`}>
+                  <log.icon className={`w-5 h-5 ${log.iconColor}`} />
                 </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex justify-between items-start mb-1">
-                    <span className={`text-[0.7rem] font-black tracking-widest uppercase ${log.color}`}>{log.type}</span>
-                    <span className="text-[0.6rem] font-bold text-text-gray opacity-40 font-mono">{log.timestamp}</span>
-                  </div>
-                  <div className="text-[0.95rem] font-black text-text-dark flex items-center gap-2">
-                    {log.camera} 
-                    <ChevronRight className="w-4 h-4 text-text-gray opacity-30" />
-                    <span className="text-accent text-[0.85rem] flex items-center gap-1">
-                       {log.confidence}
+                <div className="flex-1 min-w-0 flex flex-col justify-center">
+                  <div className="flex justify-between items-center mb-1">
+                    <span className={`text-[0.7rem] font-bold tracking-wider uppercase ${log.iconColor} truncate`}>
+                      {log.type}
                     </span>
+                    <span className="text-[0.65rem] font-mono text-text-gray font-bold">{log.timestamp}</span>
+                  </div>
+                  <div className="text-xs font-bold text-text-dark flex items-center gap-2">
+                    {log.camera}
+                    <span className="w-1 h-1 bg-border rounded-full"></span>
+                    <span className="text-text-gray font-medium">Conf: {log.confidence}</span>
                   </div>
                 </div>
               </div>
             )) : (
-              <div className="py-12 text-center text-[0.7rem] font-bold text-text-gray opacity-40 uppercase tracking-widest">
-                 No neural events recorded in this sector
+              <div className="py-20 text-center flex flex-col items-center">
+                <div className="w-12 h-12 bg-card rounded-full flex items-center justify-center mb-3 shadow-premium border border-border">
+                  <Shield className="w-5 h-5 text-text-gray" />
+                </div>
+                <div className="text-sm font-bold text-text-dark">No Events Detected</div>
+                <p className="text-[0.65rem] text-text-gray mt-1 uppercase tracking-wider font-bold">Adjust filters or view global matrix</p>
               </div>
             )}
           </div>
 
-          {/* SYSTEM STATS PANEL */}
-          <div className="mt-8 pt-8 border-t border-border space-y-6">
-             <div className="grid grid-cols-2 gap-4">
-                <div className="bg-surface p-4 rounded-2xl border border-border">
-                   <div className="text-[0.55rem] font-black text-text-gray uppercase tracking-widest mb-1 opacity-60">Periods Persons</div>
-                   <div className="text-[1.1rem] font-black text-blue-500">{summary.total_persons} <span className="text-[0.7rem] ml-0.5">UIDS</span></div>
+          {/* INTELLIGENCE FOOTER */}
+          <div className="p-4 bg-card border-t border-border shrink-0">
+            {/* THREAT ASSESSMENT */}
+            <div className={`mb-4 p-3 rounded-xl border transition-all duration-500 flex flex-col gap-1.5
+                ${summary.threat_level === 'Critical' ? 'bg-rose-500/15 border-rose-500/30' :
+                summary.threat_level === 'Elevated' ? 'bg-amber-500/15 border-amber-500/30' :
+                  'bg-emerald-500/10 border-emerald-500/20'}`}>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className={`w-2 h-2 rounded-full animate-pulse ${summary.threat_level === 'Critical' ? 'bg-rose-500' :
+                      summary.threat_level === 'Elevated' ? 'bg-amber-500' : 'bg-emerald-500'}`} />
+                  <span className={`text-[0.65rem] font-black uppercase tracking-widest ${summary.threat_level === 'Critical' ? 'text-rose-600' :
+                      summary.threat_level === 'Elevated' ? 'text-amber-600' : 'text-emerald-600'}`}>
+                    {summary.threat_level || 'Checking...'}
+                  </span>
                 </div>
-                <div className="bg-surface p-4 rounded-2xl border border-border">
-                   <div className="text-[0.55rem] font-black text-text-gray uppercase tracking-widest mb-1 opacity-60">Total Events</div>
-                   <div className="text-[1.1rem] font-black text-accent">{summary.count} <span className="text-[0.7rem] ml-0.5">IDS</span></div>
+                <Shield className={`w-3.5 h-3.5 ${summary.threat_level === 'Critical' ? 'text-rose-600' :
+                    summary.threat_level === 'Elevated' ? 'text-amber-600' : 'text-emerald-600'}`} />
+              </div>
+              <p className={`text-xs font-bold leading-tight ${summary.threat_level === 'Critical' ? 'text-rose-700' :
+                  summary.threat_level === 'Elevated' ? 'text-amber-700' : 'text-text-dark'}`}>
+                {summary.status_message || 'Initializing assessment...'}
+              </p>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2 mb-4">
+              <div className="bg-surface p-2.5 rounded-xl border border-border">
+                <div className="flex items-center gap-2 mb-1">
+                  <Users className="w-3.5 h-3.5 text-blue-500" />
+                  <span className="text-[0.55rem] font-bold text-text-gray uppercase tracking-wider">Human Activity</span>
                 </div>
-             </div>
+                <div className="text-lg font-black text-text-dark leading-none">{summary.total_persons || 0}</div>
+              </div>
 
-             <div>
-               <div className="flex justify-between items-center text-[0.7rem] font-black text-text-dark uppercase tracking-wider mb-2.5 opacity-60">
-                   <span>Most Active Object</span>
-                   <span className="text-accent">{Object.entries(summary?.object_breakdown || {}).sort((a,b) => b[1]-a[1])[0]?.[0] || 'NONE'}</span>
-               </div>
-               <div className="h-1.5 bg-bg rounded-full overflow-hidden border border-border">
-                  <div className="h-full bg-accent w-[85%] rounded-full shadow-[0_0_10px_rgba(14,165,233,0.3)] transition-all duration-1000" />
-               </div>
-             </div>
+              <div className={`p-2.5 rounded-xl border ${summary.total_weapons > 0 ? 'bg-rose-500 border-rose-600 shadow-md' : 'bg-surface border-border'}`}>
+                <div className="flex items-center gap-2 mb-1">
+                  <Target className={`w-3.5 h-3.5 ${summary.total_weapons > 0 ? 'text-white' : 'text-text-gray'}`} />
+                  <span className={`text-[0.55rem] font-bold uppercase tracking-wider ${summary.total_weapons > 0 ? 'text-white/80' : 'text-text-gray'}`}>Ballistics</span>
+                </div>
+                <div className={`text-lg font-black leading-none ${summary.total_weapons > 0 ? 'text-white' : 'text-text-dark'}`}>{summary.total_weapons || 0}</div>
+              </div>
 
-             <div className="flex items-center justify-center gap-2 text-[0.6rem] font-bold text-text-gray opacity-40 group cursor-help">
-                <Lock className="w-3 h-3" />
-                END-TO-END QUANTUM ENCRYPTION ACTIVE
-             </div>
+              <div className="bg-surface p-2.5 rounded-xl border border-border">
+                <div className="flex items-center gap-2 mb-1">
+                  <Car className="w-3.5 h-3.5 text-indigo-500" />
+                  <span className="text-[0.55rem] font-bold text-text-gray uppercase tracking-wider">Transit</span>
+                </div>
+                <div className="text-lg font-black text-text-dark leading-none">{summary.total_vehicles || 0}</div>
+              </div>
+
+              <div className="bg-surface p-2.5 rounded-xl border border-border">
+                <div className="flex items-center gap-2 mb-1">
+                  <AlertCircle className="w-3.5 h-3.5 text-accent" />
+                  <span className="text-[0.55rem] font-bold text-text-gray uppercase tracking-wider">Signals</span>
+                </div>
+                <div className="text-lg font-black text-text-dark leading-none">{summary.count || 0}</div>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between text-[0.6rem] px-1 font-bold">
+              <span className="text-text-gray uppercase tracking-widest">Engine Sync</span>
+              <span className="text-success flex items-center gap-1.5 uppercase tracking-widest font-bold">
+                <div className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" />
+                Optimal
+              </span>
+            </div>
           </div>
         </div>
       </div>
     </div>
   );
 }
+

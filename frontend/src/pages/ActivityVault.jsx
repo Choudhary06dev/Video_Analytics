@@ -57,14 +57,14 @@ const TASK_TYPES = [
   { name:'Zone Sweep',     category:'patrol',     icon:'🔍', priority:'medium' },
 ];
 const WORKERS = [
-  { name:'Maria Santos', role:'Security Lead',    avatar:'MS', color:'#8b5cf6', dept:'Security' },
-  { name:'John Rivera',  role:'AI Operator',      avatar:'JR', color:'#0ea5e9', dept:'Operations' },
-  { name:'Tom Wilson',   role:'Facility Mgr',     avatar:'TW', color:'#22c55e', dept:'Facilities' },
-  { name:'Lisa Chen',    role:'Health Tech',       avatar:'LC', color:'#f59e0b', dept:'Health' },
-  { name:'Robert Fox',   role:'Guard',            avatar:'RF', color:'#ef4444', dept:'Security' },
-  { name:'Sarah Miller', role:'Supervisor',       avatar:'SM', color:'#ec4899', dept:'Management' },
-  { name:'David Park',   role:'Analyst',          avatar:'DP', color:'#14b8a6', dept:'Analytics' },
-  { name:'Nina Reyes',   role:'Compliance',       avatar:'NR', color:'#a855f7', dept:'Legal' },
+  { name:'Ahmed Hassan',  role:'Security Lead',    avatar:'AH', color:'#8b5cf6', dept:'Security' },
+  { name:'Fatima Bibi',   role:'AI Operator',      avatar:'FB', color:'#0ea5e9', dept:'Operations' },
+  { name:'Muhammad Bilal',role:'Facility Mgr',     avatar:'MB', color:'#22c55e', dept:'Facilities' },
+  { name:'Zainab Ali',    role:'Health Tech',      avatar:'ZA', color:'#f59e0b', dept:'Health' },
+  { name:'Usman Sheikh',  role:'Guard',            avatar:'US', color:'#ef4444', dept:'Security' },
+  { name:'Aisha Malik',   role:'Supervisor',       avatar:'AM', color:'#ec4899', dept:'Management' },
+  { name:'Hamza Riaz',    role:'Analyst',          avatar:'HR', color:'#14b8a6', dept:'Analytics' },
+  { name:'Sarah Khan',    role:'Compliance',       avatar:'SK', color:'#a855f7', dept:'Legal' },
 ];
 const STATUS_META = {
   completed:     { label:'Completed',   color:'#22c55e', bg:'rgba(34,197,94,.07)',   icon:CheckCircle2 },

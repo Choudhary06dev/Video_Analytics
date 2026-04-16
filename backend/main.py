@@ -51,10 +51,36 @@ app.add_middleware(
 
 model = YOLO("yolov8n.pt")
 
-latest_intelligence: Dict[str, object] = {
+# 21 AI Scenarios Mapping
+SCENARIO_MAPPING = {
+    "person": "Unauthorized Entry - Restricted Area",
+    "knife": "Weapon Detection (Gun/Knife)",
+    "cell phone": "Mobile Phone Usage - Restricted",
+    "car": "Vehicle Observation",
+    "truck": "Vehicle Observation",
+    "bus": "Vehicle Observation",
+    "motorcycle": "Vehicle Observation",
+    "backpack": "Object Left Unattended",
+    "handbag": "Object Left Unattended",
+    "suitcase": "Object Left Unattended",
+    "fire hydrant": "Fire / Smoke Detection", # Proxy for fire/smoke in COCO
+    "bicycle": "Vehicle Observation",
+}
+
+SCENARIO_ICONS = {
+    "Weapon Detection (Gun/Knife)": "Crosshair",
+    "Unauthorized Entry - Restricted Area": "Lock",
+    "Mobile Phone Usage - Restricted": "Phone",
+    "Vehicle Observation": "Car",
+    "Object Left Unattended": "Package",
+    "Fire / Smoke Detection": "Flame",
+}
+
+# Global state for real-time intelligence
+latest_intelligence = {
     "person_count": 0,
-    "last_update": time.time(),
     "objects": [],
+    "last_update": 0.0
 }
 
 class VideoCamera:
@@ -64,6 +90,8 @@ class VideoCamera:
             source = int(source)
         self.video = cv2.VideoCapture(source)
         self.last_log_time = 0.0
+        # Tracks last logged count for each scenario name to prevent redundant entries
+        self.last_logged_state = {} 
 
     def release(self):
         if self.video is not None and self.video.isOpened():
@@ -79,8 +107,9 @@ class VideoCamera:
             )
             session.add(event)
             session.commit()
+            session.refresh(event)
 
-    def get_frame(self, background_tasks: BackgroundTasks = None):
+    def get_frame(self):
         if not self.video.isOpened():
             return None
 
@@ -90,8 +119,8 @@ class VideoCamera:
 
         results = model.predict(frame, conf=0.5, verbose=False)
         person_count = 0
-        detected_objects = []
-        highest_person_confidence = 0.0
+        detected_scenarios = {} # scenario_name -> {max_conf, count, raw_labels}
+        raw_detections = []
 
         if results and len(results) > 0:
             annotated_frame = results[0].plot()
@@ -101,35 +130,70 @@ class VideoCamera:
                 confidence = (
                     float(box.conf[0]) if hasattr(box.conf, "__getitem__") else float(box.conf)
                 )
-                detected_objects.append({"label": label, "confidence": confidence})
+                
+                raw_detections.append({"label": label, "confidence": confidence})
+                
+                # Special counting for persons
                 if label == "person":
                     person_count += 1
-                    highest_person_confidence = max(highest_person_confidence, confidence)
+                
+                # Map to Scenarios
+                scenario_name = SCENARIO_MAPPING.get(label)
+                if scenario_name:
+                    if scenario_name not in detected_scenarios:
+                        detected_scenarios[scenario_name] = {"max_conf": confidence, "count": 1, "labels": {label}}
+                    else:
+                        detected_scenarios[scenario_name]["max_conf"] = max(detected_scenarios[scenario_name]["max_conf"], confidence)
+                        detected_scenarios[scenario_name]["count"] += 1
+                        detected_scenarios[scenario_name]["labels"].add(label)
         else:
             annotated_frame = frame
 
         latest_intelligence["person_count"] = person_count
-        latest_intelligence["objects"] = sorted({item["label"] for item in detected_objects})
+        latest_intelligence["objects"] = sorted(list(detected_scenarios.keys()))
         latest_intelligence["last_update"] = time.time()
 
-        current_time = time.time()
-        if (current_time - self.last_log_time) > settings.LOG_INTERVAL_SECONDS:
-            if person_count > 0 and background_tasks is not None:
-                background_tasks.add_task(
-                    self.log_detection,
-                    "person",
-                    highest_person_confidence,
-                    {
-                        "count": person_count,
-                        "objects": detected_objects,
-                        "timestamp": datetime.now().isoformat(),
-                    },
-                )
-                self.last_log_time = current_time
+        # Logic for Event-Based Logging (Only log on change)
+        if detected_scenarios:
+            for scenario_name, data in detected_scenarios.items():
+                current_count = data["count"]
+                last_count = self.last_logged_state.get(scenario_name, 0)
+
+                # TRIGGER LOG ON CHANGE
+                if current_count != last_count:
+                    # Calculate the detail string based on the scenario
+                    if scenario_name == "Unauthorized Entry - Restricted Area":
+                        detail = f"{person_count} Persons detected"
+                    elif scenario_name == "Weapon Detection (Gun/Knife)":
+                        detail = f"{', '.join(data['labels']).capitalize()} detected"
+                    elif current_count > 1:
+                        detail = f"{current_count} {scenario_name} objects detected"
+                    else:
+                        detail = f"{list(data['labels'])[0].capitalize()} detected"
+
+                    # Instant Logging (No longer using background tasks to avoid stream queuing delay)
+                    self.log_detection(
+                        scenario_name,
+                        data["max_conf"],
+                        {
+                            "detail": detail,
+                            "count": current_count,
+                            "raw_labels": list(data["labels"]),
+                            "timestamp": datetime.now().isoformat(),
+                            "is_alert": scenario_name in ["Weapon Detection (Gun/Knife)", "Fire / Smoke Detection"]
+                        },
+                    )
+                    # Update local state so we don't log this count again
+                    self.last_logged_state[scenario_name] = current_count
+            
+            # Cleanup: if a scenario was previously present but is now gone, reset its count to 0
+            for prev_scenario in list(self.last_logged_state.keys()):
+                if prev_scenario not in detected_scenarios:
+                    self.last_logged_state[prev_scenario] = 0
 
         cv2.putText(
             annotated_frame,
-            f"NEURAL ENGINE ACTIVE | PERSONS: {person_count}",
+            f"NEURAL ENGINE ACTIVE | SCENARIOS: {len(detected_scenarios)}",
             (20, 40),
             cv2.FONT_HERSHEY_SIMPLEX,
             0.7,
@@ -144,9 +208,9 @@ class VideoCamera:
 camera = VideoCamera()
 
 
-def gen(camera, background_tasks):
+def gen(camera):
     while True:
-        frame = camera.get_frame(background_tasks)
+        frame = camera.get_frame()
         if frame is None:
             time.sleep(1)
             continue
@@ -183,9 +247,9 @@ def read_root():
 
 
 @app.get("/video_feed")
-def video_feed(background_tasks: BackgroundTasks):
+def video_feed():
     return StreamingResponse(
-        gen(camera, background_tasks),
+        gen(camera),
         media_type="multipart/x-mixed-replace; boundary=frame",
     )
 
@@ -205,34 +269,83 @@ def health_check():
 
 
 @app.get("/logs")
-def get_logs(hours: int = 24, session: Session = Depends(get_session)):
+def get_logs(hours: int = 24, camera_id: Optional[int] = None, session: Session = Depends(get_session)):
     cutoff = datetime.now() - timedelta(hours=hours)
-    statement = select(DetectionEvent).where(DetectionEvent.timestamp >= cutoff).order_by(DetectionEvent.timestamp.desc()).limit(100)
+    statement = select(DetectionEvent).where(DetectionEvent.timestamp >= cutoff)
+    
+    if camera_id is not None:
+        statement = statement.where(DetectionEvent.camera_id == camera_id)
+        
+    statement = statement.order_by(DetectionEvent.timestamp.desc()).limit(100)
     results = session.exec(statement).all()
     return results
 
 
 @app.get("/logs/summary")
-def get_logs_summary(hours: int = 24, session: Session = Depends(get_session)):
+def get_logs_summary(hours: int = 24, camera_id: Optional[int] = None, session: Session = Depends(get_session)):
     cutoff = datetime.now() - timedelta(hours=hours)
     statement = select(DetectionEvent).where(DetectionEvent.timestamp >= cutoff)
+    
+    if camera_id is not None:
+        statement = statement.where(DetectionEvent.camera_id == camera_id)
+        
     events = session.exec(statement).all()
     
     total_persons = 0
+    total_weapons = 0
+    total_vehicles = 0
     object_counts = {}
     
     for ev in events:
         obj = ev.object_class
         object_counts[obj] = object_counts.get(obj, 0) + 1
-        if obj == "person" and ev.metadata_json and "count" in ev.metadata_json:
-            total_persons += ev.metadata_json["count"]
-        elif obj == "person":
-            total_persons += 1
+        
+        # Categorize for Dashboard Stats
+        obj_lower = obj.lower()
+        if "person" in obj_lower or "entry" in obj_lower:
+            total_persons += ev.metadata_json.get("count", 1) if ev.metadata_json else 1
+        if "weapon" in obj_lower or "knife" in obj_lower:
+            total_weapons += ev.metadata_json.get("count", 1) if ev.metadata_json else 1
+        if "vehicle" in obj_lower or "car" in obj_lower or "truck" in obj_lower:
+            total_vehicles += ev.metadata_json.get("count", 1) if ev.metadata_json else 1
             
+    # Calculate Live Stats vs Historical Totals
+    # Use real-time intelligence for the primary dashboard metrics
+    live_persons = latest_intelligence.get("person_count", 0)
+    live_objects = latest_intelligence.get("objects", [])
+    
+    live_weapons = 0
+    live_vehicles = 0
+    for obj in live_objects:
+        obj_lower = obj.lower()
+        if "weapon" in obj_lower or "knife" in obj_lower:
+            live_weapons += 1 # In this simple logic, we flag presence
+        if any(v in obj_lower for v in ["vehicle", "car", "truck", "bus"]):
+            live_vehicles += 1
+
+    # Assess Threat Level based on LIVE counts, not historical sums
+    threat_level = "Normal"
+    status_msg = "Security posture stable"
+    
+    if live_weapons > 0:
+        threat_level = "Critical"
+        status_msg = f"CRITICAL: WEAPON DETECTED - Threat identified"
+    elif live_persons > 10:
+        threat_level = "Elevated"
+        status_msg = f"CROWD ALERT: {live_persons} persons in sector"
+    elif live_vehicles > 5:
+        threat_level = "Notice"
+        status_msg = f"Increased transit activity: {live_vehicles} units"
+
     return {
         "hours": hours,
-        "count": len(events),
-        "total_persons": total_persons,
+        "camera_id": camera_id,
+        "count": len(events), # Total signals in time window
+        "total_persons": live_persons, # NOW SHOWING REAL-TIME
+        "total_weapons": live_weapons, # NOW SHOWING REAL-TIME
+        "total_vehicles": live_vehicles, # NOW SHOWING REAL-TIME
+        "threat_level": threat_level,
+        "status_message": status_msg,
         "object_breakdown": object_counts,
         "timestamp": datetime.now().isoformat()
     }
