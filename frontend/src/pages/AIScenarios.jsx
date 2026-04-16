@@ -1,39 +1,39 @@
 import React, { useState } from 'react';
-import { 
-  Lock, AlertTriangle, Crosshair, Users, UserX, UserPlus, UserCheck, 
-  User, Phone, Flame, Car, Truck, Video, Baby, Ban, Building, Mountain, 
+import {
+  Lock, AlertTriangle, Crosshair, Users, UserX, UserPlus, UserCheck,
+  User, Phone, Flame, Car, Truck, Video, Baby, Ban, Building, Mountain,
   Activity, Package, Search, Grid, List as ListIcon, Filter, Play, Settings
 } from 'lucide-react';
 
 const SCENARIOS = [
-  { id: 1, name: 'Unauthorized Entry - Restricted Area', icon: Lock, color: 'var(--color-accent)', image: 'https://images.unsplash.com/photo-1586773860418-d37222d8fce3?auto=format&fit=crop&q=80&w=800&q=90', desc: 'Detects unauthorized personnel across high-security hospital zones.', status: 'excellent', health: 99.2 },
-  { id: 2, name: 'Aggressive Behaviour Detection', icon: AlertTriangle, color: 'var(--color-warning)', image: 'https://images.unsplash.com/photo-1551076805-e1869033e561?auto=format&fit=crop&q=80&w=800&q=90', desc: 'Real-time classification of erratic or violent movements.', status: 'good', health: 94.7 },
-  { id: 3, name: 'Weapon Detection (Gun/Knife)', icon: Crosshair, color: 'var(--color-danger)', image: 'https://images.unsplash.com/photo-1580273916550-e323be2ae537?auto=format&fit=crop&q=80&w=800&q=90', desc: 'Identifies immediate lethal threats in public domains.', status: 'excellent', health: 96.8 },
-  { id: 4, name: 'Multiple Persons - Single Access', icon: Users, color: 'var(--color-accent)', image: 'https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?auto=format&fit=crop&q=80&w=800&q=90', desc: 'Detects tailgating or dual-entry at single-pass gates.', status: 'good', health: 91.2 },
-  { id: 5, name: 'Blacklisted Person Alert', icon: UserX, color: 'var(--color-danger)', image: 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&q=80&w=800&q=90', desc: 'Instant facial recognition against central blacklist database.', status: 'excellent', health: 98.4 },
-  { id: 6, name: 'Crowd Density / Overcrowding', icon: Users, color: 'var(--color-warning)', image: 'https://images.unsplash.com/photo-1516549655169-df83a0774514?auto=format&fit=crop&q=80&w=800&q=90', desc: 'Monitors lobby and wait areas for threshold violations.', status: 'good', health: 89.5 },
-  { id: 7, name: 'Visitor Count Limit Exceeded', icon: UserPlus, color: 'var(--color-warning)', image: 'https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?auto=format&fit=crop&q=80&w=800&q=90', desc: 'Real-time counting for fire safety compliance.', status: 'excellent', health: 95.1 },
-  { id: 8, name: 'Entry/Exit Tracking - Visitors', icon: UserCheck, color: 'var(--color-accent)', image: 'https://www.satoamerica.com/adobe/dynamicmedia/deliver/dm-aid--804938e5-4588-4adc-a9d8-bffc50491998/sol-078.png?quality=85&preferwebp=true', desc: 'Bidirectional tracking of visitor flow patterns.', status: 'excellent', health: 97.9 },
-  { id: 9, name: 'Staff Presence/Absence at Post', icon: User, color: 'var(--color-accent)', image: 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&q=80&w=800&q=90', desc: 'Verifies staff positioning at critical healthcare nodes.', status: 'good', health: 92.4 },
-  { id: 10, name: 'Mobile Phone Usage - Restricted', icon: Phone, color: 'var(--color-warning)', image: 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&q=80&w=800&q=90', desc: 'Detects phone usage in high-radiation or sterile zones.', status: 'warning', health: 86.2 },
+  { id: 1, name: 'Unauthorized Entry - Restricted Area', icon: Lock, color: 'var(--color-accent)', image: 'https://th.bing.com/th/id/OIP.13LBdPE2SkGJfkxDNq6P3gHaCk?w=309&h=121&c=7&r=0&o=5&dpr=1.3&pid=1.7', desc: 'Detects unauthorized personnel across high-security hospital zones.', status: 'excellent', health: 99.2 },
+  { id: 2, name: 'Aggressive Behaviour Detection', icon: AlertTriangle, color: 'var(--color-warning)', image: 'https://th.bing.com/th/id/OIP.yD8MJcOqJb1k6hZ_507GIQHaE8?w=233&h=180&c=7&r=0&o=5&dpr=1.3&pid=1.7', desc: 'Real-time classification of erratic or violent movements.', status: 'good', health: 94.7 },
+  { id: 3, name: 'Weapon Detection (Gun/Knife)', icon: Crosshair, color: 'var(--color-danger)', image: 'https://tse1.mm.bing.net/th/id/OIP.WMcJRg1Sxk2IQSbELI9ShAHaFj?rs=1&pid=ImgDetMain&o=7&rm=3', desc: 'Identifies immediate lethal threats in public domains.', status: 'excellent', health: 96.8 },
+  { id: 4, name: 'Multiple Persons - Single Access', icon: Users, color: 'var(--color-accent)', image: 'https://tse3.mm.bing.net/th/id/OIP.0aPBJr7dxHXY_norFDrJbwHaE8?rs=1&pid=ImgDetMain&o=7&rm=3', desc: 'Detects tailgating or dual-entry at single-pass gates.', status: 'good', health: 91.2 },
+  { id: 5, name: 'Blacklisted Person Alert', icon: UserX, color: 'var(--color-danger)', image: 'https://th.bing.com/th/id/OIP.WQc0XDVZNcBHlfm_r-_S1wHaEJ?w=295&h=180&c=7&r=0&o=5&dpr=1.3&pid=1.7', desc: 'Instant facial recognition against central blacklist database.', status: 'excellent', health: 98.4 },
+  { id: 6, name: 'Crowd Density / Overcrowding', icon: Users, color: 'var(--color-warning)', image: 'https://th.bing.com/th/id/OIP.TptiJXGcUcDhe6bctcMKsgHaD0?w=313&h=179&c=7&r=0&o=5&dpr=1.3&pid=1.7', desc: 'Monitors lobby and wait areas for threshold violations.', status: 'good', health: 89.5 },
+  { id: 7, name: 'Visitor Count Limit Exceeded', icon: UserPlus, color: 'var(--color-warning)', image: 'https://th.bing.com/th/id/OIP.2KxpZ7UmY1hIyHwZbJmL3QHaD4?w=299&h=180&c=7&r=0&o=5&dpr=1.3&pid=1.7', desc: 'Real-time counting for fire safety compliance.', status: 'excellent', health: 95.1 },
+  { id: 8, name: 'Entry/Exit Tracking - Visitors', icon: UserCheck, color: 'var(--color-accent)', image: 'https://th.bing.com/th/id/OIP.aMhoCenmTiJDuLGfVsVXcgHaE5?w=240&h=180&c=7&r=0&o=5&dpr=1.3&pid=1.7', desc: 'Bidirectional tracking of visitor flow patterns.', status: 'excellent', health: 97.9 },
+  { id: 9, name: 'Staff Presence/Absence at Post', icon: User, color: 'var(--color-accent)', image: 'https://images.unsplash.com/photo-1559136555-9303baea8ebd?auto=format&fit=crop&q=80&w=800&q=90', desc: 'Verifies staff positioning at critical healthcare nodes.', status: 'good', health: 92.4 },
+  { id: 10, name: 'Mobile Phone Usage - Restricted', icon: Phone, color: 'var(--color-warning)', image: 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&q=80&w=800&q=90', desc: 'Detects phone usage in high-radiation or sterile zones.', status: 'warning', health: 86.2 },
   { id: 11, name: 'Fire / Smoke Detection', icon: Flame, color: 'var(--color-danger)', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?auto=format&fit=crop&q=80&w=800&q=90', desc: 'Convolutional neural net for smoke and flame patterns.', status: 'excellent', health: 99.8 },
-  { id: 12, name: 'Vehicle Observation', icon: Car, color: 'var(--color-accent)', image: 'https://images.unsplash.com/photo-1580273916550-e323be2ae537?auto=format&fit=crop&q=80&w=800&q=90', desc: 'Tracks ambulance and vehicle arrivals at emergency bay.', status: 'excellent', health: 98.1 },
-  { id: 13, name: 'Unauthorized Parking / Blockage', icon: Truck, color: 'var(--color-warning)', image: 'https://images.unsplash.com/photo-1553413077-190dd305871c?auto=format&fit=crop&q=80&w=800&q=90', desc: 'Alerts if emergency routes are blocked by vehicles.', status: 'excellent', health: 94.3 },
-  { id: 14, name: 'Camera Recording Failure', icon: Video, color: 'var(--color-danger)', image: 'https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?auto=format&fit=crop&q=80&w=800&q=90', desc: 'Diagnostic tool for signal loss or storage failure.', status: 'critical', health: 42.5 },
-  { id: 15, name: 'Motion Outside Routes', icon: Baby, color: 'var(--color-danger)', image: 'https://images.unsplash.com/photo-1516574187841-cb9cc2ca948b?auto=format&fit=crop&q=80&w=800&q=90', desc: 'Detects patients or babies moving out of safe zones.', status: 'good', health: 91.8 },
-  { id: 16, name: 'Unauthorized Handling', icon: Ban, color: 'var(--color-danger)', image: 'https://images.unsplash.com/photo-1516574187841-cb9cc2ca948b?auto=format&fit=crop&q=80&w=800&q=90', desc: 'Detects physical contact with babies by unauthorized staff.', status: 'excellent', health: 97.2 },
-  { id: 17, name: 'Object Left Unattended', icon: Package, color: 'var(--color-warning)', image: 'https://images.unsplash.com/photo-1516574187841-cb9cc2ca948b?auto=format&fit=crop&q=80&w=800&q=90', desc: 'Tracks unidentified baggage or items in corridors.', status: 'good', health: 90.1 },
-  { id: 18, name: 'Movement in Closed Areas', icon: Building, color: 'var(--color-warning)', image: 'https://images.unsplash.com/photo-1586773860418-d37222d8fce3?auto=format&fit=crop&q=80&w=800&q=90', desc: 'Motion profiling in locked or night-only departments.', status: 'excellent', health: 96.5 },
-  { id: 19, name: 'Boundary Crossing', icon: Mountain, color: 'var(--color-danger)', image: 'https://images.unsplash.com/photo-1605276374104-dee2a0ed3cd6?auto=format&fit=crop&q=80&w=800&q=90', desc: 'Detects wall jumps or perimeter fence breaches.', status: 'excellent', health: 98.7 },
-  { id: 20, name: 'Grouped Activity', icon: Users, color: 'var(--color-warning)', image: 'https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?auto=format&fit=crop&q=80&w=800&q=90', desc: 'Identifies unusual gatherings of 3+ individuals.', status: 'good', health: 93.4 },
-  { id: 21, name: 'Safety Violation', icon: AlertTriangle, color: 'var(--color-danger)', image: 'https://images.unsplash.com/photo-1516549655169-df83a0774514?auto=format&fit=crop&q=80&w=800&q=90', desc: 'Monitors PPE compliance (Gloves, Gowns, Masks).', status: 'excellent', health: 95.8 },
+  { id: 12, name: 'Vehicle Observation', icon: Car, color: 'var(--color-accent)', image: 'https://images.unsplash.com/photo-1583121274602-3e2820c69888?auto=format&fit=crop&q=80&w=800&q=90', desc: 'Tracks ambulance and vehicle arrivals at emergency bay.', status: 'excellent', health: 98.1 },
+  { id: 13, name: 'Unauthorized Parking / Blockage', icon: Truck, color: 'var(--color-warning)', image: 'https://images.unsplash.com/photo-1506521781263-d8422e82f27a?auto=format&fit=crop&q=80&w=800&q=90', desc: 'Alerts if emergency routes are blocked by vehicles.', status: 'excellent', health: 94.3 },
+  { id: 14, name: 'Camera Recording Failure', icon: Video, color: 'var(--color-danger)', image: 'https://th.bing.com/th/id/OIP.IGi3IOg_ie_KWZQyDUFXJAHaEK?w=320&h=180&c=7&r=0&o=5&dpr=1.3&pid=1.7', desc: 'Diagnostic tool for signal loss or storage failure.', status: 'critical', health: 42.5 },
+  { id: 15, name: 'Motion Outside Routes', icon: Baby, color: 'var(--color-danger)', image: 'https://images.stockcake.com/public/d/5/6/d561e091-52dc-4d54-84e1-2e4378cc3d10_large/urban-mobility-intersection-stockcake.jpg', desc: 'Detects patients or babies moving out of safe zones.', status: 'good', health: 91.8 },
+  { id: 16, name: 'Unauthorized Handling', icon: Ban, color: 'var(--color-danger)', image: 'https://tse1.mm.bing.net/th/id/OIP.scnPg8Gb5_60ajW3uyKQ8gHaE8?rs=1&pid=ImgDetMain&o=7&rm=3', desc: 'Detects physical contact with babies by unauthorized staff.', status: 'excellent', health: 97.2 },
+  { id: 17, name: 'Object Left Unattended', icon: Package, color: 'var(--color-warning)', image: 'https://tse1.mm.bing.net/th/id/OIP.FkN6PDjxo27aXOcsU1DPtQHaE8?rs=1&pid=ImgDetMain&o=7&rm=3', desc: 'Tracks unidentified baggage or items in corridors.', status: 'good', health: 90.1 },
+  { id: 18, name: 'Movement in Closed Areas', icon: Building, color: 'var(--color-warning)', image: 'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&q=80&w=800&q=90', desc: 'Motion profiling in locked or night-only departments.', status: 'excellent', health: 96.5 },
+  { id: 19, name: 'Boundary Crossing', icon: Mountain, color: 'var(--color-danger)', image: 'https://tse1.mm.bing.net/th/id/OIP.Bv-IZNYh-_6HR14I7YNeiwHaDw?rs=1&pid=ImgDetMain&o=7&rm=3', desc: 'Detects wall jumps or perimeter fence breaches.', status: 'excellent', health: 98.7 },
+  { id: 20, name: 'Grouped Activity', icon: Users, color: 'var(--color-warning)', image: 'https://images.unsplash.com/photo-1515187029135-18ee286d815b?auto=format&fit=crop&q=80&w=800&q=90', desc: 'Identifies unusual gatherings of 3+ individuals.', status: 'good', health: 93.4 },
+  { id: 21, name: 'Safety Violation', icon: AlertTriangle, color: 'var(--color-danger)', image: 'https://tse4.mm.bing.net/th/id/OIP.BMGuwKv18rN-FLuxhQaWZAHaEc?rs=1&pid=ImgDetMain&o=7&rm=3', desc: 'Monitors PPE compliance (Gloves, Gowns, Masks).', status: 'excellent', health: 95.8 },
 ];
 
 export default function AIScenarios() {
   const [searchTerm, setSearchTerm] = useState('');
   const [viewMode, setViewMode] = useState('grid');
 
-  const filtered = SCENARIOS.filter(s => 
+  const filtered = SCENARIOS.filter(s =>
     s.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -51,13 +51,13 @@ export default function AIScenarios() {
         </div>
         <div className="flex items-center gap-3">
           <div className="flex bg-card border border-border rounded-xl p-1 shadow-sm">
-            <button 
+            <button
               onClick={() => setViewMode('grid')}
               className={`p-2 rounded-lg transition-all ${viewMode === 'grid' ? 'bg-accent text-white shadow-md' : 'text-text-gray hover:text-text-dark'}`}
             >
               <Grid className="w-4 h-4" />
             </button>
-            <button 
+            <button
               onClick={() => setViewMode('list')}
               className={`p-2 rounded-lg transition-all ${viewMode === 'list' ? 'bg-accent text-white shadow-md' : 'text-text-gray hover:text-text-dark'}`}
             >
@@ -75,9 +75,9 @@ export default function AIScenarios() {
       <div className="bg-card rounded-[14px] p-6 border border-border shadow-premium flex flex-col md:flex-row gap-4 items-center">
         <div className="relative flex-1 w-full">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-text-gray" />
-          <input 
-            type="text" 
-            placeholder="Search vision models by name or category..." 
+          <input
+            type="text"
+            placeholder="Search vision models by name or category..."
             className="w-full pl-12 pr-4 py-3 bg-bg border border-border rounded-2xl text-[0.88rem] focus:outline-none focus:border-accent transition-all"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -98,7 +98,7 @@ export default function AIScenarios() {
       {/* Scenarios Grid */}
       <div className={`grid gap-6 ${viewMode === 'grid' ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' : 'grid-cols-1'}`}>
         {filtered.map((scenario, index) => (
-          <div 
+          <div
             key={scenario.id}
             className={`bg-card rounded-[14px] border border-border transition-all duration-400 overflow-hidden relative group hover:shadow-premium
               ${viewMode === 'grid' ? 'flex flex-col' : 'flex flex-row items-center p-4'}`}
@@ -108,7 +108,7 @@ export default function AIScenarios() {
               <div className="absolute inset-0 z-10 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity" />
               <img src={scenario.image} alt={scenario.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
               {viewMode === 'grid' && (
-                <div 
+                <div
                   className={`absolute top-4 left-4 z-20 w-12 h-12 rounded-2xl bg-card/90 backdrop-blur-md shadow-lg flex items-center justify-center border-2 border-status transition-colors`}
                   style={{ borderColor: scenario.status === 'critical' ? 'var(--color-danger)' : scenario.status === 'warning' ? 'var(--color-warning)' : 'var(--color-success)' }}
                 >
@@ -124,7 +124,7 @@ export default function AIScenarios() {
                   {scenario.name}
                 </h3>
                 {viewMode === 'list' && (
-                  <div 
+                  <div
                     className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 shadow-sm border border-status`}
                     style={{ borderColor: scenario.status === 'critical' ? 'var(--color-danger)' : scenario.status === 'warning' ? 'var(--color-warning)' : 'var(--color-success)' }}
                   >
@@ -132,7 +132,7 @@ export default function AIScenarios() {
                   </div>
                 )}
               </div>
-              
+
               <p className={`text-[0.78rem] text-text-gray font-semibold mb-6 leading-relaxed ${viewMode === 'grid' ? 'line-clamp-2' : 'max-w-2xl'}`}>
                 {scenario.desc}
               </p>
@@ -157,14 +157,8 @@ export default function AIScenarios() {
                 </div>
               </div>
             </div>
-            
-            {/* Status Badge Overlays */}
-            <div 
-              className={`absolute top-4 right-4 z-30 px-3 py-1.5 rounded-full text-[0.65rem] font-black uppercase tracking-widest text-white shadow-lg
-              ${scenario.status === 'critical' ? 'bg-danger' : scenario.status === 'warning' ? 'bg-warning' : 'bg-success'}`}
-            >
-              {scenario.status}
-            </div>
+
+            {/* Status Badge Overlays Removed */}
           </div>
         ))}
       </div>

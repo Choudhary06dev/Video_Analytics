@@ -1,6 +1,6 @@
 from contextlib import asynccontextmanager
-from datetime import datetime
-from typing import Dict
+from datetime import datetime, timedelta
+from typing import Dict, List, Optional
 import time
 
 import cv2
@@ -205,10 +205,37 @@ def health_check():
 
 
 @app.get("/logs")
-def get_logs(session: Session = Depends(get_session)):
-    statement = select(DetectionEvent).order_by(DetectionEvent.timestamp.desc()).limit(50)
+def get_logs(hours: int = 24, session: Session = Depends(get_session)):
+    cutoff = datetime.now() - timedelta(hours=hours)
+    statement = select(DetectionEvent).where(DetectionEvent.timestamp >= cutoff).order_by(DetectionEvent.timestamp.desc()).limit(100)
     results = session.exec(statement).all()
     return results
+
+
+@app.get("/logs/summary")
+def get_logs_summary(hours: int = 24, session: Session = Depends(get_session)):
+    cutoff = datetime.now() - timedelta(hours=hours)
+    statement = select(DetectionEvent).where(DetectionEvent.timestamp >= cutoff)
+    events = session.exec(statement).all()
+    
+    total_persons = 0
+    object_counts = {}
+    
+    for ev in events:
+        obj = ev.object_class
+        object_counts[obj] = object_counts.get(obj, 0) + 1
+        if obj == "person" and ev.metadata_json and "count" in ev.metadata_json:
+            total_persons += ev.metadata_json["count"]
+        elif obj == "person":
+            total_persons += 1
+            
+    return {
+        "hours": hours,
+        "count": len(events),
+        "total_persons": total_persons,
+        "object_breakdown": object_counts,
+        "timestamp": datetime.now().isoformat()
+    }
 
 
 # --- AUTHENTICATION ENDPOINTS ---

@@ -7,27 +7,27 @@ import {
 import { useTheme } from '../../context/ThemeContext';
 
 const SCENARIOS = [
-  { id: 1,  name: 'Unauthorized Entry',        icon: Lock,          cat: 'security' },
-  { id: 2,  name: 'Aggressive Behaviour',      icon: AlertTriangle, cat: 'threat'   },
-  { id: 3,  name: 'Weapon Detection',          icon: Crosshair,     cat: 'threat'   },
-  { id: 4,  name: 'Multiple Persons / Access', icon: Users,         cat: 'security' },
-  { id: 5,  name: 'Blacklisted Person',        icon: UserX,         cat: 'threat'   },
-  { id: 6,  name: 'Crowd Overcrowding',        icon: Users,         cat: 'crowd'    },
-  { id: 7,  name: 'Visitor Count Exceeded',    icon: UserPlus,      cat: 'crowd'    },
-  { id: 8,  name: 'Entry/Exit Tracking',       icon: UserCheck,     cat: 'access'   },
-  { id: 9,  name: 'Staff Absence at Post',     icon: User,          cat: 'access'   },
-  { id: 10, name: 'Mobile Phone – Restricted', icon: Phone,         cat: 'security' },
-  { id: 11, name: 'Fire / Smoke Detection',    icon: Flame,         cat: 'threat'   },
-  { id: 12, name: 'Vehicle Observation',       icon: Car,           cat: 'access'   },
-  { id: 13, name: 'Unauthorized Parking',      icon: Truck,         cat: 'access'   },
-  { id: 14, name: 'Camera Recording Failure',  icon: Video,         cat: 'system'   },
-  { id: 15, name: 'Motion Outside Routes',     icon: Baby,          cat: 'security' },
-  { id: 16, name: 'Unauthorized Handling',     icon: Ban,           cat: 'threat'   },
-  { id: 17, name: 'Object Left Unattended',    icon: Package,       cat: 'security' },
-  { id: 18, name: 'Movement – Closed Area',    icon: Building,      cat: 'security' },
-  { id: 19, name: 'Boundary Crossing',         icon: Mountain,      cat: 'threat'   },
-  { id: 20, name: 'Grouped Activity',          icon: Users,         cat: 'crowd'    },
-  { id: 21, name: 'Safety Violation',          icon: ShieldAlert,   cat: 'threat'   },
+  { id: 1, name: 'Unauthorized Entry', icon: Lock, cat: 'security', image: 'https://images.unsplash.com/photo-1557597774-9d2739f85a76?auto=format&fit=crop&q=80&w=800' },
+  { id: 2, name: 'Aggressive Behaviour', icon: AlertTriangle, cat: 'threat', image: 'https://images.unsplash.com/photo-1543269664-76bc3997d9ea?auto=format&fit=crop&q=80&w=400' },
+  { id: 3, name: 'Weapon Detection', icon: Crosshair, cat: 'threat', image: 'https://images.unsplash.com/photo-1588612143093-57519968412e?auto=format&fit=crop&q=80&w=800' },
+  { id: 4, name: 'Multiple Persons / Access', icon: Users, cat: 'security', image: 'https://images.unsplash.com/photo-1517457373958-b7bdd4587205?auto=format&fit=crop&q=80&w=400' },
+  { id: 5, name: 'Blacklisted Person', icon: UserX, cat: 'threat', image: 'https://images.unsplash.com/photo-1561069934-eee225952461?auto=format&fit=crop&q=80&w=400' },
+  { id: 6, name: 'Crowd Overcrowding', icon: Users, cat: 'crowd', image: 'https://images.unsplash.com/photo-1496160655511-2f93bad7281f?auto=format&fit=crop&q=80&w=400' },
+  { id: 7, name: 'Visitor Count Exceeded', icon: UserPlus, cat: 'crowd', image: 'https://images.unsplash.com/photo-1517649763962-0c623066013b?auto=format&fit=crop&q=80&w=400' },
+  { id: 8, name: 'Entry/Exit Tracking', icon: UserCheck, cat: 'access', image: 'https://images.unsplash.com/photo-1519494140268-80bbd2d6fd0d?auto=format&fit=crop&q=80&w=400' },
+  { id: 9, name: 'Staff Absence at Post', icon: User, cat: 'access', image: 'https://images.unsplash.com/photo-1559136555-9303baea8ebd?auto=format&fit=crop&q=80&w=400' },
+  { id: 10, name: 'Mobile Phone – Restricted', icon: Phone, cat: 'security', image: 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&q=80&w=400' },
+  { id: 11, name: 'Fire / Smoke Detection', icon: Flame, cat: 'threat', image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?auto=format&fit=crop&q=80&w=400' },
+  { id: 12, name: 'Vehicle Observation', icon: Car, cat: 'access', image: 'https://images.unsplash.com/photo-1583121274602-3e2820c69888?auto=format&fit=crop&q=80&w=400' },
+  { id: 13, name: 'Unauthorized Parking', icon: Truck, cat: 'access', image: 'https://images.unsplash.com/photo-1506521781263-d8422e82f27a?auto=format&fit=crop&q=80&w=400' },
+  { id: 14, name: 'Camera Recording Failure', icon: Video, cat: 'system', image: 'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&q=80&w=400' },
+  { id: 15, name: 'Motion Outside Routes', icon: Baby, cat: 'security', image: 'https://images.unsplash.com/photo-1537673156264-42ad05128080?auto=format&fit=crop&q=80&w=400' },
+  { id: 16, name: 'Unauthorized Handling', icon: Ban, cat: 'threat', image: 'https://images.unsplash.com/photo-1526434426615-1abe81efcb0b?auto=format&fit=crop&q=80&w=400' },
+  { id: 17, name: 'Object Left Unattended', icon: Package, cat: 'security', image: 'https://images.unsplash.com/photo-1577733966973-d680babb2da1?auto=format&fit=crop&q=80&w=400' },
+  { id: 18, name: 'Movement – Closed Area', icon: Building, cat: 'security', image: 'https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&q=80&w=400' },
+  { id: 19, name: 'Boundary Crossing', icon: Mountain, cat: 'threat', image: 'https://images.unsplash.com/photo-1510074377623-8cf13fb86c08?auto=format&fit=crop&q=80&w=400' },
+  { id: 20, name: 'Grouped Activity', icon: Users, cat: 'crowd', image: 'https://images.unsplash.com/photo-1515187029135-18ee286d815b?auto=format&fit=crop&q=80&w=400' },
+  { id: 21, name: 'Safety Violation', icon: ShieldAlert, cat: 'threat', image: 'https://images.unsplash.com/photo-1504917595217-d4dc5ebe6122?auto=format&fit=crop&q=80&w=400' },
 ];
 
 const STATUS_CFG = {
@@ -59,20 +59,13 @@ const STATUS_CFG = {
 
 const CAT_COLORS = {
   security: '#0ea5e9',
-  threat:   '#ef4444',
-  crowd:    '#f59e0b',
-  access:   '#22c55e',
-  system:   '#8b5cf6',
+  threat: '#ef4444',
+  crowd: '#f59e0b',
+  access: '#22c55e',
+  system: '#8b5cf6',
 };
 
-const IMAGES = [
-  'https://images.unsplash.com/photo-1586773860418-d37222d8fce3?auto=format&fit=crop&q=80&w=400',
-  'https://images.unsplash.com/photo-1551076805-e1869033e561?auto=format&fit=crop&q=80&w=400',
-  'https://images.unsplash.com/photo-1580273916550-e323be2ae537?auto=format&fit=crop&q=80&w=400',
-  'https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?auto=format&fit=crop&q=80&w=400',
-  'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&q=80&w=400',
-  'https://images.unsplash.com/photo-1516549655169-df83a0774514?auto=format&fit=crop&q=80&w=400',
-];
+// Specific images are now part of the SCENARIOS array definition
 
 function randStatus() {
   const r = Math.random();
@@ -99,8 +92,8 @@ function ScenarioCard({ s, onSelect }) {
         boxShadow: hovered
           ? `0 16px 40px -10px ${catColor}30, ${s.status === 'critical' ? cfg.glow : 'none'}`
           : s.status === 'critical'
-          ? cfg.glow
-          : '0 2px 10px rgba(0,0,0,0.04)',
+            ? cfg.glow
+            : '0 2px 10px rgba(0,0,0,0.04)',
         transform: hovered ? 'translateY(-6px) scale(1.02)' : 'translateY(0) scale(1)',
         transition: 'all 0.35s cubic-bezier(0.34,1.56,0.64,1)',
         cursor: 'pointer',
@@ -148,15 +141,7 @@ function ScenarioCard({ s, onSelect }) {
           }}>
             <s.icon style={{ width: 20, height: 20, color: catColor }} />
           </div>
-          <div style={{
-            background: cfg.bg, border: `1px solid ${cfg.border}`,
-            color: cfg.color, fontSize: 9, fontWeight: 900,
-            padding: '3px 8px', borderRadius: 8, letterSpacing: 0.8,
-            display: 'flex', alignItems: 'center', gap: 4,
-          }}>
-            {s.status === 'critical' && <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#ef4444', display: 'inline-block', animation: 'pulse 1s infinite' }} />}
-            {cfg.label}
-          </div>
+          {/* Status badge removed */}
         </div>
 
         {/* Name */}
@@ -208,11 +193,10 @@ export default function AIScenarioGrid() {
   const [search, setSearch] = useState('');
 
   const build = useCallback(() =>
-    SCENARIOS.map((s, i) => ({
+    SCENARIOS.map((s) => ({
       ...s,
       status: randStatus(),
       count: Math.floor(Math.random() * 50),
-      image: IMAGES[i % IMAGES.length],
     })),
     []
   );
@@ -287,7 +271,7 @@ export default function AIScenarioGrid() {
           const active = filter === f;
           const count = f === 'all' ? data.length
             : f === 'critical' || f === 'warning' ? data.filter(s => s.status === f).length
-            : data.filter(s => s.cat === f).length;
+              : data.filter(s => s.cat === f).length;
           return (
             <button
               key={f}
@@ -343,7 +327,7 @@ export default function AIScenarioGrid() {
             </div>
             <div style={{ padding: '20px 24px 24px' }}>
               {[
-                { label: 'Status',   value: STATUS_CFG[selected.status].label, color: STATUS_CFG[selected.status].color },
+                { label: 'Status', value: STATUS_CFG[selected.status].label, color: STATUS_CFG[selected.status].color },
                 { label: 'Category', value: selected.cat, color: CAT_COLORS[selected.cat] },
                 { label: 'Events Today', value: selected.count, color: '#0ea5e9' },
               ].map((row, i) => (

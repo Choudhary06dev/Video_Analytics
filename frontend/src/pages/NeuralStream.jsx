@@ -28,28 +28,62 @@ export default function NeuralStream() {
   const [highlightCam, setHighlightCam] = useState(null);
   const [boxPositions, setBoxPositions] = useState({});
   const [intel, setIntel] = useState({ person_count: 0, objects: [] });
+  const [filterHours, setFilterHours] = useState(1);
+  const [summary, setSummary] = useState({ total_persons: 0, count: 0, object_breakdown: {} });
 
-  // Poll backend for real-time intelligence
+  const fetchLogsData = useCallback(async () => {
+    try {
+      const [logsRes, summaryRes] = await Promise.all([
+        fetch(`http://localhost:8000/logs?hours=${filterHours}`),
+        fetch(`http://localhost:8000/logs/summary?hours=${filterHours}`)
+      ]);
+      
+      if (logsRes.ok) {
+        const logsData = await logsRes.json();
+        if (Array.isArray(logsData)) {
+          setLogs(logsData.slice(0, 20).map(log => ({
+            id: log.id,
+            type: `${log.object_class.toUpperCase()} DETECTED`,
+            color: log.object_class === 'person' ? 'text-blue-500' : 'text-accent',
+            dot: log.object_class === 'person' ? 'bg-blue-300' : 'bg-accent/40',
+            camera: `CAM-${log.camera_id.toString().padStart(2, '0')}`,
+            confidence: `${(log.confidence * 100).toFixed(1)}% Conf.`,
+            timestamp: new Date(log.timestamp).toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' })
+          })));
+        }
+      }
+
+      if (summaryRes.ok) {
+        const summaryData = await summaryRes.json();
+        if (summaryData && typeof summaryData === 'object' && !summaryData.detail) {
+          setSummary(summaryData);
+        }
+      }
+    } catch (err) {
+      console.error("Failed to fetch logs:", err);
+    }
+  }, [filterHours]);
+
+  // Fetch initial logs and stats
+  useEffect(() => {
+    fetchLogsData();
+    const interval = setInterval(fetchLogsData, 5000);
+    return () => clearInterval(interval);
+  }, [fetchLogsData]);
+
+  // Poll backend for real-time intelligence (Active UI)
   useEffect(() => {
     const fetchIntel = async () => {
       try {
         const response = await fetch('http://localhost:8000/intelligence');
         const data = await response.json();
         
-        // If person count increased, add a log entry
+        // Visual highlight if person count increases
         if (data.person_count > intel.person_count) {
-          const newLog = {
-            id: Date.now(),
-            type: 'PERSON DETECTED',
-            color: 'text-blue-500',
-            dot: 'bg-blue-300',
-            camera: 'CAM-01',
-            confidence: '98.2% Conf.',
-            timestamp: new Date().toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' })
-          };
-          setLogs(prev => [newLog, ...prev.slice(0, 15)]);
           setHighlightCam('01');
           setTimeout(() => setHighlightCam(null), 1000);
+          // Immediately fetch logs to show new entry
+          fetchLogsData();
         }
         
         setIntel(data);
@@ -60,7 +94,7 @@ export default function NeuralStream() {
 
     const interval = setInterval(fetchIntel, 1000);
     return () => clearInterval(interval);
-  }, [intel.person_count]);
+  }, [intel.person_count, fetchLogsData]);
 
   // Update bounding box positions (Visual Simulation for other cams, real for active)
   useEffect(() => {
@@ -68,7 +102,6 @@ export default function NeuralStream() {
       const newPos = {};
       CAMERAS.forEach(cam => {
         if (cam.id === '01' && intel.person_count > 0) {
-          // Keep box centered for person in cam 01 if detected
           newPos[cam.id] = { x: 40, y: 30, conf: 99.1 };
         } else {
           newPos[cam.id] = {
@@ -229,36 +262,41 @@ export default function NeuralStream() {
 
         {/* INTEGRATED SIDEBAR INTELLIGENCE */}
         <div className="w-[380px] bg-card rounded-[40px] border border-border shadow-premium flex flex-col p-8 h-fit min-h-[750px] sticky top-4">
-          <div className="flex items-center justify-between mb-8">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-accent/10 text-accent rounded-xl">
-                 <BarChart2 className="w-5 h-5" />
+          <div className="flex flex-col gap-6 mb-8">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-accent/10 text-accent rounded-xl">
+                   <BarChart2 className="w-5 h-5" />
+                </div>
+                <h2 className="text-[1.3rem] font-black text-text-dark tracking-tight uppercase leading-none">Neural Events</h2>
               </div>
-              <h2 className="text-[1.3rem] font-black text-text-dark tracking-tight uppercase leading-none">Neural Events</h2>
+              <div className="px-3 py-1 bg-accent/10 text-accent border border-accent/20 rounded-full text-[0.6rem] font-black animate-pulse flex items-center gap-1.5">
+                 <div className="w-1.5 h-1.5 bg-accent rounded-full" />
+                 LIVE
+              </div>
             </div>
-            <div className="px-3 py-1 bg-accent/10 text-accent border border-accent/20 rounded-full text-[0.6rem] font-black animate-pulse flex items-center gap-1.5">
-               <div className="w-1.5 h-1.5 bg-accent rounded-full" />
-               LIVE UPDATE
+
+            {/* FILTER BUTTONS */}
+            <div className="flex bg-bg p-1 rounded-2xl border border-border">
+              {[
+                { label: '1H', val: 1 },
+                { label: '24H', val: 24 },
+                { label: '7D', val: 168 }
+              ].map(f => (
+                <button 
+                  key={f.val} 
+                  onClick={() => setFilterHours(f.val)}
+                  className={`flex-1 py-2 rounded-xl font-black text-[0.65rem] transition-all
+                  ${filterHours === f.val ? 'bg-card text-accent shadow-sm' : 'text-text-gray hover:text-accent'}`}
+                >
+                  {f.label}
+                </button>
+              ))}
             </div>
           </div>
 
-          {/* REAL-TIME DETECTED OBJECTS LIST */}
-          {intel.objects.length > 0 && (
-            <div className="mb-6 animate-in fade-in slide-in-from-top-2 duration-500">
-              <div className="text-[0.6rem] font-black text-text-gray uppercase tracking-widest mb-3 opacity-60">Currently Identified</div>
-              <div className="flex flex-wrap gap-2">
-                {intel.objects.map((obj, i) => (
-                  <div key={i} className="px-3 py-1.5 bg-accent/5 border border-accent/20 rounded-xl flex items-center gap-2 group hover:bg-accent/10 transition-all">
-                    <div className="w-1.5 h-1.5 bg-accent rounded-full animate-pulse" />
-                    <span className="text-[0.7rem] font-black text-text-dark uppercase tracking-tight">{obj}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
           <div className="flex-1 space-y-4 overflow-y-auto pr-1 max-h-[400px] custom-scrollbar">
-            {logs.map((log) => (
+            {logs.length > 0 ? logs.map((log) => (
               <div 
                 key={log.id} 
                 className={`flex gap-5 p-5 rounded-[24px] transition-all duration-500 border group animate-in slide-in-from-right-4 fade-in duration-500
@@ -281,36 +319,34 @@ export default function NeuralStream() {
                   </div>
                 </div>
               </div>
-            ))}
+            )) : (
+              <div className="py-12 text-center text-[0.7rem] font-bold text-text-gray opacity-40 uppercase tracking-widest">
+                 No neural events recorded in this sector
+              </div>
+            )}
           </div>
 
-          {/* SYSTEM INTEGRITY PANEL */}
+          {/* SYSTEM STATS PANEL */}
           <div className="mt-8 pt-8 border-t border-border space-y-6">
-             <div>
-               <div className="flex justify-between items-center text-[0.75rem] font-black text-text-dark uppercase tracking-wider mb-2.5">
-                  <div className="flex items-center gap-2">
-                     <Wifi className="w-4 h-4 text-accent" />
-                     Stream Buffer
-                  </div>
-                  <span className="text-success flex items-center gap-1">
-                     <Shield className="w-3 h-3" />
-                     OPTIMAL
-                  </span>
-               </div>
-               <div className="h-2 bg-bg rounded-full overflow-hidden shadow-inner p-px border border-border">
-                  <div className="h-full bg-success w-[92%] rounded-full shadow-[0_0_10px_rgba(34,197,94,0.3)] transition-all duration-1000" />
-               </div>
-             </div>
-
              <div className="grid grid-cols-2 gap-4">
                 <div className="bg-surface p-4 rounded-2xl border border-border">
-                   <div className="text-[0.55rem] font-black text-text-gray uppercase tracking-widest mb-1 opacity-60">Avg Latency</div>
-                   <div className="text-[1.1rem] font-black text-accent">42<span className="text-[0.7rem] ml-0.5">MS</span></div>
+                   <div className="text-[0.55rem] font-black text-text-gray uppercase tracking-widest mb-1 opacity-60">Periods Persons</div>
+                   <div className="text-[1.1rem] font-black text-blue-500">{summary.total_persons} <span className="text-[0.7rem] ml-0.5">UIDS</span></div>
                 </div>
                 <div className="bg-surface p-4 rounded-2xl border border-border">
-                   <div className="text-[0.55rem] font-black text-text-gray uppercase tracking-widest mb-1 opacity-60">Active Objects</div>
-                   <div className="text-[1.1rem] font-black text-accent">{intel.person_count + intel.objects.length}<span className="text-[0.7rem] ml-0.5">IDS</span></div>
+                   <div className="text-[0.55rem] font-black text-text-gray uppercase tracking-widest mb-1 opacity-60">Total Events</div>
+                   <div className="text-[1.1rem] font-black text-accent">{summary.count} <span className="text-[0.7rem] ml-0.5">IDS</span></div>
                 </div>
+             </div>
+
+             <div>
+               <div className="flex justify-between items-center text-[0.7rem] font-black text-text-dark uppercase tracking-wider mb-2.5 opacity-60">
+                   <span>Most Active Object</span>
+                   <span className="text-accent">{Object.entries(summary?.object_breakdown || {}).sort((a,b) => b[1]-a[1])[0]?.[0] || 'NONE'}</span>
+               </div>
+               <div className="h-1.5 bg-bg rounded-full overflow-hidden border border-border">
+                  <div className="h-full bg-accent w-[85%] rounded-full shadow-[0_0_10px_rgba(14,165,233,0.3)] transition-all duration-1000" />
+               </div>
              </div>
 
              <div className="flex items-center justify-center gap-2 text-[0.6rem] font-bold text-text-gray opacity-40 group cursor-help">
