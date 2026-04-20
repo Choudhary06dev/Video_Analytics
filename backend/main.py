@@ -40,7 +40,13 @@ def init_roles():
 async def lifespan(app: FastAPI):
     init_db()
     init_roles()
+    # Initialize camera on startup
+    global camera
+    camera = VideoCamera()
     yield
+    # Cleanup on shutdown
+    if camera:
+        camera.release()
 
 
 app = FastAPI(lifespan=lifespan)
@@ -374,40 +380,46 @@ class VideoCamera:
         return jpeg.tobytes() if ret else self.placeholder_frame
 
 
-camera = VideoCamera()
+camera = None  # Will be initialized in lifespan
 
 
-def gen(camera):
+async def gen(camera):
     while True:
-        frame = camera.get_frame()
-        if frame is None:
-            time.sleep(1)
-            continue
+        try:
+            frame = camera.get_frame()
+            if frame is None:
+                await asyncio.sleep(1)
+                continue
 
-        yield (
-            b"--frame\r\n"
-            b"Content-Type: image/jpeg\r\n\r\n"
-            + frame
-            + b"\r\n\r\n"
-        )
-
-
-def get_current_user(token: str = Depends(get_authorization_token)):
-    payload = decode_access_token(token)
-    if not payload:
-        raise HTTPException(status_code=401, detail="Invalid or expired token")
-    return payload
-
-
-def verify_super_admin(current_user: dict = Depends(get_current_user)):
-    if current_user.get("role") != "super_admin":
-        raise HTTPException(status_code=403, detail="Forbidden: Super Admin access required")
-    return current_user
+            yield (
+                b"--frame\r\n"
+                b"Content-Type: image/jpeg\r\n\r\n"
+                + frame
+                + b"\r\n\r\n"
+            )
+            await asyncio.sleep(0.1)  # Small delay to prevent overwhelming the client
+        except asyncio.CancelledError:
+            # Handle cancellation gracefully
+            break
+        except Exception as e:
+            print(f"Error in video feed: {e}")
+            await asyncio.sleep(1)
 
 
-@app.on_event("shutdown")
-def shutdown_event():
-    camera.release()
+async def event_generator():
+    last_update = 0.0
+    while True:
+        try:
+            if latest_intelligence["last_update"] != last_update:
+                last_update = latest_intelligence["last_update"]
+                yield f"data: {json.dumps(latest_intelligence)}\n\n"
+            await asyncio.sleep(0.25)
+        except asyncio.CancelledError:
+            # Handle cancellation gracefully
+            break
+        except Exception as e:
+            print(f"Error in event stream: {e}")
+            await asyncio.sleep(1)
 
 
 @app.get("/")
@@ -416,7 +428,9 @@ def read_root():
 
 
 @app.get("/video_feed")
-def video_feed():
+async def video_feed():
+    if camera is None:
+        raise HTTPException(status_code=503, detail="Camera not initialized")
     return StreamingResponse(
         gen(camera),
         media_type="multipart/x-mixed-replace; boundary=frame",
@@ -430,19 +444,6 @@ def get_intelligence():
 
 @app.get("/events")
 async def event_stream():
-    async def event_generator():
-        last_update = 0.0
-        while True:
-            # Check for data updates
-            if latest_intelligence["last_update"] != last_update:
-                last_update = latest_intelligence["last_update"]
-                yield f"data: {json.dumps(latest_intelligence)}\n\n"
-            else:
-                # Send heartbeat every poll to keep connection alive
-                yield ": heartbeat\n\n"
-            
-            await asyncio.sleep(1.0) # Non-blocking sleep
-
     return StreamingResponse(event_generator(), media_type="text/event-stream")
 
 
@@ -451,7 +452,7 @@ def health_check():
     return {
         "status": "healthy",
         "model_loaded": model is not None,
-        "camera_open": camera.video.isOpened() if camera is not None else False,
+        "camera_open": camera.video.isOpened() if camera and camera.video else False,
     }
 
 

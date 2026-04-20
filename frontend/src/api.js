@@ -36,14 +36,16 @@ export const fetchIntelligence = () => get("/intelligence");
  * @param {string} [opts.object_class]
  * @param {string} [opts.severity]
  * @param {number} [opts.limit=200]
+ * @param {number} [opts.skip=0]
  */
 export const fetchLogs = (opts = {}) =>
   get("/logs", {
     hours:        opts.hours        ?? 24,
     camera_id:    opts.camera_id    ?? undefined,
-    object_class: opts.object_class  ?? undefined,
+    object_class: opts.object_class ?? undefined,
     severity:     opts.severity     ?? undefined,
     limit:        opts.limit        ?? 200,
+    skip:         opts.skip         ?? 0,
   });
 
 export const fetchLogsSummary = (hours = 24, cameraId = undefined) =>
