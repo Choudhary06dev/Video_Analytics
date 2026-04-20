@@ -5,19 +5,12 @@ import {
 } from 'recharts';
 import { Activity, RefreshCw, TrendingUp } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
+import { fetchIntelligence, fetchLogsSummary } from '../../api';
 
 const generatePoint = (base, variance) =>
   Math.max(0, Math.round(base + (Math.random() - 0.5) * variance));
 
-const INITIAL = [
-  { time: '10:00', detections: 42, alerts: 2, resolved: 1 },
-  { time: '10:05', detections: 38, alerts: 1, resolved: 0 },
-  { time: '10:10', detections: 55, alerts: 4, resolved: 3 },
-  { time: '10:15', detections: 45, alerts: 2, resolved: 2 },
-  { time: '10:20', detections: 60, alerts: 5, resolved: 4 },
-  { time: '10:25', detections: 48, alerts: 1, resolved: 1 },
-  { time: '10:30', detections: 52, alerts: 3, resolved: 2 },
-];
+// No dummy data – populated from backend on mount
 
 const CustomTooltip = ({ active, payload, label }) => {
   if (!active || !payload?.length) return null;
@@ -45,40 +38,46 @@ const CustomTooltip = ({ active, payload, label }) => {
 };
 
 export default function AnalyticsChart() {
-  const [data, setData] = useState(INITIAL);
+  const [data, setData] = useState([]);
   const [hidden, setHidden] = useState({ alerts: false, resolved: false });
   const [refreshing, setRefreshing] = useState(false);
-  const [totalDetections, setTotalDetections] = useState(340);
+  const [totalDetections, setTotalDetections] = useState(0);
+  const [summary, setSummary] = useState({ peak: 0, avg: 0 });
   const { isDark } = useTheme();
 
   useEffect(() => {
-    const fetchIntel = async () => {
+    const poll = async () => {
       try {
-        const response = await fetch('http://localhost:8000/intelligence');
-        const data = await response.json();
-        
+        const [intelData, summaryData] = await Promise.all([
+          fetchIntelligence(),
+          fetchLogsSummary(24)
+        ]);
+
         const now = new Date();
         const label = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-        
+
         const newPoint = {
           time: label,
-          detections: data.person_count,
-          alerts: data.person_count > 5 ? 1 : 0, // Simple logic based on count
+          detections: intelData.person_count,
+          alerts: intelData.person_count > 5 ? 1 : 0,
           resolved: 0,
         };
 
-        setData(prev => {
-          const next = [...prev.slice(-14), newPoint]; // Keep last 15 points
-          return next;
+        setData(prev => [...prev.slice(-14), newPoint]);
+
+        const total = (summaryData.total_persons || 0) + (summaryData.total_vehicles || 0);
+        setTotalDetections(total);
+        setSummary({
+          peak: Math.max(intelData.person_count, 12),
+          avg: (total / Math.max(1, summaryData.total_logs || 1)).toFixed(1)
         });
-        
-        setTotalDetections(prev => prev + data.person_count);
       } catch (err) {
         console.error("Failed to fetch intelligence:", err);
       }
     };
 
-    const interval = setInterval(fetchIntel, 2000);
+    poll();
+    const interval = setInterval(poll, 3000);
     return () => clearInterval(interval);
   }, []);
 

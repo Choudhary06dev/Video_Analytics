@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Video, Package, AlertCircle, Target, Zap, Cloud, TrendingUp, TrendingDown, RefreshCw } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
+import { fetchIntelligence, fetchLogsSummary } from '../../api';
 
 function useCountUp(target, duration = 1200) {
   const [count, setCount] = useState(0);
@@ -151,11 +152,10 @@ function KPICard({ stat, index }) {
             />
           </div>
           <div
-            className={`flex items-center gap-1 text-[0.6rem] font-bold px-2.5 py-1 rounded-full border transition-all duration-300 ${
-              stat.trendUp
+            className={`flex items-center gap-1 text-[0.6rem] font-bold px-2.5 py-1 rounded-full border transition-all duration-300 ${stat.trendUp
                 ? isDark ? 'bg-emerald-900/30 text-emerald-400 border-emerald-800' : 'bg-emerald-50 text-emerald-600 border-emerald-100'
                 : isDark ? 'bg-red-900/30 text-red-400 border-red-800' : 'bg-red-50 text-red-500 border-red-100'
-            }`}
+              }`}
           >
             {stat.trendUp ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
             {stat.trend.split(' ')[0]}
@@ -203,27 +203,35 @@ export default function KPICards() {
   const [intel, setIntel] = useState({ person_count: 0, objects: [] });
 
   useEffect(() => {
-    const fetchIntel = async () => {
+    const poll = async () => {
       try {
-        const response = await fetch('http://localhost:8000/intelligence');
-        const data = await response.json();
-        setIntel(data);
+        const [intelData, summaryData] = await Promise.all([
+          fetchIntelligence(),
+          fetchLogsSummary(24)
+        ]);
+        if (intelData && !intelData.detail) setIntel(intelData);
+        if (summaryData && !summaryData.detail) setSummary(summaryData);
       } catch (err) {
-        console.error("Failed to fetch intelligence:", err);
+        console.error("Failed to fetch dashboard data:", err);
       }
     };
 
-    const interval = setInterval(fetchIntel, 1000);
+    poll();
+    const interval = setInterval(poll, 2000);
     return () => clearInterval(interval);
   }, []);
 
-  const dynamicConfig = [...CARD_CONFIG];
-  // Update "Objects Logged" with real count
-  dynamicConfig[1] = {
-    ...dynamicConfig[1],
-    rawValue: 342 + intel.person_count, // Start with historical + real-time
-    trend: `+${intel.person_count} Active`
-  };
+  const dynamicConfig = CARD_CONFIG.map(card => {
+    if (card.key === 'objects_logged') {
+      const total = (summary.total_persons || 0) + (summary.total_vehicles || 0);
+      return { ...card, rawValue: total, trend: `+${intel.person_count} Active` };
+    }
+    if (card.key === 'high_threats') {
+      const threats = summary.total_weapons || 0;
+      return { ...card, rawValue: threats, trend: threats > 0 ? 'Action Required' : 'Sentinel Active' };
+    }
+    return card;
+  });
 
   return (
     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">

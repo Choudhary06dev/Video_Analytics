@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Camera, CameraOff, Loader2, RefreshCw } from 'lucide-react';
+import { VIDEO_FEED_URL, fetchHealth } from '../../api';
 
 export default function CameraFeed({ 
-  streamUrl = 'http://localhost:8000/video_feed', 
+  streamUrl = VIDEO_FEED_URL, 
   hideOverlay = false 
 }) {
   const [status, setStatus] = useState('connecting'); // connecting, streaming, error
@@ -12,9 +13,9 @@ export default function CameraFeed({
     let isMounted = true;
     const checkBackend = async () => {
       try {
-        const response = await fetch('http://localhost:8000/health');
+        const res = await fetchHealth();
         if (isMounted) {
-          setStatus(response.ok ? 'streaming' : 'error');
+          setStatus(res ? 'streaming' : 'error');
         }
       } catch (err) {
         if (isMounted) {

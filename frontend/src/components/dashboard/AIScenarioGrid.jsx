@@ -5,6 +5,7 @@ import {
   Activity, Package, ShieldAlert, RefreshCw, Filter,
 } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
+import { fetchLogsSummary } from '../../api';
 
 const SCENARIOS = [
   { id: 1, name: 'Unauthorized Entry', icon: Lock, cat: 'security', image: 'https://images.unsplash.com/photo-1557597774-9d2739f85a76?auto=format&fit=crop&q=80&w=800' },
@@ -192,20 +193,37 @@ export default function AIScenarioGrid() {
   const [refreshing, setRefreshing] = useState(false);
   const [search, setSearch] = useState('');
 
-  const build = useCallback(() =>
-    SCENARIOS.map((s) => ({
-      ...s,
-      status: randStatus(),
-      count: Math.floor(Math.random() * 50),
-    })),
-    []
-  );
+  const loadScenarios = useCallback(async () => {
+    try {
+      const summary = await fetchLogsSummary(24);
+      const updated = SCENARIOS.map(s => {
+        let count = 0;
+        let status = 'normal';
+        const name = s.name.toLowerCase();
+        if (name.includes('weapon')) count = summary.total_weapons || 0;
+        else if (name.includes('fire') || name.includes('smoke')) count = summary.total_smoke || 0;
+        else if (name.includes('vehicle')) count = summary.total_vehicles || 0;
+        else if (name.includes('person') || name.includes('entry')) count = summary.total_persons || 0;
+        if (count > 10 && (name.includes('weapon') || name.includes('fire'))) status = 'critical';
+        else if (count > 0 && (name.includes('weapon') || name.includes('fire'))) status = 'warning';
+        else if (count > 50) status = 'warning';
+        return { ...s, count, status };
+      });
+      setData(updated);
+    } catch (err) {
+      console.error('Failed to fetch scenario data:', err);
+    }
+  }, []);
 
-  useEffect(() => { setData(build()); }, [build]);
+  useEffect(() => {
+    loadScenarios();
+    const iv = setInterval(loadScenarios, 5000);
+    return () => clearInterval(iv);
+  }, [loadScenarios]);
 
   const handleRefresh = () => {
     setRefreshing(true);
-    setTimeout(() => { setData(build()); setRefreshing(false); }, 600);
+    loadScenarios().finally(() => setRefreshing(false));
   };
 
   const visible = data

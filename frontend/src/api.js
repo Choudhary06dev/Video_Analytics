@@ -4,12 +4,17 @@
  * All backend calls go through here.  Components just import what they need.
  */
 
-const BASE = "http://localhost:8000";
+export const BASE = "http://localhost:8000";
+export const VIDEO_FEED_URL = `${BASE}/video_feed`;
+export const EVENTS_URL = `${BASE}/events`;
 
 // ─── helpers ───────────────────────────────────────────────────────────────
 
 async function get(path, params = {}) {
   const url = new URL(BASE + path);
+  // Add cache buster by default
+  params.t = Date.now();
+  
   Object.entries(params).forEach(([k, v]) => {
     if (v !== undefined && v !== null) url.searchParams.set(k, v);
   });
@@ -26,21 +31,23 @@ export const fetchIntelligence = () => get("/intelligence");
 
 /**
  * @param {object} opts
- * @param {number}  [opts.hours=24]
- * @param {string}  [opts.objectClass]
- * @param {string}  [opts.severity]   "critical" | "warning" | "info"
- * @param {number}  [opts.limit=200]
+ * @param {number} [opts.hours=24]
+ * @param {number} [opts.camera_id]
+ * @param {string} [opts.object_class]
+ * @param {string} [opts.severity]
+ * @param {number} [opts.limit=200]
  */
 export const fetchLogs = (opts = {}) =>
   get("/logs", {
     hours:        opts.hours        ?? 24,
-    object_class: opts.objectClass  ?? undefined,
+    camera_id:    opts.camera_id    ?? undefined,
+    object_class: opts.object_class  ?? undefined,
     severity:     opts.severity     ?? undefined,
     limit:        opts.limit        ?? 200,
   });
 
-export const fetchLogsSummary = (hours = 24) =>
-  get("/logs/summary", { hours });
+export const fetchLogsSummary = (hours = 24, cameraId = undefined) =>
+  get("/logs/summary", { hours, camera_id: cameraId });
 
 // ─── alerts ────────────────────────────────────────────────────────────────
 

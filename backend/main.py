@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 from typing import Dict, List, Optional
 import time
 import json
+import asyncio
 
 import cv2
 import numpy as np
@@ -428,14 +429,19 @@ def get_intelligence():
 
 
 @app.get("/events")
-def event_stream():
-    def event_generator():
+async def event_stream():
+    async def event_generator():
         last_update = 0.0
         while True:
+            # Check for data updates
             if latest_intelligence["last_update"] != last_update:
                 last_update = latest_intelligence["last_update"]
                 yield f"data: {json.dumps(latest_intelligence)}\n\n"
-            time.sleep(0.25)
+            else:
+                # Send heartbeat every poll to keep connection alive
+                yield ": heartbeat\n\n"
+            
+            await asyncio.sleep(1.0) # Non-blocking sleep
 
     return StreamingResponse(event_generator(), media_type="text/event-stream")
 

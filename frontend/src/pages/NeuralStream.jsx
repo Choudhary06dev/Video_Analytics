@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { fetchIntelligence, fetchLogs, fetchLogsSummary, EVENTS_URL, VIDEO_FEED_URL } from '../api';
 import {
   Radio,
   Shield,
@@ -75,17 +76,16 @@ export default function NeuralStream() {
   const [loadingLogs, setLoadingLogs] = useState(false);
   const [streamConnected, setStreamConnected] = useState(false);
 
-  const fetchLogsData = useCallback(async () => {
-    setLoadingLogs(true);
+  const fetchLogsData = useCallback(async (showSpinner = false) => {
+    if (showSpinner) setLoadingLogs(true);
     try {
-      const camId = isGlobalView ? '' : `&camera_id=${parseInt(activeCamera)}`;
-      const timestamp = Date.now();
-      const logsRes = await fetch(`http://localhost:8000/logs?hours=${filterHours}${camId}&t=${timestamp}`);
+      const camId = isGlobalView ? undefined : parseInt(activeCamera);
+      const logsData = await fetchLogs({ hours: filterHours, camera_id: camId, limit: 50 });
 
-      if (logsRes.ok) {
-        const logsData = await logsRes.json();
-        if (Array.isArray(logsData)) {
-          setLogs(logsData.slice(0, 50).map(log => {
+      if (Array.isArray(logsData)) {
+        const logsData2 = logsData;
+        if (Array.isArray(logsData2)) {
+          setLogs(logsData2.slice(0, 50).map(log => {
             const scenario = SCENARIO_UI[log.object_class] || SCENARIO_UI['Default'];
             const isAlert = log.metadata_json?.is_alert || false;
             const detail = log.metadata_json?.detail || log.object_class.toUpperCase();
@@ -139,7 +139,7 @@ export default function NeuralStream() {
     let retryTimer;
 
     const connect = () => {
-      source = new EventSource('http://localhost:8000/events');
+      source = new EventSource(EVENTS_URL);
 
       source.onopen = () => {
         setStreamConnected(true);
@@ -150,7 +150,8 @@ export default function NeuralStream() {
           const data = JSON.parse(event.data);
           if (data && !data.detail) {
             setIntel(data);
-            fetchLogsData();
+            // Trigger a silent refresh for logs when new data arrives
+            fetchLogsData(false);
           }
         } catch (err) {
           console.error('Event parsing failed:', err);
@@ -165,7 +166,7 @@ export default function NeuralStream() {
     };
 
     connect();
-    fetchLogsData();
+    fetchLogsData(true); // Show spinner on initial load
 
     return () => {
       if (source) source.close();
@@ -184,12 +185,10 @@ export default function NeuralStream() {
     const pollIntel = async () => {
       if (!isActive) return;
       try {
-        const timestamp = Date.now();
-        const camIdParam = isGlobalView ? '' : `&camera_id=${parseInt(activeCamera)}`;
-
+        const camId = isGlobalView ? undefined : parseInt(activeCamera);
         const [intelRes, summaryRes] = await Promise.all([
-          fetch(`http://localhost:8000/intelligence?t=${timestamp}`).then(r => r.json()),
-          fetch(`http://localhost:8000/logs/summary?hours=${filterHours}${camIdParam}&t=${timestamp}`).then(r => r.json())
+          fetchIntelligence(),
+          fetchLogsSummary(filterHours, camId)
         ]);
 
         if (intelRes && !intelRes.detail) setIntel(intelRes);
@@ -203,7 +202,7 @@ export default function NeuralStream() {
     const pollLogs = async () => {
       if (!isActive) return;
       try {
-        await fetchLogsData();
+        await fetchLogsData(false); // Silent background poll
       } catch {
         // Silently handle fetch errors
       }
@@ -330,7 +329,7 @@ export default function NeuralStream() {
 
               <div className="absolute inset-0 bg-surface">
                 {isActiveCam && cam.id === '01' ? (
-                  <CameraFeed streamUrl="http://localhost:8000/video_feed" hideOverlay={true} />
+                  <CameraFeed streamUrl={VIDEO_FEED_URL} hideOverlay={true} />
                 ) : (
                   <img
                     src={`${cam.img}?auto=format&fit=crop&q=80&w=500`}

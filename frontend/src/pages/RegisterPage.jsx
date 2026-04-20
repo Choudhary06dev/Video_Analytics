@@ -5,6 +5,7 @@ import {
   ShieldCheck, Globe, Activity, Cpu, Zap, Database 
 } from 'lucide-react';
 import axios from 'axios';
+import { BASE } from '../api';
 import authBg from '../assets/auth-bg.png';
 
 export default function RegisterPage() {
@@ -36,7 +37,7 @@ export default function RegisterPage() {
     }
     
     try {
-      await axios.post('http://localhost:8000/auth/register', {
+      await axios.post(`${BASE}/auth/register`, {
         full_name: formData.fullName,
         email: formData.email,
         password: formData.password

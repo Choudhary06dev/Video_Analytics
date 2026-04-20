@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Maximize2, Activity, ShieldCheck, AlertTriangle, Eye, Radio } from 'lucide-react';
 import CameraFeed from './CameraFeed';
+import { fetchIntelligence, VIDEO_FEED_URL } from '../../api';
 
 const CAMERAS = [
   {
@@ -8,11 +9,11 @@ const CAMERAS = [
     image: 'https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?auto=format&fit=crop&q=80',
     fields: [
       { label: 'Authorized Staff', value: 'Ahmed Hassan', color: '#0ea5e9' },
-      { label: 'Task Detected',   value: 'Hand Hygiene',  color: '#22c55e' },
+      { label: 'Task Detected', value: 'Hand Hygiene', color: '#22c55e' },
     ],
     tags: [
-      { text: '98% Conf.',   bg: 'rgba(14,165,233,0.15)', color: '#0ea5e9' },
-      { text: 'Bio-Secure',  bg: 'rgba(34,197,94,0.15)',  color: '#22c55e' },
+      { text: '98% Conf.', bg: 'rgba(14,165,233,0.15)', color: '#0ea5e9' },
+      { text: 'Bio-Secure', bg: 'rgba(34,197,94,0.15)', color: '#22c55e' },
     ],
     stats: [{ label: 'Objects', value: '12' }, { label: 'Motion', value: '0.14' }],
     alertMode: false,
@@ -21,11 +22,11 @@ const CAMERAS = [
     id: 2, name: 'Main Lobby Central',
     image: 'https://images.unsplash.com/photo-1516549655169-df83a0774514?auto=format&fit=crop&q=80',
     fields: [
-      { label: 'Security', value: 'Muhammad Bilal',  color: '#0ea5e9' },
-      { label: 'Pattern',  value: 'Patrol Check', color: '#0ea5e9' },
+      { label: 'Security', value: 'Muhammad Bilal', color: '#0ea5e9' },
+      { label: 'Pattern', value: 'Patrol Check', color: '#0ea5e9' },
     ],
     tags: [
-      { text: '94% Conf.',    bg: 'rgba(14,165,233,0.15)', color: '#0ea5e9' },
+      { text: '94% Conf.', bg: 'rgba(14,165,233,0.15)', color: '#0ea5e9' },
       { text: 'Verified Area', bg: 'rgba(34,197,94,0.15)', color: '#22c55e' },
     ],
     stats: [{ label: 'Objects', value: '18' }, { label: 'Motion', value: '0.42' }],
@@ -35,8 +36,8 @@ const CAMERAS = [
     id: 3, name: 'Emergency Bay Exterior',
     image: 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&q=80&w=800',
     fields: [
-      { label: 'State',    value: 'Critical Watch', color: '#f59e0b' },
-      { label: 'Priority', value: 'VITAL',           color: '#ef4444' },
+      { label: 'State', value: 'Critical Watch', color: '#f59e0b' },
+      { label: 'Priority', value: 'VITAL', color: '#ef4444' },
     ],
     tags: [{ text: 'Threat Alert', bg: 'rgba(239,68,68,0.2)', color: '#ef4444' }],
     stats: [{ label: 'Alerts', value: '2' }, { label: 'Queue', value: '5' }],
@@ -46,8 +47,8 @@ const CAMERAS = [
     id: 4, name: 'Supply Hallway B',
     image: 'https://images.unsplash.com/photo-1551076805-e1869033e561?auto=format&fit=crop&q=80',
     fields: [
-      { label: 'Staff',  value: 'Usman Sheikh', color: '#0ea5e9' },
-      { label: 'Task',   value: 'Janitorial',  color: '#f59e0b' },
+      { label: 'Staff', value: 'Usman Sheikh', color: '#0ea5e9' },
+      { label: 'Task', value: 'Janitorial', color: '#f59e0b' },
     ],
     tags: [
       { text: '91% Conf.', bg: 'rgba(14,165,233,0.15)', color: '#0ea5e9' },
@@ -60,12 +61,12 @@ const CAMERAS = [
     id: 5, name: 'Secure Research Lab α',
     image: 'https://images.unsplash.com/photo-1516574187841-cb9cc2ca948b?auto=format&fit=crop&q=80&w=800',
     fields: [
-      { label: 'Auth Head',  value: 'Zainab Ali', color: '#0ea5e9' },
-      { label: 'Access',     value: 'L-3 Grant', color: '#22c55e' },
+      { label: 'Auth Head', value: 'Zainab Ali', color: '#0ea5e9' },
+      { label: 'Access', value: 'L-3 Grant', color: '#22c55e' },
     ],
     tags: [
-      { text: '99% Conf.',   bg: 'rgba(14,165,233,0.15)', color: '#0ea5e9' },
-      { text: 'Locked Down', bg: 'rgba(34,197,94,0.15)',  color: '#22c55e' },
+      { text: '99% Conf.', bg: 'rgba(14,165,233,0.15)', color: '#0ea5e9' },
+      { text: 'Locked Down', bg: 'rgba(34,197,94,0.15)', color: '#22c55e' },
     ],
     stats: [{ label: 'Objects', value: '15' }, { label: 'Motion', value: '0.08' }],
     alertMode: false,
@@ -74,8 +75,8 @@ const CAMERAS = [
     id: 6, name: 'Perimeter Sector 7',
     image: 'https://images.unsplash.com/photo-1553413077-190dd305871c?auto=format&fit=crop&q=80',
     fields: [
-      { label: 'Status',  value: 'Deep Scanning', color: '#0ea5e9' },
-      { label: 'Threats', value: 'Zero (0)',       color: '#22c55e' },
+      { label: 'Status', value: 'Deep Scanning', color: '#0ea5e9' },
+      { label: 'Threats', value: 'Zero (0)', color: '#22c55e' },
     ],
     tags: [{ text: 'Perimeter Safe', bg: 'rgba(34,197,94,0.15)', color: '#22c55e' }],
     stats: [{ label: 'Objects', value: '6' }, { label: 'Motion', value: '0.00' }],
@@ -128,13 +129,13 @@ function CameraCard({ cam }) {
           border: cam.alertMode
             ? '2px solid rgba(239,68,68,0.6)'
             : hovered
-            ? '2px solid rgba(14,165,233,0.5)'
-            : '2px solid transparent',
+              ? '2px solid rgba(14,165,233,0.5)'
+              : '2px solid transparent',
           boxShadow: cam.alertMode
             ? '0 0 24px rgba(239,68,68,0.35)'
             : hovered
-            ? '0 20px 50px -12px rgba(0,0,0,0.35)'
-            : '0 4px 16px rgba(0,0,0,0.15)',
+              ? '0 20px 50px -12px rgba(0,0,0,0.35)'
+              : '0 4px 16px rgba(0,0,0,0.15)',
           transform: hovered ? 'translateY(-6px) scale(1.01)' : 'translateY(0) scale(1)',
           transition: 'all 0.4s cubic-bezier(0.34,1.56,0.64,1)',
           background: '#000',
@@ -142,7 +143,7 @@ function CameraCard({ cam }) {
       >
         {/* Camera image */}
         {cam.id === 1 ? (
-          <CameraFeed streamUrl="http://localhost:8000/video_feed" hideOverlay={true} />
+          <CameraFeed streamUrl={VIDEO_FEED_URL} hideOverlay={true} />
         ) : (
           <img
             src={cam.image} alt={cam.name}
@@ -180,7 +181,7 @@ function CameraCard({ cam }) {
         }}>
           <div>
             <div style={{ color: 'rgba(255,255,255,0.45)', fontSize: 10, fontWeight: 700, letterSpacing: 2, textTransform: 'uppercase' }}>
-              Stream-{String(cam.id).padStart(2,'0')}
+              Stream-{String(cam.id).padStart(2, '0')}
             </div>
             <div style={{ color: '#fff', fontSize: 13, fontWeight: 900, letterSpacing: -0.3 }}>{cam.name}</div>
           </div>
@@ -315,7 +316,7 @@ function CameraCard({ cam }) {
           }}>
             {cam.id === 1 ? (
               <div style={{ width: '100%', maxHeight: '70vh' }}>
-                <CameraFeed streamUrl="http://localhost:8000/video_feed" hideOverlay={true} />
+                <CameraFeed streamUrl={VIDEO_FEED_URL} hideOverlay={true} />
               </div>
             ) : (
               <img
@@ -339,6 +340,39 @@ function CameraCard({ cam }) {
 }
 
 export default function CameraGrid() {
+  const [intel, setIntel] = useState({ person_count: 0, objects: [] });
+
+  useEffect(() => {
+    const poll = async () => {
+      try {
+        const data = await fetchIntelligence();
+        setIntel(data);
+      } catch (err) {
+        console.error('Failed to fetch camera grid intel:', err);
+      }
+    };
+    poll();
+    const interval = setInterval(poll, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const dynamicCameras = CAMERAS.map(cam => {
+    if (cam.id === 1) {
+      return {
+        ...cam,
+        stats: [
+          { label: 'Objects', value: intel.person_count.toString() },
+          { label: 'Detection', value: intel.objects.length > 0 ? intel.objects[0] : 'Idle' }
+        ],
+        fields: [
+          { label: 'AI Status', value: 'Sentinel Active', color: '#0ea5e9' },
+          { label: 'Current Count', value: `${intel.person_count} Persons`, color: '#22c55e' }
+        ]
+      };
+    }
+    return cam;
+  });
+
   return (
     <div
       className="bg-card rounded-[28px] border border-border shadow-premium p-[22px]"
@@ -350,30 +384,25 @@ export default function CameraGrid() {
             <Eye className="w-4 h-4 text-sky-500" />
             Neural Feed Matrix
           </h3>
-          <p className="text-[0.7rem] text-text-gray font-semibold">Sentinel AI Engine v4.2 · hover to inspect · click ⤢ to expand</p>
+          <p className="text-[0.7rem] text-text-gray font-semibold">Sentinel AI Engine v4.2 · Live Analytics from Stream-01</p>
         </div>
         <div className="flex flex-wrap gap-2">
           <div style={{ background: '#f0f9ff', border: '1px solid #bae6fd', color: '#0369a1' }}
             className="flex items-center gap-1.5 px-3 py-1 rounded-full text-[0.65rem] font-black">
             <Radio className="w-3 h-3" />
-            6 STREAMS SYNCED
+            LIVE SYNC ACTIVE
           </div>
           <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', color: '#15803d' }}
             className="flex items-center gap-1.5 px-3 py-1 rounded-full text-[0.65rem] font-black">
             <ShieldCheck className="w-3.5 h-3.5" />
             AES-256 ENCRYPTED
           </div>
-          <div style={{ background: '#fef2f2', border: '1px solid #fecaca', color: '#ef4444' }}
-            className="flex items-center gap-1.5 px-3 py-1 rounded-full text-[0.65rem] font-black animate-pulse">
-            <AlertTriangle className="w-3 h-3" />
-            1 ALERT ACTIVE
-          </div>
         </div>
       </div>
 
       {/* Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {CAMERAS.map(cam => <CameraCard key={cam.id} cam={cam} />)}
+        {dynamicCameras.map(cam => <CameraCard key={cam.id} cam={cam} />)}
       </div>
     </div>
   );

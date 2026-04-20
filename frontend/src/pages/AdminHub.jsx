@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
+import { BASE } from '../api';
 import { 
   ShieldAlert, Users, Server, Activity, Trash2, Loader2, 
   AlertTriangle, UserCheck, Shield, ChevronDown, Plus, X, Pencil 
@@ -32,7 +33,7 @@ export default function AdminHub() {
   const fetchUsers = async () => {
     try {
       setLoading(true);
-      const response = await axios.get('http://localhost:8000/admin/users', {
+      const response = await axios.get(`${BASE}/admin/users`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setUsers(response.data);
@@ -68,7 +69,7 @@ export default function AdminHub() {
     
     try {
       setActionLoading({ id: userId, type: 'delete' });
-      await axios.delete(`http://localhost:8000/admin/users/${userId}`, {
+      await axios.delete(`${BASE}/admin/users/${userId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setUsers(users.filter(u => u.id !== userId));
@@ -83,7 +84,7 @@ export default function AdminHub() {
     // Only block self-change if it's a demotion (handled better in backend, but good for UI)
     try {
       setActionLoading({ id: userId, type: 'role' });
-      const response = await axios.put(`http://localhost:8000/admin/users/${userId}/role`, 
+      const response = await axios.put(`${BASE}/admin/users/${userId}/role`, 
         { role_name: newRole },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -106,13 +107,13 @@ export default function AdminHub() {
         const updatePayload = { ...formData };
         if (!updatePayload.password) delete updatePayload.password; // Don't send empty password
 
-        await axios.put(`http://localhost:8000/admin/users/${editingUser.id}`, 
+        await axios.put(`${BASE}/admin/users/${editingUser.id}`, 
           updatePayload,
           { headers: { Authorization: `Bearer ${token}` } }
         );
       } else {
         // CREATE MODE
-        await axios.post('http://localhost:8000/admin/users', 
+        await axios.post(`${BASE}/admin/users`, 
           formData,
           { headers: { Authorization: `Bearer ${token}` } }
         );

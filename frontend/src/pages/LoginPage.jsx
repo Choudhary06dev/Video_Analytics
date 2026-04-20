@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { Shield, Mail, Lock, Eye, EyeOff, Loader2, Cpu, Zap, Activity } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import axios from 'axios';
+import { BASE } from '../api';
 import authBg from '../assets/auth-bg.png';
 
 export default function LoginPage() {
@@ -21,7 +22,7 @@ export default function LoginPage() {
     setError(null);
     
     try {
-      const response = await axios.post('http://localhost:8000/auth/login', {
+      const response = await axios.post(`${BASE}/auth/login`, {
         email,
         password
       });
