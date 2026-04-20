@@ -313,7 +313,17 @@ function CameraCard({ cam }) {
             width: '80vw', maxWidth: 900, borderRadius: 20, overflow: 'hidden',
             border: '1px solid rgba(255,255,255,0.1)', position: 'relative',
           }}>
-            <img src={cam.image} alt={cam.name} style={{ width: '100%', display: 'block', maxHeight: '70vh', objectFit: 'cover' }} />
+            {cam.id === 1 ? (
+              <div style={{ width: '100%', maxHeight: '70vh' }}>
+                <CameraFeed streamUrl="http://localhost:8000/video_feed" hideOverlay={true} />
+              </div>
+            ) : (
+              <img
+                src={cam.image}
+                alt={cam.name}
+                style={{ width: '100%', display: 'block', maxHeight: '70vh', objectFit: 'cover' }}
+              />
+            )}
             <div style={{ position: 'absolute', top: 16, left: 16, color: '#fff', fontWeight: 900, fontSize: 18 }}>{cam.name}</div>
             <button onClick={() => setExpanded(false)} style={{
               position: 'absolute', top: 12, right: 12,
