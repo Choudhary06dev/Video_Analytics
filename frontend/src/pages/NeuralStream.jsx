@@ -74,7 +74,6 @@ export default function NeuralStream() {
   });
   const [loadingLogs, setLoadingLogs] = useState(false);
   const [streamConnected, setStreamConnected] = useState(false);
-  const stableLockActive = intel.stable_objects?.some(obj => obj === 'Unauthorized Entry - Restricted Area' || obj === 'Weapon Detection (Gun/Knife)');
 
   const fetchLogsData = useCallback(async () => {
     setLoadingLogs(true);
@@ -365,26 +364,6 @@ export default function NeuralStream() {
                 </div>
               </div>
               <p className="text-[0.6rem] font-medium text-text-gray uppercase tracking-widest">{isGlobalView ? 'System Wide' : `Selected: CAM-0${activeCamera}`} — {logs.length} Events</p>
-            </div>
-
-            <div className="mt-4 p-4 rounded-3xl border border-border bg-surface shadow-sm">
-              <div className="flex items-center justify-between mb-3 text-[0.65rem] font-bold uppercase tracking-wider text-text-gray">
-                <span>Stable detection</span>
-                <span className={`px-2 py-1 rounded-full text-[0.6rem] font-black transition-all ${intel.stable_objects?.length > 0 ? (stableLockActive ? 'bg-rose-500/10 text-rose-600 animate-pulse' : 'bg-emerald-500/10 text-emerald-600') : 'bg-slate-500/10 text-text-gray'}`}>
-                  {intel.stable_objects?.length > 0 ? (stableLockActive ? 'LOCKED — ALERT' : 'LOCKED') : 'SCANNING'}
-                </span>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {intel.stable_objects?.length > 0 ? intel.stable_objects.map((item) => (
-                  <span key={item} className="px-3 py-1 rounded-full bg-surface text-text-dark text-[0.65rem] font-semibold uppercase tracking-[0.2em] border border-border">
-                    {item}
-                  </span>
-                )) : (
-                  <span className="px-3 py-1 rounded-full bg-surface text-text-gray text-[0.65rem] font-semibold uppercase tracking-[0.2em]">
-                    Awaiting stable lock
-                  </span>
-                )}
-              </div>
             </div>
           </div>
 
