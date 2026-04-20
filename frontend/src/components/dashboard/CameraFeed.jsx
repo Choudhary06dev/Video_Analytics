@@ -9,21 +9,24 @@ export default function CameraFeed({
   const [errorCount, setErrorCount] = useState(0);
 
   useEffect(() => {
-    // Basic health check to see if backend is reachable
+    let isMounted = true;
     const checkBackend = async () => {
       try {
         const response = await fetch('http://localhost:8000/health');
-        if (response.ok) {
-          setStatus('streaming');
-        } else {
-          setStatus('error');
+        if (isMounted) {
+          setStatus(response.ok ? 'streaming' : 'error');
         }
       } catch (err) {
-        setStatus('error');
+        if (isMounted) {
+          setStatus('error');
+        }
       }
     };
 
     checkBackend();
+    return () => {
+      isMounted = false;
+    };
   }, [errorCount]);
 
   const handleRetry = () => {
@@ -38,6 +41,7 @@ export default function CameraFeed({
           src={`${streamUrl}?t=${errorCount}`} 
           alt="Live Camera Feed"
           className="w-full h-full object-cover"
+          onLoad={() => setStatus('streaming')}
           onError={() => setStatus('error')}
         />
       ) : (

@@ -2,8 +2,10 @@ from contextlib import asynccontextmanager
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional
 import time
+import json
 
 import cv2
+import numpy as np
 from fastapi import BackgroundTasks, Depends, FastAPI, Header, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
@@ -56,6 +58,7 @@ SCENARIO_MAPPING = {
     "person": "Unauthorized Entry - Restricted Area",
     "knife": "Weapon Detection (Gun/Knife)",
     "cell phone": "Mobile Phone Usage - Restricted",
+    "laptop": "Object Left Unattended",
     "car": "Vehicle Observation",
     "truck": "Vehicle Observation",
     "bus": "Vehicle Observation",
@@ -63,6 +66,11 @@ SCENARIO_MAPPING = {
     "backpack": "Object Left Unattended",
     "handbag": "Object Left Unattended",
     "suitcase": "Object Left Unattended",
+    "book": "Object Left Unattended",
+    "bottle": "Object Left Unattended",
+    "cup": "Object Left Unattended",
+    "chair": "Object Left Unattended",
+    "tv": "Object Left Unattended",
     "fire hydrant": "Fire / Smoke Detection", # Proxy for fire/smoke in COCO
     "bicycle": "Vehicle Observation",
 }
@@ -76,10 +84,29 @@ SCENARIO_ICONS = {
     "Fire / Smoke Detection": "Flame",
 }
 
+CONF_THRESHOLD = 0.55
+IOU_THRESHOLD = 0.45
+MIN_STABLE_FRAMES_TO_LOG = 4
+SCENARIO_MIN_CONFIDENCE = {
+    "person": 0.55,
+    "knife": 0.60,
+    "cell phone": 0.65,
+    "car": 0.60,
+    "truck": 0.60,
+    "bus": 0.60,
+    "motorcycle": 0.60,
+    "backpack": 0.60,
+    "handbag": 0.60,
+    "suitcase": 0.60,
+    "bicycle": 0.60,
+    "fire hydrant": 0.55,
+}
+
 # Global state for real-time intelligence
 latest_intelligence = {
     "person_count": 0,
     "objects": [],
+    "stable_objects": [],
     "last_update": 0.0
 }
 
@@ -88,10 +115,25 @@ class VideoCamera:
         source = settings.CAMERA_SOURCE
         if isinstance(source, str) and source.isdigit():
             source = int(source)
-        self.video = cv2.VideoCapture(source)
+        self.source = source
+        self.video = cv2.VideoCapture(self.source)
         self.last_log_time = 0.0
-        # Tracks last logged count for each scenario name to prevent redundant entries
-        self.last_logged_state = {} 
+        self.scene_state = {}
+        self.placeholder_frame = self._build_placeholder_frame("NO SIGNAL")
+
+    def _build_placeholder_frame(self, message: str) -> bytes:
+        frame = np.zeros((360, 640, 3), dtype=np.uint8)
+        cv2.putText(frame, message, (18, 200), cv2.FONT_HERSHEY_SIMPLEX, 1.2, (255, 255, 255), 2, cv2.LINE_AA)
+        cv2.putText(frame, "Reconnecting camera...", (18, 250), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (200, 200, 200), 1, cv2.LINE_AA)
+        ret, jpeg = cv2.imencode(".jpg", frame)
+        return jpeg.tobytes() if ret else b""
+
+    def _ensure_camera(self) -> bool:
+        if self.video is None:
+            self.video = cv2.VideoCapture(self.source)
+        elif not self.video.isOpened():
+            self.video.open(self.source)
+        return self.video is not None and self.video.isOpened()
 
     def release(self):
         if self.video is not None and self.video.isOpened():
@@ -110,18 +152,20 @@ class VideoCamera:
             session.refresh(event)
 
     def get_frame(self):
-        if not self.video.isOpened():
-            return None
+        if not self._ensure_camera():
+            return self.placeholder_frame
 
         success, frame = self.video.read()
         if not success or frame is None:
-            return None
+            self._ensure_camera()
+            return self.placeholder_frame
 
-        results = model.predict(frame, conf=0.5, verbose=False)
+        results = model.predict(frame, conf=CONF_THRESHOLD, iou=IOU_THRESHOLD, verbose=False)
         person_count = 0
-        detected_scenarios = {} # scenario_name -> {max_conf, count, raw_labels}
+        detected_scenarios = {}
         raw_detections = []
 
+        annotated_frame = frame
         if results and len(results) > 0:
             annotated_frame = results[0].plot()
             for box in results[0].boxes:
@@ -130,14 +174,16 @@ class VideoCamera:
                 confidence = (
                     float(box.conf[0]) if hasattr(box.conf, "__getitem__") else float(box.conf)
                 )
-                
+
+                min_conf = max(CONF_THRESHOLD, SCENARIO_MIN_CONFIDENCE.get(label, CONF_THRESHOLD))
+                if confidence < min_conf:
+                    continue
+
                 raw_detections.append({"label": label, "confidence": confidence})
-                
-                # Special counting for persons
+
                 if label == "person":
                     person_count += 1
-                
-                # Map to Scenarios
+
                 scenario_name = SCENARIO_MAPPING.get(label)
                 if scenario_name:
                     if scenario_name not in detected_scenarios:
@@ -146,22 +192,47 @@ class VideoCamera:
                         detected_scenarios[scenario_name]["max_conf"] = max(detected_scenarios[scenario_name]["max_conf"], confidence)
                         detected_scenarios[scenario_name]["count"] += 1
                         detected_scenarios[scenario_name]["labels"].add(label)
-        else:
-            annotated_frame = frame
 
-        latest_intelligence["person_count"] = person_count
-        latest_intelligence["objects"] = sorted(list(detected_scenarios.keys()))
-        latest_intelligence["last_update"] = time.time()
+        current_objects = sorted(list(detected_scenarios.keys()))
+        current_time = time.time()
+        future_scene_state = {}
+        stable_objects = []
 
-        # Logic for Event-Based Logging (Only log on change)
-        if detected_scenarios:
-            for scenario_name, data in detected_scenarios.items():
-                current_count = data["count"]
-                last_count = self.last_logged_state.get(scenario_name, 0)
+        for scenario_name in set(list(self.scene_state.keys()) + current_objects):
+            current_count = detected_scenarios.get(scenario_name, {"count": 0})["count"]
+            prev = self.scene_state.get(scenario_name, {"count": 0, "stable_frames": 0, "absent_frames": 0, "present": False, "last_logged": 0})
 
-                # TRIGGER LOG ON CHANGE
-                if current_count != last_count:
-                    # Calculate the detail string based on the scenario
+            if current_count == prev["count"]:
+                stable_frames = prev["stable_frames"] + 1
+            else:
+                stable_frames = 1
+
+            if current_count == 0:
+                absent_frames = prev["absent_frames"] + 1 if prev["count"] == 0 else 1
+            else:
+                absent_frames = 0
+
+            present = prev["present"]
+            should_log = False
+
+            if current_count > 0:
+                if stable_frames >= MIN_STABLE_FRAMES_TO_LOG:
+                    if not present:
+                        should_log = True
+                        present = True
+                    elif scenario_name != "Unauthorized Entry - Restricted Area" and current_count > prev["count"]:
+                        should_log = True
+            else:
+                if present and absent_frames >= MIN_STABLE_FRAMES_TO_LOG * 2:
+                    should_log = True
+                    present = False
+
+            if present and current_count > 0:
+                stable_objects.append(scenario_name)
+
+            if should_log:
+                if current_count > 0:
+                    data = detected_scenarios[scenario_name]
                     if scenario_name == "Unauthorized Entry - Restricted Area":
                         detail = f"{person_count} Persons detected"
                     elif scenario_name == "Weapon Detection (Gun/Knife)":
@@ -171,7 +242,6 @@ class VideoCamera:
                     else:
                         detail = f"{list(data['labels'])[0].capitalize()} detected"
 
-                    # Instant Logging (No longer using background tasks to avoid stream queuing delay)
                     self.log_detection(
                         scenario_name,
                         data["max_conf"],
@@ -180,16 +250,48 @@ class VideoCamera:
                             "count": current_count,
                             "raw_labels": list(data["labels"]),
                             "timestamp": datetime.now().isoformat(),
-                            "is_alert": scenario_name in ["Weapon Detection (Gun/Knife)", "Fire / Smoke Detection"]
+                            "is_alert": scenario_name in ["Weapon Detection (Gun/Knife)", "Fire / Smoke Detection"],
                         },
                     )
-                    # Update local state so we don't log this count again
-                    self.last_logged_state[scenario_name] = current_count
-            
-            # Cleanup: if a scenario was previously present but is now gone, reset its count to 0
-            for prev_scenario in list(self.last_logged_state.keys()):
-                if prev_scenario not in detected_scenarios:
-                    self.last_logged_state[prev_scenario] = 0
+                else:
+                    detail = (
+                        "Person(s) left frame" if scenario_name == "Unauthorized Entry - Restricted Area"
+                        else "Object cleared from scene"
+                    )
+                    self.log_detection(
+                        scenario_name,
+                        0.0,
+                        {
+                            "detail": detail,
+                            "count": 0,
+                            "raw_labels": [],
+                            "timestamp": datetime.now().isoformat(),
+                            "is_alert": False,
+                        },
+                    )
+                prev["last_logged"] = current_time
+
+            future_scene_state[scenario_name] = {
+                "count": current_count,
+                "stable_frames": stable_frames,
+                "absent_frames": absent_frames,
+                "present": present,
+                "last_logged": prev["last_logged"],
+            }
+
+        self.scene_state = future_scene_state
+
+        has_change = (
+            person_count != latest_intelligence["person_count"] or
+            current_objects != latest_intelligence["objects"] or
+            sorted(stable_objects) != latest_intelligence.get("stable_objects", [])
+        )
+
+        latest_intelligence["person_count"] = person_count
+        latest_intelligence["objects"] = current_objects
+        latest_intelligence["stable_objects"] = sorted(stable_objects)
+        if has_change:
+            latest_intelligence["last_update"] = current_time
 
         cv2.putText(
             annotated_frame,
@@ -202,7 +304,7 @@ class VideoCamera:
         )
 
         ret, jpeg = cv2.imencode(".jpg", annotated_frame)
-        return jpeg.tobytes() if ret else None
+        return jpeg.tobytes() if ret else self.placeholder_frame
 
 
 camera = VideoCamera()
@@ -257,6 +359,19 @@ def video_feed():
 @app.get("/intelligence")
 def get_intelligence():
     return latest_intelligence
+
+
+@app.get("/events")
+def event_stream():
+    def event_generator():
+        last_update = 0.0
+        while True:
+            if latest_intelligence["last_update"] != last_update:
+                last_update = latest_intelligence["last_update"]
+                yield f"data: {json.dumps(latest_intelligence)}\n\n"
+            time.sleep(0.25)
+
+    return StreamingResponse(event_generator(), media_type="text/event-stream")
 
 
 @app.get("/health")

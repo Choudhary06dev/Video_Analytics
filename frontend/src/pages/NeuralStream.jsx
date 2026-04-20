@@ -48,7 +48,7 @@ export default function NeuralStream() {
   const [activeCamera, setActiveCamera] = useState('01');
   const [isGlobalView, setIsGlobalView] = useState(false);
   const [highlightCam, setHighlightCam] = useState(null);
-  const [intel, setIntel] = useState({ person_count: 0, objects: [] });
+  const [intel, setIntel] = useState({ person_count: 0, objects: [], stable_objects: [] });
   const [filterHours, setFilterHours] = useState(1);
   const [summary, setSummary] = useState({
     total_persons: 0,
@@ -60,8 +60,11 @@ export default function NeuralStream() {
     object_breakdown: {}
   });
   const [loadingLogs, setLoadingLogs] = useState(false);
+  const [streamConnected, setStreamConnected] = useState(false);
+  const stableLockActive = intel.stable_objects?.some(obj => obj === 'Unauthorized Entry - Restricted Area' || obj === 'Weapon Detection (Gun/Knife)');
 
   const fetchLogsData = useCallback(async () => {
+    setLoadingLogs(true);
     try {
       const camId = isGlobalView ? '' : `&camera_id=${parseInt(activeCamera)}`;
       const timestamp = Date.now();
@@ -96,6 +99,45 @@ export default function NeuralStream() {
       setLoadingLogs(false);
     }
   }, [filterHours, activeCamera, isGlobalView]);
+
+  useEffect(() => {
+    let source;
+    let retryTimer;
+
+    const connect = () => {
+      source = new EventSource('http://localhost:8000/events');
+
+      source.onopen = () => {
+        setStreamConnected(true);
+      };
+
+      source.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          if (data && !data.detail) {
+            setIntel(data);
+            fetchLogsData();
+          }
+        } catch (err) {
+          console.error('Event parsing failed:', err);
+        }
+      };
+
+      source.onerror = () => {
+        setStreamConnected(false);
+        if (source) source.close();
+        retryTimer = window.setTimeout(connect, 1500);
+      };
+    };
+
+    connect();
+    fetchLogsData();
+
+    return () => {
+      if (source) source.close();
+      if (retryTimer) clearTimeout(retryTimer);
+    };
+  }, [fetchLogsData]);
 
   // [REMOVED EFFECT: Consolidating into one reliable poller below]
 
@@ -139,7 +181,7 @@ export default function NeuralStream() {
       clearTimeout(intelTimeout);
       clearTimeout(logsTimeout);
     };
-  }, [fetchLogsData]);
+  }, [fetchLogsData, filterHours, activeCamera, isGlobalView]);
 
   return (
     <div className="flex flex-col gap-6 p-6 min-h-screen bg-bg font-sans transition-colors duration-300">
@@ -164,8 +206,32 @@ export default function NeuralStream() {
               <span className="flex items-center gap-1.5"><Cpu className="w-3.5 h-3.5" /> Engine v4.8</span>
               <span className="w-1 h-1 bg-border rounded-full" />
               <span className="text-accent">Sync: 99.9%</span>
+              <span className={`px-2 py-0.5 rounded-full text-[0.65rem] font-bold ${streamConnected ? 'bg-emerald-500/10 text-emerald-600' : 'bg-rose-500/10 text-rose-600'}`}>{streamConnected ? 'Events Online' : 'Reconnecting'}</span>
             </div>
           </div>
+        </div>
+      </div>
+
+      <div className="grid gap-4 lg:grid-cols-3 mb-4">
+        <div className="rounded-3xl border border-border bg-card p-4 shadow-sm">
+          <div className="text-xs uppercase tracking-[0.25em] text-text-gray font-bold mb-3">Live presence</div>
+          <div className="text-4xl font-extrabold text-text-dark">{intel.person_count}</div>
+          <div className="text-[0.75rem] text-text-gray uppercase tracking-widest mt-2">People in frame</div>
+        </div>
+        <div className="rounded-3xl border border-border bg-card p-4 shadow-sm">
+          <div className="text-xs uppercase tracking-[0.25em] text-text-gray font-bold mb-3">Active objects</div>
+          <div className="text-4xl font-extrabold text-text-dark">{intel.objects.length}</div>
+          <div className="text-[0.75rem] text-text-gray uppercase tracking-widest mt-2">Current classes</div>
+        </div>
+        <div className="rounded-3xl border border-border bg-card p-4 shadow-sm">
+          <div className="flex items-center justify-between mb-3 text-xs uppercase tracking-[0.25em] text-text-gray font-bold">
+            <span>Stable lock</span>
+            <span className={`rounded-full px-2 py-0.5 text-[0.65rem] font-black ${stableLockActive ? 'bg-rose-500/10 text-rose-600' : 'bg-emerald-500/10 text-emerald-600'}`}>
+              {stableLockActive ? 'ALERT' : intel.stable_objects.length > 0 ? 'LOCKED' : 'IDLE'}
+            </span>
+          </div>
+          <div className="text-4xl font-extrabold text-text-dark">{intel.stable_objects.length}</div>
+          <div className="text-[0.75rem] text-text-gray uppercase tracking-widest mt-2">Stable scenarios</div>
         </div>
       </div>
 
@@ -175,6 +241,8 @@ export default function NeuralStream() {
           {CAMERAS.map((cam) => {
             const isActive = activeCamera === cam.id;
             const isDetected = highlightCam === cam.id;
+            const cameraLogs = logs.filter((log) => log.camera === `CAM-${cam.id}`);
+            const latestCameraLog = cameraLogs[0];
 
             return (
               <div
@@ -213,6 +281,35 @@ export default function NeuralStream() {
                   )}
                   {/* Subtle Grid Overlay */}
                   <div className="absolute inset-0 opacity-[0.05] pointer-events-none dark:invert" style={{ backgroundImage: 'linear-gradient(#000 1px, transparent 1px), linear-gradient(90deg, #000 1px, transparent 1px)', backgroundSize: '30px 30px' }} />
+                </div>
+
+                <div className={`absolute left-0 right-0 bottom-0 p-3 bg-slate-950/65 backdrop-blur-xl text-white border-t border-white/10 transition-all duration-300 ${isActive ? 'opacity-100' : 'opacity-80'}`}>
+                  <div className="flex items-center justify-between text-[0.7rem] uppercase tracking-[0.22em] font-semibold">
+                    <span>{isActive ? 'Live insights' : 'Camera preview'}</span>
+                    <span className={`rounded-full px-2 py-1 text-[0.65rem] font-black ${isActive ? 'bg-accent/15 text-accent' : 'bg-slate-800/70 text-slate-300'}`}>
+                      {isActive ? `${intel.person_count} persons` : 'tap to activate'}
+                    </span>
+                  </div>
+                  {isActive ? (
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {intel.objects.length > 0 ? intel.objects.slice(0, 4).map((item) => (
+                        <span key={item} className="px-2.5 py-1 rounded-full bg-white/10 text-[0.7rem] text-white/90 border border-white/10">
+                          {item}
+                        </span>
+                      )) : (
+                        <span className="text-[0.75rem] text-slate-300">No active detections</span>
+                      )}
+                      {latestCameraLog ? (
+                        <span className="w-full rounded-2xl bg-slate-900/80 px-3 py-2 text-[0.72rem] text-slate-200 border border-slate-700">
+                          Latest event: <span className="font-semibold text-white">{latestCameraLog.type}</span>
+                        </span>
+                      ) : null}
+                    </div>
+                  ) : (
+                    <div className="mt-3 text-[0.75rem] text-slate-300">
+                      Select this camera to load live telemetry and event history.
+                    </div>
+                  )}
                 </div>
               </div>
             );
@@ -267,6 +364,26 @@ export default function NeuralStream() {
                 ))}
               </div>
             </div>
+
+            <div className="mt-4 p-4 rounded-3xl border border-border bg-surface shadow-sm">
+              <div className="flex items-center justify-between mb-3 text-[0.65rem] font-bold uppercase tracking-wider text-text-gray">
+                <span>Stable detection</span>
+                <span className={`px-2 py-1 rounded-full text-[0.6rem] font-black transition-all ${intel.stable_objects?.length > 0 ? (stableLockActive ? 'bg-rose-500/10 text-rose-600 animate-pulse' : 'bg-emerald-500/10 text-emerald-600') : 'bg-slate-500/10 text-text-gray'}`}>
+                  {intel.stable_objects?.length > 0 ? (stableLockActive ? 'LOCKED — ALERT' : 'LOCKED') : 'SCANNING'}
+                </span>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {intel.stable_objects?.length > 0 ? intel.stable_objects.map((item) => (
+                  <span key={item} className="px-3 py-1 rounded-full bg-surface text-text-dark text-[0.65rem] font-semibold uppercase tracking-[0.2em] border border-border">
+                    {item}
+                  </span>
+                )) : (
+                  <span className="px-3 py-1 rounded-full bg-surface text-text-gray text-[0.65rem] font-semibold uppercase tracking-[0.2em]">
+                    Awaiting stable lock
+                  </span>
+                )}
+              </div>
+            </div>
           </div>
 
           {/* LOG ENTRIES */}
@@ -276,31 +393,35 @@ export default function NeuralStream() {
                 <div className="w-6 h-6 border-2 border-accent/20 border-t-accent rounded-full animate-spin mb-3"></div>
                 <div className="text-xs text-text-gray uppercase tracking-widest font-bold">Fetching Logs...</div>
               </div>
-            ) : logs.length > 0 ? logs.map((log) => (
-              <div
-                key={log.id}
-                className={`flex gap-3 p-3 rounded-xl transition-all duration-200 border bg-card hover:bg-card-hover hover:border-accent/30 hover:shadow-premium
-                ${highlightCam === log.camera.replace('CAM-', '') ? 'border-accent shadow-[0_0_15px_rgba(59,130,246,0.1)]' : 'border-border/50'}
-                ${log.isAlert ? 'border-rose-500/50 shadow-[0_0_12px_rgba(244,63,94,0.15)] ring-1 ring-rose-500/20 animate-pulse' : ''}`}
-              >
-                <div className={`w-10 h-10 rounded-lg ${log.bg} shrink-0 flex items-center justify-center border border-border/10`}>
-                  <log.icon className={`w-5 h-5 ${log.iconColor}`} />
-                </div>
-                <div className="flex-1 min-w-0 flex flex-col justify-center">
-                  <div className="flex justify-between items-center mb-1">
-                    <span className={`text-[0.7rem] font-bold tracking-wider uppercase ${log.iconColor} truncate`}>
-                      {log.type}
-                    </span>
-                    <span className="text-[0.65rem] font-mono text-text-gray font-bold">{log.timestamp}</span>
+            ) : logs.length > 0 ? logs.map((log) => {
+              const isDeparture = /left frame|cleared from scene/i.test(log.type);
+              return (
+                <div
+                  key={log.id}
+                  className={`flex gap-3 p-3 rounded-xl transition-all duration-200 border bg-card hover:bg-card-hover hover:border-accent/30 hover:shadow-premium
+                  ${highlightCam === log.camera.replace('CAM-', '') ? 'border-accent shadow-[0_0_15px_rgba(59,130,246,0.1)]' : 'border-border/50'}
+                  ${log.isAlert ? 'border-rose-500/50 shadow-[0_0_12px_rgba(244,63,94,0.15)] ring-1 ring-rose-500/20 animate-pulse' : ''}
+                  ${isDeparture ? 'bg-slate-900/5 border-slate-500/30' : ''}`}
+                >
+                  <div className={`w-10 h-10 rounded-lg ${log.bg} shrink-0 flex items-center justify-center border border-border/10`}>
+                    <log.icon className={`w-5 h-5 ${log.iconColor}`} />
                   </div>
-                  <div className="text-xs font-bold text-text-dark flex items-center gap-2">
-                    {log.camera}
-                    <span className="w-1 h-1 bg-border rounded-full"></span>
-                    <span className="text-text-gray font-medium">Conf: {log.confidence}</span>
+                  <div className="flex-1 min-w-0 flex flex-col justify-center">
+                    <div className="flex justify-between items-center mb-1">
+                      <span className={`text-[0.7rem] font-bold tracking-wider uppercase ${log.iconColor} truncate`}>
+                        {log.type}
+                      </span>
+                      <span className="text-[0.65rem] font-mono text-text-gray font-bold">{log.timestamp}</span>
+                    </div>
+                    <div className="text-xs font-bold text-text-dark flex items-center gap-2">
+                      {log.camera}
+                      <span className="w-1 h-1 bg-border rounded-full"></span>
+                      <span className="text-text-gray font-medium">Conf: {log.confidence}</span>
+                    </div>
                   </div>
                 </div>
-              </div>
-            )) : (
+              );
+            }) : (
               <div className="py-20 text-center flex flex-col items-center">
                 <div className="w-12 h-12 bg-card rounded-full flex items-center justify-center mb-3 shadow-premium border border-border">
                   <Shield className="w-5 h-5 text-text-gray" />
