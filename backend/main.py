@@ -51,29 +51,101 @@ app.add_middleware(
 
 model = YOLO("yolov8n.pt")
 
-# 21 AI Scenarios Mapping
+# AI Scenarios Mapping (COCO-80 compatible)
 SCENARIO_MAPPING = {
-    "person": "Unauthorized Entry - Restricted Area",
+    # Person Detection
+    "person": "Staff/Visitor Activity",
+    
+    # Weapon / Threat Detection
     "knife": "Weapon Detection (Gun/Knife)",
+    "scissors": "Weapon Detection (Gun/Knife)",
+    
+    # Electronics / Restricted Items
     "cell phone": "Mobile Phone Usage - Restricted",
+    "laptop": "Electronic Device Detected",
+    "remote": "Electronic Device Detected",
+    "keyboard": "Electronic Device Detected",
+    "mouse": "Electronic Device Detected",
+    "tv": "Surveillance Monitor Active",
+    
+    # Vehicle / Transit
     "car": "Vehicle Observation",
     "truck": "Vehicle Observation",
     "bus": "Vehicle Observation",
     "motorcycle": "Vehicle Observation",
+    "bicycle": "Vehicle Observation",
+    "airplane": "Aerial Object Detected",
+    "boat": "Maritime Vessel Detected",
+    "train": "Rail Transit Detected",
+    
+    # Unattended Objects
     "backpack": "Object Left Unattended",
     "handbag": "Object Left Unattended",
     "suitcase": "Object Left Unattended",
-    "fire hydrant": "Fire / Smoke Detection", # Proxy for fire/smoke in COCO
-    "bicycle": "Vehicle Observation",
+    "umbrella": "Object Left Unattended",
+    
+    # Safety / Fire
+    "fire hydrant": "Fire / Smoke Detection",
+    "oven": "Fire / Smoke Detection",
+    "toaster": "Fire / Smoke Detection",
+    
+    # Animal Intrusion
+    "dog": "Animal Intrusion Detected",
+    "cat": "Animal Intrusion Detected",
+    "horse": "Animal Intrusion Detected",
+    "bird": "Animal Intrusion Detected",
+    "cow": "Animal Intrusion Detected",
+    "sheep": "Animal Intrusion Detected",
+    "bear": "Animal Intrusion Detected",
+    "elephant": "Animal Intrusion Detected",
+    
+    # Food / Consumables (restricted zones)
+    "bottle": "Consumable Item Detected",
+    "wine glass": "Consumable Item Detected",
+    "cup": "Consumable Item Detected",
+    
+    # Furniture / Infrastructure
+    "chair": "Furniture Displacement",
+    "couch": "Furniture Displacement",
+    "bed": "Furniture Displacement",
+    "dining table": "Furniture Displacement",
+    
+    # Sports / Recreational
+    "sports ball": "Recreational Activity Detected",
+    "baseball bat": "Potential Weapon - Blunt Object",
+    "tennis racket": "Recreational Activity Detected",
+    "skateboard": "Recreational Activity Detected",
+    "surfboard": "Recreational Activity Detected",
+    "frisbee": "Recreational Activity Detected",
+    "skis": "Recreational Activity Detected",
+    "snowboard": "Recreational Activity Detected",
+    "kite": "Aerial Object Detected",
+    
+    # Traffic
+    "traffic light": "Traffic Signal Detected",
+    "stop sign": "Traffic Signal Detected",
+    "parking meter": "Parking Zone Detected",
 }
 
 SCENARIO_ICONS = {
     "Weapon Detection (Gun/Knife)": "Crosshair",
-    "Unauthorized Entry - Restricted Area": "Lock",
+    "Potential Weapon - Blunt Object": "Crosshair",
+    "Staff/Visitor Activity": "Lock",
     "Mobile Phone Usage - Restricted": "Phone",
+    "Electronic Device Detected": "Phone",
+    "Surveillance Monitor Active": "Phone",
     "Vehicle Observation": "Car",
+    "Aerial Object Detected": "Car",
+    "Maritime Vessel Detected": "Car",
+    "Rail Transit Detected": "Car",
     "Object Left Unattended": "Package",
     "Fire / Smoke Detection": "Flame",
+    "Animal Intrusion Detected": "AlertTriangle",
+    "Consumable Item Detected": "Package",
+    "Furniture Displacement": "Package",
+    "Recreational Activity Detected": "AlertTriangle",
+    "Traffic Signal Detected": "AlertTriangle",
+    "Parking Zone Detected": "Car",
 }
 
 # Global state for real-time intelligence
@@ -269,7 +341,7 @@ def health_check():
 
 
 @app.get("/logs")
-def get_logs(hours: int = 24, camera_id: Optional[int] = None, session: Session = Depends(get_session)):
+def get_logs(hours: float = 24.0, camera_id: Optional[int] = None, session: Session = Depends(get_session)):
     cutoff = datetime.now() - timedelta(hours=hours)
     statement = select(DetectionEvent).where(DetectionEvent.timestamp >= cutoff)
     
@@ -282,7 +354,7 @@ def get_logs(hours: int = 24, camera_id: Optional[int] = None, session: Session 
 
 
 @app.get("/logs/summary")
-def get_logs_summary(hours: int = 24, camera_id: Optional[int] = None, session: Session = Depends(get_session)):
+def get_logs_summary(hours: float = 24.0, camera_id: Optional[int] = None, session: Session = Depends(get_session)):
     cutoff = datetime.now() - timedelta(hours=hours)
     statement = select(DetectionEvent).where(DetectionEvent.timestamp >= cutoff)
     
@@ -341,10 +413,10 @@ def get_logs_summary(hours: int = 24, camera_id: Optional[int] = None, session: 
         "hours": hours,
         "camera_id": camera_id,
         "count": len(events), # Total signals in time window
-        "total_persons": live_persons, # NOW SHOWING REAL-TIME
-        "total_weapons": live_weapons, # NOW SHOWING REAL-TIME
-        "total_vehicles": live_vehicles, # NOW SHOWING REAL-TIME
-        "threat_level": threat_level,
+        "total_persons": total_persons, # Filtered historical sum
+        "total_weapons": total_weapons, # Filtered historical sum
+        "total_vehicles": total_vehicles, # Filtered historical sum
+        "threat_level": threat_level, # Assess based on LIVE data
         "status_message": status_msg,
         "object_breakdown": object_counts,
         "timestamp": datetime.now().isoformat()

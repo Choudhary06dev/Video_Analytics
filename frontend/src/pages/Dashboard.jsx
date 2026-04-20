@@ -53,9 +53,6 @@ export default function Dashboard() {
       {/* 5. Performance Metrics (Bar Charts) */}
       <PerformanceMetrics />
 
-      {/* 6. Enhanced Stats (Colored Row) */}
-      <EnhancedStatsRow />
-
       {/* 7. Neural Stream & Facility Heatmap */}
       <div className="grid lg:grid-cols-3 gap-8 mt-8">
         <div className="lg:col-span-2">
