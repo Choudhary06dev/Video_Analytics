@@ -47,22 +47,22 @@ export default function FrontendHome() {
 
         {/* Feature Highlights */}
         <div className="grid md:grid-cols-3 gap-8 mt-24 text-left w-full">
-          <div className="bg-white p-8 rounded-3xl border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
-            <div className="w-14 h-14 bg-indigo-50 rounded-2xl flex items-center justify-center mb-6">
+          <div className="bg-white p-8 rounded-lg border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
+            <div className="w-14 h-14 bg-indigo-50 rounded-lg flex items-center justify-center mb-6">
               <Camera className="w-7 h-7 text-indigo-600" />
             </div>
             <h3 className="text-xl font-bold mb-3 text-slate-800">Advanced AI Vision</h3>
             <p className="text-slate-500">Detect objects, anomalies, and unauthorized access across unlimited scalable camera networks globally.</p>
           </div>
-          <div className="bg-white p-8 rounded-3xl border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
-            <div className="w-14 h-14 bg-emerald-50 rounded-2xl flex items-center justify-center mb-6">
+          <div className="bg-white p-8 rounded-lg border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
+            <div className="w-14 h-14 bg-emerald-50 rounded-lg flex items-center justify-center mb-6">
               <Activity className="w-7 h-7 text-emerald-600" />
             </div>
             <h3 className="text-xl font-bold mb-3 text-slate-800">Real-Time Processing</h3>
             <p className="text-slate-500">Ultra-low latency analytics engine built to provide instantaneous visual insights directly to standard operators.</p>
           </div>
-          <div className="bg-white p-8 rounded-3xl border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
-            <div className="w-14 h-14 bg-rose-50 rounded-2xl flex items-center justify-center mb-6">
+          <div className="bg-white p-8 rounded-lg border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
+            <div className="w-14 h-14 bg-rose-50 rounded-lg flex items-center justify-center mb-6">
               <Shield className="w-7 h-7 text-rose-600" />
             </div>
             <h3 className="text-xl font-bold mb-3 text-slate-800">Intelligent Alerts</h3>

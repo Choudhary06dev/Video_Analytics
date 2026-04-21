@@ -88,11 +88,11 @@ export default function SystemHealth() {
           </div>
         </div>
         <div className="flex items-center gap-3">
-          <div className="bg-success text-white px-4 py-2 rounded-xl text-[0.75rem] font-bold shadow-md flex items-center gap-2 border border-success">
+          <div className="bg-success text-white px-4 py-2 rounded-lg text-[0.75rem] font-bold shadow-md flex items-center gap-2 border border-success">
             <ShieldCheck className="w-4 h-4" />
             SECURE DEPLOYMENT
           </div>
-          <button className="flex items-center gap-2 px-4 py-2 bg-card text-text-dark border border-border rounded-xl text-[0.75rem] font-bold cursor-pointer hover:border-accent hover:text-accent shadow-sm">
+          <button className="flex items-center gap-2 px-4 py-2 bg-card text-text-dark border border-border rounded-lg text-[0.75rem] font-bold cursor-pointer hover:border-accent hover:text-accent shadow-sm">
             <RefreshCw className="w-4 h-4" />
             Relaunch Kernels
           </button>
@@ -107,8 +107,8 @@ export default function SystemHealth() {
           { label: 'I/O Rate', value: '1.2 GB/s', icon: HardDrive, color: 'text-warning', bg: 'bg-warning/10' },
           { label: 'Nodes Online', value: '18/18', icon: Globe, color: 'text-success', bg: 'bg-success/10' },
         ].map((s, i) => (
-          <div key={i} className="bg-card rounded-[22px] p-6 border border-border shadow-premium flex items-center gap-5 hover:-translate-y-1 transition-all">
-            <div className={`w-14 h-14 rounded-2xl ${s.bg} flex items-center justify-center ${s.color}`}>
+          <div key={i} className="bg-card rounded-lg p-6 border border-border shadow-premium flex items-center gap-5 hover:-translate-y-1 transition-all">
+            <div className={`w-14 h-14 rounded-lg ${s.bg} flex items-center justify-center ${s.color}`}>
               <s.icon className="w-7 h-7" />
             </div>
             <div>
@@ -121,7 +121,7 @@ export default function SystemHealth() {
 
       {/* Chart and Compliance Row */}
       <div className="grid lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2 bg-card rounded-[24px] p-6 md:p-8 border border-border shadow-premium flex flex-col h-[450px]">
+        <div className="lg:col-span-2 bg-card rounded-lg p-6 md:p-8 border border-border shadow-premium flex flex-col h-[450px]">
           <div className="flex justify-between items-center mb-10">
             <h3 className="text-[1.1rem] font-bold text-text-dark m-0">Resource Monitoring Matrix</h3>
             <div className="flex gap-6">
@@ -149,7 +149,7 @@ export default function SystemHealth() {
                   tick={{ fill: 'var(--color-text-gray)', fontSize: 13, fontWeight: 600 }}
                 />
                 <Tooltip
-                  contentStyle={{ borderRadius: '16px', border: '1px solid var(--color-border)', boxShadow: '0 10px 30px rgba(0,0,0,0.05)' }}
+                  contentStyle={{ borderRadius: 8, border: '1px solid var(--color-border)', boxShadow: '0 10px 30px rgba(0,0,0,0.05)' }}
                 />
                 <Line type="monotone" dataKey="cpu" stroke="var(--color-accent)" strokeWidth={4} dot={false} tension={0.4} />
                 <Line type="monotone" dataKey="memory" stroke="var(--color-success)" strokeWidth={4} dot={false} tension={0.4} />
@@ -159,7 +159,7 @@ export default function SystemHealth() {
           </div>
         </div>
 
-        <div className="lg:col-span-1 bg-card rounded-[24px] p-8 border border-border shadow-premium flex flex-col">
+        <div className="lg:col-span-1 bg-card rounded-lg p-8 border border-border shadow-premium flex flex-col">
           <h3 className="text-[1.1rem] font-bold text-text-dark mb-8 uppercase tracking-tight">Zone Compliance</h3>
           <div className="space-y-6 flex-1 overflow-y-auto pr-2 scrollbar-none">
             {SECTOR_COMPLIANCE.map((sector, i) => (
@@ -185,7 +185,7 @@ export default function SystemHealth() {
       </div>
 
       {/* Kernel Log Row */}
-      <div className="bg-black rounded-[28px] p-8 shadow-2xl overflow-hidden border border-text-dark/50 font-mono">
+      <div className="bg-black rounded-lg p-8 shadow-2xl overflow-hidden border border-text-dark/50 font-mono">
         <div className="flex items-center gap-3 mb-6">
           <Terminal className="w-5 h-5 text-accent" />
           <span className="text-white text-[0.8rem] font-bold uppercase tracking-widest opacity-80">Vision Core Kernel Log</span>

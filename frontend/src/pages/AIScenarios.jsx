@@ -50,7 +50,7 @@ export default function AIScenarios() {
           </div>
         </div>
         <div className="flex items-center gap-3">
-          <div className="flex bg-card border border-border rounded-xl p-1 shadow-sm">
+          <div className="flex bg-card border border-border rounded-lg p-1 shadow-sm">
             <button
               onClick={() => setViewMode('grid')}
               className={`p-2 rounded-lg transition-all ${viewMode === 'grid' ? 'bg-accent text-white shadow-md' : 'text-text-gray hover:text-text-dark'}`}
@@ -64,7 +64,7 @@ export default function AIScenarios() {
               <ListIcon className="w-4 h-4" />
             </button>
           </div>
-          <button className="flex items-center gap-2 px-4 py-2 bg-accent text-white rounded-xl text-[0.75rem] font-bold cursor-pointer hover:opacity-90 shadow-premium">
+          <button className="flex items-center gap-2 px-4 py-2 bg-accent text-white rounded-lg text-[0.75rem] font-bold cursor-pointer hover:opacity-90 shadow-premium">
             <Play className="w-4 h-4 fill-white" />
             Deploy New Instance
           </button>
@@ -72,19 +72,19 @@ export default function AIScenarios() {
       </div>
 
       {/* Control Bar */}
-      <div className="bg-card rounded-[14px] p-6 border border-border shadow-premium flex flex-col md:flex-row gap-4 items-center">
+      <div className="bg-card rounded-lg p-6 border border-border shadow-premium flex flex-col md:flex-row gap-4 items-center">
         <div className="relative flex-1 w-full">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-text-gray" />
           <input
             type="text"
             placeholder="Search vision models by name or category..."
-            className="w-full pl-12 pr-4 py-3 bg-bg border border-border rounded-2xl text-[0.88rem] focus:outline-none focus:border-accent transition-all"
+            className="w-full pl-12 pr-4 py-3 bg-bg border border-border rounded-lg text-[0.88rem] focus:outline-none focus:border-accent transition-all"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
         <div className="flex items-center gap-4 w-full md:w-auto">
-          <button className="flex items-center gap-2 px-5 py-3 bg-bg border border-border rounded-2xl text-[0.85rem] font-bold text-text-gray hover:border-accent hover:text-accent transition-all whitespace-nowrap">
+          <button className="flex items-center gap-2 px-5 py-3 bg-bg border border-border rounded-lg text-[0.85rem] font-bold text-text-gray hover:border-accent hover:text-accent transition-all whitespace-nowrap">
             <Filter className="w-4 h-4" />
             Severity Filter
           </button>
@@ -100,16 +100,16 @@ export default function AIScenarios() {
         {filtered.map((scenario, index) => (
           <div
             key={scenario.id}
-            className={`bg-card rounded-[14px] border border-border transition-all duration-400 overflow-hidden relative group hover:shadow-premium
+            className={`bg-card rounded-lg border border-border transition-all duration-400 overflow-hidden relative group hover:shadow-premium
               ${viewMode === 'grid' ? 'flex flex-col' : 'flex flex-row items-center p-4'}`}
           >
             {/* Image / Icon Header */}
-            <div className={`relative overflow-hidden ${viewMode === 'grid' ? 'h-[140px]' : 'w-24 h-24 rounded-xl shrink-0'}`}>
+            <div className={`relative overflow-hidden ${viewMode === 'grid' ? 'h-[140px]' : 'w-24 h-24 rounded-lg shrink-0'}`}>
               <div className="absolute inset-0 z-10 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity" />
               <img src={scenario.image} alt={scenario.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
               {viewMode === 'grid' && (
                 <div
-                  className={`absolute top-4 left-4 z-20 w-12 h-12 rounded-2xl bg-card/90 backdrop-blur-md shadow-lg flex items-center justify-center border-2 border-status transition-colors`}
+                  className={`absolute top-4 left-4 z-20 w-12 h-12 rounded-lg bg-card/90 backdrop-blur-md shadow-lg flex items-center justify-center border-2 border-status transition-colors`}
                   style={{ borderColor: scenario.status === 'critical' ? 'var(--color-danger)' : scenario.status === 'warning' ? 'var(--color-warning)' : 'var(--color-success)' }}
                 >
                   <scenario.icon className="w-6 h-6" style={{ color: scenario.color }} />
@@ -125,7 +125,7 @@ export default function AIScenarios() {
                 </h3>
                 {viewMode === 'list' && (
                   <div
-                    className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 shadow-sm border border-status`}
+                    className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 shadow-sm border border-status`}
                     style={{ borderColor: scenario.status === 'critical' ? 'var(--color-danger)' : scenario.status === 'warning' ? 'var(--color-warning)' : 'var(--color-success)' }}
                   >
                     <scenario.icon className="w-4 h-4" style={{ color: scenario.color }} />
@@ -148,10 +148,10 @@ export default function AIScenarios() {
                   </div>
                 </div>
                 <div className="flex gap-2">
-                  <button className="p-2 bg-bg border border-border rounded-xl text-text-gray hover:text-accent hover:border-accent transition-all">
+                  <button className="p-2 bg-bg border border-border rounded-lg text-text-gray hover:text-accent hover:border-accent transition-all">
                     <Settings className="w-4 h-4" />
                   </button>
-                  <button className="px-3 py-2 bg-accent/10 text-accent rounded-xl text-[0.7rem] font-bold hover:bg-accent hover:text-white transition-all">
+                  <button className="px-3 py-2 bg-accent/10 text-accent rounded-lg text-[0.7rem] font-bold hover:bg-accent hover:text-white transition-all">
                     Configure
                   </button>
                 </div>

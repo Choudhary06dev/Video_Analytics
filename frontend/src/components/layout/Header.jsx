@@ -146,7 +146,7 @@ export default function Header({ isSidebarOpen, setSidebarOpen }) {
 
           {/* Search Results Dropdown */}
           {showResults && (
-            <div className="absolute top-full left-0 right-0 mt-2 bg-card border border-border rounded-2xl shadow-premium overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-200">
+            <div className="absolute top-full left-0 right-0 mt-2 bg-card border border-border rounded-lg shadow-premium overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-200">
               <div className="p-2">
                 {results.length > 0 ? (
                   <div className="flex flex-col gap-1">
@@ -155,7 +155,7 @@ export default function Header({ isSidebarOpen, setSidebarOpen }) {
                         key={index}
                         onClick={() => handleSelect(item)}
                         onMouseEnter={() => setActiveIndex(index)}
-                        className={`flex items-center gap-3 p-3 rounded-xl transition-all text-left w-full
+                        className={`flex items-center gap-3 p-3 rounded-lg transition-all text-left w-full
                           ${activeIndex === index ? 'bg-accent-soft text-accent' : 'hover:bg-surface text-text-gray'}`}
                       >
                         <div className={`p-2 rounded-lg ${activeIndex === index ? 'bg-accent text-white shadow-sm' : 'bg-surface text-text-gray'}`}>
@@ -229,19 +229,19 @@ export default function Header({ isSidebarOpen, setSidebarOpen }) {
           </button>
 
           {showProfileMenu && (
-            <div className="absolute top-full right-0 mt-2 w-56 bg-card border border-border rounded-2xl shadow-premium overflow-hidden z-[60] animate-in fade-in slide-in-from-top-2 duration-200">
+            <div className="absolute top-full right-0 mt-2 w-56 bg-card border border-border rounded-lg shadow-premium overflow-hidden z-[60] animate-in fade-in slide-in-from-top-2 duration-200">
                <div className="p-4 border-b border-border bg-surface/30">
                   <div className="text-xs font-black text-text-dark uppercase tracking-wider mb-0.5">{user?.name}</div>
                   <div className="text-[10px] text-text-gray font-medium truncate">{user?.email}</div>
                </div>
                <div className="p-2">
-                  <button className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-surface text-text-gray transition-all">
+                  <button className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-surface text-text-gray transition-all">
                      <Settings className="w-4 h-4" />
                      <span className="text-xs font-bold">Profile Settings</span>
                   </button>
                   <button 
                     onClick={handleLogout}
-                    className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-danger/5 text-danger transition-all group"
+                    className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-danger/5 text-danger transition-all group"
                   >
                      <div className="p-1.5 rounded-lg bg-danger/10 group-hover:bg-danger group-hover:text-white transition-all">
                         <LogOut className="w-4 h-4" />

@@ -80,7 +80,7 @@ export default function AdminDashboard() {
   };
 
   const KPICard = ({ title, value, icon: Icon, color, trend }) => (
-    <div className="bg-card border border-border rounded-xl p-5 group hover:border-accent/30 transition-all duration-300 relative overflow-hidden shadow-sm">
+    <div className="bg-card border border-border rounded-lg p-5 group hover:border-accent/30 transition-all duration-300 relative overflow-hidden shadow-sm">
       <div className={`absolute top-0 right-0 w-24 h-24 opacity-5 blur-[40px] -mr-12 -mt-12 transition-all group-hover:opacity-10 bg-${color === 'accent' ? 'accent' : 'red-500'}`}></div>
       <div className="relative z-10 flex justify-between items-start">
         <div>
@@ -142,10 +142,10 @@ export default function AdminDashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mt-4">
         
         {/* Activity Chart (Left Column) */}
-        <div className="lg:col-span-8 bg-card border border-border rounded-xl p-6 shadow-sm">
+        <div className="lg:col-span-8 bg-card border border-border rounded-lg p-6 shadow-sm">
             <div className="flex items-center justify-between mb-8">
                 <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 bg-accent/10 rounded-xl flex items-center justify-center border border-accent/20">
+                    <div className="w-10 h-10 bg-accent/10 rounded-lg flex items-center justify-center border border-accent/20">
                         <TrendingUp className="w-5 h-5 text-accent" />
                     </div>
                     <div>
@@ -183,7 +183,7 @@ export default function AdminDashboard() {
 
         {/* Security Integrity Gauge (Right Column) */}
         <div className="lg:col-span-4 space-y-6">
-            <div className="bg-card border border-border rounded-xl p-6 shadow-sm relative overflow-hidden">
+            <div className="bg-card border border-border rounded-lg p-6 shadow-sm relative overflow-hidden">
                 <h3 className="text-[9px] font-black uppercase tracking-[0.2em] text-text-gray mb-6 flex items-center gap-2">
                     <Database className="w-4 h-4" />
                     Storage Hierarchy
@@ -219,7 +219,7 @@ export default function AdminDashboard() {
             </div>
 
             {/* Neural Load Indicators */}
-            <div className="bg-card border border-border rounded-xl p-6 shadow-sm">
+            <div className="bg-card border border-border rounded-lg p-6 shadow-sm">
                 <h3 className="text-[9px] font-black uppercase tracking-[0.2em] text-text-gray mb-6">Component Matrix</h3>
                 <div className="space-y-4">
                     {inferenceData.map((item, i) => (
@@ -242,7 +242,7 @@ export default function AdminDashboard() {
       </div>
 
       {/* ── Console Feed (Bottom Row) ── */}
-      <div className="bg-[#0b1120] border border-white/5 rounded-xl overflow-hidden shadow-lg relative">
+      <div className="bg-[#0b1120] border border-white/5 rounded-lg overflow-hidden shadow-lg relative">
           <div className="p-4 border-b border-white/5 bg-white/[0.02] flex items-center justify-between">
               <div className="flex items-center gap-3">
                   <Terminal className="w-4 h-4 text-accent" />

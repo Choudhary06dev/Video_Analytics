@@ -34,11 +34,11 @@ export default function SurveillanceConfig() {
         </div>
 
         <div className="flex gap-4">
-            <button className="flex items-center gap-3 bg-white/5 border border-white/10 text-white/60 px-6 py-3 rounded-2xl font-black uppercase tracking-widest text-[11px] transition-all hover:bg-white/10 hover:text-white">
+            <button className="flex items-center gap-3 bg-white/5 border border-white/10 text-white/60 px-6 py-3 rounded-lg font-black uppercase tracking-widest text-[11px] transition-all hover:bg-white/10 hover:text-white">
                 <Map className="w-4 h-4" />
                 Edit Mapping
             </button>
-            <button className="flex items-center gap-3 bg-accent text-white px-6 py-3 rounded-2xl font-black uppercase tracking-widest text-[11px] transition-all shadow-lg shadow-accent/20 hover:-translate-y-1 active:translate-y-0">
+            <button className="flex items-center gap-3 bg-accent text-white px-6 py-3 rounded-lg font-black uppercase tracking-widest text-[11px] transition-all shadow-lg shadow-accent/20 hover:-translate-y-1 active:translate-y-0">
                 <Plus className="w-4 h-4" />
                 Initialize New Feed
             </button>
@@ -52,8 +52,8 @@ export default function SurveillanceConfig() {
             { label: 'Deployed Zones', value: '8', icon: Layers, color: 'text-emerald-400' },
             { label: 'AI Inference Load', value: '62%', icon: Cpu, color: 'text-amber-400' },
         ].map((stat, i) => (
-            <div key={i} className="bg-[#0f0f12] border border-white/5 rounded-3xl p-6 flex items-center gap-6">
-                <div className={`p-4 bg-white/5 border border-white/10 rounded-2xl ${stat.color}`}>
+            <div key={i} className="bg-[#0f0f12] border border-white/5 rounded-lg p-6 flex items-center gap-6">
+                <div className={`p-4 bg-white/5 border border-white/10 rounded-lg ${stat.color}`}>
                     <stat.icon className="w-6 h-6" />
                 </div>
                 <div>
@@ -65,7 +65,7 @@ export default function SurveillanceConfig() {
       </div>
 
       {/* Main Content Area */}
-      <div className="bg-[#0f0f12] border border-white/5 rounded-[2.5rem] overflow-hidden shadow-2xl">
+      <div className="bg-[#0f0f12] border border-white/5 rounded-lg overflow-hidden shadow-2xl">
          <div className="px-8 py-7 border-b border-white/5 bg-white/[0.02] flex items-center justify-between">
             <h2 className="text-xs font-black uppercase tracking-[0.2em] flex items-center gap-3 text-white">
                <Cctv className="w-5 h-5 text-accent" />
@@ -76,7 +76,7 @@ export default function SurveillanceConfig() {
                 <input 
                     type="text" 
                     placeholder="Filter nodes..." 
-                    className="bg-black/40 border border-white/5 rounded-xl py-2 pl-9 pr-4 text-[10px] font-black uppercase tracking-widest text-white outline-none focus:border-accent/40 w-48"
+                    className="bg-black/40 border border-white/5 rounded-lg py-2 pl-9 pr-4 text-[10px] font-black uppercase tracking-widest text-white outline-none focus:border-accent/40 w-48"
                 />
             </div>
          </div>
@@ -119,10 +119,10 @@ export default function SurveillanceConfig() {
                             </td>
                             <td className="py-6 px-8 text-right">
                                 <div className="flex items-center justify-end gap-2">
-                                    <button className="p-2.5 rounded-xl bg-white/5 border border-white/5 text-white/20 hover:text-white hover:bg-white/10 transition-all">
+                                    <button className="p-2.5 rounded-lg bg-white/5 border border-white/5 text-white/20 hover:text-white hover:bg-white/10 transition-all">
                                         <Settings2 className="w-4 h-4" />
                                     </button>
-                                    <button className="p-2.5 rounded-xl bg-white/5 border border-white/5 text-white/20 hover:text-white hover:bg-white/10 transition-all">
+                                    <button className="p-2.5 rounded-lg bg-white/5 border border-white/5 text-white/20 hover:text-white hover:bg-white/10 transition-all">
                                         <MoreVertical className="w-4 h-4" />
                                     </button>
                                 </div>

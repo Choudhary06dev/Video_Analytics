@@ -50,7 +50,7 @@ export default function LoginPage() {
 
         <div className="relative z-10">
           <div className="flex items-center gap-3 mb-12">
-            <div className="w-12 h-12 bg-gradient-to-tr from-accent to-emerald-500 rounded-xl flex items-center justify-center shadow-[0_0_20px_rgba(6,182,212,0.4)]">
+            <div className="w-12 h-12 bg-gradient-to-tr from-accent to-emerald-500 rounded-lg flex items-center justify-center shadow-[0_0_20px_rgba(6,182,212,0.4)]">
               <Shield className="w-6 h-6 text-white" />
             </div>
             <span className="text-xl font-black text-white uppercase tracking-[0.2em]">Nexer Tech</span>
@@ -105,7 +105,7 @@ export default function LoginPage() {
           </div>
 
           {error && (
-            <div className="mb-8 p-5 bg-danger/10 border-l-4 border-danger rounded-r-2xl flex items-center gap-4 animate-in slide-in-from-top-2">
+            <div className="mb-8 p-5 bg-danger/10 border-l-4 border-danger rounded-r-lg flex items-center gap-4 animate-in slide-in-from-top-2">
               <div className="w-2 h-2 rounded-full bg-danger animate-pulse shadow-[0_0_8px_rgba(244,63,94,0.8)]"></div>
               <p className="text-danger text-[10px] font-black uppercase tracking-widest">{error}</p>
             </div>
@@ -124,7 +124,7 @@ export default function LoginPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="USERNAME@NEXER.SYS"
-                  className="w-full bg-white/[0.08] border-2 border-white/10 focus:border-accent focus:bg-white/[0.12] focus:shadow-[0_0_25px_rgba(6,182,212,0.2)] rounded-2xl py-4 flex items-center pl-14 pr-4 text-sm text-white font-bold outline-none transition-all placeholder:text-white/60 placeholder:font-black placeholder:tracking-[0.1em] selection:bg-accent/40"
+                  className="w-full bg-white/[0.08] border-2 border-white/10 focus:border-accent focus:bg-white/[0.12] focus:shadow-[0_0_25px_rgba(6,182,212,0.2)] rounded-lg py-4 flex items-center pl-14 pr-4 text-sm text-white font-bold outline-none transition-all placeholder:text-white/60 placeholder:font-black placeholder:tracking-[0.1em] selection:bg-accent/40"
                 />
               </div>
             </div>
@@ -141,7 +141,7 @@ export default function LoginPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="PASSWORD-KEY"
-                  className="w-full bg-white/[0.08] border-2 border-white/10 focus:border-accent focus:bg-white/[0.12] focus:shadow-[0_0_25px_rgba(6,182,212,0.2)] rounded-2xl py-4 flex items-center pl-14 pr-14 text-sm text-white font-bold outline-none transition-all placeholder:text-white/60 placeholder:font-black placeholder:tracking-[0.1em] selection:bg-accent/40"
+                  className="w-full bg-white/[0.08] border-2 border-white/10 focus:border-accent focus:bg-white/[0.12] focus:shadow-[0_0_25px_rgba(6,182,212,0.2)] rounded-lg py-4 flex items-center pl-14 pr-14 text-sm text-white font-bold outline-none transition-all placeholder:text-white/60 placeholder:font-black placeholder:tracking-[0.1em] selection:bg-accent/40"
                 />
                 <button 
                   type="button"
@@ -166,7 +166,7 @@ export default function LoginPage() {
             <button 
               type="submit" 
               disabled={loading}
-              className="w-full bg-white text-[#020617] font-black py-4 rounded-2xl flex items-center justify-center gap-4 hover:shadow-[0_15px_35px_rgba(255,255,255,0.1)] active:scale-[0.97] transition-all disabled:opacity-50 group mt-2 overflow-hidden relative"
+              className="w-full bg-white text-[#020617] font-black py-4 rounded-lg flex items-center justify-center gap-4 hover:shadow-[0_15px_35px_rgba(255,255,255,0.1)] active:scale-[0.97] transition-all disabled:opacity-50 group mt-2 overflow-hidden relative"
             >
               <div className="absolute inset-0 bg-gradient-to-r from-accent/0 via-accent/20 to-accent/0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
               {loading ? (
@@ -184,7 +184,7 @@ export default function LoginPage() {
              <p className="text-[9px] text-white/40 font-black uppercase tracking-[0.3em] mb-3">Unauthorized to Nexer Network?</p>
              <Link 
               to="/register" 
-              className="inline-flex items-center gap-3 text-white font-black uppercase text-[9px] tracking-[0.4em] border-2 border-white/10 px-6 py-3 rounded-2xl hover:border-accent/40 hover:text-accent hover:bg-white/5 transition-all italic hover:shadow-[0_0_20px_rgba(6,182,212,0.1)]"
+              className="inline-flex items-center gap-3 text-white font-black uppercase text-[9px] tracking-[0.4em] border-2 border-white/10 px-6 py-3 rounded-lg hover:border-accent/40 hover:text-accent hover:bg-white/5 transition-all italic hover:shadow-[0_0_20px_rgba(6,182,212,0.1)]"
              >
                 <div className="w-1 h-1 bg-accent rounded-full"></div>
                 Initialize Security Clearances

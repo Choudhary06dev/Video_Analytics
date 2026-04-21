@@ -25,7 +25,7 @@ export default function SystemSettings() {
 
   const SectionHeader = ({ icon: Icon, title, desc }) => (
     <div className="flex items-center gap-3 mb-6">
-        <div className="w-10 h-10 bg-accent/10 rounded-xl flex items-center justify-center border border-accent/20">
+        <div className="w-10 h-10 bg-accent/10 rounded-lg flex items-center justify-center border border-accent/20">
             <Icon className="w-5 h-5 text-accent" />
         </div>
         <div>
@@ -36,7 +36,7 @@ export default function SystemSettings() {
   );
 
   const Toggle = ({ label, desc, enabled }) => (
-    <div className="flex items-center justify-between p-4 bg-surface border border-border rounded-xl group hover:border-accent/30 transition-all shadow-sm">
+    <div className="flex items-center justify-between p-4 bg-surface border border-border rounded-lg group hover:border-accent/30 transition-all shadow-sm">
         <div>
             <p className="text-[10px] font-black uppercase tracking-widest text-text-dark">{label}</p>
             <p className="text-[8px] font-bold text-text-gray uppercase tracking-widest mt-0.5">{desc}</p>
@@ -53,7 +53,7 @@ export default function SystemSettings() {
       {/* Page Header (Scaled Down) */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 pb-2">
         <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-accent/10 rounded-2xl flex items-center justify-center border border-accent/20">
+            <div className="w-12 h-12 bg-accent/10 rounded-lg flex items-center justify-center border border-accent/20">
                 <Sliders className="w-7 h-7 text-accent font-black" />
             </div>
             <div>
@@ -69,7 +69,7 @@ export default function SystemSettings() {
         <button 
             onClick={handleSave}
             disabled={saving}
-            className="flex items-center gap-2 bg-accent text-white px-8 py-3 rounded-xl font-black uppercase tracking-widest text-[10px] transition-all shadow-md hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-50"
+            className="flex items-center gap-2 bg-accent text-white px-8 py-3 rounded-lg font-black uppercase tracking-widest text-[10px] transition-all shadow-md hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-50"
         >
             {saving ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
             {saving ? 'Syncing...' : 'Sync Configuration'}
@@ -89,7 +89,7 @@ export default function SystemSettings() {
                 <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
-                    className={`w-full flex items-center gap-3 p-4 rounded-xl border transition-all text-left group
+                    className={`w-full flex items-center gap-3 p-4 rounded-lg border transition-all text-left group
                         ${activeTab === tab.id 
                             ? 'bg-accent/10 border-accent/20 text-accent font-bold' 
                             : 'bg-card border-border text-text-gray hover:bg-surface hover:text-text-dark'}`}
@@ -101,7 +101,7 @@ export default function SystemSettings() {
         </div>
 
         {/* Content Area (Scaled Down) */}
-        <div className="lg:col-span-9 bg-card border border-border rounded-xl p-8 shadow-sm">
+        <div className="lg:col-span-9 bg-card border border-border rounded-lg p-8 shadow-sm">
             {activeTab === 'platform' && (
                 <div className="space-y-8 animate-in fade-in duration-500">
                     <SectionHeader icon={Globe} title="Regional Distribution" desc="Manage global edge nodes and deployment regions" />
@@ -114,7 +114,7 @@ export default function SystemSettings() {
                     
                     <div className="space-y-3 pt-6 border-t border-border">
                         <label className="text-[9px] font-black uppercase tracking-widest text-text-gray">Primary Engine Region</label>
-                        <select className="w-full bg-surface border border-border rounded-xl px-5 py-3 text-[11px] font-bold text-text-dark outline-none focus:border-accent transition-all appearance-none tracking-widest">
+                        <select className="w-full bg-surface border border-border rounded-lg px-5 py-3 text-[11px] font-bold text-text-dark outline-none focus:border-accent transition-all appearance-none tracking-widest">
                             <option>NORTH AMERICAN NEXUS // 01</option>
                             <option>EUROPEAN GRID // 02</option>
                             <option>ASIAN PERIMETER // 03</option>
@@ -153,7 +153,7 @@ export default function SystemSettings() {
             {activeTab === 'storage' && (
                 <div className="space-y-8 animate-in fade-in duration-500">
                     <SectionHeader icon={Database} title="Storage Lifecycle" desc="Archive management" />
-                    <div className="p-6 bg-surface border border-border rounded-xl">
+                    <div className="p-6 bg-surface border border-border rounded-lg">
                         <div className="flex items-center gap-3 mb-6">
                             <div className="w-1.5 h-1.5 bg-accent rounded-full animate-pulse"></div>
                             <p className="text-[10px] font-black uppercase tracking-widest text-text-dark">Cleanup: Daily @ 03:00</p>

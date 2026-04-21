@@ -88,7 +88,7 @@ function ScenarioCard({ s, onSelect }) {
       onClick={() => onSelect(s)}
       style={{
         background: isDark ? '#111827' : '#fff',
-        borderRadius: 18,
+        borderRadius: 8,
         border: `1.5px solid ${hovered ? catColor + '50' : (isDark ? '#1e293b' : '#f1f5f9')}`,
         boxShadow: hovered
           ? `0 16px 40px -10px ${catColor}30, ${s.status === 'critical' ? cfg.glow : 'none'}`
@@ -238,7 +238,7 @@ export default function AIScenarioGrid() {
 
   return (
     <div
-      className="bg-card rounded-[28px] border border-border shadow-premium p-7 mt-8"
+      className="bg-card rounded-lg border border-border shadow-premium p-7 mt-8"
     >
       {/* Header */}
       <div className="flex flex-wrap justify-between items-start gap-4 mb-6">
@@ -270,7 +270,7 @@ export default function AIScenarioGrid() {
           />
           <button
             onClick={handleRefresh}
-            className="p-2 rounded-xl bg-sky-50 text-sky-500 hover:bg-sky-500 hover:text-white transition-all cursor-pointer"
+            className="p-2 rounded-lg bg-sky-50 text-sky-500 hover:bg-sky-500 hover:text-white transition-all cursor-pointer"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''}`} />
           </button>
@@ -329,7 +329,7 @@ export default function AIScenarioGrid() {
           <div
             onClick={e => e.stopPropagation()}
             style={{
-              background: '#fff', borderRadius: 24, width: 380, overflow: 'hidden',
+              background: '#fff', borderRadius: 8, width: 380, overflow: 'hidden',
               border: '1px solid rgba(255,255,255,0.1)',
               animation: 'slideUpModal 0.3s cubic-bezier(0.34,1.56,0.64,1)',
               boxShadow: '0 40px 80px rgba(0,0,0,0.4)',

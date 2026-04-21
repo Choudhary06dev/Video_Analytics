@@ -115,7 +115,7 @@ function KPICard({ stat, index }) {
         transition: 'all 0.35s cubic-bezier(0.34,1.56,0.64,1)',
         cursor: 'pointer',
       }}
-      className="relative rounded-[22px] p-5 border overflow-hidden select-none backdrop-blur-sm"
+      className="relative rounded-lg p-5 border overflow-hidden select-none backdrop-blur-sm"
     >
       {/* Animated corner glow */}
       <div
@@ -131,7 +131,7 @@ function KPICard({ stat, index }) {
       {hovered && (
         <div
           style={{ borderColor: stat.accent, animationDuration: '1.2s' }}
-          className="absolute -inset-px rounded-[22px] border-2 opacity-30 animate-ping pointer-events-none"
+          className="absolute -inset-px rounded-lg border-2 opacity-30 animate-ping pointer-events-none"
         />
       )}
 
@@ -144,7 +144,7 @@ function KPICard({ stat, index }) {
               boxShadow: hovered ? `0 8px 20px -4px ${stat.glow}` : 'none',
               transition: 'all 0.35s ease',
             }}
-            className="p-2.5 rounded-xl"
+            className="p-2.5 rounded-lg"
           >
             <stat.icon
               className="w-5 h-5 transition-all duration-300"

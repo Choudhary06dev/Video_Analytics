@@ -35,7 +35,7 @@ function CameraCard({ cam, intel }) {
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}
         className={`
-          group relative overflow-hidden aspect-video rounded-[24px] cursor-pointer transition-all duration-500 bg-black
+          group relative overflow-hidden aspect-video rounded-lg cursor-pointer transition-all duration-500 bg-black
           border-2 ${cam.alert_mode ? 'border-danger/60 shadow-[0_0_24px_rgba(239,68,68,0.3)]' : hovered ? 'border-accent/50 shadow-premium' : 'border-transparent'}
         `}
         style={{ transform: hovered ? 'translateY(-6px) scale(1.01)' : 'none' }}
@@ -86,7 +86,7 @@ function CameraCard({ cam, intel }) {
           absolute bottom-0 left-0 right-0 p-3 transition-transform duration-500 z-20
           ${hovered ? 'translate-y-0' : 'translate-y-full'}
         `}>
-          <div className="bg-slate-900/90 backdrop-blur-xl border border-white/10 rounded-2xl p-3 shadow-2xl">
+          <div className="bg-slate-900/90 backdrop-blur-xl border border-white/10 rounded-lg p-3 shadow-2xl">
              <div className="flex justify-between items-center mb-3">
                 <div className="flex gap-2">
                    <span className="px-2 py-0.5 rounded-md bg-accent/20 border border-accent/30 text-accent text-[0.6rem] font-black uppercase">
@@ -129,7 +129,7 @@ function CameraCard({ cam, intel }) {
         >
            <div 
              onClick={e => e.stopPropagation()}
-             className="w-full max-w-5xl bg-card border border-white/10 rounded-[32px] overflow-hidden shadow-2xl"
+             className="w-full max-w-5xl bg-card border border-white/10 rounded-lg overflow-hidden shadow-2xl"
            >
               <div className="flex aspect-video bg-black relative">
                 {isPrimary ? (
@@ -148,7 +148,7 @@ function CameraCard({ cam, intel }) {
                 </div>
                 <button 
                   onClick={() => setExpanded(false)}
-                  className="absolute top-6 right-6 px-4 py-2 bg-white/10 hover:bg-white/20 backdrop-blur-md rounded-xl text-white text-[0.8rem] font-black border border-white/10 transition-all font-sans"
+                  className="absolute top-6 right-6 px-4 py-2 bg-white/10 hover:bg-white/20 backdrop-blur-md rounded-lg text-white text-[0.8rem] font-black border border-white/10 transition-all font-sans"
                 >
                   ✕ CLOSE VIEW
                 </button>
@@ -203,7 +203,7 @@ export default function CameraGrid({ selectedAreaId }) {
 
   if (loading) {
      return (
-        <div className="bg-card rounded-[28px] border border-border p-8 min-h-[400px] flex items-center justify-center">
+        <div className="bg-card rounded-lg border border-border p-8 min-h-[400px] flex items-center justify-center">
            <div className="flex flex-col items-center gap-4">
               <div className="w-12 h-12 border-4 border-accent border-t-transparent rounded-full animate-spin" />
               <p className="text-[0.7rem] font-black text-text-gray uppercase tracking-widest">Synchronizing Camera Matrix...</p>
@@ -213,7 +213,7 @@ export default function CameraGrid({ selectedAreaId }) {
   }
 
   return (
-    <div className="bg-card rounded-[28px] border border-border shadow-premium p-[22px]">
+    <div className="bg-card rounded-lg border border-border shadow-premium p-[22px]">
       {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-5 gap-3">
         <div>
@@ -245,7 +245,7 @@ export default function CameraGrid({ selectedAreaId }) {
           ))}
         </div>
       ) : (
-        <div className="py-20 flex flex-col items-center justify-center border-2 border-dashed border-border rounded-3xl opacity-50">
+        <div className="py-20 flex flex-col items-center justify-center border-2 border-dashed border-border rounded-lg opacity-50">
            <VideoOff className="w-12 h-12 text-text-gray mb-4" />
            <p className="text-[0.8rem] font-black text-text-gray uppercase tracking-widest">No Cameras detected in this sector</p>
            <p className="text-[0.65rem] text-text-gray font-semibold mt-1">Initialize sensor nodes via Admin Hub to view streams.</p>

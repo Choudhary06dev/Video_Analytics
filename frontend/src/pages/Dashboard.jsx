@@ -15,10 +15,10 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="flex h-screen overflow-hidden bg-background">
-      {/* 2. Main Scrollable Content */}
-      <div className="flex-1 overflow-y-auto custom-scrollbar bg-background/50">
-        <div className="flex flex-col gap-0 pb-20 max-w-[1500px] mx-auto pt-6 px-6">
+    <div className="bg-background max-w-[1600px] mx-auto">
+      {/* Main Content */}
+      <div className="bg-background/50">
+        <div className="flex flex-col gap-0 pb-20 max-w-[1600px] mx-auto">
           
           {/* Global KPI Header */}
           <KPICards />
@@ -40,7 +40,7 @@ export default function Dashboard() {
               </div>
               <button 
                 onClick={handleRefresh}
-                className="flex items-center gap-2 px-4 py-2 bg-card text-text-dark border border-border rounded-xl text-[0.75rem] font-bold cursor-pointer transition-all hover:border-accent hover:text-accent shadow-sm"
+                className="flex items-center gap-2 px-4 py-2 bg-card text-text-dark border border-border rounded-lg text-[0.75rem] font-bold cursor-pointer transition-all hover:border-accent hover:text-accent shadow-sm"
               >
                 <RefreshCw className="w-3.5 h-3.5" />
                 Recalibrate

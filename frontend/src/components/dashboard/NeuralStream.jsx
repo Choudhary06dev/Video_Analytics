@@ -49,7 +49,7 @@ export default function NeuralStream() {
   }, []);
 
   return (
-    <div className="bg-card rounded-3xl p-6 border border-border shadow-premium h-[400px] flex flex-col w-full">
+    <div className="bg-card rounded-lg p-6 border border-border shadow-premium h-[400px] flex flex-col w-full">
       <div className="flex justify-between items-center mb-5 shrink-0">
         <div>
           <h3 className="text-[1.1rem] font-bold text-text-dark m-0">Neural Detection Stream</h3>
@@ -58,7 +58,7 @@ export default function NeuralStream() {
           </div>
         </div>
         <div className="flex gap-2 items-center">
-          <span className="bg-accent-soft text-accent px-3 py-1 rounded-xl text-[0.7rem] font-extrabold flex items-center gap-1.5 border border-accent-soft relative ml-2">
+          <span className="bg-accent-soft text-accent px-3 py-1 rounded-lg text-[0.7rem] font-extrabold flex items-center gap-1.5 border border-accent-soft relative ml-2">
             <span className="absolute -left-1.5 top-1/2 -translate-y-1/2 w-2 h-2 bg-success rounded-full animate-[pulse_1.5s_ease-in-out_infinite]" />
             STREAM ACTIVE
           </span>
@@ -70,7 +70,7 @@ export default function NeuralStream() {
         {logs.map(log => (
           <div 
             key={log.id} 
-            className="flex justify-between items-center px-4 py-3 rounded-xl bg-bg text-[0.82rem] border-l-4 border-accent animate-[slideIn_0.3s_ease]"
+            className="flex justify-between items-center px-4 py-3 rounded-lg bg-bg text-[0.82rem] border-l-4 border-accent animate-[slideIn_0.3s_ease]"
             style={{ animation: 'slideDown 0.3s ease-out forwards' }}
           >
             <style>{`

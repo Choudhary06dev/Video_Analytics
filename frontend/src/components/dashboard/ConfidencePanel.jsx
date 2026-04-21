@@ -25,7 +25,7 @@ function MetricBar({ metric, loaded }) {
       onMouseLeave={() => setHovered(false)}
       style={{
         background: hovered ? metric.bg : 'transparent',
-        borderRadius: 14,
+        borderRadius: 8,
         padding: hovered ? '10px 12px' : '4px 6px',
         transition: 'all 0.3s ease',
         cursor: 'default',
@@ -74,7 +74,7 @@ export default function ConfidencePanel() {
 
   return (
     <div
-      className="w-full transition-shadow duration-300 hover:shadow-[0_12px_40px_-10px_rgba(139,92,246,0.15)] bg-card rounded-[28px] p-6 border border-border shadow-premium"
+      className="w-full transition-shadow duration-300 hover:shadow-[0_12px_40px_-10px_rgba(139,92,246,0.15)] bg-card rounded-lg p-6 border border-border shadow-premium"
     >
       {/* Header */}
       <div className="flex items-center justify-between mb-5">
@@ -100,7 +100,7 @@ export default function ConfidencePanel() {
         style={{
           background: 'linear-gradient(135deg, rgba(139,92,246,0.08) 0%, rgba(14,165,233,0.06) 100%)',
           border: '1px solid rgba(139,92,246,0.12)',
-          borderRadius: 18,
+          borderRadius: 8,
           padding: '16px 20px',
         }}
       >

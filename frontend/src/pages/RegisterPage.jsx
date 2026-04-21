@@ -66,7 +66,7 @@ export default function RegisterPage() {
 
         <div className="relative z-10">
           <div className="flex items-center gap-3 mb-10">
-            <div className="w-12 h-12 bg-gradient-to-tr from-accent to-emerald-500 rounded-xl flex items-center justify-center shadow-[0_0_20px_rgba(6,182,212,0.4)]">
+            <div className="w-12 h-12 bg-gradient-to-tr from-accent to-emerald-500 rounded-lg flex items-center justify-center shadow-[0_0_20px_rgba(6,182,212,0.4)]">
               <Globe className="w-6 h-6 text-white animate-spin-slow" />
             </div>
             <span className="text-xl font-black text-white uppercase tracking-[0.2em]">Nexer Network</span>
@@ -83,7 +83,7 @@ export default function RegisterPage() {
                 Welcome to the Nexer Ecosystem. By registering your node, you gain access to our distributed neural analytics architecture and high-security personnel ledger.
               </p>
               
-              <div className="bg-white/[0.03] border border-white/10 p-6 rounded-[2rem] backdrop-blur-md">
+              <div className="bg-white/[0.03] border border-white/10 p-6 rounded-lg backdrop-blur-md">
                 <h4 className="text-accent font-black uppercase tracking-[0.2em] text-[10px] mb-3 flex items-center gap-2">
                   <div className="w-1.5 h-1.5 bg-accent rounded-full animate-pulse"></div>
                   Protocol Initialization
@@ -98,17 +98,17 @@ export default function RegisterPage() {
 
         {/* Feature Highlights Grid */}
         <div className="relative z-10 grid grid-cols-3 gap-6">
-           <div className="flex flex-col gap-2 p-4 bg-white/[0.02] rounded-2xl border border-white/[0.05]">
+           <div className="flex flex-col gap-2 p-4 bg-white/[0.02] rounded-lg border border-white/[0.05]">
               <Database className="w-6 h-6 text-emerald-400 opacity-60 mb-2" />
               <h4 className="text-white font-bold uppercase tracking-wider text-[10px]">Secure Registry</h4>
               <p className="text-[11px] text-text-gray tracking-widest font-black opacity-50">Identity Vault</p>
            </div>
-           <div className="flex flex-col gap-2 p-4 bg-white/[0.02] rounded-2xl border border-white/[0.05]">
+           <div className="flex flex-col gap-2 p-4 bg-white/[0.02] rounded-lg border border-white/[0.05]">
               <ShieldCheck className="w-6 h-6 text-accent opacity-60 mb-2" />
               <h4 className="text-white font-bold uppercase tracking-wider text-[10px]">Neural Auth</h4>
               <p className="text-[11px] text-text-gray tracking-widest font-black opacity-50">Encrypted Keys</p>
            </div>
-           <div className="flex flex-col gap-2 p-4 bg-white/[0.02] rounded-2xl border border-white/[0.05]">
+           <div className="flex flex-col gap-2 p-4 bg-white/[0.02] rounded-lg border border-white/[0.05]">
               <Activity className="w-6 h-6 text-blue-400 opacity-60 mb-2" />
               <h4 className="text-white font-bold uppercase tracking-wider text-[10px]">Node Status</h4>
               <p className="text-[11px] text-text-gray tracking-widest font-black opacity-50">Live Syncing</p>
@@ -162,7 +162,7 @@ export default function RegisterPage() {
           ) : (
             <form onSubmit={handleSubmit} className="space-y-5 animate-in fade-in slide-in-from-top-4 duration-700">
               {error && (
-                <div className="mb-6 p-5 bg-danger/10 border-l-4 border-danger rounded-r-2xl flex items-center gap-4 animate-shake">
+                <div className="mb-6 p-5 bg-danger/10 border-l-4 border-danger rounded-r-lg flex items-center gap-4 animate-shake">
                   <div className="w-2 h-2 rounded-full bg-danger animate-pulse shadow-[0_0_8px_rgba(244,63,94,0.8)]"></div>
                   <p className="text-danger text-[10px] font-black uppercase tracking-widest">{error}</p>
                 </div>
@@ -180,7 +180,7 @@ export default function RegisterPage() {
                     value={formData.fullName}
                     onChange={handleChange}
                     placeholder="FIRST LAST"
-                    className="w-full bg-white/[0.08] border-2 border-white/10 focus:border-accent focus:bg-white/[0.12] focus:shadow-[0_0_25px_rgba(6,182,212,0.2)] rounded-2xl py-4 flex items-center pl-14 pr-4 text-sm text-white font-bold outline-none transition-all placeholder:text-white/60 placeholder:font-black placeholder:tracking-[0.1em] selection:bg-accent/40"
+                    className="w-full bg-white/[0.08] border-2 border-white/10 focus:border-accent focus:bg-white/[0.12] focus:shadow-[0_0_25px_rgba(6,182,212,0.2)] rounded-lg py-4 flex items-center pl-14 pr-4 text-sm text-white font-bold outline-none transition-all placeholder:text-white/60 placeholder:font-black placeholder:tracking-[0.1em] selection:bg-accent/40"
                   />
                 </div>
               </div>
@@ -198,7 +198,7 @@ export default function RegisterPage() {
                     value={formData.email}
                     onChange={handleChange}
                     placeholder="NODE-ADDR@NEXER.CORE"
-                    className="w-full bg-white/[0.08] border-2 border-white/10 focus:border-accent focus:bg-white/[0.12] focus:shadow-[0_0_25px_rgba(6,182,212,0.2)] rounded-2xl py-4 flex items-center pl-14 pr-4 text-sm text-white font-bold outline-none transition-all placeholder:text-white/60 placeholder:font-black placeholder:tracking-[0.1em] selection:bg-accent/40"
+                    className="w-full bg-white/[0.08] border-2 border-white/10 focus:border-accent focus:bg-white/[0.12] focus:shadow-[0_0_25px_rgba(6,182,212,0.2)] rounded-lg py-4 flex items-center pl-14 pr-4 text-sm text-white font-bold outline-none transition-all placeholder:text-white/60 placeholder:font-black placeholder:tracking-[0.1em] selection:bg-accent/40"
                   />
                 </div>
               </div>
@@ -217,7 +217,7 @@ export default function RegisterPage() {
                       value={formData.password}
                       onChange={handleChange}
                       placeholder="••••"
-                      className="w-full bg-white/[0.08] border-2 border-white/10 focus:border-accent focus:bg-white/[0.12] focus:shadow-[0_0_25px_rgba(6,182,212,0.2)] rounded-2xl py-4 flex items-center pl-14 pr-4 text-sm text-white font-bold outline-none transition-all placeholder:text-white/40 selection:bg-accent/40"
+                      className="w-full bg-white/[0.08] border-2 border-white/10 focus:border-accent focus:bg-white/[0.12] focus:shadow-[0_0_25px_rgba(6,182,212,0.2)] rounded-lg py-4 flex items-center pl-14 pr-4 text-sm text-white font-bold outline-none transition-all placeholder:text-white/40 selection:bg-accent/40"
                     />
                   </div>
                 </div>
@@ -235,7 +235,7 @@ export default function RegisterPage() {
                       value={formData.confirmPassword}
                       onChange={handleChange}
                       placeholder="••••"
-                      className="w-full bg-white/[0.08] border-2 border-white/10 focus:border-accent focus:bg-white/[0.12] focus:shadow-[0_0_25px_rgba(6,182,212,0.2)] rounded-2xl py-4 flex items-center pl-14 pr-4 text-sm text-white font-bold outline-none transition-all placeholder:text-white/40 selection:bg-accent/40"
+                      className="w-full bg-white/[0.08] border-2 border-white/10 focus:border-accent focus:bg-white/[0.12] focus:shadow-[0_0_25px_rgba(6,182,212,0.2)] rounded-lg py-4 flex items-center pl-14 pr-4 text-sm text-white font-bold outline-none transition-all placeholder:text-white/40 selection:bg-accent/40"
                     />
                   </div>
                 </div>
@@ -245,7 +245,7 @@ export default function RegisterPage() {
                 <button 
                   type="submit" 
                   disabled={loading}
-                  className="w-full bg-accent text-[#020617] font-black py-5 rounded-2xl flex items-center justify-center gap-4 hover:shadow-[0_15px_35px_rgba(6,182,212,0.3)] hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 group relative overflow-hidden"
+                  className="w-full bg-accent text-[#020617] font-black py-5 rounded-lg flex items-center justify-center gap-4 hover:shadow-[0_15px_35px_rgba(6,182,212,0.3)] hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 group relative overflow-hidden"
                 >
                   <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
                   {loading ? (
@@ -263,7 +263,7 @@ export default function RegisterPage() {
                 <p className="text-[9px] text-white/40 font-black uppercase tracking-[0.3em] mb-4">Existing Personnel Registry?</p>
                 <Link 
                   to="/login" 
-                  className="inline-flex items-center gap-3 text-white font-black uppercase text-[9px] tracking-[0.4em] border-2 border-white/10 px-8 py-4 rounded-2xl hover:border-accent/40 hover:text-accent hover:bg-white/5 transition-all italic hover:shadow-[0_0_20px_rgba(6,182,212,0.1)] active:scale-95"
+                  className="inline-flex items-center gap-3 text-white font-black uppercase text-[9px] tracking-[0.4em] border-2 border-white/10 px-8 py-4 rounded-lg hover:border-accent/40 hover:text-accent hover:bg-white/5 transition-all italic hover:shadow-[0_0_20px_rgba(6,182,212,0.1)] active:scale-95"
                 >
                   <div className="w-1.5 h-1.5 bg-accent rounded-full animate-pulse"></div>
                   Direct Station Access

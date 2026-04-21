@@ -1,4 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import axios from 'axios';
+import { BASE } from '../api';
 
 const AuthContext = createContext();
 
@@ -6,13 +8,41 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(localStorage.getItem('token'));
   const [loading, setLoading] = useState(true);
+  const [permissions, setPermissions] = useState({});
+
+  const fetchPermissions = async (activeToken) => {
+    if (!activeToken) {
+      setPermissions({});
+      return;
+    }
+    try {
+      const res = await axios.get(`${BASE}/auth/permissions`, {
+        headers: { Authorization: `Bearer ${activeToken}` }
+      });
+      setPermissions(res.data?.permissions || {});
+    } catch (err) {
+      setPermissions({});
+    }
+  };
+
+  const canView = (moduleKey) => {
+    if (!moduleKey) return true;
+    const modulePerm = permissions[moduleKey];
+    return modulePerm ? modulePerm.can_view !== false : true;
+  };
 
   useEffect(() => {
-    const savedUser = localStorage.getItem('user');
-    if (savedUser && token) {
-      setUser(JSON.parse(savedUser));
-    }
-    setLoading(false);
+    const initializeSession = async () => {
+      const savedUser = localStorage.getItem('user');
+      if (savedUser && token) {
+        setUser(JSON.parse(savedUser));
+        await fetchPermissions(token);
+      } else {
+        setPermissions({});
+      }
+      setLoading(false);
+    };
+    initializeSession();
   }, [token]);
 
   const login = (userData, userToken) => {
@@ -20,6 +50,7 @@ export const AuthProvider = ({ children }) => {
     localStorage.setItem('user', JSON.stringify(userData));
     setToken(userToken);
     setUser(userData);
+    fetchPermissions(userToken);
   };
 
   const logout = () => {
@@ -27,10 +58,11 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem('user');
     setToken(null);
     setUser(null);
+    setPermissions({});
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, role: user?.role, login, logout, isAuthenticated: !!token, loading }}>
+    <AuthContext.Provider value={{ user, token, role: user?.role, permissions, canView, login, logout, isAuthenticated: !!token, loading }}>
       {!loading && children}
     </AuthContext.Provider>
   );

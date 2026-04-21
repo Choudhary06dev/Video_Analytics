@@ -18,7 +18,7 @@ const CustomTooltip = ({ active, payload, label }) => {
     <div style={{
       background: 'rgba(15,23,42,0.95)',
       border: '1px solid rgba(14,165,233,0.3)',
-      borderRadius: 14,
+      borderRadius: 8,
       padding: '10px 16px',
       backdropFilter: 'blur(12px)',
       boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
@@ -97,7 +97,7 @@ export default function AnalyticsChart() {
 
   return (
     <div
-      className="w-full flex flex-col h-[460px] transition-shadow duration-300 hover:shadow-[0_12px_40px_-10px_rgba(14,165,233,0.15)] bg-card rounded-[28px] p-6 md:p-7 border border-border shadow-premium"
+      className="w-full flex flex-col h-[460px] transition-shadow duration-300 hover:shadow-[0_12px_40px_-10px_rgba(14,165,233,0.15)] bg-card rounded-lg p-6 md:p-7 border border-border shadow-premium"
     >
       {/* Header */}
       <div className="flex justify-between items-start mb-5 shrink-0 flex-wrap gap-3">
@@ -193,7 +193,7 @@ export default function AnalyticsChart() {
           { label: 'Peak Today', value: '72', icon: TrendingUp, color: '#0ea5e9' },
           { label: 'Avg/hr', value: '51.2', icon: Activity, color: '#8b5cf6' },
         ].map((s, i) => (
-          <div key={i} className="flex items-center gap-2 px-3 py-2 rounded-xl bg-surface border border-border flex-1">
+          <div key={i} className="flex items-center gap-2 px-3 py-2 rounded-lg bg-surface border border-border flex-1">
             <s.icon className="w-3.5 h-3.5" style={{ color: s.color }} />
             <div>
               <div className="text-[0.6rem] text-text-gray font-bold uppercase tracking-wider">{s.label}</div>

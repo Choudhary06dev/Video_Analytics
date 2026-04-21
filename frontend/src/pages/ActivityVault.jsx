@@ -439,7 +439,7 @@ function ActivityRow({ act, idx, onSelect, isSelected }) {
               { label: 'Duration', value: act.duration, icon: <Clock size={13} />, color: '#ec4899', sub: 'Task time' },
             ].map((d, i) => (
               <div key={i} style={{
-                background: isDark ? 'rgba(255,255,255,.05)' : 'rgba(255,255,255,.9)', borderRadius: 14, padding: '12px 14px',
+                background: isDark ? 'rgba(255,255,255,.05)' : 'rgba(255,255,255,.9)', borderRadius: 8, padding: '12px 14px',
                 border: `1px solid ${isDark ? 'rgba(255,255,255,.1)' : 'rgba(0,0,0,.05)'}`, display: 'flex', alignItems: 'center', gap: 10,
                 transition: 'all 0.2s', cursor: 'default',
               }}
@@ -572,7 +572,7 @@ export default function ActivityVault() {
 
       {/* ═══════════════ HERO HEADER ═══════════════ */}
       <div style={{
-        borderRadius: 28, overflow: 'hidden', position: 'relative', marginBottom: 28,
+        borderRadius: 8, overflow: 'hidden', position: 'relative', marginBottom: 28,
         background: 'linear-gradient(135deg,#0f172a 0%,#1e293b 40%,#0f172a 100%)',
         backgroundSize: '200% 200%', animation: 'vpGradient 10s ease infinite',
         padding: '32px 36px 28px',
@@ -586,9 +586,9 @@ export default function ActivityVault() {
           {/* Title row */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16, flexWrap: 'wrap', marginBottom: 28 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-              <div style={{ width: 52, height: 52, borderRadius: 16, background: 'linear-gradient(135deg,#0ea5e9,#8b5cf6)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 8px 28px rgba(14,165,233,.4)', animation: 'vpGlow 3s ease-in-out infinite', position: 'relative' }}>
+              <div style={{ width: 52, height: 52, borderRadius: 8, background: 'linear-gradient(135deg,#0ea5e9,#8b5cf6)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 8px 28px rgba(14,165,233,.4)', animation: 'vpGlow 3s ease-in-out infinite', position: 'relative' }}>
                 <Archive size={24} color="#fff" />
-                <div style={{ position: 'absolute', inset: 0, borderRadius: 16, border: '2px solid rgba(14,165,233,.2)', animation: 'vpRipple 3s ease-out infinite' }} />
+                <div style={{ position: 'absolute', inset: 0, borderRadius: 8, border: '2px solid rgba(14,165,233,.2)', animation: 'vpRipple 3s ease-out infinite' }} />
               </div>
               <div>
                 <h1 style={{ fontSize: 26, fontWeight: 900, color: '#f8fafc', margin: 0, letterSpacing: -.5 }}>Activity Vault</h1>
@@ -636,12 +636,12 @@ export default function ActivityVault() {
             ].map(({ label, value, color, Icon, trend, trendUp, sub }) => (
               <div key={label} className="vp-stat-card" style={{
                 background: 'rgba(255,255,255,.05)', border: '1px solid rgba(255,255,255,.07)',
-                borderRadius: 18, padding: '20px 22px', backdropFilter: 'blur(12px)', position: 'relative', overflow: 'hidden',
+                borderRadius: 8, padding: '20px 22px', backdropFilter: 'blur(12px)', position: 'relative', overflow: 'hidden',
               }}>
                 {/* Mini scan line */}
                 <div style={{ position: 'absolute', top: 0, height: 1, width: '30%', background: `linear-gradient(90deg,transparent,${color}60,transparent)`, animation: 'vpScanline 4s ease-in-out infinite', animationDelay: `${Math.random() * 2}s` }} />
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 14 }}>
-                  <div style={{ width: 42, height: 42, borderRadius: 13, background: `${color}12`, display: 'flex', alignItems: 'center', justifyContent: 'center', border: `1px solid ${color}18` }}>
+                  <div style={{ width: 42, height: 42, borderRadius: 8, background: `${color}12`, display: 'flex', alignItems: 'center', justifyContent: 'center', border: `1px solid ${color}18` }}>
                     <Icon size={20} style={{ color }} />
                   </div>
                   <div style={{ fontSize: 10, fontWeight: 800, color: trendUp ? '#4ade80' : '#38bdf8', background: trendUp ? 'rgba(34,197,94,.12)' : 'rgba(56,189,248,.12)', padding: '3px 8px', borderRadius: 99, display: 'flex', alignItems: 'center', gap: 3, border: `1px solid ${trendUp ? 'rgba(34,197,94,.2)' : 'rgba(56,189,248,.2)'}` }}>
@@ -660,7 +660,7 @@ export default function ActivityVault() {
       {/* ═══════════════ INSIGHTS ROW ═══════════════ */}
       <div style={{ display: 'grid', gridTemplateColumns: '160px 1fr 1fr', gap: 16, marginBottom: 20 }}>
         {/* Donut */}
-        <div style={{ background: cardBg, borderRadius: 22, border: `1px solid ${cardBorder}`, padding: '20px 16px', display: 'flex', flexDirection: 'column', alignItems: 'center', boxShadow: '0 2px 16px rgba(0,0,0,.04)' }}>
+        <div style={{ background: cardBg, borderRadius: 8, border: `1px solid ${cardBorder}`, padding: '20px 16px', display: 'flex', flexDirection: 'column', alignItems: 'center', boxShadow: '0 2px 16px rgba(0,0,0,.04)' }}>
           <StatusDonut stats={stats} size={120} />
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 4, marginTop: 12, width: '100%' }}>
             {Object.entries(STATUS_META).map(([k, v]) => (
@@ -672,7 +672,7 @@ export default function ActivityVault() {
         </div>
 
         {/* Timeline chart */}
-        <div style={{ background: cardBg, borderRadius: 22, border: `1px solid ${cardBorder}`, padding: '20px 24px', boxShadow: '0 2px 16px rgba(0,0,0,.04)' }}>
+        <div style={{ background: cardBg, borderRadius: 8, border: `1px solid ${cardBorder}`, padding: '20px 24px', boxShadow: '0 2px 16px rgba(0,0,0,.04)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
             <div>
               <div style={{ fontSize: 14, fontWeight: 800, color: textPrimary, display: 'flex', alignItems: 'center', gap: 6 }}><BarChart3 size={14} style={{ color: '#0ea5e9' }} />Hourly Activity Timeline</div>
@@ -691,7 +691,7 @@ export default function ActivityVault() {
         </div>
 
         {/* Heatmap */}
-        <div style={{ background: cardBg, borderRadius: 22, border: `1px solid ${cardBorder}`, padding: '20px 24px', boxShadow: '0 2px 16px rgba(0,0,0,.04)' }}>
+        <div style={{ background: cardBg, borderRadius: 8, border: `1px solid ${cardBorder}`, padding: '20px 24px', boxShadow: '0 2px 16px rgba(0,0,0,.04)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
             <div>
               <div style={{ fontSize: 14, fontWeight: 800, color: textPrimary, display: 'flex', alignItems: 'center', gap: 6 }}><Layers size={14} style={{ color: '#8b5cf6' }} />Weekly Heatmap</div>
@@ -704,7 +704,7 @@ export default function ActivityVault() {
       </div>
 
       {/* ═══════════════ TABLE CARD ═══════════════ */}
-      <div style={{ background: cardBg, borderRadius: 24, border: `1px solid ${cardBorder}`, boxShadow: '0 4px 30px rgba(0,0,0,.05)', overflow: 'hidden' }}>
+      <div style={{ background: cardBg, borderRadius: 8, border: `1px solid ${cardBorder}`, boxShadow: '0 4px 30px rgba(0,0,0,.05)', overflow: 'hidden' }}>
 
         {/* Toolbar */}
         <div style={{ padding: '16px 28px', borderBottom: '1px solid rgba(0,0,0,.05)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
@@ -852,7 +852,7 @@ export default function ActivityVault() {
 
       {/* ═══════════════ FOOTER STATUS ═══════════════ */}
       <div style={{
-        marginTop: 16, borderRadius: 18, overflow: 'hidden', position: 'relative',
+        marginTop: 16, borderRadius: 8, overflow: 'hidden', position: 'relative',
         background: 'linear-gradient(135deg,#0f172a,#1e293b)',
         padding: '14px 28px', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
       }}>

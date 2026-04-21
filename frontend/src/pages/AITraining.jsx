@@ -87,13 +87,13 @@ export default function AITraining() {
         <div className="flex items-center gap-3">
           <button 
             onClick={() => setIsTraining(!isTraining)}
-            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-[0.8rem] font-bold cursor-pointer transition-all shadow-premium border
+            className={`flex items-center gap-2 px-5 py-2.5 rounded-lg text-[0.8rem] font-bold cursor-pointer transition-all shadow-premium border
               ${isTraining ? 'bg-danger/10 text-danger border-danger/20 hover:bg-danger/20' : 'bg-success/10 text-success border-success/20 hover:bg-success/20'}`}
           >
             {isTraining ? <Square className="w-4 h-4 fill-danger" /> : <Play className="w-4 h-4 fill-success" />}
             {isTraining ? 'Interrupt Training' : 'Resume Training'}
           </button>
-          <button className="flex items-center gap-2 px-4 py-2 bg-card text-text-dark border border-border rounded-xl text-[0.75rem] font-bold cursor-pointer hover:border-accent hover:text-accent shadow-sm">
+          <button className="flex items-center gap-2 px-4 py-2 bg-card text-text-dark border border-border rounded-lg text-[0.75rem] font-bold cursor-pointer hover:border-accent hover:text-accent shadow-sm">
             <RotateCcw className="w-4 h-4" />
             Reset Weights
           </button>
@@ -108,9 +108,9 @@ export default function AITraining() {
           { label: 'Precision', value: '91.8%', trend: '+1.1%', icon: Target, color: 'text-success', bg: 'bg-success/10' },
           { label: 'Recall', value: '89.4%', trend: '+0.5%', icon: TrendingUp, color: 'text-warning', bg: 'bg-warning/10' },
         ].map((s, i) => (
-          <div key={i} className="bg-card rounded-[22px] p-6 border border-border shadow-premium flex flex-col justify-between hover:-translate-y-1 transition-all group">
+          <div key={i} className="bg-card rounded-lg p-6 border border-border shadow-premium flex flex-col justify-between hover:-translate-y-1 transition-all group">
             <div className="flex justify-between items-start mb-4">
-              <div className={`w-12 h-12 rounded-2xl ${s.bg} flex items-center justify-center ${s.color}`}>
+              <div className={`w-12 h-12 rounded-lg ${s.bg} flex items-center justify-center ${s.color}`}>
                 <s.icon className="w-6 h-6" />
               </div>
               <div className={`text-[0.65rem] font-extrabold px-2 py-1 rounded-lg ${s.trend.startsWith('+') ? 'bg-success/10 text-success' : 'bg-danger/10 text-danger'}`}>
@@ -127,7 +127,7 @@ export default function AITraining() {
 
       {/* Main Analysis Chart Row */}
       <div className="grid lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2 bg-card rounded-[24px] p-6 md:p-8 border border-border shadow-premium flex flex-col h-[480px]">
+        <div className="lg:col-span-2 bg-card rounded-lg p-6 md:p-8 border border-border shadow-premium flex flex-col h-[480px]">
           <div className="flex justify-between items-center mb-10">
             <div>
               <h3 className="text-[1.1rem] font-bold text-text-dark m-0">Training Convergence</h3>
@@ -170,7 +170,7 @@ export default function AITraining() {
                   tick={{fill: 'var(--color-text-gray)', fontSize: 13, fontWeight: 600}} 
                 />
                 <Tooltip 
-                  contentStyle={{ borderRadius: '16px', border: '1px solid var(--color-border)', boxShadow: '0 10px 30px rgba(0,0,0,0.05)' }}
+                  contentStyle={{ borderRadius: 8, border: '1px solid var(--color-border)', boxShadow: '0 10px 30px rgba(0,0,0,0.05)' }}
                 />
                 <Area 
                   yAxisId="left"
@@ -204,7 +204,7 @@ export default function AITraining() {
         </div>
 
         {/* Dataset Distribution */}
-        <div className="lg:col-span-1 bg-card rounded-[24px] p-8 border border-border shadow-premium flex flex-col">
+        <div className="lg:col-span-1 bg-card rounded-lg p-8 border border-border shadow-premium flex flex-col">
           <h3 className="text-[1.1rem] font-bold text-text-dark mb-2">Class Distribution</h3>
           <p className="text-[0.75rem] text-text-gray font-semibold mb-8">Training Set Sample Balance</p>
           <div className="flex-1 flex flex-col items-center justify-center">
@@ -240,7 +240,7 @@ export default function AITraining() {
 
       {/* Training Console Row */}
       <div className="grid lg:grid-cols-4 gap-8">
-        <div className="lg:col-span-3 bg-[#0f172a] rounded-[28px] p-8 shadow-2xl border border-white/5 font-mono relative overflow-hidden group">
+        <div className="lg:col-span-3 bg-[#0f172a] rounded-lg p-8 shadow-2xl border border-white/5 font-mono relative overflow-hidden group">
           <div className="absolute inset-0 bg-gradient-to-br from-accent/5 to-transparent pointer-events-none" />
           <div className="flex items-center justify-between mb-6 relative z-10">
             <div className="flex items-center gap-3">
@@ -266,7 +266,7 @@ export default function AITraining() {
           </div>
         </div>
 
-        <div className="lg:col-span-1 bg-card rounded-[24px] p-6 border border-border shadow-premium flex flex-col gap-5">
+        <div className="lg:col-span-1 bg-card rounded-lg p-6 border border-border shadow-premium flex flex-col gap-5">
             <h3 className="text-[1rem] font-black text-text-dark uppercase tracking-tight">Resource Usage</h3>
             {[
                 { label: 'GPU Utilization', value: '92%', icon: Cpu, color: 'text-accent' },
@@ -274,7 +274,7 @@ export default function AITraining() {
                 { label: 'Core Temp', value: '74°C', icon: Activity, color: 'text-danger' },
                 { label: 'Throughput', value: '142 f/s', icon: Zap, color: 'text-warning' },
             ].map((stat, i) => (
-                <div key={i} className="flex items-center justify-between p-4 bg-bg rounded-2xl border border-border">
+                <div key={i} className="flex items-center justify-between p-4 bg-bg rounded-lg border border-border">
                     <div className="flex items-center gap-3">
                         <stat.icon className={`w-4 h-4 ${stat.color}`} />
                         <span className="text-[0.7rem] font-bold text-text-gray uppercase">{stat.label}</span>

@@ -93,7 +93,7 @@ function StatCard({ stat, index }) {
         cursor: 'pointer',
         userSelect: 'none',
       }}
-      className="relative p-6 rounded-[22px] text-white overflow-hidden"
+      className="relative p-6 rounded-lg text-white overflow-hidden"
     >
       {/* Shine overlay */}
       <div
@@ -160,7 +160,7 @@ function StatCard({ stat, index }) {
             transform: hovered ? 'rotate(10deg) scale(1.1)' : 'rotate(0deg) scale(1)',
             transition: 'transform 0.4s ease',
           }}
-          className="p-3 rounded-xl"
+          className="p-3 rounded-lg"
         >
           <stat.icon className="w-6 h-6" />
         </div>

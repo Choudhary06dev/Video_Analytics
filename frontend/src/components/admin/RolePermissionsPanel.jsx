@@ -58,18 +58,40 @@ export default function RolePermissionsPanel({ roleId, initialPermissions, onUpd
     });
   };
 
+  const setAllPermissions = (enabled) => {
+    setPermissions(
+      modules.map((mod) => ({
+        role_id: roleId,
+        module_id: mod.id,
+        can_view: enabled,
+        can_edit: enabled,
+        can_delete: enabled
+      }))
+    );
+  };
+
   const handleSave = async () => {
     try {
       setSaving(true);
+      const payload = modules.map((mod) => {
+        const perm = findPermission(mod.id);
+        return {
+          module_key: mod.key,
+          can_view: !!perm.can_view,
+          can_edit: !!perm.can_edit,
+          can_delete: !!perm.can_delete
+        };
+      });
+
       await axios.put(`${BASE}/admin/roles/${roleId}/permissions`, 
-        { permissions: permissions.map(p => ({ module_id: p.module_id, can_view: p.can_view, can_edit: p.can_edit })) },
+        payload,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setMessage({ type: 'success', text: "Access protocols updated successfully." });
       onUpdated?.();
       setTimeout(() => setMessage(null), 3000);
     } catch (err) {
-      setMessage({ type: 'error', text: "Critical failure during protocol sync." });
+      setMessage({ type: 'error', text: err.response?.data?.detail || "Critical failure during protocol sync." });
     } finally {
       setSaving(false);
     }
@@ -78,7 +100,7 @@ export default function RolePermissionsPanel({ roleId, initialPermissions, onUpd
   return (
     <div className="space-y-6">
       {message && (
-        <div className={`p-4 rounded-xl flex items-center gap-3 border animate-in slide-in-from-top-2 duration-300
+        <div className={`p-4 rounded-lg flex items-center gap-3 border animate-in slide-in-from-top-2 duration-300
             ${message.type === 'success' ? 'bg-success/10 border-success/20 text-success' : 'bg-danger/10 border-danger/20 text-danger'}`}>
             {message.type === 'success' ? <CheckCircle2 className="w-5 h-5" /> : <AlertCircle className="w-5 h-5" />}
             <span className="text-[10px] font-black uppercase tracking-widest">{message.text}</span>
@@ -89,7 +111,7 @@ export default function RolePermissionsPanel({ roleId, initialPermissions, onUpd
         {modules.map((mod) => {
           const perm = findPermission(mod.id);
           return (
-            <div key={mod.id} className="bg-surface/50 border border-border rounded-xl p-4 flex items-center justify-between group hover:border-accent/30 transition-all">
+            <div key={mod.id} className="bg-surface/50 border border-border rounded-lg p-4 flex items-center justify-between group hover:border-accent/30 transition-all">
                 <div className="flex items-center gap-4">
                     <div className="w-10 h-10 bg-card rounded-lg flex items-center justify-center border border-border shadow-sm">
                         <Activity className="w-5 h-5 text-text-gray group-hover:text-accent transition-colors" />
@@ -128,11 +150,27 @@ export default function RolePermissionsPanel({ roleId, initialPermissions, onUpd
         })}
       </div>
 
-      <div className="pt-6 border-t border-border flex justify-end">
+      <div className="pt-6 border-t border-border flex items-center justify-between gap-3">
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setAllPermissions(true)}
+            disabled={saving || modules.length === 0}
+            className="px-4 py-2 border border-success/30 text-success rounded-lg text-[9px] font-black uppercase tracking-widest hover:bg-success/10 transition-all disabled:opacity-50"
+          >
+            Allow All
+          </button>
+          <button
+            onClick={() => setAllPermissions(false)}
+            disabled={saving || modules.length === 0}
+            className="px-4 py-2 border border-border text-text-gray rounded-lg text-[9px] font-black uppercase tracking-widest hover:border-danger/40 hover:text-danger transition-all disabled:opacity-50"
+          >
+            Clear All
+          </button>
+        </div>
         <button
           onClick={handleSave}
           disabled={saving}
-          className="flex items-center gap-3 bg-accent text-white px-8 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-md hover:-translate-y-0.5 active:translate-y-0 transition-all disabled:opacity-50"
+          className="flex items-center gap-3 bg-accent text-white px-8 py-3 rounded-lg text-[10px] font-black uppercase tracking-widest shadow-md hover:-translate-y-0.5 active:translate-y-0 transition-all disabled:opacity-50"
         >
           {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ShieldCheck className="w-3.5 h-3.5" />}
           {saving ? 'Syncing...' : 'Commit Protocol Changes'}

@@ -204,9 +204,9 @@ export default function NeuralStream() {
   }, [fetchLogsData, filterHours, activeCamera, isGlobalView]);
 
   return (
-    <div className="flex flex-col gap-4 pt-0 pb-4 px-6 min-h-screen bg-bg font-sans transition-colors duration-300">
+    <div className="max-w-[1600px] mx-auto flex flex-col gap-4 bg-bg font-sans transition-colors duration-300">
       {/* COMPACT HEADER */}
-      <div className="flex justify-between items-center bg-card px-5 py-3 rounded-xl border border-border shadow-premium shrink-0">
+      <div className="flex justify-between items-center bg-card px-5 py-3 rounded-lg border border-border shadow-premium shrink-0">
         <div className="flex items-center gap-4">
           <div className="w-10 h-10 bg-accent rounded-lg flex items-center justify-center text-white shadow-lg shadow-accent/20">
             <Radio className="w-5 h-5 animate-pulse" />
@@ -279,13 +279,13 @@ export default function NeuralStream() {
       </div>
 
       {/* STREAMING MATRIX (Dynamic Focus vs Global) */}
-      <div className="w-full shrink-0 overflow-hidden bg-card rounded-[24px] border border-border shadow-premium p-4 flex gap-4">
+      <div className="w-full shrink-0 overflow-hidden bg-card rounded-lg border border-border shadow-premium p-4 flex gap-4">
           
           {/* CAMERA SELECTION SIDEBAR (Small Strip) */}
           <div className="w-20 md:w-40 flex flex-col gap-2 overflow-y-auto custom-scrollbar pr-2 shrink-0 border-r border-border/50">
              <div
                onClick={() => { setIsGlobalView(true); setActiveCamera(null); setLogsOffset(0); }}
-               className={`aspect-video rounded-xl border-2 flex flex-col items-center justify-center cursor-pointer transition-all ${isGlobalView ? 'border-accent bg-accent/10 shadow-[0_0_15px_rgba(14,165,233,0.3)]' : 'border-border/50 bg-surface hover:border-accent/40'}`}
+               className={`aspect-video rounded-lg border-2 flex flex-col items-center justify-center cursor-pointer transition-all ${isGlobalView ? 'border-accent bg-accent/10 shadow-[0_0_15px_rgba(14,165,233,0.3)]' : 'border-border/50 bg-surface hover:border-accent/40'}`}
              >
                 <LayoutGrid className={`w-5 h-5 mb-1 ${isGlobalView ? 'text-accent' : 'text-text-gray'}`} />
                 <span className={`text-[0.55rem] font-black uppercase tracking-widest ${isGlobalView ? 'text-accent' : 'text-text-gray'} hidden md:block`}>Matrix</span>
@@ -297,7 +297,7 @@ export default function NeuralStream() {
                    <div 
                      key={cam.id}
                      onClick={() => { setActiveCamera(cam.id); setIsGlobalView(false); setLogsOffset(0); }}
-                     className={`aspect-video rounded-xl border-2 cursor-pointer transition-all overflow-hidden relative group
+                     className={`aspect-video rounded-lg border-2 cursor-pointer transition-all overflow-hidden relative group
                        ${isActive ? 'border-accent shadow-[0_0_15px_rgba(14,165,233,0.3)]' : 'border-black hover:border-accent/40'}
                      `}
                    >
@@ -313,14 +313,14 @@ export default function NeuralStream() {
                      <div className="absolute top-0 left-0 right-0 bg-gradient-to-b from-black/80 to-transparent p-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
                         <span className="text-[0.45rem] font-black text-white uppercase tracking-widest">{cam.name}</span>
                      </div>
-                     {isActive && <div className="absolute inset-0 ring-inset ring-2 ring-accent/50 rounded-xl" />}
+                     {isActive && <div className="absolute inset-0 ring-inset ring-2 ring-accent/50 rounded-lg" />}
                    </div>
                 )
              })}
           </div>
 
           {/* MAIN STREAMING AREA */}
-          <div className="flex-1 overflow-y-auto custom-scrollbar bg-black rounded-2xl relative border border-border overflow-hidden">
+          <div className="flex-1 overflow-y-auto custom-scrollbar bg-black rounded-lg relative border border-border overflow-hidden">
              {isGlobalView ? (
                 /* Dynamic Grid Reflow */
                 <div 
@@ -328,7 +328,7 @@ export default function NeuralStream() {
                   style={{ gridTemplateColumns: `repeat(${gridSize}, minmax(0, 1fr))` }}
                 >
                    {cameras.slice(0, gridSize * gridSize).map(cam => (
-                      <div key={cam.id} className="relative bg-slate-900 rounded-xl overflow-hidden border border-white/10 group">
+                      <div key={cam.id} className="relative bg-slate-900 rounded-lg overflow-hidden border border-white/10 group">
                          <CameraFeed streamUrl={`${VIDEO_FEED_URL}/${cam.id}`} hideOverlay={true} />
                          <div className="absolute top-0 left-0 right-0 p-2 bg-gradient-to-b from-black/80 to-transparent">
                             <span className="text-[0.55rem] font-black text-white/80 uppercase tracking-widest block mb-0.5">Stream-{cam.id}</span>
@@ -371,7 +371,7 @@ export default function NeuralStream() {
       {/* FULL-WIDTH INTELLIGENCE & BREAKDOWN SECTION */}
       <div className="flex-1 flex gap-4 overflow-hidden">
         {/* LOGS TABLE OVERVIEW */}
-        <div className="flex-1 bg-card rounded-xl border border-border shadow-premium flex flex-col overflow-hidden min-w-0">
+        <div className="flex-1 bg-card rounded-lg border border-border shadow-premium flex flex-col overflow-hidden min-w-0">
           {/* LOGS HEADER + FILTERS */}
           <div className="px-5 py-3 border-b border-border flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -547,7 +547,7 @@ export default function NeuralStream() {
         </div>
 
         {/* DETAILED ACTIVITY BREAKDOWN PANEL */}
-        <div className="w-[300px] xl:w-[320px] bg-card rounded-xl border border-border shadow-premium flex flex-col overflow-hidden shrink-0">
+        <div className="w-[300px] xl:w-[320px] bg-card rounded-lg border border-border shadow-premium flex flex-col overflow-hidden shrink-0">
           <div className="px-5 py-3 border-b border-border bg-gradient-to-br from-surface to-bg relative overflow-hidden">
             <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none">
               <Target className="w-16 h-16" />

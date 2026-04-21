@@ -55,7 +55,7 @@ export default function FacilityHeatmap() {
 
   return (
     <div
-      className="h-full flex flex-col w-full p-6 transition-shadow duration-300 hover:shadow-[0_12px_40px_-10px_rgba(249,115,22,0.12)] bg-card rounded-[28px] border border-border shadow-premium"
+      className="h-full flex flex-col w-full p-6 transition-shadow duration-300 hover:shadow-[0_12px_40px_-10px_rgba(249,115,22,0.12)] bg-card rounded-lg border border-border shadow-premium"
     >
       {/* Header */}
       <div className="flex justify-between items-start mb-5 shrink-0 flex-wrap gap-3">
@@ -169,7 +169,7 @@ export default function FacilityHeatmap() {
 
       {/* Footer */}
       <div
-        className="mt-4 p-3 flex justify-between items-center shrink-0 bg-surface rounded-[14px] border border-border"
+        className="mt-4 p-3 flex justify-between items-center shrink-0 bg-surface rounded-lg border border-border"
       >
         <div className="text-[0.72rem] text-text-gray">
           <span className="font-black text-text-dark">Peak:</span> 2:00 PM – 4:00 PM

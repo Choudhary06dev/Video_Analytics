@@ -637,7 +637,7 @@ function ActivityRow({ act, idx, isNew }) {
             {label:'Camera',      value:act.camId,                   icon:<Camera size={12}/>, color:'#06b6d4', sub:act.zone},
           ].map((d,i) => (
             <div key={i} style={{
-              background:'rgba(255,255,255,.85)',borderRadius:13,padding:'11px 13px',
+              background:'rgba(255,255,255,.85)',borderRadius: 8,padding:'11px 13px',
               border:'1px solid rgba(15,23,42,.06)',
               display:'flex',alignItems:'center',gap:9,
               backdropFilter:'blur(10px)',
@@ -802,7 +802,7 @@ export default function ActivityVault() {
 
   return (
     <div style={{
-      borderRadius:24,overflow:'hidden',
+      borderRadius: 8,overflow:'hidden',
       border:'1px solid rgba(6,182,212,.1)',
       boxShadow:'0 8px 48px -12px rgba(0,0,0,.12),0 0 0 1px rgba(255,255,255,.9) inset',
       background:'#fff',
@@ -815,7 +815,7 @@ export default function ActivityVault() {
         <div style={{
           position:'absolute',top:16,right:16,zIndex:100,
           background:'#0f172a',color:'#f8fafc',
-          padding:'10px 16px',borderRadius:13,
+          padding:'10px 16px',borderRadius: 8,
           fontSize:11,fontWeight:700,
           boxShadow:'0 12px 36px rgba(0,0,0,.35)',
           border:'1px solid rgba(239,68,68,.3)',
@@ -850,7 +850,7 @@ export default function ActivityVault() {
           {/* Brand */}
           <div style={{display:'flex',alignItems:'center',gap:14}}>
             <div style={{
-              width:46,height:46,borderRadius:14,
+              width:46,height:46,borderRadius: 8,
               background:'linear-gradient(135deg,#06b6d4,#6366f1)',
               display:'flex',alignItems:'center',justifyContent:'center',
               boxShadow:'0 8px 24px rgba(6,182,212,.4)',
@@ -858,7 +858,7 @@ export default function ActivityVault() {
               position:'relative',
             }}>
               <Archive size={20} color="#fff"/>
-              <div style={{position:'absolute',inset:0,borderRadius:14,border:'1.5px solid rgba(6,182,212,.4)',animation:'vaultRipple 3s ease-out infinite'}}/>
+              <div style={{position:'absolute',inset:0,borderRadius: 8,border:'1.5px solid rgba(6,182,212,.4)',animation:'vaultRipple 3s ease-out infinite'}}/>
             </div>
             <div>
               <h3 style={{fontSize:19,fontWeight:800,color:'#f8fafc',margin:0,letterSpacing:-.4,lineHeight:1.2}}>
@@ -930,7 +930,7 @@ export default function ActivityVault() {
               {showFilter && (
                 <div style={{
                   position:'absolute',top:'calc(100% + 6px)',right:0,
-                  background:'#0f172a',borderRadius:13,
+                  background:'#0f172a',borderRadius: 8,
                   border:'1px solid rgba(6,182,212,.2)',
                   boxShadow:'0 16px 40px rgba(0,0,0,.4)',
                   zIndex:50,overflow:'hidden',minWidth:160,
@@ -1029,7 +1029,7 @@ export default function ActivityVault() {
               style={{
                 background:'rgba(255,255,255,.04)',
                 border:'1px solid rgba(255,255,255,.06)',
-                borderRadius:16,padding:'14px 15px',
+                borderRadius: 8,padding:'14px 15px',
                 backdropFilter:'blur(10px)',
               }}>
               <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:8}}>

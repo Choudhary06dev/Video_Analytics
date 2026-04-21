@@ -19,14 +19,14 @@ export default function LiveFeeds() {
   const filteredCameras = filter === 'all' ? cameras : cameras.filter(c => c.zone.toLowerCase() === filter.toLowerCase());
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="max-w-[1600px] mx-auto flex flex-col gap-6">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-text-dark">Live Camera Feeds</h1>
           <p className="text-text-gray text-sm">Monitoring {cameras.filter(c => c.status === 'active').length} active streams across all zones.</p>
         </div>
         
-        <div className="flex items-center gap-2 bg-card p-1 rounded-xl border border-border">
+        <div className="flex items-center gap-2 bg-card p-1 rounded-lg border border-border">
           <button 
             onClick={() => setViewMode('grid')}
             className={`p-2 rounded-lg transition-all ${viewMode === 'grid' ? 'bg-accent-soft text-accent shadow-sm' : 'text-text-gray hover:text-text-dark'}`}
@@ -49,7 +49,7 @@ export default function LiveFeeds() {
           <input 
             type="text" 
             placeholder="Search by camera name or ID..." 
-            className="w-full bg-card border border-border focus:border-accent focus:ring-4 focus:ring-accent/10 text-sm text-text-dark rounded-xl pl-10 pr-4 py-2.5 outline-none transition-all"
+            className="w-full bg-card border border-border focus:border-accent focus:ring-4 focus:ring-accent/10 text-sm text-text-dark rounded-lg pl-10 pr-4 py-2.5 outline-none transition-all"
           />
         </div>
         <div className="relative">
@@ -57,7 +57,7 @@ export default function LiveFeeds() {
           <select 
             value={filter}
             onChange={(e) => setFilter(e.target.value)}
-            className="w-full bg-card border border-border focus:border-accent focus:ring-4 focus:ring-accent/10 text-sm text-text-dark rounded-xl pl-10 pr-4 py-2.5 outline-none appearance-none transition-all"
+            className="w-full bg-card border border-border focus:border-accent focus:ring-4 focus:ring-accent/10 text-sm text-text-dark rounded-lg pl-10 pr-4 py-2.5 outline-none appearance-none transition-all"
           >
             <option value="all">All Zones</option>
             <option value="exterior">Exterior</option>
@@ -66,7 +66,7 @@ export default function LiveFeeds() {
             <option value="secure">Secure</option>
           </select>
         </div>
-        <button className="bg-accent text-white px-4 py-2.5 rounded-xl font-semibold hover:opacity-90 transition-all flex items-center justify-center gap-2 shadow-md">
+        <button className="bg-accent text-white px-4 py-2.5 rounded-lg font-semibold hover:opacity-90 transition-all flex items-center justify-center gap-2 shadow-md">
           <Camera className="w-4 h-4" /> Add Camera
         </button>
       </div>
@@ -74,7 +74,7 @@ export default function LiveFeeds() {
       {viewMode === 'grid' ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {filteredCameras.map((cam) => (
-            <div key={cam.id} className="group bg-card rounded-2xl border border-border overflow-hidden shadow-sm hover:shadow-md transition-all">
+            <div key={cam.id} className="group bg-card rounded-lg border border-border overflow-hidden shadow-sm hover:shadow-md transition-all">
               <div className="relative aspect-video bg-[#0f172a] border-b border-border overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-to-br from-accent/10 to-accent/30"></div>
                 <div className="absolute top-2 left-2 flex gap-1">
@@ -119,7 +119,7 @@ export default function LiveFeeds() {
           ))}
         </div>
       ) : (
-        <div className="bg-card rounded-2xl border border-border overflow-hidden shadow-sm">
+        <div className="bg-card rounded-lg border border-border overflow-hidden shadow-sm">
           <table className="w-full text-left">
             <thead>
               <tr className="bg-surface border-b border-border">

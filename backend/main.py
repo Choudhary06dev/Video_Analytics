@@ -16,7 +16,7 @@ from ultralytics import YOLO
 
 from config import settings
 from database import engine, get_session, init_db
-from models import DetectionEvent, Role, User, ModulePermission, AIScenario, RoleModulePermission, Area, Camera, CameraScenarioAssignment
+from models import DetectionEvent, Role, User, ModulePermission, AIScenario, RoleModulePermission, Area, Camera, CameraScenarioAssignment, AuditLog
 from security import (
     create_access_token,
     decode_access_token,
@@ -765,6 +765,32 @@ def get_current_user(token: str = Depends(get_authorization_token)):
 def read_current_user(current_user: dict = Depends(get_current_user)):
     return {"user": current_user}
 
+@app.get("/auth/permissions")
+def read_current_permissions(
+    current_user: dict = Depends(get_current_user),
+    session: Session = Depends(get_session)
+):
+    user_id = current_user.get("id")
+    db_user = session.get(User, user_id) if user_id else None
+    if not db_user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    stmt = select(RoleModulePermission).where(RoleModulePermission.role_id == db_user.role_id)
+    role_permissions = session.exec(stmt).all()
+
+    permissions_map = {}
+    for perm in role_permissions:
+        mod = session.get(ModulePermission, perm.module_permission_id)
+        if not mod:
+            continue
+        permissions_map[mod.key] = {
+            "can_view": perm.can_view,
+            "can_edit": perm.can_edit,
+            "can_delete": perm.can_delete
+        }
+
+    return {"role_id": db_user.role_id, "permissions": permissions_map}
+
 
 # --- ADMIN ENDPOINTS ---
 
@@ -789,6 +815,7 @@ def get_all_users(session: Session = Depends(get_session), admin_data: dict = De
             "full_name": u.full_name,
             "email": u.email,
             "role": role_obj.name if role_obj else "unknown",
+            "is_active": u.is_active,
             "created_at": u.created_at
         })
     return result
@@ -852,9 +879,12 @@ class AdminUserUpdate(BaseModel):
     email: str | None = None
     password: str | None = None
     role_name: str | None = None
+    is_active: bool | None = None
 
 @app.put("/admin/users/{user_id}")
-def update_user_by_admin(user_id: int, user_data: AdminUserUpdate, session: Session = Depends(get_session), admin_data: dict = Depends(verify_super_admin)):
+def update_user_by_admin(user_id: int, user_data: AdminUserUpdate, session: Session = Depends(get_session), admin_data: dict = Depends(verify_admin_access)):
+    print(f"DEBUG: Edit endpoint called for user {user_id}")
+    print(f"DEBUG: Received data: {user_data}")
     user = session.get(User, user_id)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
@@ -879,20 +909,30 @@ def update_user_by_admin(user_id: int, user_data: AdminUserUpdate, session: Sess
         # Prevent self-demotion from Super Admin to avoid system lockouts
         if user.id == admin_data.get("id") and user_data.role_name != "super_admin":
              raise HTTPException(status_code=400, detail="Safety Lock: You cannot revoke your own Super Admin access level.")
-             
+
         role = session.exec(select(Role).where(Role.name == user_data.role_name)).first()
         if not role:
             raise HTTPException(status_code=400, detail="Invalid role specified")
         user.role_id = role.id
-        
-    record_audit_log(session, admin_data.get("id"), "UPDATE", "Personnel Matrix", f"Synchronized identity protocol for node {user.email}")
+
+    if user_data.is_active is not None:
+        print(f"DEBUG: Setting is_active from {user.is_active} to {user_data.is_active}")
+        user.is_active = user_data.is_active
+        print(f"DEBUG: User is_active now = {user.is_active}")
+
+    try:
+        record_audit_log(session, admin_data.get("id"), "UPDATE", "Personnel Matrix", f"Synchronized identity protocol for node {user.email}")
+    except Exception as e:
+        print(f"Audit log error: {e}")
+
     session.add(user)
     session.commit()
+    print(f"DEBUG: Committed. Final is_active in DB = {user.is_active}")
     session.refresh(user)
     return {"message": "User updated successfully", "id": user.id}
 
 @app.delete("/admin/users/{user_id}")
-def delete_user(user_id: int, session: Session = Depends(get_session), admin_data: dict = Depends(verify_super_admin)):
+def delete_user(user_id: int, session: Session = Depends(get_session), admin_data: dict = Depends(verify_admin_access)):
     user = session.get(User, user_id)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
@@ -905,17 +945,22 @@ def delete_user(user_id: int, session: Session = Depends(get_session), admin_dat
     return {"message": "User deleted successfully"}
 
 @app.patch("/admin/users/{user_id}/status")
-def toggle_user_status(user_id: int, status_data: dict, session: Session = Depends(get_session), admin_data: dict = Depends(verify_super_admin)):
+def toggle_user_status(user_id: int, status_data: dict, session: Session = Depends(get_session), admin_data: dict = Depends(verify_admin_access)):
     user = session.get(User, user_id)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
-    
+
     if user.id == admin_data.get("id"):
         raise HTTPException(status_code=400, detail="Cannot suspend your own account")
-        
+
     user.is_active = status_data.get("is_active", True)
-    record_audit_log(session, admin_data.get("id"), "STATUS_CHANGE", "Personnel Matrix", f"Node {user.email} session status set to {'ACTIVE' if user.is_active else 'SUSPENDED'}")
     session.add(user)
+
+    try:
+        record_audit_log(session, admin_data.get("id"), "STATUS_CHANGE", "Personnel Matrix", f"Node {user.email} session status set to {'ACTIVE' if user.is_active else 'SUSPENDED'}")
+    except Exception as e:
+        print(f"Audit log error: {e}")
+
     session.commit()
     return {"message": "User status updated", "is_active": user.is_active}
 
@@ -993,8 +1038,77 @@ class PermissionUpdate(BaseModel):
     can_edit: bool
     can_delete: bool
 
+class RoleCreateRequest(BaseModel):
+    name: str
+    description: str | None = None
+
+class RoleUpdateRequest(BaseModel):
+    name: str | None = None
+    description: str | None = None
+
+@app.post("/admin/roles")
+def create_role(role_data: RoleCreateRequest, session: Session = Depends(get_session), admin_data: dict = Depends(verify_super_admin)):
+    normalized_name = role_data.name.strip().lower().replace(" ", "_")
+    if not normalized_name:
+        raise HTTPException(status_code=400, detail="Role name is required")
+
+    existing = session.exec(select(Role).where(Role.name == normalized_name)).first()
+    if existing:
+        raise HTTPException(status_code=400, detail="Role already exists")
+
+    new_role = Role(
+        name=normalized_name,
+        description=role_data.description.strip() if role_data.description else None
+    )
+    session.add(new_role)
+    session.commit()
+    session.refresh(new_role)
+
+    record_audit_log(
+        session,
+        admin_data.get("id"),
+        "CREATE",
+        "Access Authority",
+        f"Created role profile: {new_role.name}"
+    )
+    session.commit()
+    return {"message": "Role created successfully", "role": new_role}
+
+@app.put("/admin/roles/{role_id}")
+def update_role(role_id: int, role_data: RoleUpdateRequest, session: Session = Depends(get_session), admin_data: dict = Depends(verify_super_admin)):
+    role = session.get(Role, role_id)
+    if not role:
+        raise HTTPException(status_code=404, detail="Role not found")
+
+    if role_data.name is not None:
+        normalized_name = role_data.name.strip().lower().replace(" ", "_")
+        if not normalized_name:
+            raise HTTPException(status_code=400, detail="Role name cannot be empty")
+
+        existing = session.exec(select(Role).where(Role.name == normalized_name, Role.id != role_id)).first()
+        if existing:
+            raise HTTPException(status_code=400, detail="Role name already exists")
+        role.name = normalized_name
+
+    if role_data.description is not None:
+        role.description = role_data.description.strip() or None
+
+    session.add(role)
+    session.commit()
+    session.refresh(role)
+
+    record_audit_log(
+        session,
+        admin_data.get("id"),
+        "UPDATE",
+        "Access Authority",
+        f"Updated role profile: {role.name}"
+    )
+    session.commit()
+    return {"message": "Role updated successfully", "role": role}
+
 @app.put("/admin/roles/{role_id}/permissions")
-def update_role_permissions(role_id: int, perms: List[PermissionUpdate], session: Session = Depends(get_session), admin_data: dict = Depends(verify_super_admin)):
+def update_role_permissions(role_id: int, perms: List[PermissionUpdate], session: Session = Depends(get_session), admin_data: dict = Depends(verify_admin_access)):
     role = session.get(Role, role_id)
     if not role:
         raise HTTPException(status_code=404, detail="Role not found")

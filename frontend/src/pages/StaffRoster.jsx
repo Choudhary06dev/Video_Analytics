@@ -60,11 +60,11 @@ export default function StaffRoster() {
           </div>
         </div>
         <div className="flex items-center gap-3">
-          <button className="flex items-center gap-2 px-4 py-2 bg-accent text-white rounded-xl text-[0.75rem] font-bold cursor-pointer transition-all hover:opacity-90 shadow-[0_4px_12px_rgba(14,165,233,0.3)]">
+          <button className="flex items-center gap-2 px-4 py-2 bg-accent text-white rounded-lg text-[0.75rem] font-bold cursor-pointer transition-all hover:opacity-90 shadow-[0_4px_12px_rgba(14,165,233,0.3)]">
             <UserPlus className="w-4 h-4" />
             Add Staff Member
           </button>
-          <button className="flex items-center gap-2 px-4 py-2 bg-card text-text-dark border border-border rounded-xl text-[0.75rem] font-bold cursor-pointer hover:border-accent hover:text-accent shadow-sm">
+          <button className="flex items-center gap-2 px-4 py-2 bg-card text-text-dark border border-border rounded-lg text-[0.75rem] font-bold cursor-pointer hover:border-accent hover:text-accent shadow-sm">
             <Calendar className="w-4 h-4" />
             Manage Schedule
           </button>
@@ -74,7 +74,7 @@ export default function StaffRoster() {
       {/* Shift Stats Row */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
         {SHIFT_STATS.map((stat, i) => (
-          <div key={i} className="bg-card rounded-[22px] p-6 border border-border shadow-premium flex items-center justify-between group hover:-translate-y-1 transition-all">
+          <div key={i} className="bg-card rounded-lg p-6 border border-border shadow-premium flex items-center justify-between group hover:-translate-y-1 transition-all">
             <div>
               <div className="flex items-center gap-2 mb-2">
                 <stat.icon className={`w-4 h-4 ${stat.color}`} />
@@ -85,7 +85,7 @@ export default function StaffRoster() {
                 <span className="text-[0.8rem] font-bold text-text-gray">/ {stat.total}</span>
               </div>
             </div>
-            <div className={`w-14 h-14 rounded-2xl ${stat.bg} flex items-center justify-center`}>
+            <div className={`w-14 h-14 rounded-lg ${stat.bg} flex items-center justify-center`}>
               <div className={`h-1.5 w-8 rounded-full ${stat.color.replace('text', 'bg')} opacity-40 rotate-90`} />
             </div>
           </div>
@@ -94,7 +94,7 @@ export default function StaffRoster() {
 
       {/* Chart & Summary Row */}
       <div className="grid lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2 bg-card rounded-[24px] p-6 md:p-8 border border-border shadow-premium flex flex-col h-[450px]">
+        <div className="lg:col-span-2 bg-card rounded-lg p-6 md:p-8 border border-border shadow-premium flex flex-col h-[450px]">
           <div className="flex justify-between items-center mb-8">
             <h3 className="text-[1.1rem] font-bold text-text-dark m-0">Shift Capacity vs Requirements</h3>
             <div className="flex gap-4">
@@ -125,7 +125,7 @@ export default function StaffRoster() {
                 />
                 <Tooltip 
                   cursor={{fill: 'var(--color-accent-soft)', opacity: 0.4}}
-                  contentStyle={{ borderRadius: '14px', border: '1px solid var(--color-border)', boxShadow: '0 10px 30px rgba(0,0,0,0.05)' }}
+                  contentStyle={{ borderRadius: 8, border: '1px solid var(--color-border)', boxShadow: '0 10px 30px rgba(0,0,0,0.05)' }}
                 />
                 <Bar 
                   dataKey="active" 
@@ -153,30 +153,30 @@ export default function StaffRoster() {
           </div>
         </div>
 
-        <div className="lg:col-span-1 bg-card rounded-[24px] p-8 border border-border shadow-premium flex flex-col">
+        <div className="lg:col-span-1 bg-card rounded-lg p-8 border border-border shadow-premium flex flex-col">
           <h3 className="text-[1.1rem] font-bold text-text-dark mb-6">Duty Summary</h3>
           <div className="space-y-6 flex-1">
-            <div className="flex justify-between items-center p-4 bg-bg rounded-2xl border border-border">
+            <div className="flex justify-between items-center p-4 bg-bg rounded-lg border border-border">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-success/10 flex items-center justify-center text-success">
+                <div className="w-10 h-10 rounded-lg bg-success/10 flex items-center justify-center text-success">
                   <CheckCircle className="w-5 h-5" />
                 </div>
                 <span className="text-[0.85rem] font-bold text-text-gray">On Duty</span>
               </div>
               <span className="text-[1.2rem] font-black text-text-dark">42</span>
             </div>
-            <div className="flex justify-between items-center p-4 bg-bg rounded-2xl border border-border">
+            <div className="flex justify-between items-center p-4 bg-bg rounded-lg border border-border">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-accent-soft flex items-center justify-center text-accent">
+                <div className="w-10 h-10 rounded-lg bg-accent-soft flex items-center justify-center text-accent">
                   <Clock className="w-5 h-5" />
                 </div>
                 <span className="text-[0.85rem] font-bold text-text-gray">On Break</span>
               </div>
               <span className="text-[1.2rem] font-black text-text-dark">6</span>
             </div>
-            <div className="flex justify-between items-center p-4 bg-bg rounded-2xl border border-border">
+            <div className="flex justify-between items-center p-4 bg-bg rounded-lg border border-border">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-warning/10 flex items-center justify-center text-warning">
+                <div className="w-10 h-10 rounded-lg bg-warning/10 flex items-center justify-center text-warning">
                   <XCircle className="w-5 h-5" />
                 </div>
                 <span className="text-[0.85rem] font-bold text-text-gray">Off Duty</span>
@@ -184,14 +184,14 @@ export default function StaffRoster() {
               <span className="text-[1.2rem] font-black text-text-dark">9</span>
             </div>
           </div>
-          <button className="mt-8 w-full py-4 bg-bg border border-border rounded-xl text-[0.85rem] font-bold text-text-dark hover:border-accent hover:text-accent transition-all">
+          <button className="mt-8 w-full py-4 bg-bg border border-border rounded-lg text-[0.85rem] font-bold text-text-dark hover:border-accent hover:text-accent transition-all">
             Export Roster Report
           </button>
         </div>
       </div>
 
       {/* Staff Grid Section */}
-      <div className="bg-card rounded-[24px] border border-border shadow-premium overflow-hidden">
+      <div className="bg-card rounded-lg border border-border shadow-premium overflow-hidden">
         <div className="p-8 border-b border-border flex flex-col md:flex-row md:justify-between md:items-center gap-6">
           <h3 className="text-[1.1rem] font-bold text-text-dark m-0">Staff Member Directory</h3>
           <div className="flex items-center gap-4 flex-1 max-w-md">
@@ -200,7 +200,7 @@ export default function StaffRoster() {
               <input 
                 type="text" 
                 placeholder="Search staff by name or role..." 
-                className="w-full pl-11 pr-4 py-2.5 bg-bg border border-border rounded-xl text-[0.85rem] focus:outline-none focus:border-accent transition-all"
+                className="w-full pl-11 pr-4 py-2.5 bg-bg border border-border rounded-lg text-[0.85rem] focus:outline-none focus:border-accent transition-all"
               />
             </div>
           </div>
@@ -208,7 +208,7 @@ export default function StaffRoster() {
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-8">
           {STAFF_MEMBERS.map((member) => (
-            <div key={member.id} className="p-5 rounded-2xl bg-bg border border-border group hover:border-accent hover:shadow-premium transition-all">
+            <div key={member.id} className="p-5 rounded-lg bg-bg border border-border group hover:border-accent hover:shadow-premium transition-all">
               <div className="flex justify-between items-start mb-4">
                 <div className="flex items-center gap-4">
                   <div className="w-12 h-12 rounded-full bg-accent text-white flex items-center justify-center font-black text-[1.1rem] shadow-md">
@@ -225,11 +225,11 @@ export default function StaffRoster() {
               </div>
 
               <div className="grid grid-cols-2 gap-4 mb-5">
-                <div className="bg-card p-3 rounded-xl border border-border">
+                <div className="bg-card p-3 rounded-lg border border-border">
                   <p className="text-[0.6rem] text-text-gray font-bold uppercase mb-1">Role</p>
                   <p className="text-[0.8rem] text-text-dark font-bold">{member.role}</p>
                 </div>
-                <div className="bg-card p-3 rounded-xl border border-border">
+                <div className="bg-card p-3 rounded-lg border border-border">
                   <p className="text-[0.6rem] text-text-gray font-bold uppercase mb-1">Current Shift</p>
                   <p className="text-[0.8rem] text-text-dark font-bold">{member.shift}</p>
                 </div>

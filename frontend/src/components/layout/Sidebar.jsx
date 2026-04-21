@@ -17,29 +17,32 @@ import {
 import { useAuth } from '../../context/AuthContext';
 
 export default function Sidebar({ isSidebarOpen }) {
-  const { role } = useAuth();
+  const { role, canView } = useAuth();
   
   const mainMenu = [
-    { name: 'Command Hub', icon: LayoutDashboard, path: '/' },
-    { name: 'Neural Stream', icon: Radio, path: '/neural-stream' },
-    { name: 'AI Scenarios', icon: Brain, path: '/scenarios' },
-    { name: 'Staff Roster', icon: Users, path: '/roster' },
-    { name: 'Activity Vault', icon: ClipboardList, path: '/vault' },
+    { name: 'Command Hub', icon: LayoutDashboard, path: '/', moduleKey: 'dashboard' },
+    { name: 'Neural Stream', icon: Radio, path: '/neural-stream', moduleKey: 'live_monitoring' },
+    { name: 'AI Scenarios', icon: Brain, path: '/scenarios', moduleKey: 'scenarios' },
+    { name: 'Staff Roster', icon: Users, path: '/roster', moduleKey: 'roster' },
+    { name: 'Activity Vault', icon: ClipboardList, path: '/vault', moduleKey: 'vault' },
   ];
 
   const analyticsMenu = [
-    { name: 'System Health', icon: Cpu, path: '/health' },
+    { name: 'System Health', icon: Cpu, path: '/health', moduleKey: 'health' },
     { name: 'AI Training', icon: GraduationCap, path: '/training' },
-    { name: 'Crisis Alerts', icon: Bell, path: '/alerts' },
+    { name: 'Crisis Alerts', icon: Bell, path: '/alerts', moduleKey: 'alerts' },
   ];
 
   const adminMenu = [
-    { name: 'Admin Control', icon: ShieldAlert, path: '/admin', reqRole: 'admin_level' }
+    { name: 'Admin Control', icon: ShieldAlert, path: '/admin', reqRole: 'admin_level', moduleKey: 'admin_hub' }
   ];
 
   const renderNavLinks = (items) => (
     <ul className="flex flex-col gap-1">
-      {items.filter(item => !item.reqRole || (item.reqRole === 'admin_level' && (role === 'super_admin' || role === 'admin'))).map((item, index) => (
+      {items
+        .filter(item => !item.reqRole || (item.reqRole === 'admin_level' && (role === 'super_admin' || role === 'admin')))
+        .filter(item => canView(item.moduleKey))
+        .map((item, index) => (
         <li key={index}>
           <NavLink
             to={item.path}

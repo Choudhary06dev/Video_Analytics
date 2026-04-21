@@ -92,11 +92,11 @@ export default function Alerts() {
           </div>
         </div>
         <div className="flex items-center gap-3">
-          <button className="flex items-center gap-2 px-5 py-2.5 bg-danger text-white rounded-xl text-[0.8rem] font-bold cursor-pointer transition-all hover:opacity-90 shadow-[0_4px_12px_rgba(239,68,68,0.3)] uppercase tracking-widest">
+          <button className="flex items-center gap-2 px-5 py-2.5 bg-danger text-white rounded-lg text-[0.8rem] font-bold cursor-pointer transition-all hover:opacity-90 shadow-[0_4px_12px_rgba(239,68,68,0.3)] uppercase tracking-widest">
             <ShieldAlert className="w-4 h-4" />
             Initiate Lockdown
           </button>
-          <button className="flex items-center gap-2 px-4 py-2 bg-card text-text-dark border border-border rounded-xl text-[0.75rem] font-bold cursor-pointer hover:border-accent hover:text-accent shadow-sm">
+          <button className="flex items-center gap-2 px-4 py-2 bg-card text-text-dark border border-border rounded-lg text-[0.75rem] font-bold cursor-pointer hover:border-accent hover:text-accent shadow-sm">
             <Download className="w-4 h-4" />
             Full Audit Log
           </button>
@@ -110,8 +110,8 @@ export default function Alerts() {
           { label: 'High Severity', value: stats.high, color: 'text-warning', bg: 'bg-warning/10', icon: AlertTriangle },
           { label: 'Total Events', value: stats.total, color: 'text-accent', bg: 'bg-accent-soft', icon: Info },
         ].map((s, i) => (
-          <div key={i} className="bg-card rounded-[24px] p-6 border border-border shadow-premium flex items-center gap-5 hover:-translate-y-1 transition-all group">
-            <div className={`w-14 h-14 rounded-2xl ${s.bg} flex items-center justify-center ${s.color}`}>
+          <div key={i} className="bg-card rounded-lg p-6 border border-border shadow-premium flex items-center gap-5 hover:-translate-y-1 transition-all group">
+            <div className={`w-14 h-14 rounded-lg ${s.bg} flex items-center justify-center ${s.color}`}>
               <s.icon className={`w-7 h-7 ${i === 0 && s.value > 0 && 'animate-pulse'}`} />
             </div>
             <div>
@@ -123,15 +123,15 @@ export default function Alerts() {
       </div>
 
       {/* Controls & Search */}
-      <div className="bg-card rounded-[28px] border border-border shadow-premium overflow-hidden flex flex-col min-h-[600px]">
+      <div className="bg-card rounded-lg border border-border shadow-premium overflow-hidden flex flex-col min-h-[600px]">
         <div className="p-8 border-b border-border flex flex-col lg:flex-row lg:items-center justify-between gap-8">
           {/* Custom Tabs */}
-          <div className="flex bg-bg p-1.5 rounded-2xl border border-border">
+          <div className="flex bg-bg p-1.5 rounded-lg border border-border">
             {['all', 'critical', 'warning', 'info'].map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
-                className={`px-6 py-2.5 rounded-xl text-[0.8rem] font-bold capitalize transition-all
+                className={`px-6 py-2.5 rounded-lg text-[0.8rem] font-bold capitalize transition-all
                   ${activeTab === tab ? 'bg-card text-accent shadow-premium border border-border' : 'text-text-gray hover:text-text-dark'}`}
               >
                 {tab}
@@ -147,10 +147,10 @@ export default function Alerts() {
                     placeholder="Search incidents by camera, scenario, or detail..." 
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full pl-12 pr-4 py-3 bg-bg border border-border rounded-2xl text-[0.88rem] focus:outline-none focus:border-accent transition-all"
+                    className="w-full pl-12 pr-4 py-3 bg-bg border border-border rounded-lg text-[0.88rem] focus:outline-none focus:border-accent transition-all"
                 />
              </div>
-             <button className="p-3 bg-bg border border-border rounded-2xl text-text-gray hover:text-danger hover:border-danger transition-all">
+             <button className="p-3 bg-bg border border-border rounded-lg text-text-gray hover:text-danger hover:border-danger transition-all">
                 <Trash2 className="w-5 h-5" />
              </button>
           </div>
@@ -215,13 +215,13 @@ export default function Alerts() {
                       </td>
                       <td className="px-8 py-6 text-right">
                          <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all transform group-hover:translate-x-0 translate-x-4">
-                            <button className="p-2.5 bg-accent-soft text-accent rounded-xl hover:bg-accent hover:text-white transition-all shadow-sm" title="View Stream">
+                            <button className="p-2.5 bg-accent-soft text-accent rounded-lg hover:bg-accent hover:text-white transition-all shadow-sm" title="View Stream">
                                <Video className="w-4.5 h-4.5" />
                             </button>
-                            <button className="p-2.5 bg-success/10 text-success rounded-xl hover:bg-success hover:text-white transition-all shadow-sm" title="Resolve Incident">
+                            <button className="p-2.5 bg-success/10 text-success rounded-lg hover:bg-success hover:text-white transition-all shadow-sm" title="Resolve Incident">
                                <CheckCircle2 className="w-4.5 h-4.5" />
                             </button>
-                            <button className="p-2.5 bg-bg border border-border rounded-xl text-text-gray hover:text-text-dark transition-all shadow-sm">
+                            <button className="p-2.5 bg-bg border border-border rounded-lg text-text-gray hover:text-text-dark transition-all shadow-sm">
                                <MoreHorizontal className="w-4.5 h-4.5" />
                             </button>
                          </div>
@@ -234,7 +234,7 @@ export default function Alerts() {
           )}
           {!loading && filteredAlerts.length === 0 && (
             <div className="py-24 text-center">
-               <div className="w-20 h-20 bg-bg rounded-3xl flex items-center justify-center text-text-gray/20 mx-auto mb-4 border border-border shadow-inner">
+               <div className="w-20 h-20 bg-bg rounded-lg flex items-center justify-center text-text-gray/20 mx-auto mb-4 border border-border shadow-inner">
                   <CheckCircle2 className="w-10 h-10" />
                </div>
                <p className="text-[1.1rem] font-black text-text-dark">No Active Crisis</p>
@@ -249,10 +249,10 @@ export default function Alerts() {
                System Health: <span className="text-success uppercase">Neural Scan Active</span>
             </div>
             <div className="flex gap-4">
-               <button className="px-6 py-2.5 bg-card border border-border rounded-xl text-[0.8rem] font-bold text-text-gray hover:text-text-dark transition-all">
+               <button className="px-6 py-2.5 bg-card border border-border rounded-lg text-[0.8rem] font-bold text-text-gray hover:text-text-dark transition-all">
                   Previous 24h
                </button>
-               <button className="px-6 py-2.5 bg-accent text-white rounded-xl text-[0.8rem] font-bold hover:opacity-90 shadow-premium transition-all">
+               <button className="px-6 py-2.5 bg-accent text-white rounded-lg text-[0.8rem] font-bold hover:opacity-90 shadow-premium transition-all">
                   Acknowledge All
                </button>
             </div>

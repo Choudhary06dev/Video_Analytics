@@ -14,15 +14,15 @@ import { useAuth } from '../../context/AuthContext';
 import { APP_CONFIG } from '../../config';
 
 export default function AdminSidebar({ isSidebarOpen }) {
-  const { user, role } = useAuth();
+  const { user, canView } = useAuth();
   const navigate = useNavigate();
 
   const adminMenu = [
-    { name: 'Dashboard', icon: LayoutDashboard, path: '/admin/dashboard' },
-    { name: 'Users', icon: UsersIcon, path: '/admin/users' },
-    { name: 'Roles', icon: ShieldCheck, path: '/admin/roles' },
-    { name: 'Audit Logs', icon: History, path: '/admin/audit' },
-    { name: 'Settings', icon: SettingsIcon, path: '/admin/settings' },
+    { name: 'Dashboard', icon: LayoutDashboard, path: '/admin/dashboard', moduleKey: 'dashboard' },
+    { name: 'Users', icon: UsersIcon, path: '/admin/users', moduleKey: 'roster' },
+    { name: 'Roles', icon: ShieldCheck, path: '/admin/roles', moduleKey: 'admin_hub' },
+    { name: 'Audit Logs', icon: History, path: '/admin/audit', moduleKey: 'admin_hub' },
+    { name: 'Settings', icon: SettingsIcon, path: '/admin/settings', moduleKey: 'settings' },
   ];
 
   const handleExitAdmin = () => {
@@ -31,7 +31,7 @@ export default function AdminSidebar({ isSidebarOpen }) {
 
   const renderNavLinks = (items) => (
     <ul className="flex flex-col gap-1">
-      {items.map((item, index) => (
+      {items.filter(item => canView(item.moduleKey)).map((item, index) => (
         <li key={index}>
           <NavLink
             to={item.path}
@@ -95,7 +95,7 @@ export default function AdminSidebar({ isSidebarOpen }) {
           </span>
         </button>
 
-        <div className={`p-3 bg-surface rounded-xl border border-border flex items-center gap-3 ${!isSidebarOpen && 'md:px-2 flex-col'}`}>
+        <div className={`p-3 bg-surface rounded-lg border border-border flex items-center gap-3 ${!isSidebarOpen && 'md:px-2 flex-col'}`}>
             <div className="relative">
                 <img 
                     src={`https://ui-avatars.com/api/?name=${user?.name || 'User'}&background=06b6d4&color=fff&bold=true`} 

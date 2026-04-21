@@ -82,7 +82,7 @@ export default function PerformanceMetrics() {
 
       {/* ── Detection Count Chart ── */}
       <div
-        className="flex flex-col h-[380px] p-6 transition-shadow hover:shadow-[0_12px_40px_-10px_rgba(14,165,233,0.14)] bg-card rounded-[28px] border border-border shadow-premium"
+        className="flex flex-col h-[380px] p-6 transition-shadow hover:shadow-[0_12px_40px_-10px_rgba(14,165,233,0.14)] bg-card rounded-lg border border-border shadow-premium"
       >
         <div className="flex justify-between items-start mb-5 shrink-0">
           <div>
@@ -170,7 +170,7 @@ export default function PerformanceMetrics() {
 
       {/* ── Camera Performance Chart ── */}
       <div
-        className="flex flex-col h-[380px] p-6 transition-shadow hover:shadow-[0_12px_40px_-10px_rgba(34,197,94,0.14)] bg-card rounded-[28px] border border-border shadow-premium"
+        className="flex flex-col h-[380px] p-6 transition-shadow hover:shadow-[0_12px_40px_-10px_rgba(34,197,94,0.14)] bg-card rounded-lg border border-border shadow-premium"
       >
         <div className="flex justify-between items-start mb-5 shrink-0">
           <div>

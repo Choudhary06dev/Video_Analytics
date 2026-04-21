@@ -80,7 +80,7 @@ function AlertRow({ alert, onDismiss }) {
           background: cfg.iconBg,
           border: `1px solid ${cfg.border}`,
         }}
-        className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${
+        className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${
           alert.type === 'critical' ? 'animate-pulse' : ''
         }`}
       >
@@ -148,7 +148,7 @@ export default function RecentAlerts() {
   const criticalCount = alerts.filter(a => a.type === 'critical').length;
 
   return (
-    <div className="h-full flex flex-col overflow-hidden bg-card rounded-[24px] border border-border shadow-premium">
+    <div className="h-full flex flex-col overflow-hidden bg-card rounded-lg border border-border shadow-premium">
       {/* Header */}
       <div className="px-5 py-4 border-b border-border flex items-center justify-between shrink-0">
         <div className="flex items-center gap-2.5">
@@ -205,7 +205,7 @@ export default function RecentAlerts() {
         <div
           style={{
             background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)',
-            borderRadius: 14,
+            borderRadius: 8,
             padding: '10px 16px',
           }}
           className="flex items-center justify-between text-white shadow-lg"
