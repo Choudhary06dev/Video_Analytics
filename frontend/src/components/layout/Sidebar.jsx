@@ -34,7 +34,7 @@ export default function Sidebar({ isSidebarOpen }) {
   ];
 
   const adminMenu = [
-    { name: 'Admin Hub', icon: ShieldAlert, path: '/admin-hub', reqRole: 'admin_level' }
+    { name: 'Admin Control', icon: ShieldAlert, path: '/admin', reqRole: 'admin_level' }
   ];
 
   const renderNavLinks = (items) => (

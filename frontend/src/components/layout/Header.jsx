@@ -221,7 +221,9 @@ export default function Header({ isSidebarOpen, setSidebarOpen }) {
             <img src={`https://ui-avatars.com/api/?name=${user?.name || 'User'}&background=06b6d4&color=fff&bold=true`} alt="User" className="w-8 h-8 rounded-full shadow-sm ring-2 ring-white/5" />
             <div className="hidden lg:flex flex-col items-start -space-y-1">
                <span className="text-[11px] font-black text-text-dark uppercase tracking-tight">{user?.name || 'Operator'}</span>
-               <span className="text-[9px] font-bold text-text-gray uppercase tracking-widest opacity-60">Level 1 Access</span>
+               <span className="text-[9px] font-bold text-text-gray uppercase tracking-widest opacity-60">
+                 {user?.role ? user.role.replace('_', ' ') : 'Standard'} Access
+               </span>
             </div>
             <ChevronDown className={`w-3.5 h-3.5 text-text-gray transition-transform duration-300 ${showProfileMenu ? 'rotate-180 text-accent' : ''}`} />
           </button>

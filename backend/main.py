@@ -840,6 +840,8 @@ def create_user_by_admin(user_data: AdminUserCreate, session: Session = Depends(
         session.add(new_user)
         session.commit()
         session.refresh(new_user)
+        record_audit_log(session, admin_data.get("id"), "CREATE", "Personnel Matrix", f"Authorized new node: {new_user.email} (Role: {role.name})")
+        session.commit()
         return {"message": "User created successfully", "user_id": new_user.id, "role": role.name}
     except Exception as e:
         print(f"Admin Registration Error: {str(e)}")
@@ -883,6 +885,7 @@ def update_user_by_admin(user_id: int, user_data: AdminUserUpdate, session: Sess
             raise HTTPException(status_code=400, detail="Invalid role specified")
         user.role_id = role.id
         
+    record_audit_log(session, admin_data.get("id"), "UPDATE", "Personnel Matrix", f"Synchronized identity protocol for node {user.email}")
     session.add(user)
     session.commit()
     session.refresh(user)
@@ -896,9 +899,136 @@ def delete_user(user_id: int, session: Session = Depends(get_session), admin_dat
     if user.id == admin_data.get("id"):
         raise HTTPException(status_code=400, detail="Cannot delete your own super admin account")
     
+    record_audit_log(session, admin_data.get("id"), "DELETE", "Personnel Matrix", f"Purged identity linkage for node: {user.email}")
     session.delete(user)
     session.commit()
     return {"message": "User deleted successfully"}
+
+@app.patch("/admin/users/{user_id}/status")
+def toggle_user_status(user_id: int, status_data: dict, session: Session = Depends(get_session), admin_data: dict = Depends(verify_super_admin)):
+    user = session.get(User, user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    if user.id == admin_data.get("id"):
+        raise HTTPException(status_code=400, detail="Cannot suspend your own account")
+        
+    user.is_active = status_data.get("is_active", True)
+    record_audit_log(session, admin_data.get("id"), "STATUS_CHANGE", "Personnel Matrix", f"Node {user.email} session status set to {'ACTIVE' if user.is_active else 'SUSPENDED'}")
+    session.add(user)
+    session.commit()
+    return {"message": "User status updated", "is_active": user.is_active}
+
+# --- ADMIN: AUDIT LOGGING ---
+
+def record_audit_log(session: Session, user_id: int, action: str, resource: str, details: str):
+    """Utility to record administrative actions in the temporal matrix."""
+    log = AuditLog(
+        user_id=user_id,
+        action=action,
+        resource=resource,
+        details=details
+    )
+    session.add(log)
+    # Note: caller should handle commit unless this is used in a specific transaction
+
+@app.get("/admin/audit-logs")
+def get_audit_logs(limit: int = 50, session: Session = Depends(get_session), admin_data: dict = Depends(verify_admin_access)):
+    statement = select(AuditLog).order_by(AuditLog.timestamp.desc()).limit(limit)
+    logs = session.exec(statement).all()
+    
+    result = []
+    for l in logs:
+        u = session.get(User, l.user_id)
+        result.append({
+            "id": l.id,
+            "user_name": u.full_name if u else "Unknown Node",
+            "user_email": u.email if u else "N/A",
+            "action": l.action,
+            "resource": l.resource,
+            "details": l.details,
+            "timestamp": l.timestamp
+        })
+    return result
+
+# --- ADMIN: ROLE & PERMISSION MANAGEMENT ---
+
+@app.get("/admin/roles")
+def get_roles(session: Session = Depends(get_session), admin_data: dict = Depends(verify_admin_access)):
+    roles = session.exec(select(Role)).all()
+    result = []
+    for r in roles:
+        # Fetch permissions for this role
+        stmt = select(RoleModulePermission).where(RoleModulePermission.role_id == r.id)
+        perms = session.exec(stmt).all()
+        
+        perm_list = []
+        for p in perms:
+            mod = session.get(ModulePermission, p.module_permission_id)
+            perm_list.append({
+                "module_id": p.module_permission_id,
+                "module_key": mod.key if mod else "unknown",
+                "module_name": mod.name if mod else "unknown",
+                "can_view": p.can_view,
+                "can_edit": p.can_edit,
+                "can_delete": p.can_delete
+            })
+            
+        result.append({
+            "id": r.id,
+            "name": r.name,
+            "description": r.description,
+            "permissions": perm_list
+        })
+    return result
+
+@app.get("/admin/modules")
+def get_modules(session: Session = Depends(get_session), admin_data: dict = Depends(verify_admin_access)):
+    modules = session.exec(select(ModulePermission)).all()
+    return modules
+
+class PermissionUpdate(BaseModel):
+    module_key: str
+    can_view: bool
+    can_edit: bool
+    can_delete: bool
+
+@app.put("/admin/roles/{role_id}/permissions")
+def update_role_permissions(role_id: int, perms: List[PermissionUpdate], session: Session = Depends(get_session), admin_data: dict = Depends(verify_super_admin)):
+    role = session.get(Role, role_id)
+    if not role:
+        raise HTTPException(status_code=404, detail="Role not found")
+        
+    for p in perms:
+        # Find module by key
+        stmt = select(ModulePermission).where(ModulePermission.key == p.module_key)
+        mod = session.exec(stmt).first()
+        if not mod: continue
+        
+        # Check if permission record exists
+        perm_stmt = select(RoleModulePermission).where(
+            RoleModulePermission.role_id == role_id,
+            RoleModulePermission.module_permission_id == mod.id
+        )
+        existing_perm = session.exec(perm_stmt).first()
+        
+        if existing_perm:
+            existing_perm.can_view = p.can_view
+            existing_perm.can_edit = p.can_edit
+            existing_perm.can_delete = p.can_delete
+            session.add(existing_perm)
+        else:
+            new_perm = RoleModulePermission(
+                role_id=role_id,
+                module_permission_id=mod.id,
+                can_view=p.can_view,
+                can_edit=p.can_edit,
+                can_delete=p.can_delete
+            )
+            session.add(new_perm)
+            
+    session.commit()
+    return {"message": "Permissions updated successfully"}
 
 
 # --- ADMIN: AREA MANAGEMENT ---

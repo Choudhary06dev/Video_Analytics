@@ -67,6 +67,7 @@ class User(SQLModel, table=True):
     email: str = Field(index=True, unique=True)
     hashed_password: str
     role_id: int = Field(default=3, foreign_key="role.id")
+    is_active: bool = Field(default=True)
     created_at: datetime = Field(default_factory=datetime.now)
 
     # Relationships
@@ -125,3 +126,14 @@ class DetectionEvent(SQLModel, table=True):
 
     class Config:
         arbitrary_types_allowed = True
+
+class AuditLog(SQLModel, table=True):
+    """
+    Registry for tracking all critical administrative actions.
+    """
+    id: Optional[int] = Field(default=None, primary_key=True)
+    user_id: int = Field(foreign_key="user.id")
+    action: str # e.g. "CREATE_USER", "UPDATE_PERMISSIONS", "TOGGLE_CAMERA"
+    resource: str # e.g. "Identity Matrix", "Access Authority", "Surveillance"
+    details: str
+    timestamp: datetime = Field(default_factory=datetime.now)

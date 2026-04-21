@@ -5,6 +5,7 @@ import { AuthProvider } from './context/AuthContext';
 
 // Layout
 import AppLayout from './layouts/AppLayout';
+import AdminLayout from './layouts/AdminLayout';
 
 // Components
 import ProtectedRoute from './components/ProtectedRoute';
@@ -21,7 +22,14 @@ import SystemHealth from './pages/SystemHealth';
 import AITraining from './pages/AITraining';
 import Alerts from './pages/Alerts';
 import Settings from './pages/Settings';
-import AdminHub from './pages/AdminHub';
+
+// Admin Pages
+import AdminDashboard from './pages/admin/AdminDashboard';
+import UserManagement from './pages/admin/UserManagement';
+import RoleManagement from './pages/admin/RoleManagement';
+import ActionAudit from './pages/admin/ActionAudit';
+import SystemSettings from './pages/admin/SystemSettings';
+import SurveillanceConfig from './pages/admin/SurveillanceConfig';
 
 function App() {
   return (
@@ -33,7 +41,7 @@ function App() {
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
 
-            {/* Private Protected Routes */}
+            {/* Private Protected Routes (Operator/User Side) */}
             <Route element={<ProtectedRoute />}>
               <Route element={<AppLayout />}>
                 <Route path="/" element={<Dashboard />} />
@@ -48,10 +56,16 @@ function App() {
               </Route>
             </Route>
 
-            {/* Admin Restricted Routes */}
-            <Route element={<ProtectedRoute allowedRoles={['super_admin', 'admin']} />}>
-              <Route element={<AppLayout />}>
-                <Route path="/admin-hub" element={<AdminHub />} />
+            {/* Dedicated Admin Panel (Laravel-style) */}
+            <Route path="/admin" element={<ProtectedRoute allowedRoles={['super_admin', 'admin']} />}>
+              <Route element={<AdminLayout />}>
+                <Route index element={<Navigate to="/admin/dashboard" replace />} />
+                <Route path="dashboard" element={<AdminDashboard />} />
+                <Route path="users" element={<UserManagement />} />
+                <Route path="roles" element={<RoleManagement />} />
+                <Route path="audit" element={<ActionAudit />} />
+                <Route path="settings" element={<SystemSettings />} />
+                <Route path="surveillance" element={<SurveillanceConfig />} />
               </Route>
             </Route>
 
