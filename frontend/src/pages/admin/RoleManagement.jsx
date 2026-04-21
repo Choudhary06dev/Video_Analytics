@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import { BASE } from '../../api';
+import { fetchRoles as apiFetchRoles, createRole, updateRole } from '../../services/userService';
 import { useAuth } from '../../context/AuthContext';
 import { 
   ShieldCheck, 
@@ -16,7 +15,7 @@ import {
   Edit2,
   X
 } from 'lucide-react';
-import RolePermissionsPanel from '../../components/admin/RolePermissionsPanel';
+import RolePermissionsPanel from '../../components/ui/RolePermissionsPanel';
 
 export default function RoleManagement() {
   const { token } = useAuth();
@@ -35,15 +34,13 @@ export default function RoleManagement() {
   const fetchRoles = async () => {
     try {
       setLoading(true);
-      const res = await axios.get(`${BASE}/admin/roles`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setRoles(res.data);
-      if (res.data.length > 0 && !selectedRole) {
-        setSelectedRole(res.data[0]);
+      const data = await apiFetchRoles();
+      setRoles(data);
+      if (data.length > 0 && !selectedRole) {
+        setSelectedRole(data[0]);
       }
       if (selectedRole) {
-        const updatedSelectedRole = res.data.find(r => r.id === selectedRole.id);
+        const updatedSelectedRole = data.find(r => r.id === selectedRole.id);
         if (updatedSelectedRole) {
           setSelectedRole(updatedSelectedRole);
         }
@@ -75,13 +72,9 @@ export default function RoleManagement() {
     try {
       setSubmitting(true);
       if (editingRole) {
-        await axios.put(`${BASE}/admin/roles/${editingRole.id}`, roleFormData, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        await updateRole(editingRole.id, roleFormData);
       } else {
-        await axios.post(`${BASE}/admin/roles`, roleFormData, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
+        await createRole(roleFormData);
       }
 
       setShowRoleModal(false);
@@ -89,7 +82,7 @@ export default function RoleManagement() {
       setRoleFormData({ name: '', description: '' });
       await fetchRoles();
     } catch (err) {
-      alert(err.response?.data?.detail || "Failed to save role");
+      alert(err.message || "Failed to save role");
     } finally {
       setSubmitting(false);
     }

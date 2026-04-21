@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import { BASE } from '../../api';
+import { fetchModules as apiFetchModules, updateRolePermissions } from '../../services/userService';
 import { useAuth } from '../../context/AuthContext';
 import { 
   ShieldCheck, 
@@ -32,10 +31,8 @@ export default function RolePermissionsPanel({ roleId, initialPermissions, onUpd
 
   const fetchModules = async () => {
     try {
-      const res = await axios.get(`${BASE}/admin/modules`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setModules(res.data);
+      const data = await apiFetchModules();
+      setModules(data);
     } catch (err) {
       console.error("Failed to fetch modules", err);
     }
@@ -83,15 +80,12 @@ export default function RolePermissionsPanel({ roleId, initialPermissions, onUpd
         };
       });
 
-      await axios.put(`${BASE}/admin/roles/${roleId}/permissions`, 
-        payload,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      await updateRolePermissions(roleId, payload);
       setMessage({ type: 'success', text: "Access protocols updated successfully." });
       onUpdated?.();
       setTimeout(() => setMessage(null), 3000);
     } catch (err) {
-      setMessage({ type: 'error', text: err.response?.data?.detail || "Critical failure during protocol sync." });
+      setMessage({ type: 'error', text: err.message || "Critical failure during protocol sync." });
     } finally {
       setSaving(false);
     }

@@ -1,10 +1,9 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Shield, Mail, Lock, Eye, EyeOff, Loader2, Cpu, Zap, Activity } from 'lucide-react';
-import { useAuth } from '../context/AuthContext';
-import axios from 'axios';
-import { BASE } from '../api';
-import authBg from '../assets/auth-bg.png';
+import { useAuth } from '../../context/AuthContext';
+import { login as apiLogin } from '../../services/authService';
+import authBg from '../../assets/auth-bg.png';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -22,15 +21,11 @@ export default function LoginPage() {
     setError(null);
     
     try {
-      const response = await axios.post(`${BASE}/auth/login`, {
-        email,
-        password
-      });
-      
-      login(response.data.user, response.data.access_token);
+      const data = await apiLogin(email, password);
+      login(data.user, data.access_token);
       navigate('/');
     } catch (err) {
-      setError(err.response?.data?.detail || 'System Authentication Failed. Access Denied.');
+      setError(err.message || 'System Authentication Failed. Access Denied.');
     } finally {
       setLoading(false);
     }

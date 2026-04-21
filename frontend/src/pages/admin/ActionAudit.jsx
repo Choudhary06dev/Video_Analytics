@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import { BASE } from '../../api';
+import { fetchAuditLogs as apiFetchAuditLogs } from '../../services/userService';
 import { useAuth } from '../../context/AuthContext';
 import { 
   History, 
@@ -42,10 +41,8 @@ export default function ActionAudit() {
   const fetchLogs = async () => {
     try {
       setLoading(true);
-      const res = await axios.get(`${BASE}/admin/audit-logs`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setLogs(res.data);
+      const data = await apiFetchAuditLogs();
+      setLogs(data);
       setError(null);
     } catch (err) {
       setError("Failed to decrypt temporal audit logs.");

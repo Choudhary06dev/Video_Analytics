@@ -3,7 +3,7 @@ from typing import Optional
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 from fastapi import Header, HTTPException
-from config import settings
+from app.core.config import settings
 
 # Use pbkdf2_sha256 as the default hashing scheme for long passwords,
 # while still allowing verification of existing bcrypt hashes.

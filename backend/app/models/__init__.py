@@ -1,0 +1,10 @@
+# Import all models here so SQLModel metadata picks them up
+from app.models.user import User, Role, ModulePermission, RoleModulePermission, RoleAreaPermission
+from app.models.camera import Camera, Area, CameraScenarioAssignment
+from app.models.alert import DetectionEvent, AIScenario, AuditLog
+
+__all__ = [
+    "User", "Role", "ModulePermission", "RoleModulePermission", "RoleAreaPermission",
+    "Camera", "Area", "CameraScenarioAssignment",
+    "DetectionEvent", "AIScenario", "AuditLog",
+]

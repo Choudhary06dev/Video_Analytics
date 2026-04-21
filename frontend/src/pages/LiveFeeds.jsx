@@ -1,20 +1,26 @@
-import React, { useState } from 'react';
-import { Video, Grid, List, Search, Filter, Camera } from 'lucide-react';
+import { Video, Grid, List, Search, Filter, Camera, Loader2 } from 'lucide-react';
+import { fetchAdminCameras } from '../services/cameraService';
 
 export default function LiveFeeds() {
   const [viewMode, setViewMode] = useState('grid');
   const [filter, setFilter] = useState('all');
+  const [cameras, setCameras] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const cameras = [
-    { id: 1, name: 'Main Entrance', zone: 'Exterior', status: 'active', detections: 24, lastAlert: '2 mins ago' },
-    { id: 2, name: 'Warehouse A-1', zone: 'Interior', status: 'active', detections: 8, lastAlert: 'None' },
-    { id: 3, name: 'Loading Dock 4', zone: 'Logistics', status: 'active', detections: 115, lastAlert: '15 mins ago' },
-    { id: 4, name: 'Parking Lot East', zone: 'Exterior', status: 'inactive', detections: 0, lastAlert: 'N/A' },
-    { id: 5, name: 'Server Room', zone: 'Secure', status: 'active', detections: 2, lastAlert: 'None' },
-    { id: 6, name: 'Reception Lobby', zone: 'Interior', status: 'active', detections: 42, lastAlert: '5 mins ago' },
-    { id: 7, name: 'Perimeter Fence B', zone: 'Exterior', status: 'active', detections: 1, lastAlert: '6h ago' },
-    { id: 8, name: 'Office Floor 2', zone: 'Interior', status: 'active', detections: 12, lastAlert: 'None' },
-  ];
+  useEffect(() => {
+    loadCameras();
+  }, []);
+
+  const loadCameras = async () => {
+    try {
+      const data = await fetchAdminCameras();
+      setCameras(data || []);
+    } catch (err) {
+      console.error('Failed to load cameras:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const filteredCameras = filter === 'all' ? cameras : cameras.filter(c => c.zone.toLowerCase() === filter.toLowerCase());
 
@@ -71,7 +77,12 @@ export default function LiveFeeds() {
         </button>
       </div>
 
-      {viewMode === 'grid' ? (
+      {loading ? (
+        <div className="flex flex-col items-center justify-center py-20 gap-4">
+          <Loader2 className="w-10 h-10 text-accent animate-spin" />
+          <p className="text-[0.65rem] font-black text-text-gray uppercase tracking-[0.2em]">Acquiring Satellite Uplinks</p>
+        </div>
+      ) : viewMode === 'grid' ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {filteredCameras.map((cam) => (
             <div key={cam.id} className="group bg-card rounded-lg border border-border overflow-hidden shadow-sm hover:shadow-md transition-all">
@@ -79,9 +90,9 @@ export default function LiveFeeds() {
                 <div className="absolute inset-0 bg-gradient-to-br from-accent/10 to-accent/30"></div>
                 <div className="absolute top-2 left-2 flex gap-1">
                   <span className="bg-black/60 backdrop-blur-md text-[10px] text-white px-1.5 py-0.5 rounded font-medium border border-white/10 uppercase">
-                    {cam.zone}
+                    {cam.area_id ? `Area ${cam.area_id}` : 'General'}
                   </span>
-                  {cam.status === 'inactive' && (
+                  {!cam.is_active && (
                     <span className="bg-danger/80 backdrop-blur-md text-[10px] text-white px-1.5 py-0.5 rounded font-medium shadow-sm uppercase">
                       OFFLINE
                     </span>
@@ -92,7 +103,7 @@ export default function LiveFeeds() {
                     <Video className="w-6 h-6" />
                   </button>
                 </div>
-                {cam.status === 'active' && (
+                {cam.is_active && (
                    <span className="absolute bottom-2 right-2 flex h-2 w-2">
                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                      <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
@@ -106,12 +117,12 @@ export default function LiveFeeds() {
                 </div>
                 <div className="flex items-center gap-4">
                   <div className="flex flex-col">
-                    <span className="text-[10px] text-text-gray font-medium leading-tight">Detections</span>
-                    <span className="text-xs font-bold text-text-dark">{cam.detections}</span>
+                    <span className="text-[10px] text-text-gray font-medium leading-tight">Config</span>
+                    <span className="text-xs font-bold text-text-dark">{cam.stream_url ? 'Configured' : 'No URL'}</span>
                   </div>
                   <div className="flex flex-col">
-                    <span className="text-[10px] text-text-gray font-medium leading-tight">Last Alert</span>
-                    <span className="text-xs font-bold text-text-dark">{cam.lastAlert}</span>
+                    <span className="text-[10px] text-text-gray font-medium leading-tight">Status</span>
+                    <span className={`text-xs font-bold ${cam.is_active ? 'text-success' : 'text-danger'}`}>{cam.is_active ? 'Active' : 'Standby'}</span>
                   </div>
                 </div>
               </div>
@@ -124,10 +135,9 @@ export default function LiveFeeds() {
             <thead>
               <tr className="bg-surface border-b border-border">
                 <th className="px-6 py-4 text-xs font-bold text-text-gray uppercase tracking-wider">Camera Name</th>
-                <th className="px-6 py-4 text-xs font-bold text-text-gray uppercase tracking-wider">Zone</th>
+                <th className="px-6 py-4 text-xs font-bold text-text-gray uppercase tracking-wider">Area</th>
                 <th className="px-6 py-4 text-xs font-bold text-text-gray uppercase tracking-wider">Status</th>
-                <th className="px-6 py-4 text-xs font-bold text-text-gray uppercase tracking-wider">Detections Today</th>
-                <th className="px-6 py-4 text-xs font-bold text-text-gray uppercase tracking-wider">Last Alert</th>
+                <th className="px-6 py-4 text-xs font-bold text-text-gray uppercase tracking-wider">Reference ID</th>
                 <th className="px-6 py-4 text-xs font-bold text-text-gray uppercase tracking-wider text-right">Action</th>
               </tr>
             </thead>
@@ -136,20 +146,19 @@ export default function LiveFeeds() {
                 <tr key={cam.id} className="hover:bg-surface transition-colors">
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
-                      <div className={`w-8 h-8 rounded-lg ${cam.status === 'active' ? 'bg-accent-soft text-accent' : 'bg-surface text-text-gray'} flex items-center justify-center`}>
+                      <div className={`w-8 h-8 rounded-lg ${cam.is_active ? 'bg-accent-soft text-accent' : 'bg-surface text-text-gray'} flex items-center justify-center`}>
                         <Video className="w-4 h-4" />
                       </div>
                       <span className="text-sm font-bold text-text-dark">{cam.name}</span>
                     </div>
                   </td>
-                  <td className="px-6 py-4"><span className="text-xs font-medium text-text-gray">{cam.zone}</span></td>
+                  <td className="px-6 py-4"><span className="text-xs font-medium text-text-gray">{cam.area_id ? `Area ${cam.area_id}` : 'General'}</span></td>
                   <td className="px-6 py-4">
-                    <span className={`inline-flex px-2 py-0.5 rounded-full text-[10px] font-bold uppercase border ${cam.status === 'active' ? 'bg-emerald-50 text-emerald-600 border-emerald-100 dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-800' : 'bg-rose-50 text-rose-600 border-rose-100 dark:bg-rose-900/30 dark:text-rose-400 dark:border-rose-800'}`}>
-                      {cam.status}
+                    <span className={`inline-flex px-2 py-0.5 rounded-full text-[10px] font-bold uppercase border ${cam.is_active ? 'bg-emerald-50 text-emerald-600 border-emerald-100 dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-800' : 'bg-rose-50 text-rose-600 border-rose-100 dark:bg-rose-900/30 dark:text-rose-400 dark:border-rose-800'}`}>
+                      {cam.is_active ? 'Active' : 'Inactive'}
                     </span>
                   </td>
-                  <td className="px-6 py-4"><span className="text-sm font-bold text-text-dark">{cam.detections}</span></td>
-                  <td className="px-6 py-4"><span className="text-xs text-text-gray">{cam.lastAlert}</span></td>
+                  <td className="px-6 py-4"><span className="text-sm font-bold text-text-dark">CAD-{cam.id.toString().padStart(4, '0')}</span></td>
                   <td className="px-6 py-4 text-right">
                     <button className="text-accent hover:opacity-80 text-xs font-bold">Manage</button>
                   </td>
@@ -158,7 +167,7 @@ export default function LiveFeeds() {
             </tbody>
           </table>
         </div>
-      )}
+      )}}
     </div>
   );
 }

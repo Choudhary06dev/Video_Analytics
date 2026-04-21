@@ -8,7 +8,7 @@ import {
   ArrowUpDown, MoreHorizontal, ExternalLink, Copy, Maximize2, Filter
 } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
-import { fetchLogs } from '../api';
+import { fetchLogs as apiFetchLogs } from '../services/alertService';
 
 /* ═══════════════════════════════════════════════════════════════════════════════
    GLOBAL CSS
@@ -498,6 +498,36 @@ export default function ActivityVault() {
   const surfaceBg = isDark ? '#1e293b' : '#f8fafc';
   const surfaceBg2 = isDark ? '#0f172a' : '#fafbfc';
 
+  // Helper to map backend events to frontend UI format
+  const formatBackendEvent = (event) => {
+    const ago = Math.floor((Date.now() - new Date(event.timestamp)) / 60000);
+    const worker = WORKERS[Math.floor(Math.random() * WORKERS.length)]; // AI event, mock worker
+    
+    return {
+      id: `AV-${event.id.toString().padStart(4, '0')}`,
+      worker,
+      task: { 
+        icon: '🤖', 
+        name: event.scenario_key.replace(/_/g, ' ').toUpperCase(), 
+        category: 'monitor' 
+      },
+      zone: 'Zone-Alpha', // Mock zone
+      status: event.is_alert ? 'flagged' : 'completed',
+      priority: event.severity.toLowerCase(),
+      camId: `CAM-${event.camera_id}`,
+      frames: 420,
+      procTime: "1.2",
+      confidence: event.confidence * 100,
+      timeAgo: ago < 60 ? `${ago}m ago` : `${Math.floor(ago / 60)}h ago`,
+      timestamp: new Date(event.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      date: new Date(event.timestamp).toLocaleDateString([], { month: 'short', day: 'numeric' }),
+      sparkline: Array.from({ length: 12 }, () => Math.floor(Math.random() * 100)),
+      threat: event.severity === 'Critical' ? 85 : 20,
+      duration: "0min",
+      notes: `AI detected ${event.object_class} with ${Math.round(event.confidence * 100)}% confidence.`
+    };
+  };
+
   // Inject CSS
   useEffect(() => {
     if (document.getElementById('vp-css')) return;
@@ -509,7 +539,7 @@ export default function ActivityVault() {
   // Fetch real logs from backend
   const loadLogs = useCallback(async () => {
     try {
-      const data = await fetchLogs({ hours: 24 });
+      const data = await apiFetchLogs({ hours: 24 });
       if (Array.isArray(data)) {
         setActivities(data.map(event => formatBackendEvent(event)));
       }

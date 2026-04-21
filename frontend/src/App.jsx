@@ -8,12 +8,14 @@ import AppLayout from './layouts/AppLayout';
 import AdminLayout from './layouts/AdminLayout';
 
 // Components
-import ProtectedRoute from './components/ProtectedRoute';
+import ProtectedRoute from './components/ui/ProtectedRoute';
 
-// Pages
+// Pages - Auth
+import LoginPage from './pages/auth/Login';
+import RegisterPage from './pages/auth/Signup';
+
+// Pages - Main
 import Dashboard from './pages/Dashboard';
-import LoginPage from './pages/LoginPage';
-import RegisterPage from './pages/RegisterPage';
 import NeuralStream from './pages/NeuralStream';
 import AIScenarios from './pages/AIScenarios';
 import StaffRoster from './pages/StaffRoster';
@@ -23,7 +25,7 @@ import AITraining from './pages/AITraining';
 import Alerts from './pages/Alerts';
 import Settings from './pages/Settings';
 
-// Admin Pages
+// Sub Admin Pages
 import AdminDashboard from './pages/admin/AdminDashboard';
 import UserManagement from './pages/admin/UserManagement';
 import RoleManagement from './pages/admin/RoleManagement';

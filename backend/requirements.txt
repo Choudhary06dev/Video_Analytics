@@ -1,0 +1,14 @@
+fastapi
+uvicorn
+sqlmodel
+psycopg2-binary
+python-jose[cryptography]
+passlib[bcrypt]
+python-multipart
+python-dotenv
+httpx
+colorama
+pydantic
+opencv-python
+numpy
+ultralytics

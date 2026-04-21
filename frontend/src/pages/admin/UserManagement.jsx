@@ -1,6 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import { BASE } from '../../api';
+import { 
+  fetchAdminUsers, 
+  createUser, 
+  updateUser, 
+  deleteUser, 
+  updateUserStatus,
+  fetchRoles,
+  fetchAuditLogs 
+} from '../../services/userService';
 import { useAuth } from '../../context/AuthContext';
 import { 
   Users, 
@@ -47,12 +54,12 @@ export default function UserManagement() {
   const fetchData = async () => {
     try {
       setLoading(true);
-      const [usersRes, rolesRes] = await Promise.all([
-        axios.get(`${BASE}/admin/users`, { headers: { Authorization: `Bearer ${token}` } }),
-        axios.get(`${BASE}/admin/roles`, { headers: { Authorization: `Bearer ${token}` } })
+      const [usersData, rolesData] = await Promise.all([
+        fetchAdminUsers(),
+        fetchRoles()
       ]);
-      setUsers(usersRes.data);
-      setRoles(rolesRes.data);
+      setUsers(usersData);
+      setRoles(rolesData);
     } catch (err) {
       console.error("Failed to fetch data", err);
     } finally {
@@ -64,12 +71,12 @@ export default function UserManagement() {
     e.preventDefault();
     try {
       setSubmitting(true);
-      await axios.post(`${BASE}/admin/users`, formData, { headers: { Authorization: `Bearer ${token}` } });
+      await createUser(formData);
       setShowAddModal(false);
       setFormData({ full_name: '', email: '', password: '', role_name: 'operator' });
       fetchData();
     } catch (err) {
-      alert(err.response?.data?.detail || "Failed to create user");
+      alert(err.message || "Failed to create user");
     } finally {
       setSubmitting(false);
     }
@@ -82,15 +89,13 @@ export default function UserManagement() {
       const dataToSubmit = { ...formData };
       if (!dataToSubmit.password) delete dataToSubmit.password;
 
-      console.log("Submitting user data:", dataToSubmit);
-
-      await axios.put(`${BASE}/admin/users/${selectedUser.id}`, dataToSubmit, { headers: { Authorization: `Bearer ${token}` } });
+      await updateUser(selectedUser.id, dataToSubmit);
       setShowEditModal(false);
       setSelectedUser(null);
       fetchData();
     } catch (err) {
-      console.error("Edit error:", err.response?.data || err.message);
-      alert(err.response?.data?.detail || "Failed to edit user");
+      console.error("Edit error:", err.message);
+      alert(err.message || "Failed to edit user");
     } finally {
       setSubmitting(false);
     }
@@ -99,12 +104,12 @@ export default function UserManagement() {
   const handleDeleteUser = async () => {
     try {
       setSubmitting(true);
-      await axios.delete(`${BASE}/admin/users/${selectedUser.id}`, { headers: { Authorization: `Bearer ${token}` } });
+      await deleteUser(selectedUser.id);
       setShowDeleteModal(false);
       setSelectedUser(null);
       fetchData();
     } catch (err) {
-      alert(err.response?.data?.detail || "Failed to delete user");
+      alert(err.message || "Failed to delete user");
     } finally {
       setSubmitting(false);
     }
@@ -112,14 +117,11 @@ export default function UserManagement() {
 
   const toggleUserStatus = async (userId, currentStatus) => {
     try {
-      await axios.patch(`${BASE}/admin/users/${userId}/status`,
-        { is_active: !currentStatus },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      await updateUserStatus(userId, !currentStatus);
       fetchData();
     } catch (err) {
-      console.error("Status toggle error:", err.response?.data || err.message);
-      alert(err.response?.data?.detail || "Failed to update user status");
+      console.error("Status toggle error:", err.message);
+      alert(err.message || "Failed to update user status");
     }
   };
 

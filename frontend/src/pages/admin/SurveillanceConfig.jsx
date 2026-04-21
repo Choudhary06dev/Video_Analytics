@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { fetchAdminCameras, fetchAdminAreas } from '../../services/cameraService';
 import { 
   Cctv, 
   Plus, 
@@ -8,24 +9,51 @@ import {
   Video,
   Layers,
   Search,
-  MoreVertical
+  MoreVertical,
+  Loader2
 } from 'lucide-react';
 
 export default function SurveillanceConfig() {
-  const cameras = [
-    { id: 1, name: 'Main Entrance - Cam 01', zone: 'Restricted Entry', status: 'Online', source: 'rtsp://192.168.1.10:554/live' },
-    { id: 2, name: 'ER Reception - Cam 02', zone: 'High Traffic', status: 'Online', source: 'rtsp://192.168.1.11:554/live' },
-    { id: 3, name: 'Pharmacy - Cam 03', zone: 'Secure Storage', status: 'Online', source: 'rtsp://192.168.1.12:554/live' },
-    { id: 4, name: 'Main Corridor - Cam 04', zone: 'Public Area', status: 'Reconnecting', source: 'rtsp://192.168.1.13:554/live' },
-  ];
+  const [cameras, setCameras] = useState([]);
+  const [areas, setAreas] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  const loadData = async () => {
+    try {
+      setLoading(true);
+      const [camData, areaData] = await Promise.all([
+        fetchAdminCameras(),
+        fetchAdminAreas()
+      ]);
+      setCameras(camData || []);
+      setAreas(areaData || []);
+    } catch (err) {
+      console.error("Failed to load surveillance data", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+      return (
+          <div className="h-[60vh] flex flex-col items-center justify-center gap-4">
+              <Loader2 className="w-10 h-10 text-accent animate-spin" />
+              <p className="text-[10px] font-black uppercase tracking-widest text-white/30">Indexing Neural Hubs...</p>
+          </div>
+      );
+  }
 
   return (
-    <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
+    <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-20">
       
       {/* Page Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
-          <h1 className="text-4xl font-black italic uppercase tracking-tighter text-white">
+          <h1 className="text-4xl font-black italic uppercase tracking-tighter text-white font-sans">
             Surveillance <span className="text-accent underline decoration-accent/20 underline-offset-8">Registry</span>
           </h1>
           <p className="text-[11px] font-bold text-white/30 uppercase tracking-[0.4em] mt-3">
@@ -48,9 +76,9 @@ export default function SurveillanceConfig() {
       {/* Stats Quick Grid */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {[
-            { label: 'Active Streams', value: '4/4', icon: Video, color: 'text-accent' },
-            { label: 'Deployed Zones', value: '8', icon: Layers, color: 'text-emerald-400' },
-            { label: 'AI Inference Load', value: '62%', icon: Cpu, color: 'text-amber-400' },
+            { label: 'Active Streams', value: `${cameras.filter(c => c.is_active !== false).length}/${cameras.length}`, icon: Video, color: 'text-accent' },
+            { label: 'Deployed Zones', value: areas.length, icon: Layers, color: 'text-emerald-400' },
+            { label: 'AI Inference Load', value: '42%', icon: Cpu, color: 'text-amber-400' },
         ].map((stat, i) => (
             <div key={i} className="bg-[#0f0f12] border border-white/5 rounded-lg p-6 flex items-center gap-6">
                 <div className={`p-4 bg-white/5 border border-white/10 rounded-lg ${stat.color}`}>
@@ -94,41 +122,48 @@ export default function SurveillanceConfig() {
                     </tr>
                 </thead>
                 <tbody>
-                    {cameras.map((cam) => (
-                        <tr key={cam.id} className="border-b border-white/5 hover:bg-white/[0.03] transition-all group/row">
-                            <td className="py-6 px-8 text-[10px] font-bold text-white/20 italic">#{cam.id.toString().padStart(3, '0')}</td>
-                            <td className="py-6 px-8">
-                                <div className="flex items-center gap-3">
-                                    <div className="w-8 h-8 rounded-lg bg-accent/10 border border-accent/20 flex items-center justify-center">
-                                        <Video className="w-4 h-4 text-accent" />
+                    {cameras.map((cam) => {
+                        const area = areas.find(a => a.id === cam.area_id);
+                        return (
+                            <tr key={cam.id} className="border-b border-white/5 hover:bg-white/[0.03] transition-all group/row font-sans">
+                                <td className="py-6 px-8 text-[10px] font-bold text-white/20 italic">#{cam.id.toString().padStart(3, '0')}</td>
+                                <td className="py-6 px-8">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-8 h-8 rounded-lg bg-accent/10 border border-accent/20 flex items-center justify-center">
+                                            <Video className="w-4 h-4 text-accent" />
+                                        </div>
+                                        <span className="text-sm font-black text-white">{cam.name}</span>
                                     </div>
-                                    <span className="text-sm font-black text-white">{cam.name}</span>
-                                </div>
-                            </td>
-                            <td className="py-6 px-8">
-                                <span className="px-3 py-1 rounded-full bg-white/5 border border-white/10 text-[10px] font-black uppercase tracking-widest text-white/60">
-                                    {cam.zone}
-                                </span>
-                            </td>
-                            <td className="py-6 px-8 text-[10px] font-mono text-white/30">{cam.source}</td>
-                            <td className="py-6 px-8">
-                                <div className="flex items-center gap-2">
-                                    <div className={`w-1.5 h-1.5 rounded-full ${cam.status === 'Online' ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' : 'bg-amber-500 animate-pulse shadow-[0_0_8px_rgba(245,158,11,0.5)]'}`}></div>
-                                    <span className={`text-[10px] font-black uppercase tracking-widest ${cam.status === 'Online' ? 'text-emerald-500' : 'text-amber-500'}`}>{cam.status}</span>
-                                </div>
-                            </td>
-                            <td className="py-6 px-8 text-right">
-                                <div className="flex items-center justify-end gap-2">
-                                    <button className="p-2.5 rounded-lg bg-white/5 border border-white/5 text-white/20 hover:text-white hover:bg-white/10 transition-all">
-                                        <Settings2 className="w-4 h-4" />
-                                    </button>
-                                    <button className="p-2.5 rounded-lg bg-white/5 border border-white/5 text-white/20 hover:text-white hover:bg-white/10 transition-all">
-                                        <MoreVertical className="w-4 h-4" />
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
-                    ))}
+                                </td>
+                                <td className="py-6 px-8">
+                                    <span className="px-3 py-1 rounded-full bg-white/5 border border-white/10 text-[10px] font-black uppercase tracking-widest text-white/60">
+                                        {area ? area.name : `Area-${cam.area_id}`}
+                                    </span>
+                                </td>
+                                <td className="py-6 px-8 text-[10px] font-mono text-white/30 truncate max-w-[200px]" title={cam.rtsp_url}>
+                                    {cam.rtsp_url}
+                                </td>
+                                <td className="py-6 px-8">
+                                    <div className="flex items-center gap-2">
+                                        <div className={`w-1.5 h-1.5 rounded-full ${cam.is_active !== false ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' : 'bg-rose-500 animate-pulse shadow-[0_0_8px_rgba(244,63,94,0.5)]'}`}></div>
+                                        <span className={`text-[10px] font-black uppercase tracking-widest ${cam.is_active !== false ? 'text-emerald-500' : 'text-rose-500'}`}>
+                                            {cam.is_active !== false ? 'Online' : 'Disabled'}
+                                        </span>
+                                    </div>
+                                </td>
+                                <td className="py-6 px-8 text-right">
+                                    <div className="flex items-center justify-end gap-2">
+                                        <button className="p-2.5 rounded-lg bg-white/5 border border-white/5 text-white/20 hover:text-white hover:bg-white/10 transition-all">
+                                            <Settings2 className="w-4 h-4" />
+                                        </button>
+                                        <button className="p-2.5 rounded-lg bg-white/5 border border-white/5 text-white/20 hover:text-white hover:bg-white/10 transition-all">
+                                            <MoreVertical className="w-4 h-4" />
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        );
+                    })}
                 </tbody>
             </table>
          </div>

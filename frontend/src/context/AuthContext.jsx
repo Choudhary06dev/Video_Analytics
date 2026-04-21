@@ -1,6 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import axios from 'axios';
-import { BASE } from '../api';
+import { fetchPermissions as apiFetchPermissions } from '../services/authService';
 
 const AuthContext = createContext();
 
@@ -16,10 +15,8 @@ export const AuthProvider = ({ children }) => {
       return;
     }
     try {
-      const res = await axios.get(`${BASE}/auth/permissions`, {
-        headers: { Authorization: `Bearer ${activeToken}` }
-      });
-      setPermissions(res.data?.permissions || {});
+      const data = await apiFetchPermissions();
+      setPermissions(data?.permissions || {});
     } catch (err) {
       setPermissions({});
     }

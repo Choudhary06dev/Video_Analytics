@@ -1,10 +1,10 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Camera, Shield, Activity, ArrowRight } from 'lucide-react';
-import { APP_CONFIG } from '../config';
+import { APP_CONFIG } from '../../config';
 
 // Import isolated frontend CSS
-import '../assets/frontend.css';
+import '../../assets/frontend.css';
 
 export default function FrontendHome() {
   return (

@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
-import KPICards from '../components/dashboard/KPICards';
-import CameraGrid from '../components/dashboard/CameraGrid';
-import AnalyticsChart from '../components/dashboard/AnalyticsChart';
-import ConfidencePanel from '../components/dashboard/ConfidencePanel';
-import NeuralStream from '../components/dashboard/NeuralStream';
-import FacilityHeatmap from '../components/dashboard/FacilityHeatmap';
-import PerformanceMetrics from '../components/dashboard/PerformanceMetrics';
+import KPICards from '../components/ui/KPICards';
+import CameraGrid from '../components/camera/CameraGrid';
+import AnalyticsChart from '../components/charts/AnalyticsChart';
+import ConfidencePanel from '../components/ui/ConfidencePanel';
+import NeuralStream from '../components/camera/NeuralStream';
+import FacilityHeatmap from '../components/charts/FacilityHeatmap';
+import PerformanceMetrics from '../components/charts/PerformanceMetrics';
 import { RefreshCw } from 'lucide-react';
 
 export default function Dashboard() {

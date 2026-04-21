@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { fetchIntelligence, fetchLogs, fetchLogsSummary, EVENTS_URL, VIDEO_FEED_URL } from '../api';
+import { fetchIntelligence, fetchAdminCameras, getStreamUrl } from '../services/cameraService';
+import { fetchLogs, fetchLogsSummary, subscribeToEvents } from '../services/alertService';
+import { EVENTS_URL, VIDEO_FEED_URL } from '../services/api';
 import {
   Radio,
   Shield,
@@ -46,8 +48,7 @@ const SCENARIO_UI = {
   'Parking Zone Detected': { icon: Car, color: 'text-blue-500', bg: 'bg-blue-500/10' },
   'Default': { icon: Target, color: 'text-slate-400', bg: 'bg-slate-400/10' }
 };
-import CameraFeed from '../components/dashboard/CameraFeed';
-import { fetchAdminCameras } from '../api';
+import CameraFeed from '../components/camera/CameraFeed';
 
 export default function NeuralStream() {
   const [logs, setLogs] = useState([]);

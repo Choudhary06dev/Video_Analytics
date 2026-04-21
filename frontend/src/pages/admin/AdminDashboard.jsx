@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import { BASE } from '../../api';
+import { fetchAdminUsers } from '../../services/userService';
+import { fetchLogs } from '../../services/alertService';
 import { useAuth } from '../../context/AuthContext';
 import { 
   Users, 
@@ -61,20 +61,20 @@ export default function AdminDashboard() {
 
   const fetchAdminStats = async () => {
     try {
-      const [usersRes, logsRes] = await Promise.all([
-        axios.get(`${BASE}/admin/users`, { headers: { Authorization: `Bearer ${token}` } }),
-        axios.get(`${BASE}/logs?hours=24`, { headers: { Authorization: `Bearer ${token}` } })
+      const [usersData, logsData] = await Promise.all([
+        fetchAdminUsers(),
+        fetchLogs({ hours: 24 })
       ]);
 
       setStats({
-        totalUsers: usersRes.data.length,
-        totalDetections: logsRes.data.length,
+        totalUsers: usersData.length,
+        totalDetections: logsData.length,
         activeCameras: 4,
-        criticalAlerts: logsRes.data.filter(l => l.severity === 'Critical').length,
+        criticalAlerts: logsData.filter(l => l.severity === 'Critical').length,
       });
       setLoading(false);
     } catch (err) {
-      console.error("Failed to fetch admin stats", err);
+      console.error("Failed to fetch admin stats", err.message);
       setLoading(false);
     }
   };

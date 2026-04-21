@@ -1,0 +1,45 @@
+from fastapi import FastAPI, HTTPException, Depends
+from fastapi.responses import StreamingResponse
+import asyncio
+import json
+from pipelines.inference import InferenceEngine
+from typing import Dict
+
+app = FastAPI(title="AI Inference Service")
+
+active_engines: Dict[int, InferenceEngine] = {}
+
+async def get_engine(camera_id: int, source: str) -> InferenceEngine:
+    if camera_id not in active_engines:
+        active_engines[camera_id] = InferenceEngine(camera_id, source)
+    return active_engines[camera_id]
+
+@app.get("/stream/{camera_id}")
+async def stream_camera(camera_id: int, source: str):
+    engine = await get_engine(camera_id, source)
+    
+    async def frame_generator():
+        while True:
+            frame_bytes, events = engine.process_frame()
+            # In a real microservice, we would send 'events' to a message broker (Redis/RabbitMQ) 
+            # or provide an endpoint for the backend to poll.
+            # For simplicity, we'll just stream the video for now.
+            yield (
+                b"--frame\r\n"
+                b"Content-Type: image/jpeg\r\n\r\n"
+                + frame_bytes
+                + b"\r\n\r\n"
+            )
+            await asyncio.sleep(0.1)
+
+    return StreamingResponse(frame_generator(), media_type="multipart/x-mixed-replace; boundary=frame")
+
+@app.get("/intelligence/{camera_id}")
+async def get_intelligence(camera_id: int):
+    if camera_id not in active_engines:
+        raise HTTPException(status_code=404, detail="Camera engine not active")
+    return active_engines[camera_id].latest_intelligence
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8001)

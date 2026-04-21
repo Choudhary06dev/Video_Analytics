@@ -4,9 +4,8 @@ import {
   Shield, Mail, Lock, User, Loader2, 
   ShieldCheck, Globe, Activity, Cpu, Zap, Database 
 } from 'lucide-react';
-import axios from 'axios';
-import { BASE } from '../api';
-import authBg from '../assets/auth-bg.png';
+import { register as apiRegister } from '../../services/authService';
+import authBg from '../../assets/auth-bg.png';
 
 export default function RegisterPage() {
   const [formData, setFormData] = useState({
@@ -37,16 +36,16 @@ export default function RegisterPage() {
     }
     
     try {
-      await axios.post(`${BASE}/auth/register`, {
-        full_name: formData.fullName,
-        email: formData.email,
-        password: formData.password
-      });
+      await apiRegister(
+        formData.fullName,
+        formData.email,
+        formData.password
+      );
       
       setSuccess(true);
       setTimeout(() => navigate('/login'), 2000);
     } catch (err) {
-      setError(err.response?.data?.detail || 'Identity Initialization Refused. Connection Terminated.');
+      setError(err.message || 'Identity Initialization Refused. Connection Terminated.');
     } finally {
       setLoading(false);
     }
