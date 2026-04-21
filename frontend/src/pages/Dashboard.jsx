@@ -6,11 +6,9 @@ import ConfidencePanel from '../components/dashboard/ConfidencePanel';
 import NeuralStream from '../components/dashboard/NeuralStream';
 import FacilityHeatmap from '../components/dashboard/FacilityHeatmap';
 import PerformanceMetrics from '../components/dashboard/PerformanceMetrics';
-import AreaSidebar from '../components/dashboard/AreaSidebar';
 import { RefreshCw } from 'lucide-react';
 
 export default function Dashboard() {
-  const [selectedAreaId, setSelectedAreaId] = useState(null);
 
   const handleRefresh = () => {
     window.location.reload();
@@ -18,9 +16,6 @@ export default function Dashboard() {
 
   return (
     <div className="flex h-screen overflow-hidden bg-background">
-      {/* 1. Lateral Navigation: Area Hierarchy */}
-      <AreaSidebar onSelectArea={setSelectedAreaId} />
-
       {/* 2. Main Scrollable Content */}
       <div className="flex-1 overflow-y-auto custom-scrollbar bg-background/50">
         <div className="flex flex-col gap-0 pb-20 max-w-[1500px] mx-auto pt-6 px-6">
@@ -33,7 +28,7 @@ export default function Dashboard() {
             <div>
               <h2 className="text-[1.8rem] font-black text-text-dark mb-1 tracking-tight uppercase">Command Hub</h2>
               <div className="text-[0.9rem] text-text-gray font-semibold flex items-center gap-2">
-                {selectedAreaId ? `Monitoring Zone ID: ${selectedAreaId}` : "Global Facility Intelligence"}
+                Global Facility Intelligence
                 <span className="w-1 h-1 bg-text-gray rounded-full opacity-30" />
                 V2.0.0-PRO
               </div>
@@ -54,7 +49,7 @@ export default function Dashboard() {
           </div>
 
           {/* Live Video Feeds (Filtered by Area) */}
-          <CameraGrid selectedAreaId={selectedAreaId} />
+          <CameraGrid />
 
           {/* Real-time Analytics & Confidence Panel */}
           <div className="grid lg:grid-cols-3 gap-8 mt-8">
