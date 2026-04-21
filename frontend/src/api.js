@@ -5,16 +5,17 @@
  */
 
 export const BASE = "http://localhost:8000";
-export const VIDEO_FEED_URL = `${BASE}/video_feed`;
 export const EVENTS_URL = `${BASE}/events`;
+export const VIDEO_FEED_URL = `${BASE}/video_feed`;
+
+// ─── admin ──────────────────────────────────────────────────────────────────
+export const fetchAdminAreas = () => get("/admin/areas");
+export const fetchAdminCameras = () => get("/admin/cameras");
 
 // ─── helpers ───────────────────────────────────────────────────────────────
 
 async function get(path, params = {}) {
   const url = new URL(BASE + path);
-  // Add cache buster by default
-  params.t = Date.now();
-  
   Object.entries(params).forEach(([k, v]) => {
     if (v !== undefined && v !== null) url.searchParams.set(k, v);
   });
@@ -31,27 +32,23 @@ export const fetchIntelligence = () => get("/intelligence");
 
 /**
  * @param {object} opts
- * @param {number} [opts.hours=24]
- * @param {number} [opts.camera_id]
- * @param {string} [opts.object_class]
- * @param {string} [opts.severity]
- * @param {number} [opts.limit=200]
- * @param {number} [opts.skip=0]
+ * @param {number}  [opts.hours=24]
+ * @param {string}  [opts.objectClass]
+ * @param {string}  [opts.severity]   "critical" | "warning" | "info"
+ * @param {number}  [opts.limit=200]
  */
 export const fetchLogs = (opts = {}) =>
   get("/logs", {
-    hours:        opts.hours        ?? 24,
-    camera_id:    opts.camera_id    ?? undefined,
-    object_class: opts.object_class ?? undefined,
-    severity:     opts.severity     ?? undefined,
-    limit:        opts.limit        ?? 200,
-    skip:         opts.skip         ?? 0,
+    hours: opts.hours ?? 24,
+    object_class: opts.objectClass ?? undefined,
+    severity: opts.severity ?? undefined,
+    limit: opts.limit ?? 200,
   });
 
-export const fetchLogsSummary = (hours = 24, cameraId = undefined) =>
-  get("/logs/summary", { hours, camera_id: cameraId });
+export const fetchLogsSummary = (hours = 24) =>
+  get("/logs/summary", { hours });
 
-// ─── alerts ────────────────────────────────────────────────────────────────
+// ─── alerts ─────────────────────────────────────────────
 
 /**
  * @param {object} opts
@@ -61,9 +58,9 @@ export const fetchLogsSummary = (hours = 24, cameraId = undefined) =>
  */
 export const fetchAlerts = (opts = {}) =>
   get("/alerts", {
-    hours:    opts.hours    ?? 24,
+    hours: opts.hours ?? 24,
     severity: opts.severity ?? undefined,
-    limit:    opts.limit    ?? 100,
+    limit: opts.limit ?? 100,
   });
 
 // ─── health ────────────────────────────────────────────────────────────────
@@ -93,11 +90,11 @@ export function subscribeToEvents({ onSnapshot, onDetection, onError }) {
   const es = new EventSource(`${BASE}/events`);
 
   es.addEventListener("snapshot", (e) => {
-    try { onSnapshot?.(JSON.parse(e.data)); } catch {}
+    try { onSnapshot?.(JSON.parse(e.data)); } catch { }
   });
 
   es.addEventListener("detection", (e) => {
-    try { onDetection?.(JSON.parse(e.data)); } catch {}
+    try { onDetection?.(JSON.parse(e.data)); } catch { }
   });
 
   es.onerror = (err) => {
@@ -107,7 +104,7 @@ export function subscribeToEvents({ onSnapshot, onDetection, onError }) {
   return () => es.close();
 }
 
-// ─── auth ──────────────────────────────────────────────────────────────────
+// ─── auth ──────────
 
 export async function login(email, password) {
   const res = await fetch(`${BASE}/auth/login`, {

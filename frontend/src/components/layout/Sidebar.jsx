@@ -34,12 +34,12 @@ export default function Sidebar({ isSidebarOpen }) {
   ];
 
   const adminMenu = [
-    { name: 'Admin Hub', icon: ShieldAlert, path: '/admin-hub', reqRole: 'super_admin' }
+    { name: 'Admin Hub', icon: ShieldAlert, path: '/admin-hub', reqRole: 'admin_level' }
   ];
 
   const renderNavLinks = (items) => (
     <ul className="flex flex-col gap-1">
-      {items.filter(item => !item.reqRole || (item.reqRole === 'super_admin' && role === 'super_admin')).map((item, index) => (
+      {items.filter(item => !item.reqRole || (item.reqRole === 'admin_level' && (role === 'super_admin' || role === 'admin'))).map((item, index) => (
         <li key={index}>
           <NavLink
             to={item.path}
@@ -91,7 +91,7 @@ export default function Sidebar({ isSidebarOpen }) {
           {renderNavLinks(analyticsMenu)}
         </div>
 
-        {role === 'super_admin' && (
+        {(role === 'super_admin' || role === 'admin') && (
           <div className="mt-4 border-t border-danger/10 pt-4">
             <div className={`text-[0.65rem] text-danger/80 font-black uppercase tracking-[2px] mb-2 px-2.5 flex items-center gap-2 ${!isSidebarOpen && 'md:hidden'}`}>
                 <div className="w-1.5 h-1.5 bg-danger rounded-full animate-pulse"></div>

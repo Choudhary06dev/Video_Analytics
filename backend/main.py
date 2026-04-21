@@ -16,7 +16,7 @@ from ultralytics import YOLO
 
 from config import settings
 from database import engine, get_session, init_db
-from models import DetectionEvent, Role, User
+from models import DetectionEvent, Role, User, ModulePermission, AIScenario, RoleModulePermission, Area, Camera, CameraScenarioAssignment
 from security import (
     create_access_token,
     decode_access_token,
@@ -26,27 +26,90 @@ from security import (
 )
 
 
-def init_roles():
+def init_system_data():
+    """
+    Seeds initial roles, modules, and AI scenarios.
+    """
     with Session(engine) as session:
-        roles = ["super_admin", "admin", "operator"]
-        for idx, role_name in enumerate(roles, start=1):
-            existing = session.get(Role, idx)
+        # 1. Seed Roles
+        roles = {
+            1: ("super_admin", "Full system access and configuration"),
+            2: ("admin", "Hospital-wide management and surveillance"),
+            3: ("operator", "Real-time monitoring and alert response")
+        }
+        for idx, (name, desc) in roles.items():
+            db_role = session.get(Role, idx)
+            if not db_role:
+                session.add(Role(id=idx, name=name, description=desc))
+        
+        # 2. Seed Modules
+        modules = [
+            ("Dashboard", "dashboard"),
+            ("Live Monitoring", "live_monitoring"),
+            ("AI Scenarios", "scenarios"),
+            ("Activity Vault", "vault"),
+            ("Alerts", "alerts"),
+            ("System Health", "health"),
+            ("Admin Hub", "admin_hub"),
+            ("Staff Roster", "roster"),
+            ("Settings", "settings"),
+        ]
+        db_modules = {}
+        for name, key in modules:
+            stmt = select(ModulePermission).where(ModulePermission.key == key)
+            mod = session.exec(stmt).first()
+            if not mod:
+                mod = ModulePermission(name=name, key=key)
+                session.add(mod)
+                session.commit()
+                session.refresh(mod)
+            db_modules[key] = mod.id
+
+        # 3. Seed AI Scenarios
+        scenarios = [
+            ("Unauthorized restricted area entry", "restricted_entry", "Critical"),
+            ("Aggressive behavior", "aggression", "Critical"),
+            ("Weapon detection (gun/knife)", "weapon_threat", "Critical"),
+            ("Tailgating / Multiple entry", "tailgating", "High"),
+            ("Blacklisted person alert", "blacklist_face", "Critical"),
+            ("Overcrowding detection", "crowd_density", "High"),
+            ("Visitor count limit exceeded", "visitor_limit", "Medium"),
+            ("Visitor tracking", "visitor_tracking", "Low"),
+            ("Staff absence at post", "staff_absence", "High"),
+            ("Mobile phone usage - restricted", "mobile_restricted", "Medium"),
+            ("Fire / smoke detection", "fire_smoke", "Critical"),
+            ("Vehicle tracking", "vehicle_tracking", "Low"),
+            ("Unauthorized parking / blockage", "parking_violation", "Medium"),
+            ("Camera/Recording failure", "system_failure", "High"),
+            ("Baby outside route", "baby_movement", "Critical"),
+            ("Unauthorized baby handling", "baby_handling", "Critical"),
+            ("Baby unattended", "baby_unattended", "Critical"),
+            ("Unauthorized patient exit", "patient_exit", "High"),
+            ("Night attendant limit exceeded", "night_limit", "Medium"),
+            ("Closed department movement", "closed_dept_movement", "High"),
+            ("Boundary intrusion", "boundary_climb", "High"),
+        ]
+        for name, key, severity in scenarios:
+            stmt = select(AIScenario).where(AIScenario.key == key)
+            existing = session.exec(stmt).first()
             if not existing:
-                session.add(Role(id=idx, name=role_name))
+                session.add(AIScenario(name=name, key=key, default_severity=severity))
+
         session.commit()
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    # 1. Initialize DB tables
     init_db()
-    init_roles()
-    # Initialize camera on startup
-    global camera
-    camera = VideoCamera()
+    # 2. Seed initial roles, modules, and AI scenarios
+    init_system_data()
+    # 3. Cache scenarios for AI engine
+    refresh_scenario_cache()
     yield
-    # Cleanup on shutdown
-    if camera:
-        camera.release()
+    # 4. Cleanup all cameras on shutdown
+    for cam in active_cameras.values():
+        cam.release()
 
 
 app = FastAPI(lifespan=lifespan)
@@ -183,16 +246,25 @@ latest_intelligence = {
     "last_update": 0.0
 }
 
+# Cached AI Scenarios for logic performance
+SCENARIO_CACHE: Dict[str, dict] = {}
+
+def refresh_scenario_cache():
+    global SCENARIO_CACHE
+    with Session(engine) as session:
+        scenarios = session.exec(select(AIScenario)).all()
+        SCENARIO_CACHE = {s.key: {"name": s.name, "severity": s.default_severity} for s in scenarios}
+
 class VideoCamera:
-    def __init__(self):
-        source = settings.CAMERA_SOURCE
+    def __init__(self, camera_id: int, source):
         if isinstance(source, str) and source.isdigit():
             source = int(source)
+        self.camera_id = camera_id
         self.source = source
         self.video = cv2.VideoCapture(self.source)
         self.last_log_time = 0.0
         self.scene_state = {}
-        self.placeholder_frame = self._build_placeholder_frame("NO SIGNAL")
+        self.placeholder_frame = self._build_placeholder_frame(f"CAMERA {camera_id} - NO SIGNAL")
 
     def _build_placeholder_frame(self, message: str) -> bytes:
         frame = np.zeros((360, 640, 3), dtype=np.uint8)
@@ -212,12 +284,22 @@ class VideoCamera:
         if self.video is not None and self.video.isOpened():
             self.video.release()
 
-    def log_detection(self, object_class: str, confidence: float, metadata: dict):
+    def log_detection(self, scenario_key: str, confidence: float, metadata: dict):
         with Session(engine) as session:
+            # Use cached scenario info
+            scenario_info = SCENARIO_CACHE.get(scenario_key, {"name": scenario_key, "severity": "Low"})
+            severity = scenario_info["severity"]
+            
+            # Profession alert logic: Critical and High severity trigger 'is_alert'
+            is_alert = severity in ["Critical", "High"]
+            
             event = DetectionEvent(
-                camera_id=1,
-                object_class=object_class,
+                camera_id=self.camera_id,
+                scenario_key=scenario_key,
+                object_class=metadata.get("raw_labels", ["unknown"])[0],
                 confidence=float(confidence),
+                severity=severity,
+                is_alert=is_alert,
                 metadata_json=metadata,
             )
             session.add(event)
@@ -380,13 +462,35 @@ class VideoCamera:
         return jpeg.tobytes() if ret else self.placeholder_frame
 
 
-camera = None  # Will be initialized in lifespan
+# --- CAMERA MANAGEMENT ---
+
+active_cameras: Dict[int, VideoCamera] = {}
+
+async def get_camera_instance(camera_id: int, session: Session) -> VideoCamera:
+    """
+    Returns an existing camera instance or creates a new one from DB source.
+    """
+    if camera_id in active_cameras:
+        return active_cameras[camera_id]
+    
+    camera_data = session.get(Camera, camera_id)
+    if not camera_data:
+        raise HTTPException(status_code=404, detail=f"Camera {camera_id} not found")
+    
+    new_cam = VideoCamera(camera_id=camera_id, source=camera_data.source_url)
+    active_cameras[camera_id] = new_cam
+    return new_cam
 
 
-async def gen(camera):
+# --- STREAMING GENERATORS ---
+
+async def gen(camera_instance: VideoCamera):
+    """
+    Video frame generator for a specific physical camera.
+    """
     while True:
         try:
-            frame = camera.get_frame()
+            frame = camera_instance.get_frame()
             if frame is None:
                 await asyncio.sleep(1)
                 continue
@@ -397,16 +501,17 @@ async def gen(camera):
                 + frame
                 + b"\r\n\r\n"
             )
-            await asyncio.sleep(0.1)  # Small delay to prevent overwhelming the client
+            await asyncio.sleep(0.1)
         except asyncio.CancelledError:
-            # Handle cancellation gracefully
             break
         except Exception as e:
-            print(f"Error in video feed: {e}")
+            print(f"Error in video feed {camera_instance.camera_id}: {e}")
             await asyncio.sleep(1)
 
-
 async def event_generator():
+    """
+    Broadcasts the latest global intelligence state via Server-Sent Events.
+    """
     last_update = 0.0
     while True:
         try:
@@ -415,7 +520,6 @@ async def event_generator():
                 yield f"data: {json.dumps(latest_intelligence)}\n\n"
             await asyncio.sleep(0.25)
         except asyncio.CancelledError:
-            # Handle cancellation gracefully
             break
         except Exception as e:
             print(f"Error in event stream: {e}")
@@ -424,36 +528,67 @@ async def event_generator():
 
 @app.get("/")
 def read_root():
-    return {"status": "AI Analytics Backend Online", "ai_model": "YOLOv8 Nano"}
+    return {
+        "status": "Hospital AI Surveillance Online",
+        "version": "2.0.0-PRO",
+        "engine": "FastAPI + YOLOv8",
+        "timestamp": datetime.now().isoformat()
+    }
 
-
-@app.get("/video_feed")
-async def video_feed():
-    if camera is None:
-        raise HTTPException(status_code=503, detail="Camera not initialized")
+@app.get("/video_feed/{camera_id}")
+async def video_feed(camera_id: int, session: Session = Depends(get_session)):
+    """
+    Direct MJPEG stream for a specific camera.
+    """
+    camera_instance = await get_camera_instance(camera_id, session)
     return StreamingResponse(
-        gen(camera),
+        gen(camera_instance),
         media_type="multipart/x-mixed-replace; boundary=frame",
     )
 
-
 @app.get("/intelligence")
 def get_intelligence():
+    """
+    Global real-time intelligence state (aggregated).
+    """
     return latest_intelligence
-
 
 @app.get("/events")
 async def event_stream():
+    """
+    Real-time event stream for the dashboard.
+    """
     return StreamingResponse(event_generator(), media_type="text/event-stream")
-
 
 @app.get("/health")
 def health_check():
+    """
+    System health diagnostics.
+    """
     return {
         "status": "healthy",
+        "active_streams": len(active_cameras),
         "model_loaded": model is not None,
-        "camera_open": camera.video.isOpened() if camera and camera.video else False,
+        "uptime": "normal"
     }
+
+
+@app.get("/alerts")
+def get_alerts(hours: float = 24.0, severity: Optional[str] = None, limit: int = 100, session: Session = Depends(get_session)):
+    """
+    Fetch high-priority detection events flagged as alerts.
+    """
+    cutoff = datetime.now() - timedelta(hours=hours)
+    statement = select(DetectionEvent).where(
+        DetectionEvent.timestamp >= cutoff,
+        DetectionEvent.is_alert == True
+    )
+    
+    if severity:
+        statement = statement.where(DetectionEvent.severity == severity)
+        
+    statement = statement.order_by(DetectionEvent.timestamp.desc()).limit(limit)
+    return session.exec(statement).all()
 
 
 @app.get("/logs")
@@ -539,6 +674,27 @@ def get_logs_summary(hours: float = 24.0, camera_id: Optional[int] = None, sessi
     }
 
 
+# --- MODELS FOR ADMIN ENDPOINTS ---
+
+class AreaCreate(BaseModel):
+    name: str
+    description: Optional[str] = None
+    parent_id: Optional[int] = None
+
+class AreaUpdate(BaseModel):
+    name: Optional[str] = None
+    description: Optional[str] = None
+    parent_id: Optional[int] = None
+
+class CameraCreate(BaseModel):
+    name: str
+    source_url: str
+    area_id: int
+
+class ScenarioToggle(BaseModel):
+    scenario_id: int
+    is_enabled: bool
+
 # --- AUTHENTICATION ENDPOINTS ---
 
 class UserRegister(BaseModel):
@@ -617,8 +773,13 @@ def verify_super_admin(current_user: dict = Depends(get_current_user)):
         raise HTTPException(status_code=403, detail="Forbidden: Super Admin access required")
     return current_user
 
+def verify_admin_access(current_user: dict = Depends(get_current_user)):
+    if current_user.get("role") not in ["super_admin", "admin"]:
+        raise HTTPException(status_code=403, detail="Forbidden: Admin access level required")
+    return current_user
+
 @app.get("/admin/users")
-def get_all_users(session: Session = Depends(get_session), admin_data: dict = Depends(verify_super_admin)):
+def get_all_users(session: Session = Depends(get_session), admin_data: dict = Depends(verify_admin_access)):
     users = session.exec(select(User)).all()
     result = []
     for u in users:
@@ -738,6 +899,130 @@ def delete_user(user_id: int, session: Session = Depends(get_session), admin_dat
     session.delete(user)
     session.commit()
     return {"message": "User deleted successfully"}
+
+
+# --- ADMIN: AREA MANAGEMENT ---
+
+@app.get("/admin/areas")
+def get_areas(session: Session = Depends(get_session), admin_data: dict = Depends(verify_admin_access)):
+    """
+    Returns all areas. (Future enhancement: return as a tree).
+    """
+    areas = session.exec(select(Area)).all()
+    return areas
+
+@app.post("/admin/areas")
+def create_area(area_data: AreaCreate, session: Session = Depends(get_session), admin_data: dict = Depends(verify_super_admin)):
+    """
+    Creates a new area, optionally under a parent area.
+    """
+    if area_data.parent_id:
+        parent = session.get(Area, area_data.parent_id)
+        if not parent:
+            raise HTTPException(status_code=400, detail="Parent area not found")
+            
+    new_area = Area(
+        name=area_data.name,
+        description=area_data.description,
+        parent_id=area_data.parent_id
+    )
+    session.add(new_area)
+    session.commit()
+    session.refresh(new_area)
+    return new_area
+
+@app.put("/admin/areas/{area_id}")
+def update_area(area_id: int, area_data: AreaUpdate, session: Session = Depends(get_session), admin_data: dict = Depends(verify_super_admin)):
+    area = session.get(Area, area_id)
+    if not area:
+        raise HTTPException(status_code=404, detail="Area not found")
+        
+    if area_data.name:
+        area.name = area_data.name
+    if area_data.description:
+        area.description = area_data.description
+    if area_data.parent_id is not None:
+        if area_data.parent_id == area_id:
+            raise HTTPException(status_code=400, detail="An area cannot be its own parent")
+        area.parent_id = area_data.parent_id if area_data.parent_id != 0 else None
+        
+    session.add(area)
+    session.commit()
+    session.refresh(area)
+    return area
+
+@app.delete("/admin/areas/{area_id}")
+def delete_area(area_id: int, session: Session = Depends(get_session), admin_data: dict = Depends(verify_super_admin)):
+    area = session.get(Area, area_id)
+    if not area:
+        raise HTTPException(status_code=404, detail="Area not found")
+        
+    # Check for children
+    children = session.exec(select(Area).where(Area.parent_id == area_id)).all()
+    if children:
+        raise HTTPException(status_code=400, detail="Cannot delete an area that has sub-areas. Delete or move children first.")
+        
+    # Check for cameras
+    if area.cameras:
+        raise HTTPException(status_code=400, detail="Cannot delete an area that has cameras assigned to it.")
+        
+    session.delete(area)
+    session.commit()
+    return {"message": "Area deleted successfully"}
+
+
+# --- ADMIN: CAMERA MANAGEMENT ---
+
+@app.get("/admin/cameras")
+def get_cameras(session: Session = Depends(get_session), admin_data: dict = Depends(verify_admin_access)):
+    cameras = session.exec(select(Camera)).all()
+    return cameras
+
+@app.post("/admin/cameras")
+def create_camera(camera_data: CameraCreate, session: Session = Depends(get_session), admin_data: dict = Depends(verify_super_admin)):
+    area = session.get(Area, camera_data.area_id)
+    if not area:
+        raise HTTPException(status_code=400, detail="Assigned Area not found")
+        
+    new_camera = Camera(
+        name=camera_data.name,
+        source_url=camera_data.source_url,
+        area_id=camera_data.area_id
+    )
+    session.add(new_camera)
+    session.commit()
+    session.refresh(new_camera)
+    return new_camera
+
+@app.put("/admin/cameras/{camera_id}/scenarios")
+def toggle_camera_scenario(camera_id: int, toggle: ScenarioToggle, session: Session = Depends(get_session), admin_data: dict = Depends(verify_super_admin)):
+    camera = session.get(Camera, camera_id)
+    if not camera:
+        raise HTTPException(status_code=404, detail="Camera not found")
+        
+    scenario = session.get(AIScenario, toggle.scenario_id)
+    if not scenario:
+        raise HTTPException(status_code=400, detail="AI Scenario not found")
+        
+    # Check if assignment exists
+    stmt = select(CameraScenarioAssignment).where(
+        CameraScenarioAssignment.camera_id == camera_id,
+        CameraScenarioAssignment.scenario_id == toggle.scenario_id
+    )
+    assignment = session.exec(stmt).first()
+    
+    if assignment:
+        assignment.is_enabled = toggle.is_enabled
+    else:
+        assignment = CameraScenarioAssignment(
+            camera_id=camera_id,
+            scenario_id=toggle.scenario_id,
+            is_enabled=toggle.is_enabled
+        )
+        
+    session.add(assignment)
+    session.commit()
+    return {"message": f"Scenario '{scenario.name}' {'enabled' if toggle.is_enabled else 'disabled'} for camera '{camera.name}'"}
 
 if __name__ == "__main__":
     import uvicorn

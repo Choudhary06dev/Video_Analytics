@@ -48,8 +48,8 @@ function App() {
               </Route>
             </Route>
 
-            {/* Super Admin Restricted Routes */}
-            <Route element={<ProtectedRoute allowedRoles={['super_admin']} />}>
+            {/* Admin Restricted Routes */}
+            <Route element={<ProtectedRoute allowedRoles={['super_admin', 'admin']} />}>
               <Route element={<AppLayout />}>
                 <Route path="/admin-hub" element={<AdminHub />} />
               </Route>

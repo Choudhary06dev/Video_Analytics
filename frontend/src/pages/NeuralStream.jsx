@@ -47,21 +47,14 @@ const SCENARIO_UI = {
   'Default': { icon: Target, color: 'text-slate-400', bg: 'bg-slate-400/10' }
 };
 import CameraFeed from '../components/dashboard/CameraFeed';
-
-const CAMERAS = [
-  { id: '01', status: 'bg-emerald-500', img: 'https://images.unsplash.com/photo-1558002038-1055907df827', name: 'ICU ENTRANCE' },
-  { id: '02', status: 'bg-emerald-500', img: 'https://images.unsplash.com/photo-1516549655169-df83a0774514', name: 'MAIN RECEPTION' },
-  { id: '03', status: 'bg-emerald-500', img: 'https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d', name: 'EMERGENCY BAY' },
-  { id: '04', status: 'bg-emerald-500', img: 'https://images.unsplash.com/photo-1551076805-e1869033e561', name: 'SUPPLY CLOSET' },
-  { id: '05', status: 'bg-emerald-500', img: 'https://images.unsplash.com/photo-1516574187841-cb9cc2ca948b', name: 'LAB SECTOR A' },
-  { id: '06', status: 'bg-emerald-500', img: 'https://images.unsplash.com/photo-1553413077-190dd305871c', name: 'NORTH PERIMETER' },
-];
+import { fetchAdminCameras } from '../api';
 
 export default function NeuralStream() {
   const [logs, setLogs] = useState([]);
-  const [activeCamera, setActiveCamera] = useState('01');
-  const [isGlobalView, setIsGlobalView] = useState(false);
-  const [highlightCam, setHighlightCam] = useState(null); // eslint-disable-line no-unused-vars
+  const [cameras, setCameras] = useState([]);
+  const [activeCamera, setActiveCamera] = useState(null);
+  const [isGlobalView, setIsGlobalView] = useState(true);
+  const [gridSize, setGridSize] = useState(3); // 2x2 (2), 3x3 (3), 4x4 (4)
   const [intel, setIntel] = useState({ person_count: 0, objects: [], stable_objects: [] });
   const [filterHours, setFilterHours] = useState(1);
   const [logsOffset, setLogsOffset] = useState(0);
@@ -78,56 +71,60 @@ export default function NeuralStream() {
   const [loadingLogs, setLoadingLogs] = useState(false);
   const [streamConnected, setStreamConnected] = useState(false);
 
+  useEffect(() => {
+    loadCameras();
+  }, []);
+
+  const loadCameras = async () => {
+    try {
+      const data = await fetchAdminCameras();
+      setCameras(data || []);
+      if (data && data.length > 0 && !activeCamera) {
+          // If we want a default selected camera, we could do it here
+      }
+    } catch (err) {
+      console.error('Failed to load cameras:', err);
+    }
+  };
+
   const fetchLogsData = useCallback(async (showSpinner = false) => {
     if (showSpinner) setLoadingLogs(true);
     try {
-      const camId = isGlobalView ? undefined : parseInt(activeCamera);
+      const camId = isGlobalView ? undefined : activeCamera;
       const logsData = await fetchLogs({ hours: filterHours, camera_id: camId, limit: PAGE_SIZE, skip: logsOffset });
 
       if (Array.isArray(logsData)) {
-        const logsData2 = logsData;
-        if (Array.isArray(logsData2)) {
-          setLogs(logsData2.slice(0, 50).map(log => {
-            const scenario = SCENARIO_UI[log.object_class] || SCENARIO_UI['Default'];
-            const isAlert = log.metadata_json?.is_alert || false;
-            const detail = log.metadata_json?.detail || log.object_class.toUpperCase();
+        setLogs(logsData.slice(0, 50).map(log => {
+          const scenario = SCENARIO_UI[log.scenario_key] || SCENARIO_UI['Default'];
+          const isAlert = log.is_alert || false;
+          const detail = log.metadata_json?.detail || log.scenario_key.toUpperCase();
 
-            // Calculate elapsed time
-            const logDate = new Date(log.timestamp);
-            const now = new Date();
-            const diffMs = Math.max(0, now - logDate);
-            const diffMins = Math.floor(diffMs / 60000);
-            const diffHrs = Math.floor(diffMins / 60);
-            let timeAgo = '';
-            if (diffMins < 1) timeAgo = 'Just now';
-            else if (diffMins < 60) timeAgo = `${diffMins}m ago`;
-            else timeAgo = `${diffHrs}h ${diffMins % 60}m ago`;
+          const logDate = new Date(log.timestamp);
+          const now = new Date();
+          const diffMs = Math.max(0, now - logDate);
+          const diffMins = Math.floor(diffMs / 60000);
+          const diffHrs = Math.floor(diffMins / 60);
+          let timeAgo = '';
+          if (diffMins < 1) timeAgo = 'Just now';
+          else if (diffMins < 60) timeAgo = `${diffMins}m ago`;
+          else timeAgo = `${diffHrs}h ${diffMins % 60}m ago`;
 
-            // Determine severity
-            let severity = 'LOW';
-            if (isAlert) severity = 'CRITICAL';
-            else if (log.confidence > 0.8 || log.object_class.includes('Vehicle') || log.object_class.includes('Unattended')) severity = 'HIGH';
-            else if (log.confidence > 0.6) severity = 'MEDIUM';
-
-            const eventId = `EVT-${logDate.getTime().toString().slice(-6)}-${log.id}`;
-
-            return {
-              id: log.id,
-              eventId: eventId,
-              type: detail,
-              icon: scenario.icon,
-              color: scenario.color,
-              bg: isAlert ? 'bg-rose-500/20' : scenario.bg,
-              iconColor: isAlert ? 'text-rose-600' : scenario.color,
-              isAlert: isAlert,
-              camera: `CAM-${log.camera_id.toString().padStart(2, '0')}`,
-              confidence: `${(log.confidence * 100).toFixed(1)}%`,
-              timestamp: logDate.toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' }),
-              timeAgo: timeAgo,
-              severity: severity
-            };
-          }));
-        }
+          return {
+            id: log.id,
+            eventId: `EVT-${logDate.getTime().toString().slice(-6)}-${log.id}`,
+            type: detail,
+            icon: scenario.icon,
+            color: scenario.color,
+            bg: isAlert ? 'bg-rose-500/20' : scenario.bg,
+            iconColor: isAlert ? 'text-rose-600' : scenario.color,
+            isAlert: isAlert,
+            camera: `CAM-${log.camera_id.toString().padStart(2, '0')}`,
+            confidence: `${(log.confidence * 100).toFixed(1)}%`,
+            timestamp: logDate.toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+            timeAgo: timeAgo,
+            severity: log.severity.toUpperCase()
+          };
+        }));
       }
     } catch (err) {
       console.error("Failed to fetch logs:", err);
@@ -142,24 +139,18 @@ export default function NeuralStream() {
 
     const connect = () => {
       source = new EventSource(EVENTS_URL);
-
-      source.onopen = () => {
-        setStreamConnected(true);
-      };
-
+      source.onopen = () => setStreamConnected(true);
       source.onmessage = (event) => {
         try {
           const data = JSON.parse(event.data);
           if (data && !data.detail) {
             setIntel(data);
-            // Trigger a silent refresh for logs when new data arrives
             fetchLogsData(false);
           }
         } catch (err) {
           console.error('Event parsing failed:', err);
         }
       };
-
       source.onerror = () => {
         setStreamConnected(false);
         if (source) source.close();
@@ -168,7 +159,7 @@ export default function NeuralStream() {
     };
 
     connect();
-    fetchLogsData(true); // Show spinner on initial load
+    fetchLogsData(true);
 
     return () => {
       if (source) source.close();
@@ -176,9 +167,6 @@ export default function NeuralStream() {
     };
   }, [fetchLogsData]);
 
-  // [REMOVED EFFECT: Consolidating into one reliable poller below]
-
-  // 🚀 Ultra-Reliable Sync Engine (Recursive Timeout Pattern)
   useEffect(() => {
     let intelTimeout;
     let logsTimeout;
@@ -187,7 +175,7 @@ export default function NeuralStream() {
     const pollIntel = async () => {
       if (!isActive) return;
       try {
-        const camId = isGlobalView ? undefined : parseInt(activeCamera);
+        const camId = isGlobalView ? undefined : activeCamera;
         const [intelRes, summaryRes] = await Promise.all([
           fetchIntelligence(),
           fetchLogsSummary(filterHours, camId)
@@ -195,23 +183,16 @@ export default function NeuralStream() {
 
         if (intelRes && !intelRes.detail) setIntel(intelRes);
         if (summaryRes && !summaryRes.detail) setSummary(summaryRes);
-      } catch {
-        // Silently handle network errors
-      }
+      } catch {}
       intelTimeout = setTimeout(pollIntel, 1000);
     };
 
     const pollLogs = async () => {
       if (!isActive) return;
-      try {
-        await fetchLogsData(false); // Silent background poll
-      } catch {
-        // Silently handle fetch errors
-      }
+      try { await fetchLogsData(false); } catch {}
       logsTimeout = setTimeout(pollLogs, 2000);
     };
 
-    // Start heartbeat
     pollIntel();
     pollLogs();
 
@@ -225,7 +206,7 @@ export default function NeuralStream() {
   return (
     <div className="flex flex-col gap-4 pt-0 pb-4 px-6 min-h-screen bg-bg font-sans transition-colors duration-300">
       {/* COMPACT HEADER */}
-      <div className="flex justify-between items-center bg-card px-5 py-3 rounded-xl border border-border shadow-premium">
+      <div className="flex justify-between items-center bg-card px-5 py-3 rounded-xl border border-border shadow-premium shrink-0">
         <div className="flex items-center gap-4">
           <div className="w-10 h-10 bg-accent rounded-lg flex items-center justify-center text-white shadow-lg shadow-accent/20">
             <Radio className="w-5 h-5 animate-pulse" />
@@ -251,7 +232,23 @@ export default function NeuralStream() {
         </div>
 
         {/* STATS BAR IN HEADER */}
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
+          {/* Grid Layout Switcher (Only visible in Global View) */}
+          {isGlobalView && (
+             <div className="flex bg-surface p-1 rounded-lg border border-border mr-2">
+                {[2, 3, 4].map(num => (
+                   <button
+                     key={num}
+                     onClick={() => setGridSize(num)}
+                     className={`px-3 py-1 rounded-md font-bold text-[0.65rem] transition-all uppercase tracking-widest
+                     ${gridSize === num ? 'bg-card text-accent shadow-premium border border-border' : 'text-text-gray hover:text-text-dark'}`}
+                   >
+                     {num}x{num}
+                   </button>
+                ))}
+             </div>
+          )}
+
           {/* Threat Assessment Badge */}
           <div className={`flex items-center gap-2 px-3 py-2 rounded-lg border transition-all duration-500
               ${summary.threat_level === 'Critical' ? 'bg-rose-500/15 border-rose-500/30' :
@@ -269,17 +266,9 @@ export default function NeuralStream() {
 
           {/* Quick Stats */}
           <div className="flex items-center gap-2">
-            <div className="bg-surface px-3 py-1.5 rounded-lg border border-border flex items-center gap-2">
-              <Users className="w-3.5 h-3.5 text-blue-500" />
-              <span className="text-sm font-black text-text-dark">{summary.total_persons || 0}</span>
-            </div>
             <div className={`px-3 py-1.5 rounded-lg border flex items-center gap-2 ${summary.total_weapons > 0 ? 'bg-rose-500 border-rose-600' : 'bg-surface border-border'}`}>
               <Target className={`w-3.5 h-3.5 ${summary.total_weapons > 0 ? 'text-white' : 'text-text-gray'}`} />
               <span className={`text-sm font-black ${summary.total_weapons > 0 ? 'text-white' : 'text-text-dark'}`}>{summary.total_weapons || 0}</span>
-            </div>
-            <div className="bg-surface px-3 py-1.5 rounded-lg border border-border flex items-center gap-2">
-              <Car className="w-3.5 h-3.5 text-indigo-500" />
-              <span className="text-sm font-black text-text-dark">{summary.total_vehicles || 0}</span>
             </div>
             <div className="bg-surface px-3 py-1.5 rounded-lg border border-border flex items-center gap-2">
               <AlertCircle className="w-3.5 h-3.5 text-accent" />
@@ -289,63 +278,95 @@ export default function NeuralStream() {
         </div>
       </div>
 
-      {/* CAMERA STRIP - Compact Row */}
-      <div className="grid grid-cols-7 gap-3">
-        {/* ALL Cameras Selection */}
-        <div
-          onClick={() => { setIsGlobalView(true); setLogsOffset(0); }}
-          className={`relative aspect-video rounded-lg overflow-hidden transition-all duration-300 cursor-pointer bg-card group border flex flex-col items-center justify-center
-          ${isGlobalView ? 'border-accent shadow-[0_8px_20px_-6px_rgba(59,130,246,0.3)] ring-2 ring-accent/10 bg-accent/5' : 'border-border hover:border-accent/40 hover:bg-surface'}`}
-        >
-          <div className="absolute top-2 left-2 z-20 pointer-events-none">
-            <div className="flex items-center gap-1.5 px-2 py-1 bg-card/90 backdrop-blur-md rounded text-[0.55rem] font-bold text-text-dark uppercase tracking-wider border border-border shadow-sm">
-              <span className={`w-1.5 h-1.5 rounded-full ${isGlobalView ? 'bg-accent animate-pulse' : 'bg-text-gray'}`} />
-              Global View
-            </div>
+      {/* STREAMING MATRIX (Dynamic Focus vs Global) */}
+      <div className="w-full shrink-0 overflow-hidden bg-card rounded-[24px] border border-border shadow-premium p-4 flex gap-4">
+          
+          {/* CAMERA SELECTION SIDEBAR (Small Strip) */}
+          <div className="w-20 md:w-40 flex flex-col gap-2 overflow-y-auto custom-scrollbar pr-2 shrink-0 border-r border-border/50">
+             <div
+               onClick={() => { setIsGlobalView(true); setActiveCamera(null); setLogsOffset(0); }}
+               className={`aspect-video rounded-xl border-2 flex flex-col items-center justify-center cursor-pointer transition-all ${isGlobalView ? 'border-accent bg-accent/10 shadow-[0_0_15px_rgba(14,165,233,0.3)]' : 'border-border/50 bg-surface hover:border-accent/40'}`}
+             >
+                <LayoutGrid className={`w-5 h-5 mb-1 ${isGlobalView ? 'text-accent' : 'text-text-gray'}`} />
+                <span className={`text-[0.55rem] font-black uppercase tracking-widest ${isGlobalView ? 'text-accent' : 'text-text-gray'} hidden md:block`}>Matrix</span>
+             </div>
+             
+             {cameras.map(cam => {
+                const isActive = activeCamera === cam.id && !isGlobalView;
+                return (
+                   <div 
+                     key={cam.id}
+                     onClick={() => { setActiveCamera(cam.id); setIsGlobalView(false); setLogsOffset(0); }}
+                     className={`aspect-video rounded-xl border-2 cursor-pointer transition-all overflow-hidden relative group
+                       ${isActive ? 'border-accent shadow-[0_0_15px_rgba(14,165,233,0.3)]' : 'border-black hover:border-accent/40'}
+                     `}
+                   >
+                     {/* Thumbnail preview - since it's hard to stream 20 cameras, we'll stream the active one or a placeholder image */}
+                     {isActive ? (
+                         <CameraFeed streamUrl={`${VIDEO_FEED_URL}/${cam.id}`} hideOverlay={true} />
+                     ) : (
+                         <div className="w-full h-full bg-slate-900 border border-white/5 flex items-center justify-center relative">
+                             <div className="absolute inset-0 bg-[repeating-linear-gradient(0deg,transparent,transparent_2px,rgba(255,255,255,0.02)_2px,rgba(255,255,255,0.02)_4px)]" />
+                             <Radio className="w-4 h-4 text-white/20" />
+                         </div>
+                     )}
+                     <div className="absolute top-0 left-0 right-0 bg-gradient-to-b from-black/80 to-transparent p-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <span className="text-[0.45rem] font-black text-white uppercase tracking-widest">{cam.name}</span>
+                     </div>
+                     {isActive && <div className="absolute inset-0 ring-inset ring-2 ring-accent/50 rounded-xl" />}
+                   </div>
+                )
+             })}
           </div>
-          <LayoutGrid className={`w-8 h-8 mb-1 transition-all ${isGlobalView ? 'text-accent scale-110' : 'text-text-gray group-hover:text-accent/60'}`} />
-          <span className={`text-[0.6rem] font-black uppercase tracking-[0.2em] ${isGlobalView ? 'text-accent' : 'text-text-gray'}`}>All Feeds</span>
-        </div>
 
-        {CAMERAS.map((cam) => {
-          const isActiveCam = activeCamera === cam.id && !isGlobalView;
-          const isDetected = highlightCam === cam.id;
-
-          return (
-            <div
-              key={cam.id}
-              onClick={() => {
-                setActiveCamera(cam.id);
-                setIsGlobalView(false);
-                setLogsOffset(0);
-              }}
-              className={`relative aspect-video rounded-lg overflow-hidden transition-all duration-300 cursor-pointer bg-card group border
-              ${isActiveCam ? 'border-accent shadow-[0_8px_20px_-6px_rgba(59,130,246,0.3)] ring-2 ring-accent/10' : 'border-border hover:border-accent/40'}
-              ${isDetected ? 'ring-4 ring-accent/10 animate-pulse' : ''}`}
-            >
-              <div className="absolute top-2 left-2 z-20 pointer-events-none">
-                <div className="flex items-center gap-1.5 px-2 py-1 bg-card/90 backdrop-blur-md rounded text-[0.55rem] font-bold text-text-dark uppercase tracking-wider border border-border shadow-sm">
-                  <span className={`w-1.5 h-1.5 rounded-full ${cam.status}`} />
-                  {cam.name}
+          {/* MAIN STREAMING AREA */}
+          <div className="flex-1 overflow-y-auto custom-scrollbar bg-black rounded-2xl relative border border-border overflow-hidden">
+             {isGlobalView ? (
+                /* Dynamic Grid Reflow */
+                <div 
+                  className="grid h-full p-2 gap-2"
+                  style={{ gridTemplateColumns: `repeat(${gridSize}, minmax(0, 1fr))` }}
+                >
+                   {cameras.slice(0, gridSize * gridSize).map(cam => (
+                      <div key={cam.id} className="relative bg-slate-900 rounded-xl overflow-hidden border border-white/10 group">
+                         <CameraFeed streamUrl={`${VIDEO_FEED_URL}/${cam.id}`} hideOverlay={true} />
+                         <div className="absolute top-0 left-0 right-0 p-2 bg-gradient-to-b from-black/80 to-transparent">
+                            <span className="text-[0.55rem] font-black text-white/80 uppercase tracking-widest block mb-0.5">Stream-{cam.id}</span>
+                            <span className="text-[0.7rem] font-bold text-white tracking-tight leading-none">{cam.name}</span>
+                         </div>
+                         <div className="absolute bottom-2 right-2 px-2 py-0.5 bg-black/60 backdrop-blur border border-white/10 rounded font-black text-[0.55rem] text-accent flex items-center gap-1 uppercase">
+                             <span className="w-1.5 h-1.5 bg-accent rounded-full animate-pulse" /> Live
+                         </div>
+                      </div>
+                   ))}
                 </div>
-              </div>
-
-              <div className="absolute inset-0 bg-surface">
-                {isActiveCam && cam.id === '01' ? (
-                  <CameraFeed streamUrl={VIDEO_FEED_URL} hideOverlay={true} />
-                ) : (
-                  <img
-                    src={`${cam.img}?auto=format&fit=crop&q=80&w=500`}
-                    className={`w-full h-full object-cover transition-all duration-500 ${isActiveCam ? 'opacity-100' : 'opacity-80 group-hover:opacity-100 scale-100 group-hover:scale-105'}`}
-                    alt="Stream"
-                  />
-                )}
-                <div className="absolute inset-0 opacity-[0.03] pointer-events-none dark:invert" style={{ backgroundImage: 'linear-gradient(#000 1px, transparent 1px), linear-gradient(90deg, #000 1px, transparent 1px)', backgroundSize: '25px 25px' }} />
-              </div>
-            </div>
-          );
-        })}
+             ) : (
+                /* Focus Mode */
+                <div className="relative w-full h-full flex flex-col items-center justify-center min-h-[300px]">
+                   {activeCamera && <CameraFeed streamUrl={`${VIDEO_FEED_URL}/${activeCamera}`} hideOverlay={true} />}
+                   <div className="absolute top-4 left-4 flex flex-col gap-1 z-10">
+                      <div className="px-3 py-1 bg-black/60 backdrop-blur border border-white/10 rounded-lg">
+                          <span className="text-[0.6rem] font-black text-white/50 uppercase tracking-widest block mb-0.5">Neural Stream Active</span>
+                          <span className="text-[1rem] font-bold text-white tracking-tight">
+                             {cameras.find(c => c.id === activeCamera)?.name || 'Unknown Zone'}
+                          </span>
+                      </div>
+                      <div className="flex gap-2">
+                         <div className="px-2 py-1 bg-accent/20 border border-accent/30 rounded text-[0.55rem] font-black text-accent uppercase tracking-widest flex items-center gap-1.5">
+                            <Shield className="w-3 h-3" /> Encrypted Link
+                         </div>
+                      </div>
+                   </div>
+                   
+                   {/* Overlay HUD lines just for aesthetic Focus Mode */}
+                   <div className="absolute inset-x-8 top-1/2 h-[1px] bg-accent/10 pointer-events-none" />
+                   <div className="absolute inset-y-8 left-1/2 w-[1px] bg-accent/10 pointer-events-none" />
+                   <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 pointer-events-none border border-accent/20 rounded-full" />
+                </div>
+             )}
+          </div>
       </div>
+
 
       {/* FULL-WIDTH INTELLIGENCE & BREAKDOWN SECTION */}
       <div className="flex-1 flex gap-4 overflow-hidden">
