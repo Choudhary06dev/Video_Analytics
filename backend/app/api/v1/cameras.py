@@ -5,9 +5,9 @@ from typing import List
 import httpx
 from app.core.database import get_session
 from app.api.v1.auth import get_current_user
-from app.api.v1.users import verify_admin_access, verify_super_admin
+from app.api.v1.users import verify_admin_access, verify_super_admin, verify_admin_hub_access
 from app.models import Camera, Area, CameraScenarioAssignment, AIScenario
-from app.schemas.camera_schema import CameraCreate, AreaCreate, AreaUpdate, ScenarioToggle
+from app.schemas.camera_schema import CameraCreate, CameraUpdate, AreaCreate, AreaUpdate, ScenarioToggle
 
 router = APIRouter(prefix="", tags=["Camera Management"])
 
@@ -19,7 +19,7 @@ def get_areas(session: Session = Depends(get_session), admin_data: dict = Depend
     return areas
 
 @router.post("/admin/areas")
-def create_area(area_data: AreaCreate, session: Session = Depends(get_session), admin_data: dict = Depends(verify_super_admin)):
+def create_area(area_data: AreaCreate, session: Session = Depends(get_session), admin_data: dict = Depends(verify_admin_hub_access)):
     if area_data.parent_id:
         parent = session.get(Area, area_data.parent_id)
         if not parent:
@@ -36,7 +36,7 @@ def create_area(area_data: AreaCreate, session: Session = Depends(get_session), 
     return new_area
 
 @router.put("/admin/areas/{area_id}")
-def update_area(area_id: int, area_data: AreaUpdate, session: Session = Depends(get_session), admin_data: dict = Depends(verify_super_admin)):
+def update_area(area_id: int, area_data: AreaUpdate, session: Session = Depends(get_session), admin_data: dict = Depends(verify_admin_hub_access)):
     area = session.get(Area, area_id)
     if not area:
         raise HTTPException(status_code=404, detail="Area not found")
@@ -54,7 +54,7 @@ def update_area(area_id: int, area_data: AreaUpdate, session: Session = Depends(
     return area
 
 @router.delete("/admin/areas/{area_id}")
-def delete_area(area_id: int, session: Session = Depends(get_session), admin_data: dict = Depends(verify_super_admin)):
+def delete_area(area_id: int, session: Session = Depends(get_session), admin_data: dict = Depends(verify_admin_hub_access)):
     area = session.get(Area, area_id)
     if not area:
         raise HTTPException(status_code=404, detail="Area not found")
@@ -75,7 +75,7 @@ def get_cameras(session: Session = Depends(get_session), admin_data: dict = Depe
     return cameras
 
 @router.post("/admin/cameras")
-def create_camera(camera_data: CameraCreate, session: Session = Depends(get_session), admin_data: dict = Depends(verify_super_admin)):
+def create_camera(camera_data: CameraCreate, session: Session = Depends(get_session), admin_data: dict = Depends(verify_admin_hub_access)):
     area = session.get(Area, camera_data.area_id)
     if not area:
         raise HTTPException(status_code=400, detail="Assigned Area not found")
@@ -88,6 +88,36 @@ def create_camera(camera_data: CameraCreate, session: Session = Depends(get_sess
     session.commit()
     session.refresh(new_camera)
     return new_camera
+
+@router.put("/admin/cameras/{camera_id}")
+def update_camera(camera_id: int, camera_data: CameraUpdate, session: Session = Depends(get_session), admin_data: dict = Depends(verify_admin_hub_access)):
+    camera = session.get(Camera, camera_id)
+    if not camera:
+        raise HTTPException(status_code=404, detail="Camera not found")
+    if camera_data.name is not None:
+        camera.name = camera_data.name
+    if camera_data.source_url is not None:
+        camera.source_url = camera_data.source_url
+    if camera_data.area_id is not None:
+        area = session.get(Area, camera_data.area_id)
+        if not area:
+            raise HTTPException(status_code=400, detail="Assigned Area not found")
+        camera.area_id = camera_data.area_id
+    if camera_data.is_active is not None:
+        camera.is_active = camera_data.is_active
+    session.add(camera)
+    session.commit()
+    session.refresh(camera)
+    return camera
+
+@router.delete("/admin/cameras/{camera_id}")
+def delete_camera(camera_id: int, session: Session = Depends(get_session), admin_data: dict = Depends(verify_admin_hub_access)):
+    camera = session.get(Camera, camera_id)
+    if not camera:
+        raise HTTPException(status_code=404, detail="Camera not found")
+    session.delete(camera)
+    session.commit()
+    return {"message": "Camera deleted successfully"}
 
 @router.put("/admin/cameras/{camera_id}/scenarios")
 def toggle_camera_scenario(camera_id: int, toggle: ScenarioToggle, session: Session = Depends(get_session), admin_data: dict = Depends(verify_super_admin)):

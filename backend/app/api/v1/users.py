@@ -3,7 +3,7 @@ from sqlmodel import Session, select
 from typing import List
 from app.core.database import get_session
 from app.api.v1.auth import get_current_user
-from app.models import User, Role
+from app.models import User, Role, ModulePermission, RoleModulePermission
 from app.schemas.user_schema import AdminUserCreate, AdminUserUpdate, RoleUpdate
 from app.services.user_service import get_user_by_email, record_audit_log
 from app.core.security import get_password_hash
@@ -18,6 +18,31 @@ def verify_admin_access(current_user: dict = Depends(get_current_user)):
 def verify_super_admin(current_user: dict = Depends(get_current_user)):
     if current_user.get("role") != "super_admin":
         raise HTTPException(status_code=403, detail="Forbidden: Super Admin access required")
+    return current_user
+
+def verify_admin_hub_access(current_user: dict = Depends(get_current_user), session: Session = Depends(get_session)):
+    """Verify user has access to admin_hub module with edit permissions"""
+    user_id = current_user.get("id")
+    db_user = session.get(User, user_id) if user_id else None
+    if not db_user:
+        raise HTTPException(status_code=403, detail="Forbidden: User not found")
+    
+    # Get admin_hub module
+    admin_hub_module = session.exec(select(ModulePermission).where(ModulePermission.key == "admin_hub")).first()
+    if not admin_hub_module:
+        raise HTTPException(status_code=403, detail="Forbidden: Admin Hub module not configured")
+    
+    # Check role permission for admin_hub module
+    role_perm = session.exec(
+        select(RoleModulePermission).where(
+            RoleModulePermission.role_id == db_user.role_id,
+            RoleModulePermission.module_permission_id == admin_hub_module.id
+        )
+    ).first()
+    
+    if not role_perm or not role_perm.can_edit:
+        raise HTTPException(status_code=403, detail="Forbidden: Admin Hub access required")
+    
     return current_user
 
 @router.get("/")

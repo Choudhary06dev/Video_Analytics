@@ -33,6 +33,8 @@ import ActionAudit from './pages/admin/ActionAudit';
 import SystemSettings from './pages/admin/SystemSettings';
 import SurveillanceConfig from './pages/admin/SurveillanceConfig';
 
+import AreaManagement from './pages/admin/AreaManagement';
+
 function App() {
   return (
     <ThemeProvider>
@@ -65,6 +67,7 @@ function App() {
                 <Route path="dashboard" element={<AdminDashboard />} />
                 <Route path="users" element={<UserManagement />} />
                 <Route path="roles" element={<RoleManagement />} />
+                <Route path="areas" element={<AreaManagement />} />
                 <Route path="audit" element={<ActionAudit />} />
                 <Route path="settings" element={<SystemSettings />} />
                 <Route path="surveillance" element={<SurveillanceConfig />} />

@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { fetchIntelligence, fetchAdminCameras, getStreamUrl } from '../services/cameraService';
+import { fetchIntelligence } from '../api';
+import { fetchAdminCameras, getStreamUrl } from '../services/cameraService';
 import { fetchLogs, fetchLogsSummary, subscribeToEvents } from '../services/alertService';
-import { EVENTS_URL, VIDEO_FEED_URL } from '../services/api';
+import { EVENTS_URL, VIDEO_FEED_URL } from '../api';
 import {
   Radio,
   Shield,

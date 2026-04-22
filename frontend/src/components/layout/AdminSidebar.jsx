@@ -8,7 +8,9 @@ import {
   Settings as SettingsIcon,
   ChevronLeft,
   Terminal,
-  BrainCircuit
+  BrainCircuit,
+  Map,
+  Video
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { APP_CONFIG } from '../../config';
@@ -21,6 +23,8 @@ export default function AdminSidebar({ isSidebarOpen }) {
     { name: 'Dashboard', icon: LayoutDashboard, path: '/admin/dashboard', moduleKey: 'dashboard' },
     { name: 'Users', icon: UsersIcon, path: '/admin/users', moduleKey: 'roster' },
     { name: 'Roles', icon: ShieldCheck, path: '/admin/roles', moduleKey: 'admin_hub' },
+    { name: 'Areas', icon: Map, path: '/admin/areas', moduleKey: 'admin_hub' },
+    { name: 'Cameras', icon: Video, path: '/admin/surveillance', moduleKey: 'admin_hub' },
     { name: 'Audit Logs', icon: History, path: '/admin/audit', moduleKey: 'admin_hub' },
     { name: 'Settings', icon: SettingsIcon, path: '/admin/settings', moduleKey: 'settings' },
   ];

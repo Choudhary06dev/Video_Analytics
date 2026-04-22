@@ -13,9 +13,8 @@ export const updateCamera = (cameraId, cameraData) => put(`/admin/cameras/${came
 export const deleteCamera = (cameraId) => del(`/admin/cameras/${cameraId}`);
 
 // Intelligence & Feeds
-export const fetchIntelligence = (cameraId) => get("/intelligence", { camera_id: cameraId });
-export const toggleScenario = (cameraId, scenarioId, isEnabled) => 
-    post(`/admin/cameras/${cameraId}/scenarios`, { scenario_id: scenarioId, is_enabled: isEnabled });
+export const toggleScenario = (cameraId, scenarioId, isEnabled) =>
+    put(`/admin/cameras/${cameraId}/scenarios`, { scenario_id: scenarioId, is_enabled: isEnabled });
 
 export const getStreamUrl = (cameraId) => {
     const { BASE } = require('./api');
