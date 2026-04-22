@@ -10,7 +10,7 @@ export const deleteUser = (userId) => del(`/admin/users/${userId}`);
 
 export const updateUserStatus = (userId, isActive) => patch(`/admin/users/${userId}/status`, { is_active: isActive });
 
-export const fetchAuditLogs = (limit = 50) => get("/admin/audit-logs", { limit });
+export const fetchAuditLogs = (limit = 50) => get("/admin/users/audit-logs", { limit });
 
 export const fetchRoles = () => get("/admin/roles");
 export const createRole = (roleData) => post("/admin/roles", roleData);

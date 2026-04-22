@@ -13,7 +13,9 @@ export async function get(path, params = {}) {
       }
   });
   if (res.status === 401) {
-      // Handle logout or redirect
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      window.location.href = '/login';
   }
   if (!res.ok) throw new Error(`GET ${path} → ${res.status}`);
   return res.json();
@@ -28,6 +30,11 @@ export async function post(path, body) {
         },
         body: JSON.stringify(body),
     });
+    if (res.status === 401) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        window.location.href = '/login';
+    }
     if (!res.ok) {
         const err = await res.json().catch(() => ({}));
         throw new Error(err.detail ?? "POST failed");
@@ -43,6 +50,11 @@ export async function put(path, body) {
         },
         body: JSON.stringify(body),
     });
+    if (res.status === 401) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        window.location.href = '/login';
+    }
     if (!res.ok) {
         const err = await res.json().catch(() => ({}));
         throw new Error(err.detail ?? "PUT failed");
@@ -59,6 +71,11 @@ export async function patch(path, body) {
         },
         body: JSON.stringify(body),
     });
+    if (res.status === 401) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        window.location.href = '/login';
+    }
     if (!res.ok) {
         const err = await res.json().catch(() => ({}));
         throw new Error(err.detail ?? "PATCH failed");
@@ -73,6 +90,11 @@ export async function del(path) {
             'Authorization': `Bearer ${localStorage.getItem('token')}`
         },
     });
+    if (res.status === 401) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        window.location.href = '/login';
+    }
     if (!res.ok) {
         const err = await res.json().catch(() => ({}));
         throw new Error(err.detail ?? "DELETE failed");
