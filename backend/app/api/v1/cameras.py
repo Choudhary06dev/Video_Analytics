@@ -71,7 +71,7 @@ def delete_area(area_id: int, session: Session = Depends(get_session), admin_dat
 
 @router.get("/admin/cameras")
 def get_cameras(session: Session = Depends(get_session), admin_data: dict = Depends(verify_admin_access)):
-    cameras = session.exec(select(Camera)).all()
+    cameras = session.exec(select(Camera).where(Camera.is_active == True)).all()
     return cameras
 
 @router.post("/admin/cameras")
@@ -115,9 +115,12 @@ def delete_camera(camera_id: int, session: Session = Depends(get_session), admin
     camera = session.get(Camera, camera_id)
     if not camera:
         raise HTTPException(status_code=404, detail="Camera not found")
-    session.delete(camera)
+        
+    # Perform soft-delete to preserve AI intelligence logs
+    camera.is_active = False
+    session.add(camera)
     session.commit()
-    return {"message": "Camera deleted successfully"}
+    return {"message": "Camera deactivated successfully"}
 
 @router.put("/admin/cameras/{camera_id}/scenarios")
 def toggle_camera_scenario(camera_id: int, toggle: ScenarioToggle, session: Session = Depends(get_session), admin_data: dict = Depends(verify_super_admin)):
@@ -156,8 +159,9 @@ async def video_feed(camera_id: int, session: Session = Depends(get_session)):
         raise HTTPException(status_code=404, detail="Camera not found")
     
     # Assuming AI service runs on localhost:8001
-    source_url = camera_data.source_url
-    ai_service_url = f"http://localhost:8001/stream/{camera_id}?source={source_url}"
+    import urllib.parse
+    source_url_encoded = urllib.parse.quote(camera_data.source_url, safe="")
+    ai_service_url = f"http://localhost:8001/stream/{camera_id}?source={source_url_encoded}"
     
     async def stream_proxy():
         async with httpx.AsyncClient() as client:

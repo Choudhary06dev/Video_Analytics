@@ -107,6 +107,10 @@ def read_root():
         "engine": "FastAPI Modular Architecture"
     }
 
+@app.get("/health")
+def health_check():
+    return {"status": "ok"}
+
 # Include Routers
 app.include_router(auth.router)
 app.include_router(users.router)

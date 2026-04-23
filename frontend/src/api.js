@@ -40,13 +40,14 @@ export const fetchIntelligence = () => get("/intelligence");
 export const fetchLogs = (opts = {}) =>
   get("/logs", {
     hours: opts.hours ?? 24,
+    camera_id: opts.camera_id ?? undefined,
     object_class: opts.objectClass ?? undefined,
     severity: opts.severity ?? undefined,
     limit: opts.limit ?? 200,
   });
 
-export const fetchLogsSummary = (hours = 24) =>
-  get("/logs/summary", { hours });
+export const fetchLogsSummary = (hours = 24, camera_id = undefined) =>
+  get("/logs/summary", { hours, camera_id });
 
 // ─── alerts ─────────────────────────────────────────────
 

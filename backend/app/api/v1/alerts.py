@@ -5,7 +5,9 @@ from typing import Optional
 import httpx
 import json
 import asyncio
+from pydantic import BaseModel
 from app.core.database import get_session
+from app.models import DetectionEvent
 from app.services.alert_service import get_alerts, get_logs, get_logs_summary
 
 router = APIRouter(prefix="", tags=["Intelligence & Alerts"])
@@ -18,6 +20,34 @@ latest_intelligence_cache = {
     "stable_objects": [],
     "last_update": 0.0
 }
+
+class WebhookEvent(BaseModel):
+    camera_id: int
+    scenario_key: str
+    confidence: float
+    metadata: dict
+
+@router.post("/webhook/events")
+async def receive_events(events: list[WebhookEvent], session: Session = Depends(get_session)):
+    for ev in events:
+        severity = "Medium"
+        is_alert = False
+        if ev.confidence > 0.7:
+            severity = "High"
+            is_alert = True
+        
+        db_event = DetectionEvent(
+            camera_id=ev.camera_id,
+            scenario_key=ev.scenario_key,
+            object_class=ev.scenario_key,
+            confidence=ev.confidence,
+            severity=severity,
+            is_alert=is_alert,
+            metadata_json=ev.metadata
+        )
+        session.add(db_event)
+    session.commit()
+    return {"status": "success"}
 
 @router.get("/intelligence")
 async def get_intelligence(camera_id: Optional[int] = None):

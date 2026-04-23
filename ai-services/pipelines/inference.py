@@ -1,6 +1,7 @@
 import cv2
 import numpy as np
 import time
+import threading
 from datetime import datetime
 from ultralytics import YOLO
 import os
@@ -89,6 +90,7 @@ class InferenceEngine:
         self.camera_id = camera_id
         self.source = source
         self.video = cv2.VideoCapture(self.source)
+        self.video.set(cv2.CAP_PROP_BUFFERSIZE, 1) # Prevent frame buffering delay
         self.scene_state = {}
         self.placeholder_frame = self._build_placeholder_frame(f"CAMERA {camera_id} - NO SIGNAL")
         self.latest_intelligence = {
@@ -97,6 +99,24 @@ class InferenceEngine:
             "stable_objects": [],
             "last_update": 0.0
         }
+        
+        self.latest_frame = None
+        self.running = True
+        self.thread = threading.Thread(target=self._capture_thread, daemon=True)
+        self.thread.start()
+
+    def _capture_thread(self):
+        while self.running:
+            if not self._ensure_camera():
+                time.sleep(1)
+                continue
+            
+            success, frame = self.video.read()
+            if success:
+                self.latest_frame = frame
+            else:
+                self.video.release()
+                time.sleep(3.0) # Prevent 403 camera ban from rapid reconnects
 
     def _build_placeholder_frame(self, message: str) -> bytes:
         frame = np.zeros((360, 640, 3), dtype=np.uint8)
@@ -108,22 +128,22 @@ class InferenceEngine:
     def _ensure_camera(self) -> bool:
         if self.video is None:
             self.video = cv2.VideoCapture(self.source)
+            self.video.set(cv2.CAP_PROP_BUFFERSIZE, 1)
         elif not self.video.isOpened():
             self.video.open(self.source)
+            self.video.set(cv2.CAP_PROP_BUFFERSIZE, 1)
         return self.video is not None and self.video.isOpened()
 
     def release(self):
+        self.running = False
         if self.video is not None and self.video.isOpened():
             self.video.release()
 
     def process_frame(self):
-        if not self._ensure_camera():
+        if self.latest_frame is None:
             return self.placeholder_frame, None
 
-        success, frame = self.video.read()
-        if not success or frame is None:
-            self._ensure_camera()
-            return self.placeholder_frame, None
+        frame = self.latest_frame.copy()
 
         results = model.predict(frame, conf=CONF_THRESHOLD, iou=IOU_THRESHOLD, verbose=False)
         person_count = 0

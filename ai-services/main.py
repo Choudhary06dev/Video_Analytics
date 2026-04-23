@@ -2,6 +2,7 @@ from fastapi import FastAPI, HTTPException, Depends
 from fastapi.responses import StreamingResponse
 import asyncio
 import json
+import httpx
 from pipelines.inference import InferenceEngine
 from typing import Dict
 
@@ -14,6 +15,22 @@ async def get_engine(camera_id: int, source: str) -> InferenceEngine:
         active_engines[camera_id] = InferenceEngine(camera_id, source)
     return active_engines[camera_id]
 
+async def send_events_to_backend(camera_id: int, events: list):
+    if not events: return
+    payload = []
+    for ev in events:
+        payload.append({
+            "camera_id": camera_id,
+            "scenario_key": ev["scenario_key"],
+            "confidence": ev["confidence"],
+            "metadata": ev["metadata"]
+        })
+    try:
+        async with httpx.AsyncClient() as client:
+            await client.post("http://localhost:8000/webhook/events", json=payload)
+    except Exception as e:
+        print("Webhook error:", e)
+
 @app.get("/stream/{camera_id}")
 async def stream_camera(camera_id: int, source: str):
     engine = await get_engine(camera_id, source)
@@ -21,6 +38,8 @@ async def stream_camera(camera_id: int, source: str):
     async def frame_generator():
         while True:
             frame_bytes, events = engine.process_frame()
+            if events:
+                asyncio.create_task(send_events_to_backend(camera_id, events))
             # In a real microservice, we would send 'events' to a message broker (Redis/RabbitMQ) 
             # or provide an endpoint for the backend to poll.
             # For simplicity, we'll just stream the video for now.
