@@ -6,6 +6,9 @@ from datetime import datetime
 from ultralytics import YOLO
 import os
 
+# Optimize OpenCV/FFmpeg for RTSP stability (IMOU/Dahua specialized)
+os.environ["OPENCV_FFMPEG_CAPTURE_OPTIONS"] = "rtsp_transport;tcp|rtsp_flags;prefer_tcp|stimeout;10000000" # 10s timeout, TCP
+
 # AI Scenarios Mapping
 SCENARIO_MAPPING = {
     "person": "Unauthorized entry into restricted areas",
@@ -61,23 +64,64 @@ class InferenceEngine:
             "last_update": 0.0
         }
         
+        self.enabled_scenarios = set()
+        self._load_initial_config()
+        
         self.latest_frame = None
         self.running = True
+        
+        # Exponential backoff for reconnection (prevents 403 IP bans from IMOU/Dahua cameras)
+        self._reconnect_delay = 10    # Start with 10 seconds
+        self._max_reconnect_delay = 120  # Cap at 2 minutes
+        self._consecutive_failures = 0
+        
         self.thread = threading.Thread(target=self._capture_thread, daemon=True)
         self.thread.start()
+
+    def _load_initial_config(self):
+        """
+        Fetches the enabled scenarios from the backend API.
+        """
+        try:
+            # We use a synchronous request here because it's in __init__ (in a thread-friendly way)
+            import requests
+            response = requests.get(f"http://localhost:8000/admin/cameras/{self.camera_id}/scenarios", timeout=2)
+            if response.status_code == 200:
+                scenarios = response.json()
+                self.enabled_scenarios = {s["name"] for s in scenarios if s.get("is_enabled")}
+                print(f"Engine {self.camera_id} loaded {len(self.enabled_scenarios)} scenarios.")
+        except Exception as e:
+            print(f"Engine {self.camera_id} failed to load config: {e}")
+
+    def update_config(self, enabled_names: list):
+        """
+        Updates the enabled scenarios in real-time.
+        """
+        self.enabled_scenarios = set(enabled_names)
+        print(f"Engine {self.camera_id} config updated: {len(self.enabled_scenarios)} scenarios enabled.")
+
 
     def _capture_thread(self):
         while self.running:
             if not self._ensure_camera():
-                time.sleep(1)
+                # Exponential backoff: wait longer after each consecutive failure
+                wait_time = min(self._reconnect_delay * (2 ** min(self._consecutive_failures, 4)), self._max_reconnect_delay)
+                self._consecutive_failures += 1
+                print(f"[Camera {self.camera_id}] Connection failed. Waiting {wait_time}s before retry (attempt #{self._consecutive_failures})")
+                time.sleep(wait_time)
                 continue
             
             success, frame = self.video.read()
             if success:
                 self.latest_frame = frame
+                # Reset backoff on successful read
+                self._consecutive_failures = 0
             else:
+                self._consecutive_failures += 1
+                wait_time = min(self._reconnect_delay * (2 ** min(self._consecutive_failures, 4)), self._max_reconnect_delay)
+                print(f"[Camera {self.camera_id}] Frame read failed. Releasing and waiting {wait_time}s (attempt #{self._consecutive_failures})")
                 self.video.release()
-                time.sleep(3.0) # Prevent 403 camera ban from rapid reconnects
+                time.sleep(wait_time)
 
     def _build_placeholder_frame(self, message: str) -> bytes:
         frame = np.zeros((360, 640, 3), dtype=np.uint8)
@@ -87,13 +131,25 @@ class InferenceEngine:
         return jpeg.tobytes() if ret else b""
 
     def _ensure_camera(self) -> bool:
+        masked_source = self.source
+        if isinstance(self.source, str) and "@" in self.source:
+            parts = self.source.split("@")
+            masked_source = "rtsp://***:***@" + parts[1]
+
         if self.video is None:
-            self.video = cv2.VideoCapture(self.source)
+            print(f"[Engine {self.camera_id}] Initializing VideoCapture for {masked_source}")
+            self.video = cv2.VideoCapture(self.source, cv2.CAP_FFMPEG)
             self.video.set(cv2.CAP_PROP_BUFFERSIZE, 1)
         elif not self.video.isOpened():
-            self.video.open(self.source)
+            print(f"[Engine {self.camera_id}] Attempting to open {masked_source}")
+            self.video.open(self.source, cv2.CAP_FFMPEG)
             self.video.set(cv2.CAP_PROP_BUFFERSIZE, 1)
-        return self.video is not None and self.video.isOpened()
+        
+        status = self.video is not None and self.video.isOpened()
+        if not status:
+            # If it failed to open, force a re-creation next time to clear internal cache
+            self.video = None
+        return status
 
     def release(self):
         self.running = False
@@ -129,13 +185,14 @@ class InferenceEngine:
                     person_count += 1
 
                 scenario_name = SCENARIO_MAPPING.get(label)
-                if scenario_name:
+                if scenario_name and scenario_name in self.enabled_scenarios:
                     if scenario_name not in detected_scenarios:
                         detected_scenarios[scenario_name] = {"max_conf": confidence, "count": 1, "labels": {label}}
                     else:
                         detected_scenarios[scenario_name]["max_conf"] = max(detected_scenarios[scenario_name]["max_conf"], confidence)
                         detected_scenarios[scenario_name]["count"] += 1
                         detected_scenarios[scenario_name]["labels"].add(label)
+
 
         current_objects = sorted(list(detected_scenarios.keys()))
         current_time = time.time()

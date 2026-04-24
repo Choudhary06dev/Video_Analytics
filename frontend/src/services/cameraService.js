@@ -13,10 +13,19 @@ export const updateCamera = (cameraId, cameraData) => put(`/admin/cameras/${came
 export const deleteCamera = (cameraId) => del(`/admin/cameras/${cameraId}`);
 
 // Intelligence & Feeds
-export const toggleScenario = (cameraId, scenarioId, isEnabled) =>
-    put(`/admin/cameras/${cameraId}/scenarios`, { scenario_id: scenarioId, is_enabled: isEnabled });
+export const fetchCameraScenarios = (cameraId) => get(`/admin/cameras/${cameraId}/scenarios`);
+export const syncCameraScenarios = (cameraId, scenarioIds) =>
+    put(`/admin/cameras/${cameraId}/scenarios`, { enabled_scenario_ids: scenarioIds });
+
+
+// AI Scenarios (Dynamic Module)
+export const fetchScenarios = () => get("/admin/scenarios");
+export const createScenario = (data) => post("/admin/scenarios", data);
+export const updateScenario = (id, data) => put(`/admin/scenarios/${id}`, data);
+export const deleteScenario = (id) => del(`/admin/scenarios/${id}`);
 
 export const getStreamUrl = (cameraId) => {
-    const { BASE } = require('./api');
-    return `${BASE}/video_feed/${cameraId}`;
+    // Note: In production we'd use a stable config for BASE
+    return `http://localhost:8000/video_feed/${cameraId}`;
 };
+

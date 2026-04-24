@@ -22,28 +22,35 @@ def verify_super_admin(current_user: dict = Depends(get_current_user)):
 
 def verify_admin_hub_access(current_user: dict = Depends(get_current_user), session: Session = Depends(get_session)):
     """Verify user has access to admin_hub module with edit permissions"""
+    return verify_module_access("admin_hub", current_user, session)
+
+def verify_module_access(module_key: str, current_user: dict = Depends(get_current_user), session: Session = Depends(get_session)):
+    """Generic module-based permission verifier - NO HARDCODED BYPASSES"""
     user_id = current_user.get("id")
+
     db_user = session.get(User, user_id) if user_id else None
     if not db_user:
         raise HTTPException(status_code=403, detail="Forbidden: User not found")
     
-    # Get admin_hub module
-    admin_hub_module = session.exec(select(ModulePermission).where(ModulePermission.key == "admin_hub")).first()
-    if not admin_hub_module:
-        raise HTTPException(status_code=403, detail="Forbidden: Admin Hub module not configured")
+    # Get the specific module
+    module = session.exec(select(ModulePermission).where(ModulePermission.key == module_key)).first()
+    if not module:
+        # If module doesn't exist, we default to deny for security
+        raise HTTPException(status_code=403, detail=f"Forbidden: {module_key} module not configured")
     
-    # Check role permission for admin_hub module
+    # Check role permission for this module
     role_perm = session.exec(
         select(RoleModulePermission).where(
             RoleModulePermission.role_id == db_user.role_id,
-            RoleModulePermission.module_permission_id == admin_hub_module.id
+            RoleModulePermission.module_permission_id == module.id
         )
     ).first()
     
     if not role_perm or not role_perm.can_edit:
-        raise HTTPException(status_code=403, detail="Forbidden: Admin Hub access required")
+        raise HTTPException(status_code=403, detail=f"Forbidden: Edit permission required for {module.name}")
     
     return current_user
+
 
 @router.get("/")
 def get_all_users(session: Session = Depends(get_session), admin_data: dict = Depends(verify_admin_access)):

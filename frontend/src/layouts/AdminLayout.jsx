@@ -3,7 +3,7 @@ import { Outlet, Navigate } from 'react-router-dom';
 import Sidebar from '../components/layout/Sidebar';
 import Header from '../components/layout/Header';
 import Footer from '../components/layout/Footer';
-import AdminSidebar from '../components/layout/AdminSidebar';
+import AdminSidebar from '../components/admin/AdminSidebar';
 import { useAuth } from '../context/AuthContext';
 
 export default function AdminLayout() {

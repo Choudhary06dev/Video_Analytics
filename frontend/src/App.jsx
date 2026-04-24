@@ -34,6 +34,10 @@ import SystemSettings from './pages/admin/SystemSettings';
 import SurveillanceConfig from './pages/admin/SurveillanceConfig';
 
 import AreaManagement from './pages/admin/AreaManagement';
+import ScenarioOrchestration from './pages/admin/ScenarioOrchestration';
+import AIScenarioRegistry from './pages/admin/AIScenarioRegistry';
+
+
 
 function App() {
   return (
@@ -71,6 +75,10 @@ function App() {
                 <Route path="audit" element={<ActionAudit />} />
                 <Route path="settings" element={<SystemSettings />} />
                 <Route path="surveillance" element={<SurveillanceConfig />} />
+                <Route path="scenarios" element={<ScenarioOrchestration />} />
+                <Route path="scenario-registry" element={<AIScenarioRegistry />} />
+
+
               </Route>
             </Route>
 

@@ -59,6 +59,18 @@ async def get_intelligence(camera_id: int):
         raise HTTPException(status_code=404, detail="Camera engine not active")
     return active_engines[camera_id].latest_intelligence
 
+@app.post("/control/reload/{camera_id}")
+async def reload_camera_config(camera_id: int, config: dict):
+    """
+    Updates the enabled scenarios for an active inference engine.
+    """
+    if camera_id in active_engines:
+        enabled_scenarios = config.get("enabled_scenarios", [])
+        active_engines[camera_id].update_config(enabled_scenarios)
+        return {"status": "success", "reloaded": enabled_scenarios}
+    return {"status": "skipped", "message": "Engine not active"}
+
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8001)

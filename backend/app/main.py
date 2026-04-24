@@ -26,21 +26,46 @@ def init_system_data():
         
         # 2. Seed Modules
         modules = [
-            ("Dashboard", "dashboard"),
-            ("Live Monitoring", "live_monitoring"),
-            ("AI Scenarios", "scenarios"),
-            ("Activity Vault", "vault"),
-            ("Alerts", "alerts"),
-            ("System Health", "health"),
-            ("Admin Hub", "admin_hub"),
+            ("Admin Management", "admin_hub"),
+            ("User Directory", "users"),
+            ("Access Roles", "roles"),
+            ("Facility Areas", "areas"),
+            ("Surveillance Nodes", "cameras"),
+            ("Audit Protocols", "audit"),
+            ("Scenario Control", "scenario_orchestration"),
+            ("AI Scenarios", "intelligence_registry"),
+
             ("Staff Roster", "roster"),
             ("Settings", "settings"),
+            ("Activity Vault", "vault"),
+            ("System Health", "health"),
         ]
+
+
         for name, key in modules:
             stmt = select(ModulePermission).where(ModulePermission.key == key)
             mod = session.exec(stmt).first()
             if not mod:
-                session.add(ModulePermission(name=name, key=key))
+                mod = ModulePermission(name=name, key=key)
+                session.add(mod)
+                session.flush() # Get ID
+            
+            # Auto-assign to Super Admin (Role ID 1)
+            from app.models import RoleModulePermission
+            stmt_link = select(RoleModulePermission).where(
+                RoleModulePermission.role_id == 1,
+                RoleModulePermission.module_permission_id == mod.id
+            )
+            link = session.exec(stmt_link).first()
+            if not link:
+                session.add(RoleModulePermission(
+                    role_id=1,
+                    module_permission_id=mod.id,
+                    can_view=True,
+                    can_edit=True,
+                    can_delete=True
+                ))
+
 
         # 3. Sync AI Scenarios
         scenarios_to_sync = [

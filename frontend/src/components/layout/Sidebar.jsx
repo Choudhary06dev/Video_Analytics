@@ -49,7 +49,8 @@ export default function Sidebar({ isSidebarOpen }) {
             className={({ isActive }) => `flex items-center gap-3 px-3 py-2 rounded-lg cursor-pointer transition-all duration-200 group backdrop-blur-sm
               ${isActive
                 ? 'bg-accent-soft/70 text-accent font-bold shadow-[0_1px_3px_rgba(0,0,0,0.02)]'
-                : 'text-text-gray font-semibold hover:bg-accent-soft/40 hover:text-accent'
+                : 'text-text-dark font-semibold hover:bg-accent-soft/40 hover:text-accent'
+
               }`
             }
           >
