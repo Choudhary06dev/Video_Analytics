@@ -19,6 +19,7 @@ import {
 
 import { useAuth } from '../../context/AuthContext';
 import { APP_CONFIG } from '../../config';
+import Logo from '../ui/Logo';
 
 export default function AdminSidebar({ isSidebarOpen }) {
   const { user, canView } = useAuth();
@@ -159,25 +160,15 @@ export default function AdminSidebar({ isSidebarOpen }) {
   return (
     <aside
       className={`${isSidebarOpen ? 'w-[260px] translate-x-0' : 'w-20 -translate-x-full md:translate-x-0'} 
-      transition-all duration-300 ease-in-out fixed md:relative z-50 h-full bg-card border-r border-border flex flex-col pt-6 px-4 pb-9 overflow-hidden shadow-premium`}
+      transition-all duration-300 ease-in-out fixed md:relative z-50 h-full bg-card border-r border-border flex flex-col pt-4 px-4 pb-9 overflow-hidden shadow-premium`}
     >
       {/* Admin Branding */}
-      <div className="flex items-center gap-3 font-extrabold text-accent mb-8 shrink-0 h-12 px-2">
-        <div className="relative">
-          <div className="w-10 h-10 bg-accent rounded-xl flex items-center justify-center shadow-lg shadow-accent/20">
-            <BrainCircuit className="w-6 h-6 text-white" />
-          </div>
-          <div className="absolute -top-1 -right-1 w-4 h-4 bg-danger rounded-full border-2 border-card flex items-center justify-center">
-            <div className="w-1.5 h-1.5 bg-white rounded-full animate-pulse"></div>
-          </div>
-        </div>
-        <div className={`transition-all duration-300 flex flex-col ${!isSidebarOpen && 'opacity-0 scale-0'}`}>
-          <span className="text-[1.1rem] font-black italic uppercase tracking-tighter text-text-dark leading-tight">
-            Matrix <span className="text-accent underline decoration-accent/30 underline-offset-4">Root</span>
-          </span>
-          <span className="text-[8px] font-black text-accent/60 uppercase tracking-[0.3em] leading-none mt-1">Admin Protocol</span>
-        </div>
+      <div className="mb-2 shrink-0 h-12 px-2">
+        <Logo isSidebarOpen={isSidebarOpen} className="h-12 w-12" />
       </div>
+      
+      {/* Divider Line */}
+      <div className={`mx-2 mb-4 border-t border-border/50 ${!isSidebarOpen && 'opacity-0'}`}></div>
 
       {/* Navigation */}
       <nav className="flex-1 overflow-y-auto w-full scrollbar-none flex flex-col gap-6">
