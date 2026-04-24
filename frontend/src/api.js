@@ -10,7 +10,6 @@ export const VIDEO_FEED_URL = `${BASE}/video_feed`;
 
 // ─── admin ──────────────────────────────────────────────────────────────────
 export const fetchAdminAreas = () => get("/admin/areas");
-export const fetchAdminCameras = () => get("/admin/cameras");
 
 // ─── helpers ───────────────────────────────────────────────────────────────
 

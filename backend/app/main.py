@@ -42,34 +42,73 @@ def init_system_data():
             if not mod:
                 session.add(ModulePermission(name=name, key=key))
 
-        # 3. Seed AI Scenarios
-        scenarios = [
-            ("Unauthorized restricted area entry", "restricted_entry", "Critical"),
-            ("Aggressive behavior", "aggression", "Critical"),
-            ("Weapon detection (gun/knife)", "weapon_threat", "Critical"),
-            ("Tailgating / Multiple entry", "tailgating", "High"),
-            ("Blacklisted person alert", "blacklist_face", "Critical"),
-            ("Overcrowding detection", "crowd_density", "High"),
-            ("Visitor count limit exceeded", "visitor_limit", "Medium"),
-            ("Visitor tracking", "visitor_tracking", "Low"),
-            ("Staff absence at post", "staff_absence", "High"),
-            ("Mobile phone usage - restricted", "mobile_restricted", "Medium"),
-            ("Fire / smoke detection", "fire_smoke", "Critical"),
-            ("Vehicle tracking", "vehicle_tracking", "Low"),
-            ("Unauthorized parking / blockage", "parking_violation", "Medium"),
-            ("Camera/Recording failure", "system_failure", "High"),
-            ("Baby outside route", "baby_movement", "Critical"),
-            ("Unauthorized baby handling", "baby_handling", "Critical"),
-            ("Baby unattended", "baby_unattended", "Critical"),
-            ("Unauthorized patient exit", "patient_exit", "High"),
-            ("Night attendant limit exceeded", "night_limit", "Medium"),
-            ("Closed department movement", "closed_dept_movement", "High"),
-            ("Boundary intrusion", "boundary_climb", "High"),
+        # 3. Sync AI Scenarios
+        scenarios_to_sync = [
+            "Unauthorized entry into restricted areas",
+            "Aggressive behaviour detection",
+            "Weapon detection (gun/knife)",
+            "Multiple persons entry on single access",
+            "Blacklisted person alert (facial recognition)",
+            "Crowd density / overcrowding detection",
+            "Visitor count limit (only 1 attendant per patient)",
+            "Entry/Exit tracking of visitors (face recognition)",
+            "Staff presence/absence at duty post",
+            "Mobile phone usage in restricted areas",
+            "Fire / smoke detection",
+            "Vehicle detection & tracking",
+            "Unauthorized parking / ambulance blockage",
+            "Camera offline and recording failure alert",
+            "Baby moved outside designated routes",
+            "Unauthorized person handling or carrying baby",
+            "Baby left unattended",
+            "Patient approaching exit without discharge clearance",
+            "More than allowed attendants during night",
+            "Movement in closed departments/areas",
+            "Person climbing or jumping over boundary wall",
         ]
-        for name, key, severity in scenarios:
-            stmt = select(AIScenario).where(AIScenario.key == key)
-            if not session.exec(stmt).first():
-                session.add(AIScenario(name=name, key=key, default_severity=severity))
+        
+        # Mapping for default severities
+        severities = {
+            "Unauthorized entry into restricted areas": "Critical",
+            "Aggressive behaviour detection": "Critical",
+            "Weapon detection (gun/knife)": "Critical",
+            "Multiple persons entry on single access": "High",
+            "Blacklisted person alert (facial recognition)": "Critical",
+            "Crowd density / overcrowding detection": "High",
+            "Visitor count limit (only 1 attendant per patient)": "Medium",
+            "Entry/Exit tracking of visitors (face recognition)": "Low",
+            "Staff presence/absence at duty post": "High",
+            "Mobile phone usage in restricted areas": "Medium",
+            "Fire / smoke detection": "Critical",
+            "Vehicle detection & tracking": "Low",
+            "Unauthorized parking / ambulance blockage": "High",
+            "Camera offline and recording failure alert": "Critical",
+            "Baby moved outside designated routes": "Critical",
+            "Unauthorized person handling or carrying baby": "Critical",
+            "Baby left unattended": "High",
+            "Patient approaching exit without discharge clearance": "High",
+            "More than allowed attendants during night": "Medium",
+            "Movement in closed departments/areas": "Critical",
+            "Person climbing or jumping over boundary wall": "Critical",
+        }
+
+        # Add or update scenarios
+        for name in scenarios_to_sync:
+            key = name # AI sends name as key
+            stmt = select(AIScenario).where(AIScenario.name == name)
+            existing = session.exec(stmt).first()
+            if not existing:
+                session.add(AIScenario(name=name, key=key, default_severity=severities[name]))
+            else:
+                existing.key = key
+                existing.default_severity = severities[name]
+                session.add(existing)
+
+        # Remove extra scenarios
+        all_db_scenarios = session.exec(select(AIScenario)).all()
+        for scenario in all_db_scenarios:
+            if scenario.name not in scenarios_to_sync:
+                session.delete(scenario)
 
         session.commit()
 

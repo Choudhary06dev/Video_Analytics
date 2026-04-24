@@ -71,7 +71,7 @@ def delete_area(area_id: int, session: Session = Depends(get_session), admin_dat
 
 @router.get("/admin/cameras")
 def get_cameras(session: Session = Depends(get_session), admin_data: dict = Depends(verify_admin_access)):
-    cameras = session.exec(select(Camera).where(Camera.is_active == True)).all()
+    cameras = session.exec(select(Camera)).all()
     return cameras
 
 @router.post("/admin/cameras")

@@ -27,26 +27,27 @@ import {
 } from 'lucide-react';
 
 const SCENARIO_UI = {
-  'Staff/Visitor Activity': { icon: Lock, color: 'text-blue-500', bg: 'bg-blue-500/10' },
-  'Weapon Detection (Gun/Knife)': { icon: Crosshair, color: 'text-rose-500', bg: 'bg-rose-500/15' },
-  'Mobile Phone Usage - Restricted': { icon: Phone, color: 'text-amber-500', bg: 'bg-amber-500/10' },
-  'Vehicle Observation': { icon: Car, color: 'text-indigo-500', bg: 'bg-indigo-500/10' },
-  'Object Left Unattended': { icon: Package, color: 'text-slate-500', bg: 'bg-slate-500/10' },
-  'Fire / Smoke Detection': { icon: Flame, color: 'text-orange-500', bg: 'bg-orange-500/15' },
-  'Aggressive Behaviour Detection': { icon: AlertTriangle, color: 'text-rose-600', bg: 'bg-rose-600/10' },
-  'Multiple Persons - Single Access': { icon: Target, color: 'text-blue-400', bg: 'bg-blue-400/10' },
-  'Electronic Device Detected': { icon: Cpu, color: 'text-cyan-500', bg: 'bg-cyan-500/10' },
-  'Surveillance Monitor Active': { icon: Activity, color: 'text-purple-500', bg: 'bg-purple-500/10' },
-  'Aerial Object Detected': { icon: Activity, color: 'text-indigo-400', bg: 'bg-indigo-400/10' },
-  'Maritime Vessel Detected': { icon: Activity, color: 'text-blue-400', bg: 'bg-blue-400/10' },
-  'Rail Transit Detected': { icon: Activity, color: 'text-emerald-500', bg: 'bg-emerald-500/10' },
-  'Animal Intrusion Detected': { icon: AlertCircle, color: 'text-amber-600', bg: 'bg-amber-600/10' },
-  'Consumable Item Detected': { icon: Package, color: 'text-yellow-600', bg: 'bg-yellow-600/10' },
-  'Furniture Displacement': { icon: Package, color: 'text-slate-400', bg: 'bg-slate-400/10' },
-  'Recreational Activity Detected': { icon: Target, color: 'text-lime-500', bg: 'bg-lime-500/10' },
-  'Potential Weapon - Blunt Object': { icon: Shield, color: 'text-rose-400', bg: 'bg-rose-400/15' },
-  'Traffic Signal Detected': { icon: AlertCircle, color: 'text-red-500', bg: 'bg-red-500/10' },
-  'Parking Zone Detected': { icon: Car, color: 'text-blue-500', bg: 'bg-blue-500/10' },
+  'Unauthorized entry into restricted areas': { icon: Lock, color: 'text-rose-500', bg: 'bg-rose-500/10' },
+  'Aggressive behaviour detection': { icon: AlertTriangle, color: 'text-orange-500', bg: 'bg-orange-500/15' },
+  'Weapon detection (gun/knife)': { icon: Crosshair, color: 'text-rose-600', bg: 'bg-rose-600/15' },
+  'Multiple persons entry on single access': { icon: Users, color: 'text-blue-500', bg: 'bg-blue-500/10' },
+  'Blacklisted person alert (facial recognition)': { icon: Target, color: 'text-rose-500', bg: 'bg-rose-500/10' },
+  'Crowd density / overcrowding detection': { icon: Users, color: 'text-amber-500', bg: 'bg-amber-500/10' },
+  'Visitor count limit (only 1 attendant per patient)': { icon: Users, color: 'text-amber-500', bg: 'bg-amber-500/10' },
+  'Entry/Exit tracking of visitors (face recognition)': { icon: Activity, color: 'text-indigo-400', bg: 'bg-indigo-400/10' },
+  'Staff presence/absence at duty post': { icon: Shield, color: 'text-blue-400', bg: 'bg-blue-400/10' },
+  'Mobile phone usage in restricted areas': { icon: Phone, color: 'text-amber-500', bg: 'bg-amber-500/10' },
+  'Fire / smoke detection': { icon: Flame, color: 'text-orange-600', bg: 'bg-orange-600/15' },
+  'Vehicle detection & tracking': { icon: Car, color: 'text-indigo-500', bg: 'bg-indigo-500/10' },
+  'Unauthorized parking / ambulance blockage': { icon: Car, color: 'text-rose-500', bg: 'bg-rose-500/10' },
+  'Camera offline and recording failure alert': { icon: AlertCircle, color: 'text-rose-500', bg: 'bg-rose-500/10' },
+  'Baby moved outside designated routes': { icon: AlertTriangle, color: 'text-rose-500', bg: 'bg-rose-500/10' },
+  'Unauthorized person handling or carrying baby': { icon: AlertTriangle, color: 'text-rose-500', bg: 'bg-rose-500/10' },
+  'Baby left unattended': { icon: Package, color: 'text-amber-500', bg: 'bg-amber-500/10' },
+  'Patient approaching exit without discharge clearance': { icon: Activity, color: 'text-amber-500', bg: 'bg-amber-500/10' },
+  'More than allowed attendants during night': { icon: Users, color: 'text-amber-500', bg: 'bg-amber-500/10' },
+  'Movement in closed departments/areas': { icon: Lock, color: 'text-rose-500', bg: 'bg-rose-500/10' },
+  'Person climbing or jumping over boundary wall': { icon: Target, color: 'text-rose-600', bg: 'bg-rose-600/10' },
   'Default': { icon: Target, color: 'text-slate-400', bg: 'bg-slate-400/10' }
 };
 import CameraFeed from '../components/camera/CameraFeed';
@@ -294,28 +295,31 @@ export default function NeuralStream() {
              </div>
              
              {cameras.map(cam => {
-                const isActive = activeCamera === cam.id && !isGlobalView;
+                const isDisabled = cam.is_active === false;
+                const isActive = activeCamera === cam.id && !isGlobalView && !isDisabled;
                 return (
                    <div 
                      key={cam.id}
-                     onClick={() => { setActiveCamera(cam.id); setIsGlobalView(false); setLogsOffset(0); }}
-                     className={`aspect-video rounded-lg border-2 cursor-pointer transition-all overflow-hidden relative group
-                       ${isActive ? 'border-accent shadow-[0_0_15px_rgba(14,165,233,0.3)]' : 'border-black hover:border-accent/40'}
+                     onClick={() => { if(!isDisabled) { setActiveCamera(cam.id); setIsGlobalView(false); setLogsOffset(0); } }}
+                     className={`aspect-video rounded-lg border-2 transition-all overflow-hidden relative group
+                       ${isActive ? 'border-accent shadow-[0_0_15px_rgba(14,165,233,0.3)] cursor-pointer' : isDisabled ? 'border-danger/30 opacity-60 cursor-not-allowed' : 'border-black hover:border-accent/40 cursor-pointer'}
                      `}
                    >
-                     {/* Thumbnail preview - since it's hard to stream 20 cameras, we'll stream the active one or a placeholder image */}
+                     {/* Thumbnail preview */}
                      {isActive ? (
                          <CameraFeed streamUrl={`${VIDEO_FEED_URL}/${cam.id}`} hideOverlay={true} />
                      ) : (
                          <div className="w-full h-full bg-slate-900 border border-white/5 flex items-center justify-center relative">
                              <div className="absolute inset-0 bg-[repeating-linear-gradient(0deg,transparent,transparent_2px,rgba(255,255,255,0.02)_2px,rgba(255,255,255,0.02)_4px)]" />
-                             <Radio className="w-4 h-4 text-white/20" />
+                             {isDisabled ? <Settings className="w-4 h-4 text-danger/50" /> : <Radio className="w-4 h-4 text-white/20" />}
                          </div>
                      )}
-                     <div className="absolute top-0 left-0 right-0 bg-gradient-to-b from-black/80 to-transparent p-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                     <div className="absolute top-0 left-0 right-0 bg-gradient-to-b from-black/80 to-transparent p-1.5 opacity-0 group-hover:opacity-100 transition-opacity flex justify-between items-start">
                         <span className="text-[0.45rem] font-black text-white uppercase tracking-widest">{cam.name}</span>
+                        {isDisabled && <span className="text-[0.45rem] font-black text-danger uppercase tracking-widest">OFF</span>}
                      </div>
                      {isActive && <div className="absolute inset-0 ring-inset ring-2 ring-accent/50 rounded-lg" />}
+                     {isDisabled && <div className="absolute inset-0 bg-danger/10" />}
                    </div>
                 )
              })}
@@ -329,18 +333,30 @@ export default function NeuralStream() {
                   className="grid h-full p-2 gap-2"
                   style={{ gridTemplateColumns: `repeat(${gridSize}, minmax(0, 1fr))` }}
                 >
-                   {cameras.slice(0, gridSize * gridSize).map(cam => (
-                      <div key={cam.id} className="relative bg-slate-900 rounded-lg overflow-hidden border border-white/10 group">
-                         <CameraFeed streamUrl={`${VIDEO_FEED_URL}/${cam.id}`} hideOverlay={true} />
-                         <div className="absolute top-0 left-0 right-0 p-2 bg-gradient-to-b from-black/80 to-transparent">
+                   {cameras.slice(0, gridSize * gridSize).map(cam => {
+                      const isDisabled = cam.is_active === false;
+                      return (
+                      <div key={cam.id} className={`relative bg-slate-900 rounded-lg overflow-hidden border border-white/10 group aspect-video ${isDisabled ? 'opacity-60 grayscale' : ''}`}>
+                         {isDisabled ? (
+                           <div className="w-full h-full flex flex-col items-center justify-center bg-slate-900 border border-white/5 relative aspect-video">
+                             <div className="absolute inset-0 bg-[repeating-linear-gradient(0deg,transparent,transparent_2px,rgba(255,255,255,0.02)_2px,rgba(255,255,255,0.02)_4px)]" />
+                             <Settings className="w-8 h-8 text-danger/30 mb-2" />
+                             <span className="text-[0.6rem] font-black text-danger/50 uppercase tracking-widest mt-2 z-10">Stream Disabled</span>
+                           </div>
+                         ) : (
+                           <CameraFeed streamUrl={`${VIDEO_FEED_URL}/${cam.id}`} hideOverlay={true} />
+                         )}
+                         <div className="absolute top-0 left-0 right-0 p-2 bg-gradient-to-b from-black/80 to-transparent z-10">
                             <span className="text-[0.55rem] font-black text-white/80 uppercase tracking-widest block mb-0.5">Stream-{cam.id}</span>
                             <span className="text-[0.7rem] font-bold text-white tracking-tight leading-none">{cam.name}</span>
                          </div>
-                         <div className="absolute bottom-2 right-2 px-2 py-0.5 bg-black/60 backdrop-blur border border-white/10 rounded font-black text-[0.55rem] text-accent flex items-center gap-1 uppercase">
-                             <span className="w-1.5 h-1.5 bg-accent rounded-full animate-pulse" /> Live
+                         <div className={`absolute bottom-2 right-2 px-2 py-0.5 bg-black/60 backdrop-blur border ${isDisabled ? 'border-danger/30 text-danger' : 'border-white/10 text-accent'} rounded font-black text-[0.55rem] flex items-center gap-1 uppercase z-10`}>
+                             {!isDisabled && <span className="w-1.5 h-1.5 bg-accent rounded-full animate-pulse" />} 
+                             {isDisabled ? 'OFFLINE' : 'Live'}
                          </div>
                       </div>
-                   ))}
+                      )
+                   })}
                 </div>
              ) : (
                 /* Focus Mode */

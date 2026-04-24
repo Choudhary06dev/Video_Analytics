@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { Maximize2, Activity, ShieldCheck, AlertTriangle, Eye, Radio, VideoOff } from 'lucide-react';
+import { Maximize2, Activity, ShieldCheck, AlertTriangle, Eye, Radio, VideoOff, Settings } from 'lucide-react';
 import CameraFeed from './CameraFeed';
-import { fetchIntelligence, fetchAdminCameras, VIDEO_FEED_URL } from '../../api';
+import { fetchIntelligence, VIDEO_FEED_URL } from '../../api';
+import { fetchAdminCameras } from '../../services/cameraService';
 
 /**
  * CameraCard — Individual stream component with AI overlays and HUD.
@@ -14,6 +15,8 @@ function CameraCard({ cam, intel }) {
   // Is this the primary stream (the one receiving demo AI intel)?
   // For now, we'll map the primary intel to the first camera or ID 1
   const isPrimary = cam.id === 1 || cam.is_primary;
+
+  const isDisabled = cam.is_active === false;
 
   useEffect(() => {
     const iv = setInterval(() => {
@@ -37,17 +40,19 @@ function CameraCard({ cam, intel }) {
         className={`
           group relative overflow-hidden aspect-video rounded-lg cursor-pointer transition-all duration-500 bg-black
           border-2 ${cam.alert_mode ? 'border-danger/60 shadow-[0_0_24px_rgba(239,68,68,0.3)]' : hovered ? 'border-accent/50 shadow-premium' : 'border-transparent'}
+          ${isDisabled ? 'opacity-60 grayscale' : ''}
         `}
         style={{ transform: hovered ? 'translateY(-6px) scale(1.01)' : 'none' }}
       >
         {/* Stream Source */}
-        {isPrimary ? (
-          <CameraFeed streamUrl={`${VIDEO_FEED_URL}/${cam.id}`} hideOverlay={true} />
+        {isDisabled ? (
+           <div className="w-full h-full flex flex-col items-center justify-center bg-slate-900 border border-white/5 relative aspect-video">
+             <div className="absolute inset-0 bg-[repeating-linear-gradient(0deg,transparent,transparent_2px,rgba(255,255,255,0.02)_2px,rgba(255,255,255,0.02)_4px)]" />
+             <Settings className="w-8 h-8 text-danger/30 mb-2" />
+             <span className="text-[0.6rem] font-black text-danger/50 uppercase tracking-widest mt-2 z-10">Stream Disabled</span>
+           </div>
         ) : (
-          <div className="w-full h-full flex flex-col items-center justify-center bg-gray-900/50">
-            <VideoOff className="w-8 h-8 text-white/20 mb-2" />
-            <span className="text-[0.6rem] font-bold text-white/40 uppercase tracking-widest">No Active Stream</span>
-          </div>
+          <CameraFeed streamUrl={`${VIDEO_FEED_URL}/${cam.id}`} hideOverlay={true} />
         )}
 
         {/* Scan-line overlay */}
@@ -132,14 +137,16 @@ function CameraCard({ cam, intel }) {
              className="w-full max-w-5xl bg-card border border-white/10 rounded-lg overflow-hidden shadow-2xl"
            >
               <div className="flex aspect-video bg-black relative">
-                {isPrimary ? (
-                  <CameraFeed streamUrl={`${VIDEO_FEED_URL}/${cam.id}`} hideOverlay={true} />
+                {isDisabled ? (
+                   <div className="w-full flex flex-col items-center justify-center bg-slate-900 border border-white/5 relative">
+                     <div className="absolute inset-0 bg-[repeating-linear-gradient(0deg,transparent,transparent_2px,rgba(255,255,255,0.02)_2px,rgba(255,255,255,0.02)_4px)]" />
+                     <Settings className="w-16 h-16 text-danger/30 mb-4 z-10" />
+                     <span className="text-[1rem] font-black text-danger/50 uppercase tracking-widest z-10">Stream Disabled</span>
+                   </div>
                 ) : (
-                  <div className="w-full flex items-center justify-center text-white/20">
-                    <VideoOff className="w-16 h-16" />
-                  </div>
+                  <CameraFeed streamUrl={`${VIDEO_FEED_URL}/${cam.id}`} hideOverlay={true} />
                 )}
-                <div className="absolute top-6 left-6 flex flex-col gap-1">
+                <div className="absolute top-6 left-6 flex flex-col gap-1 z-10">
                    <h2 className="text-xl font-black text-white tracking-tight">{cam.name}</h2>
                    <div className="flex items-center gap-2 text-white/40 text-[0.75rem] font-bold">
                       <Radio className="w-3 h-3 text-danger animate-pulse" />
