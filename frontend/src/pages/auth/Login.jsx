@@ -4,6 +4,7 @@ import { Shield, Mail, Lock, Eye, EyeOff, Loader2, Cpu, Zap, Activity } from 'lu
 import { useAuth } from '../../context/AuthContext';
 import { login as apiLogin } from '../../services/authService';
 import authBg from '../../assets/auth-bg.png';
+import Logo from '../../components/ui/Logo';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -45,9 +46,7 @@ export default function LoginPage() {
 
         <div className="relative z-10">
           <div className="flex items-center gap-3 mb-12">
-            <div className="w-12 h-12 bg-gradient-to-tr from-accent to-emerald-500 rounded-lg flex items-center justify-center shadow-[0_0_20px_rgba(6,182,212,0.4)]">
-              <Shield className="w-6 h-6 text-white" />
-            </div>
+            <Logo showText={false} className="w-12 h-12" />
             <span className="text-xl font-black text-white uppercase tracking-[0.2em]">Nexer Tech</span>
           </div>
 
@@ -87,7 +86,7 @@ export default function LoginPage() {
           
           <div className="mb-8">
              <div className="lg:hidden flex items-center gap-3 mb-6">
-                <Shield className="w-8 h-8 text-accent animate-pulse" />
+                <Logo showText={false} className="w-10 h-10" />
                 <span className="text-xl font-black text-white uppercase tracking-[0.2em] italic">Nexer Tech</span>
              </div>
              <h3 className="text-3xl font-black text-white mb-2 uppercase tracking-tighter italic">

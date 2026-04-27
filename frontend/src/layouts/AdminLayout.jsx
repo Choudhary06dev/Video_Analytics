@@ -3,16 +3,14 @@ import { Outlet, Navigate } from 'react-router-dom';
 import Sidebar from '../components/layout/Sidebar';
 import Header from '../components/layout/Header';
 import Footer from '../components/layout/Footer';
-import AdminSidebar from '../components/layout/AdminSidebar';
+import AdminSidebar from '../components/admin/AdminSidebar';
 import { useAuth } from '../context/AuthContext';
 
 export default function AdminLayout() {
-  const { user, isAuthenticated, loading } = useAuth();
+  const { canView } = useAuth();
   const [isSidebarOpen, setSidebarOpen] = useState(true);
-  const { role } = useAuth();
 
-  // Strict double-check for admin roles
-  if (role !== 'super_admin' && role !== 'admin') {
+  if (!canView('admin_hub')) {
     return <Navigate to="/" replace />;
   }
 

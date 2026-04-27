@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { 
-  Menu, Search, Bell, ChevronDown, Sun, Moon, 
-  LayoutDashboard, Radio, Brain, Users, ClipboardList, 
+import {
+  Menu, Search, Bell, ChevronDown, Sun, Moon,
+  LayoutDashboard, Radio, Brain, Users, ClipboardList,
   Cpu, GraduationCap, Settings, X, ArrowRight
 } from 'lucide-react';
 import { APP_CONFIG } from '../../config';
@@ -21,13 +21,13 @@ const SEARCH_INDEX = [
   { name: 'AI Training', category: 'Pages', path: '/training', icon: GraduationCap },
   { name: 'Crisis Alerts', category: 'Pages', path: '/alerts', icon: Bell },
   { name: 'Global Settings', category: 'Pages', path: '/settings', icon: Settings },
-  
+
   // AI Scenarios (Top ones)
   { name: 'Unauthorized Entry', category: 'AI Models', path: '/scenarios', icon: Brain },
   { name: 'Weapon Detection', category: 'AI Models', path: '/scenarios', icon: Brain },
   { name: 'Fire / Smoke Detection', category: 'AI Models', path: '/scenarios', icon: Brain },
   { name: 'Crowd Density', category: 'AI Models', path: '/scenarios', icon: Brain },
-  
+
   // Mock Technical Items
   { name: 'Main Gate Camera', category: 'Cameras', path: '/neural-stream', icon: Radio },
   { name: 'ICU Monitor 04', category: 'Cameras', path: '/neural-stream', icon: Radio },
@@ -48,7 +48,7 @@ export default function Header({ isSidebarOpen, setSidebarOpen }) {
 
   useEffect(() => {
     if (searchQuery.trim().length > 0) {
-      const filtered = SEARCH_INDEX.filter(item => 
+      const filtered = SEARCH_INDEX.filter(item =>
         item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         item.category.toLowerCase().includes(searchQuery.toLowerCase())
       ).slice(0, 8);
@@ -106,28 +106,28 @@ export default function Header({ isSidebarOpen, setSidebarOpen }) {
   return (
     <header className="h-16 shrink-0 bg-card/80 backdrop-blur-md border-b border-border flex items-center justify-between px-4 sm:px-8 z-30">
       <div className="flex items-center gap-4">
-        <button 
+        <button
           onClick={() => setSidebarOpen(!isSidebarOpen)}
           className="p-2 -ml-2 rounded-lg text-text-gray hover:bg-surface transition-colors focus:outline-none"
         >
           <Menu className="w-5 h-5" />
         </button>
         <h1 className="text-xl font-semibold text-text-dark hidden sm:block truncate">
-          {APP_CONFIG.PROJECT_NAME} 
+          {APP_CONFIG.PROJECT_NAME}
           <span className="text-xs ml-2 px-2 py-1 rounded-md bg-accent-soft text-accent border border-accent/20 align-middle font-bold">
             PRO
           </span>
         </h1>
       </div>
-      
+
       <div className="flex items-center gap-2 sm:gap-4 shrink-0">
         {/* Functional Search Bar */}
         <div className="relative hidden md:block w-72 group" ref={searchRef}>
           <div className="relative">
             <Search className={`w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 transition-colors ${showResults ? 'text-accent' : 'text-text-gray group-focus-within:text-accent'}`} />
-            <input 
-              type="text" 
-              placeholder="Search cameras, events, pages..." 
+            <input
+              type="text"
+              placeholder="Search cameras, events, pages..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               onKeyDown={handleKeyDown}
@@ -135,7 +135,7 @@ export default function Header({ isSidebarOpen, setSidebarOpen }) {
               className="w-full bg-surface border border-border focus:bg-card focus:border-accent focus:ring-4 focus:ring-accent/10 text-sm text-text-dark rounded-full pl-10 pr-10 py-2 outline-none transition-all duration-300"
             />
             {searchQuery && (
-              <button 
+              <button
                 onClick={() => setSearchQuery('')}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-text-gray hover:text-text-dark p-1 rounded-full hover:bg-surface"
               >
@@ -212,43 +212,43 @@ export default function Header({ isSidebarOpen, setSidebarOpen }) {
           <Bell className="w-5 h-5" />
           <span className="absolute top-1.5 right-2 w-2 h-2 bg-danger rounded-full border-2 border-card shadow-sm"></span>
         </button>
-        
+
         <div className="relative" ref={profileRef}>
-          <button 
+          <button
             onClick={() => setShowProfileMenu(!showProfileMenu)}
             className={`flex items-center gap-2 p-1 pr-3 rounded-full border transition-all ${showProfileMenu ? 'bg-accent-soft border-accent/20' : 'border-border hover:bg-surface'}`}
           >
             <img src={`https://ui-avatars.com/api/?name=${user?.name || 'User'}&background=06b6d4&color=fff&bold=true`} alt="User" className="w-8 h-8 rounded-full shadow-sm ring-2 ring-white/5" />
             <div className="hidden lg:flex flex-col items-start -space-y-1">
-               <span className="text-[11px] font-black text-text-dark uppercase tracking-tight">{user?.name || 'Operator'}</span>
-               <span className="text-[9px] font-bold text-text-gray uppercase tracking-widest opacity-60">
-                 {user?.role ? user.role.replace('_', ' ') : 'Standard'} Access
-               </span>
+              <span className="text-[11px] font-black text-text-dark uppercase tracking-tight">{user?.name || 'Operator'}</span>
+              <span className="text-[9px] font-bold text-text-gray uppercase tracking-widest opacity-60">
+                {user?.role ? user.role.replace('_', ' ') : 'Standard'} Access
+              </span>
             </div>
             <ChevronDown className={`w-3.5 h-3.5 text-text-gray transition-transform duration-300 ${showProfileMenu ? 'rotate-180 text-accent' : ''}`} />
           </button>
 
           {showProfileMenu && (
             <div className="absolute top-full right-0 mt-2 w-56 bg-card border border-border rounded-lg shadow-premium overflow-hidden z-[60] animate-in fade-in slide-in-from-top-2 duration-200">
-               <div className="p-4 border-b border-border bg-surface/30">
-                  <div className="text-xs font-black text-text-dark uppercase tracking-wider mb-0.5">{user?.name}</div>
-                  <div className="text-[10px] text-text-gray font-medium truncate">{user?.email}</div>
-               </div>
-               <div className="p-2">
-                  <button className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-surface text-text-gray transition-all">
-                     <Settings className="w-4 h-4" />
-                     <span className="text-xs font-bold">Profile Settings</span>
-                  </button>
-                  <button 
-                    onClick={handleLogout}
-                    className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-danger/5 text-danger transition-all group"
-                  >
-                     <div className="p-1.5 rounded-lg bg-danger/10 group-hover:bg-danger group-hover:text-white transition-all">
-                        <LogOut className="w-4 h-4" />
-                     </div>
-                     <span className="text-xs font-bold">Terminate Session</span>
-                  </button>
-               </div>
+              <div className="p-4 border-b border-border bg-surface/30">
+                <div className="text-xs font-black text-text-dark uppercase tracking-wider mb-0.5">{user?.name}</div>
+                <div className="text-[10px] text-text-gray font-medium truncate">{user?.email}</div>
+              </div>
+              <div className="p-2">
+                <button className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-surface text-text-gray transition-all">
+                  <Settings className="w-4 h-4" />
+                  <span className="text-xs font-bold">Profile Settings</span>
+                </button>
+                <button
+                  onClick={handleLogout}
+                  className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-danger/5 text-danger transition-all group"
+                >
+                  <div className="p-1.5 rounded-lg bg-danger/10 group-hover:bg-danger group-hover:text-white transition-all">
+                    <LogOut className="w-4 h-4" />
+                  </div>
+                  <span className="text-xs font-bold">Terminate Session</span>
+                </button>
+              </div>
             </div>
           )}
         </div>

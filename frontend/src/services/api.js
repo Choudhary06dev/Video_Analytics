@@ -37,7 +37,11 @@ export async function post(path, body) {
     }
     if (!res.ok) {
         const err = await res.json().catch(() => ({}));
-        throw new Error(err.detail ?? "POST failed");
+        let msg = "POST failed";
+        if (typeof err.detail === 'string') msg = err.detail;
+        else if (Array.isArray(err.detail)) msg = err.detail.map(e => e.msg || JSON.stringify(e)).join(", ");
+        else if (err.detail) msg = JSON.stringify(err.detail);
+        throw new Error(msg);
     }
     return res.json();
 }
@@ -57,7 +61,11 @@ export async function put(path, body) {
     }
     if (!res.ok) {
         const err = await res.json().catch(() => ({}));
-        throw new Error(err.detail ?? "PUT failed");
+        let msg = "PUT failed";
+        if (typeof err.detail === 'string') msg = err.detail;
+        else if (Array.isArray(err.detail)) msg = err.detail.map(e => e.msg || JSON.stringify(e)).join(", ");
+        else if (err.detail) msg = JSON.stringify(err.detail);
+        throw new Error(msg);
     }
     return res.json();
 }
@@ -78,7 +86,11 @@ export async function patch(path, body) {
     }
     if (!res.ok) {
         const err = await res.json().catch(() => ({}));
-        throw new Error(err.detail ?? "PATCH failed");
+        let msg = "PATCH failed";
+        if (typeof err.detail === 'string') msg = err.detail;
+        else if (Array.isArray(err.detail)) msg = err.detail.map(e => e.msg || JSON.stringify(e)).join(", ");
+        else if (err.detail) msg = JSON.stringify(err.detail);
+        throw new Error(msg);
     }
     return res.json();
 }
@@ -97,7 +109,11 @@ export async function del(path) {
     }
     if (!res.ok) {
         const err = await res.json().catch(() => ({}));
-        throw new Error(err.detail ?? "DELETE failed");
+        let msg = "DELETE failed";
+        if (typeof err.detail === 'string') msg = err.detail;
+        else if (Array.isArray(err.detail)) msg = err.detail.map(e => e.msg || JSON.stringify(e)).join(", ");
+        else if (err.detail) msg = JSON.stringify(err.detail);
+        throw new Error(msg);
     }
     return res.json();
 }

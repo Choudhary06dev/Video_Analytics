@@ -26,21 +26,54 @@ def init_system_data():
         
         # 2. Seed Modules
         modules = [
-            ("Dashboard", "dashboard"),
-            ("Live Monitoring", "live_monitoring"),
+            ("Command Hub", "dashboard"),
+            ("Neural Stream", "live_monitoring"),
             ("AI Scenarios", "scenarios"),
-            ("Activity Vault", "vault"),
-            ("Alerts", "alerts"),
-            ("System Health", "health"),
-            ("Admin Hub", "admin_hub"),
             ("Staff Roster", "roster"),
+            ("Activity Vault", "vault"),
+            ("System Health", "health"),
+            ("AI Training", "training"),
+            ("Crisis Alerts", "alerts"),
+            ("Admin Control", "admin_hub"),
+            ("Dashboard", "admin_dashboard"),
+            ("Users", "users"),
+            ("Roles", "roles"),
+            ("Areas", "areas"),
+            ("Cameras", "cameras"),
+            ("Audit Protocols", "audit"),
+            ("Scenario Control", "scenario_orchestration"),
+            ("AI Scenario Registry", "intelligence_registry"),
             ("Settings", "settings"),
         ]
+
+
         for name, key in modules:
             stmt = select(ModulePermission).where(ModulePermission.key == key)
             mod = session.exec(stmt).first()
             if not mod:
-                session.add(ModulePermission(name=name, key=key))
+                mod = ModulePermission(name=name, key=key)
+                session.add(mod)
+                session.flush() # Get ID
+            elif mod.name != name:
+                mod.name = name
+                session.add(mod)
+            
+            # Auto-assign to Super Admin (Role ID 1)
+            from app.models import RoleModulePermission
+            stmt_link = select(RoleModulePermission).where(
+                RoleModulePermission.role_id == 1,
+                RoleModulePermission.module_permission_id == mod.id
+            )
+            link = session.exec(stmt_link).first()
+            if not link:
+                session.add(RoleModulePermission(
+                    role_id=1,
+                    module_permission_id=mod.id,
+                    can_view=True,
+                    can_edit=True,
+                    can_delete=True
+                ))
+
 
         # 3. Sync AI Scenarios
         scenarios_to_sync = [

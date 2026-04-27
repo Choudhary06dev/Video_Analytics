@@ -1,6 +1,6 @@
 import { get, post, put, del, patch } from './api';
 
-export const fetchAdminUsers = () => get("/admin/users");
+export const fetchAdminUsers = () => get("/admin/users/");
 
 export const createUser = (userData) => post("/admin/users", userData);
 

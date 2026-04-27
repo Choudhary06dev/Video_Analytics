@@ -5,21 +5,22 @@ from typing import List
 import httpx
 from app.core.database import get_session
 from app.api.v1.auth import get_current_user
-from app.api.v1.users import verify_admin_access, verify_super_admin, verify_admin_hub_access
+from app.api.v1.users import verify_module_access
 from app.models import Camera, Area, CameraScenarioAssignment, AIScenario
-from app.schemas.camera_schema import CameraCreate, CameraUpdate, AreaCreate, AreaUpdate, ScenarioToggle
+
+from app.schemas.camera_schema import CameraCreate, CameraUpdate, AreaCreate, AreaUpdate, ScenarioToggle, ScenarioBulkUpdate, ScenarioCreate, ScenarioUpdate
 
 router = APIRouter(prefix="", tags=["Camera Management"])
 
 # --- AREAS ---
 
 @router.get("/admin/areas")
-def get_areas(session: Session = Depends(get_session), admin_data: dict = Depends(verify_admin_access)):
+def get_areas(session: Session = Depends(get_session), admin_data: dict = Depends(lambda cur=Depends(get_current_user), s=Depends(get_session): verify_module_access("areas", cur, s, access_level="view"))):
     areas = session.exec(select(Area)).all()
     return areas
 
 @router.post("/admin/areas")
-def create_area(area_data: AreaCreate, session: Session = Depends(get_session), admin_data: dict = Depends(verify_admin_hub_access)):
+def create_area(area_data: AreaCreate, session: Session = Depends(get_session), admin_data: dict = Depends(lambda cur=Depends(get_current_user), s=Depends(get_session): verify_module_access("areas", cur, s, access_level="edit"))):
     if area_data.parent_id:
         parent = session.get(Area, area_data.parent_id)
         if not parent:
@@ -36,7 +37,7 @@ def create_area(area_data: AreaCreate, session: Session = Depends(get_session), 
     return new_area
 
 @router.put("/admin/areas/{area_id}")
-def update_area(area_id: int, area_data: AreaUpdate, session: Session = Depends(get_session), admin_data: dict = Depends(verify_admin_hub_access)):
+def update_area(area_id: int, area_data: AreaUpdate, session: Session = Depends(get_session), admin_data: dict = Depends(lambda cur=Depends(get_current_user), s=Depends(get_session): verify_module_access("areas", cur, s, access_level="edit"))):
     area = session.get(Area, area_id)
     if not area:
         raise HTTPException(status_code=404, detail="Area not found")
@@ -54,7 +55,7 @@ def update_area(area_id: int, area_data: AreaUpdate, session: Session = Depends(
     return area
 
 @router.delete("/admin/areas/{area_id}")
-def delete_area(area_id: int, session: Session = Depends(get_session), admin_data: dict = Depends(verify_admin_hub_access)):
+def delete_area(area_id: int, session: Session = Depends(get_session), admin_data: dict = Depends(lambda cur=Depends(get_current_user), s=Depends(get_session): verify_module_access("areas", cur, s, access_level="delete"))):
     area = session.get(Area, area_id)
     if not area:
         raise HTTPException(status_code=404, detail="Area not found")
@@ -70,12 +71,26 @@ def delete_area(area_id: int, session: Session = Depends(get_session), admin_dat
 # --- CAMERAS ---
 
 @router.get("/admin/cameras")
-def get_cameras(session: Session = Depends(get_session), admin_data: dict = Depends(verify_admin_access)):
+def get_cameras(session: Session = Depends(get_session), admin_data: dict = Depends(lambda cur=Depends(get_current_user), s=Depends(get_session): verify_module_access("cameras", cur, s, access_level="view"))):
     cameras = session.exec(select(Camera)).all()
-    return cameras
+    result = []
+    for cam in cameras:
+        # Count enabled assignments for this camera
+        stmt = select(CameraScenarioAssignment).where(
+            CameraScenarioAssignment.camera_id == cam.id,
+            CameraScenarioAssignment.is_enabled == True
+        )
+        count = len(session.exec(stmt).all())
+        
+        # Merge count into dict
+        cam_dict = cam.dict()
+        cam_dict["scenario_count"] = count
+        result.append(cam_dict)
+    return result
+
 
 @router.post("/admin/cameras")
-def create_camera(camera_data: CameraCreate, session: Session = Depends(get_session), admin_data: dict = Depends(verify_admin_hub_access)):
+def create_camera(camera_data: CameraCreate, session: Session = Depends(get_session), admin_data: dict = Depends(lambda cur=Depends(get_current_user), s=Depends(get_session): verify_module_access("cameras", cur, s, access_level="edit"))):
     area = session.get(Area, camera_data.area_id)
     if not area:
         raise HTTPException(status_code=400, detail="Assigned Area not found")
@@ -90,7 +105,7 @@ def create_camera(camera_data: CameraCreate, session: Session = Depends(get_sess
     return new_camera
 
 @router.put("/admin/cameras/{camera_id}")
-def update_camera(camera_id: int, camera_data: CameraUpdate, session: Session = Depends(get_session), admin_data: dict = Depends(verify_admin_hub_access)):
+def update_camera(camera_id: int, camera_data: CameraUpdate, session: Session = Depends(get_session), admin_data: dict = Depends(lambda cur=Depends(get_current_user), s=Depends(get_session): verify_module_access("cameras", cur, s, access_level="edit"))):
     camera = session.get(Camera, camera_id)
     if not camera:
         raise HTTPException(status_code=404, detail="Camera not found")
@@ -111,7 +126,7 @@ def update_camera(camera_id: int, camera_data: CameraUpdate, session: Session = 
     return camera
 
 @router.delete("/admin/cameras/{camera_id}")
-def delete_camera(camera_id: int, session: Session = Depends(get_session), admin_data: dict = Depends(verify_admin_hub_access)):
+def delete_camera(camera_id: int, session: Session = Depends(get_session), admin_data: dict = Depends(lambda cur=Depends(get_current_user), s=Depends(get_session): verify_module_access("cameras", cur, s, access_level="delete"))):
     camera = session.get(Camera, camera_id)
     if not camera:
         raise HTTPException(status_code=404, detail="Camera not found")
@@ -122,30 +137,173 @@ def delete_camera(camera_id: int, session: Session = Depends(get_session), admin
     session.commit()
     return {"message": "Camera deactivated successfully"}
 
-@router.put("/admin/cameras/{camera_id}/scenarios")
-def toggle_camera_scenario(camera_id: int, toggle: ScenarioToggle, session: Session = Depends(get_session), admin_data: dict = Depends(verify_super_admin)):
+@router.get("/admin/cameras/{camera_id}/scenarios")
+def get_camera_scenarios(camera_id: int, session: Session = Depends(get_session), admin_data: dict = Depends(lambda cur=Depends(get_current_user), s=Depends(get_session): verify_module_access("scenario_orchestration", cur, s, access_level="view"))):
+    """
+    Returns all 21 scenarios with their is_enabled status for a specific camera.
+    """
     camera = session.get(Camera, camera_id)
     if not camera:
         raise HTTPException(status_code=404, detail="Camera not found")
-    scenario = session.get(AIScenario, toggle.scenario_id)
-    if not scenario:
-        raise HTTPException(status_code=400, detail="AI Scenario not found")
+    
+    # Get all system scenarios
+    all_scenarios = session.exec(select(AIScenario)).all()
+    
+    # Get current assignments
+    stmt = select(CameraScenarioAssignment).where(CameraScenarioAssignment.camera_id == camera_id)
+    assignments = {a.scenario_id: a.is_enabled for a in session.exec(stmt).all()}
+    
+    result = []
+    for s in all_scenarios:
+        result.append({
+            "id": s.id,
+            "name": s.name,
+            "key": s.key,
+            "severity": s.default_severity,
+            "is_enabled": assignments.get(s.id, False)
+        })
+    
+    return result
+
+
+@router.get("/internal/cameras/{camera_id}/scenarios/enabled")
+def get_enabled_camera_scenarios(camera_id: int, session: Session = Depends(get_session)):
+    """
+    Internal service endpoint used by the AI process at startup.
+    It returns only enabled scenario names and does not expose admin metadata.
+    """
+    camera = session.get(Camera, camera_id)
+    if not camera:
+        raise HTTPException(status_code=404, detail="Camera not found")
+
     stmt = select(CameraScenarioAssignment).where(
         CameraScenarioAssignment.camera_id == camera_id,
-        CameraScenarioAssignment.scenario_id == toggle.scenario_id
+        CameraScenarioAssignment.is_enabled == True
     )
-    assignment = session.exec(stmt).first()
-    if assignment:
-        assignment.is_enabled = toggle.is_enabled
-    else:
-        assignment = CameraScenarioAssignment(
-            camera_id=camera_id,
-            scenario_id=toggle.scenario_id,
-            is_enabled=toggle.is_enabled
-        )
-    session.add(assignment)
+    assignments = session.exec(stmt).all()
+    enabled_names = []
+    for assignment in assignments:
+        scenario = session.get(AIScenario, assignment.scenario_id)
+        if scenario:
+            enabled_names.append(scenario.name)
+
+    return {"camera_id": camera_id, "enabled_scenarios": enabled_names}
+
+@router.put("/admin/cameras/{camera_id}/scenarios")
+async def sync_camera_scenarios(camera_id: int, data: ScenarioBulkUpdate, session: Session = Depends(get_session), admin_data: dict = Depends(lambda cur=Depends(get_current_user), s=Depends(get_session): verify_module_access("scenario_orchestration", cur, s, access_level="edit"))):
+
+    """
+    Bulk syncs enabled scenarios for a camera and notifies the AI service.
+    """
+    camera = session.get(Camera, camera_id)
+    if not camera:
+        raise HTTPException(status_code=404, detail="Camera not found")
+    
+    # 1. Remove existing assignments for this camera
+    stmt = select(CameraScenarioAssignment).where(CameraScenarioAssignment.camera_id == camera_id)
+    existing = session.exec(stmt).all()
+    for e in existing:
+        session.delete(e)
+    
+    # 2. Add new enabled assignments
+    enabled_names = []
+    for sid in data.enabled_scenario_ids:
+        scenario = session.get(AIScenario, sid)
+        if scenario:
+            assignment = CameraScenarioAssignment(
+                camera_id=camera_id,
+                scenario_id=sid,
+                is_enabled=True
+            )
+            session.add(assignment)
+            enabled_names.append(scenario.name)
+    
     session.commit()
-    return {"message": f"Scenario '{scenario.name}' {'enabled' if toggle.is_enabled else 'disabled'}"}
+
+    # 3. Notify AI Service (Handshake)
+    try:
+        async with httpx.AsyncClient() as client:
+            # Tell AI service to reload config for this camera
+            await client.post(f"http://localhost:8001/control/reload/{camera_id}", json={
+                "enabled_scenarios": enabled_names
+            })
+    except Exception as e:
+        # Don't fail the whole request if AI service is down, but log it
+        print(f"Failed to notify AI service: {e}")
+
+    return {"status": "success", "message": f"Synced {len(enabled_names)} scenarios for camera {camera_id}"}
+    
+
+# --- AI SCENARIOS (CRUD) ---
+
+@router.get("/admin/scenarios")
+def get_all_scenarios(session: Session = Depends(get_session), admin_data: dict = Depends(lambda cur=Depends(get_current_user), s=Depends(get_session): verify_module_access("intelligence_registry", cur, s, access_level="view"))):
+    """
+    Returns the list of all AI scenarios in the system.
+    """
+    return session.exec(select(AIScenario)).all()
+
+
+@router.post("/admin/scenarios")
+def create_scenario(data: ScenarioCreate, session: Session = Depends(get_session), admin_data: dict = Depends(lambda cur=Depends(get_current_user), s=Depends(get_session): verify_module_access("intelligence_registry", cur, s, access_level="edit"))):
+
+    """
+    Adds a new AI scenario to the system registry.
+    """
+    # Check if key already exists
+    existing = session.exec(select(AIScenario).where(AIScenario.key == data.key)).first()
+    if existing:
+        raise HTTPException(status_code=400, detail="A scenario with this key already exists")
+        
+    new_scenario = AIScenario(
+        name=data.name,
+        key=data.key,
+        description=data.description,
+        default_severity=data.default_severity
+    )
+    session.add(new_scenario)
+    session.commit()
+    session.refresh(new_scenario)
+    return new_scenario
+
+
+@router.put("/admin/scenarios/{scenario_id}")
+def update_scenario(scenario_id: int, data: ScenarioUpdate, session: Session = Depends(get_session), admin_data: dict = Depends(lambda cur=Depends(get_current_user), s=Depends(get_session): verify_module_access("intelligence_registry", cur, s, access_level="edit"))):
+
+    """
+    Updates an existing AI scenario.
+    """
+    scenario = session.get(AIScenario, scenario_id)
+    if not scenario:
+        raise HTTPException(status_code=404, detail="Scenario not found")
+        
+    if data.name: scenario.name = data.name
+    if data.key: scenario.key = data.key
+    if data.description: scenario.description = data.description
+    if data.default_severity: scenario.default_severity = data.default_severity
+    
+    session.add(scenario)
+    session.commit()
+    session.refresh(scenario)
+    return scenario
+
+
+@router.delete("/admin/scenarios/{scenario_id}")
+def delete_scenario(scenario_id: int, session: Session = Depends(get_session), admin_data: dict = Depends(lambda cur=Depends(get_current_user), s=Depends(get_session): verify_module_access("intelligence_registry", cur, s, access_level="delete"))):
+
+    """
+    Removes a scenario from the system.
+    """
+    scenario = session.get(AIScenario, scenario_id)
+    if not scenario:
+        raise HTTPException(status_code=404, detail="Scenario not found")
+        
+    # Check if any camera is using it?
+    # For now we allow deletion but it might break existing assignments.
+    session.delete(scenario)
+    session.commit()
+    return {"message": "Scenario deleted successfully"}
+
 
 # --- STREAMS ---
 
@@ -162,12 +320,24 @@ async def video_feed(camera_id: int, session: Session = Depends(get_session)):
     import urllib.parse
     source_url_encoded = urllib.parse.quote(camera_data.source_url, safe="")
     ai_service_url = f"http://localhost:8001/stream/{camera_id}?source={source_url_encoded}"
+    ai_health_url = f"http://localhost:8001/intelligence/{camera_id}"
+
+    try:
+        async with httpx.AsyncClient(timeout=1.0) as client:
+            await client.get(ai_health_url)
+    except httpx.HTTPError:
+        raise HTTPException(status_code=503, detail="AI video service is offline")
     
     async def stream_proxy():
-        async with httpx.AsyncClient() as client:
-            async with client.stream("GET", ai_service_url) as response:
-                async for chunk in response.aiter_bytes():
-                    yield chunk
+        try:
+            timeout = httpx.Timeout(None, connect=2.0)
+            async with httpx.AsyncClient(timeout=timeout) as client:
+                async with client.stream("GET", ai_service_url) as response:
+                    response.raise_for_status()
+                    async for chunk in response.aiter_bytes():
+                        yield chunk
+        except httpx.HTTPError as exc:
+            print(f"AI stream unavailable for camera {camera_id}: {exc}")
 
     return StreamingResponse(
         stream_proxy(),

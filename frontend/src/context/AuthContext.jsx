@@ -25,7 +25,17 @@ export const AuthProvider = ({ children }) => {
   const canView = (moduleKey) => {
     if (!moduleKey) return true;
     const modulePerm = permissions[moduleKey];
-    return modulePerm ? modulePerm.can_view !== false : true;
+    return !!modulePerm?.can_view;
+  };
+
+  const canEdit = (moduleKey) => {
+    if (!moduleKey) return true;
+    return !!permissions[moduleKey]?.can_edit;
+  };
+
+  const canDelete = (moduleKey) => {
+    if (!moduleKey) return true;
+    return !!permissions[moduleKey]?.can_delete;
   };
 
   useEffect(() => {
@@ -59,7 +69,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, role: user?.role, permissions, canView, login, logout, isAuthenticated: !!token, loading }}>
+    <AuthContext.Provider value={{ user, token, role: user?.role, permissions, canView, canEdit, canDelete, login, logout, isAuthenticated: !!token, loading }}>
       {!loading && children}
     </AuthContext.Provider>
   );

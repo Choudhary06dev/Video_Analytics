@@ -30,3 +30,23 @@ class CameraUpdate(BaseModel):
 class ScenarioToggle(BaseModel):
     scenario_id: int
     is_enabled: bool
+
+
+class ScenarioBulkUpdate(BaseModel):
+    enabled_scenario_ids: list[int]
+
+
+class ScenarioCreate(BaseModel):
+    name: str
+    key: str
+    description: Optional[str] = None
+    default_severity: str = "Medium"
+
+
+class ScenarioUpdate(BaseModel):
+    name: Optional[str] = None
+    key: Optional[str] = None
+    description: Optional[str] = None
+    default_severity: Optional[str] = None
+
+

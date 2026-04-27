@@ -4,8 +4,11 @@ import {
   fetchAdminAreas, 
   createCamera, 
   updateCamera, 
-  deleteCamera 
+  deleteCamera,
+  fetchCameraScenarios,
+  syncCameraScenarios
 } from '../../services/cameraService';
+
 import { 
   Cctv, 
   Plus, 
@@ -19,8 +22,11 @@ import {
   Loader2,
   Edit2,
   Trash2,
-  X
+  X,
+  BrainCircuit,
+  CheckCircle2
 } from 'lucide-react';
+
 import { useNavigate } from 'react-router-dom';
 
 export default function SurveillanceConfig() {
@@ -36,9 +42,13 @@ export default function SurveillanceConfig() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedCamera, setSelectedCamera] = useState(null);
 
-  // Form States
   const [formData, setFormData] = useState({ name: '', source_url: '', area_id: '', is_active: true });
   const [submitting, setSubmitting] = useState(false);
+
+  // AI Scenario States
+  const [showScenarioModal, setShowScenarioModal] = useState(false);
+  const [loadingScenarios, setLoadingScenarios] = useState(false);
+  const [scenarioData, setScenarioData] = useState([]);
 
   useEffect(() => {
     loadData();
@@ -119,6 +129,40 @@ export default function SurveillanceConfig() {
     setSelectedCamera(camera);
     setShowDeleteModal(true);
   };
+
+  const openScenarioModal = async (camera) => {
+    setSelectedCamera(camera);
+    setShowScenarioModal(true);
+    setLoadingScenarios(true);
+    try {
+      const data = await fetchCameraScenarios(camera.id);
+      setScenarioData(data);
+    } catch (err) {
+      console.error("Failed to load scenarios", err);
+    } finally {
+      setLoadingScenarios(false);
+    }
+  };
+
+  const handleSaveScenarios = async () => {
+    const enabledIds = scenarioData.filter(s => s.is_enabled).map(s => s.id);
+    try {
+      setSubmitting(true);
+      await syncCameraScenarios(selectedCamera.id, enabledIds);
+      setShowScenarioModal(false);
+    } catch (err) {
+      alert(err.message || "Failed to sync scenarios");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const toggleScenarioInState = (id) => {
+    setScenarioData(prev => prev.map(s => 
+      s.id === id ? { ...s, is_enabled: !s.is_enabled } : s
+    ));
+  };
+
 
   const filteredCameras = cameras.filter(cam => 
     cam.name.toLowerCase().includes(filter.toLowerCase()) || 
@@ -256,6 +300,9 @@ export default function SurveillanceConfig() {
                                 </td>
                                 <td className="py-6 px-8 text-right">
                                     <div className="flex items-center justify-end gap-2">
+                                        <button onClick={() => openScenarioModal(cam)} className="p-2 border border-border text-violet-500 rounded-lg hover:bg-violet-500 hover:text-white transition-all bg-card" title="AI Model Configuration">
+                                            <BrainCircuit className="w-4 h-4" />
+                                        </button>
                                         <button onClick={() => openEditModal(cam)} className="p-2 border border-border text-text-gray rounded-lg hover:text-accent hover:border-accent transition-all bg-card" title="Configure Stream">
                                             <Edit2 className="w-4 h-4" />
                                         </button>
@@ -263,6 +310,7 @@ export default function SurveillanceConfig() {
                                             <Trash2 className="w-4 h-4" />
                                         </button>
                                     </div>
+
                                 </td>
                             </tr>
                         );
@@ -379,6 +427,75 @@ export default function SurveillanceConfig() {
         </div>
       )}
 
+      {/* Scenario Orchestrator Modal */}
+      {showScenarioModal && selectedCamera && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-card w-full max-w-2xl rounded-lg border border-border overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200">
+            <div className="p-5 border-b border-border flex items-center justify-between bg-violet-500/5">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-violet-500/10 rounded-lg flex items-center justify-center border border-violet-500/20">
+                  <BrainCircuit className="w-6 h-6 text-violet-500" />
+                </div>
+                <div>
+                  <h2 className="text-sm font-black uppercase tracking-widest text-text-dark">AI Intelligence Config</h2>
+                  <p className="text-[9px] font-bold text-text-gray uppercase tracking-widest">Managing models for: <span className="text-violet-500">{selectedCamera.name}</span></p>
+                </div>
+              </div>
+              <button type="button" onClick={() => setShowScenarioModal(false)} className="text-text-gray hover:text-text-dark p-1">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            
+            <div className="p-6">
+              {loadingScenarios ? (
+                <div className="py-20 flex flex-col items-center gap-3">
+                  <Loader2 className="w-8 h-8 text-violet-500 animate-spin" />
+                  <p className="text-[10px] font-black uppercase tracking-widest text-text-gray">Mapping Neural Paths...</p>
+                </div>
+              ) : (
+                <>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+                    {scenarioData.map(scenario => (
+                      <div 
+                        key={scenario.id} 
+                        onClick={() => toggleScenarioInState(scenario.id)}
+                        className={`flex items-center justify-between p-4 rounded-lg border transition-all cursor-pointer group
+                          ${scenario.is_enabled ? 'bg-violet-500/5 border-violet-500/30 shadow-sm' : 'bg-surface border-border hover:border-violet-500/30'}`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className={`w-2 h-2 rounded-full ${scenario.is_enabled ? 'bg-violet-500 animate-pulse' : 'bg-border'}`} />
+                          <span className={`text-[11px] font-black uppercase tracking-tight transition-colors ${scenario.is_enabled ? 'text-violet-600' : 'text-text-gray group-hover:text-text-dark'}`}>
+                            {scenario.name}
+                          </span>
+                        </div>
+                        {scenario.is_enabled && <CheckCircle2 className="w-4 h-4 text-violet-500" />}
+                      </div>
+                    ))}
+                  </div>
+                  
+                  <div className="mt-8 pt-6 border-t border-border flex items-center justify-between">
+                    <div className="text-[10px] font-black uppercase tracking-widest text-text-gray">
+                      <span className="text-violet-500">{scenarioData.filter(s => s.is_enabled).length}</span> Models Selected
+                    </div>
+                    <div className="flex gap-3">
+                      <button onClick={() => setShowScenarioModal(false)}
+                        className="px-6 py-2.5 bg-surface border border-border rounded-lg text-[10px] font-black uppercase tracking-widest text-text-gray hover:text-text-dark transition-all">
+                        Discard
+                      </button>
+                      <button onClick={handleSaveScenarios} disabled={submitting}
+                        className="px-8 py-2.5 bg-violet-600 text-white rounded-lg text-[10px] font-black uppercase tracking-widest shadow-md hover:-translate-y-0.5 transition-all disabled:opacity-50">
+                        {submitting ? 'Syncing...' : 'Deploy Models'}
+                      </button>
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
+
