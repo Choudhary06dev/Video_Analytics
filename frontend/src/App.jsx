@@ -1,90 +1,98 @@
-import React from 'react';
+import React, { Suspense, lazy } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider } from './context/ThemeContext';
 import { AuthProvider } from './context/AuthContext';
 
 // Layout
-import AppLayout from './layouts/AppLayout';
-import AdminLayout from './layouts/AdminLayout';
+const AppLayout = lazy(() => import('./layouts/AppLayout'));
+const AdminLayout = lazy(() => import('./layouts/AdminLayout'));
 
 // Components
-import ProtectedRoute from './components/ui/ProtectedRoute';
+const ProtectedRoute = lazy(() => import('./components/ui/ProtectedRoute'));
 
 // Pages - Auth
-import LoginPage from './pages/auth/Login';
-import RegisterPage from './pages/auth/Signup';
+const LoginPage = lazy(() => import('./pages/auth/Login'));
+const RegisterPage = lazy(() => import('./pages/auth/Signup'));
 
 // Pages - Main
-import Dashboard from './pages/Dashboard';
-import NeuralStream from './pages/NeuralStream';
-import AIScenarios from './pages/AIScenarios';
-import StaffRoster from './pages/StaffRoster';
-import ActivityVault from './pages/ActivityVault';
-import SystemHealth from './pages/SystemHealth';
-import AITraining from './pages/AITraining';
-import Alerts from './pages/Alerts';
-import Settings from './pages/Settings';
+const Dashboard = lazy(() => import('./pages/Dashboard'));
+const NeuralStream = lazy(() => import('./pages/NeuralStream'));
+const AIScenarios = lazy(() => import('./pages/AIScenarios'));
+const StaffRoster = lazy(() => import('./pages/StaffRoster'));
+const ActivityVault = lazy(() => import('./pages/ActivityVault'));
+const SystemHealth = lazy(() => import('./pages/SystemHealth'));
+const AITraining = lazy(() => import('./pages/AITraining'));
+const Alerts = lazy(() => import('./pages/Alerts'));
+const Settings = lazy(() => import('./pages/Settings'));
 
 // Sub Admin Pages
-import AdminDashboard from './pages/admin/AdminDashboard';
-import UserManagement from './pages/admin/UserManagement';
-import RoleManagement from './pages/admin/RoleManagement';
-import ActionAudit from './pages/admin/ActionAudit';
-import SystemSettings from './pages/admin/SystemSettings';
-import SurveillanceConfig from './pages/admin/SurveillanceConfig';
+const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard'));
+const UserManagement = lazy(() => import('./pages/admin/UserManagement'));
+const RoleManagement = lazy(() => import('./pages/admin/RoleManagement'));
+const ActionAudit = lazy(() => import('./pages/admin/ActionAudit'));
+const SystemSettings = lazy(() => import('./pages/admin/SystemSettings'));
+const SurveillanceConfig = lazy(() => import('./pages/admin/SurveillanceConfig'));
 
-import AreaManagement from './pages/admin/AreaManagement';
-import ScenarioOrchestration from './pages/admin/ScenarioOrchestration';
-import AIScenarioRegistry from './pages/admin/AIScenarioRegistry';
+const AreaManagement = lazy(() => import('./pages/admin/AreaManagement'));
+const ScenarioOrchestration = lazy(() => import('./pages/admin/ScenarioOrchestration'));
+const AIScenarioRegistry = lazy(() => import('./pages/admin/AIScenarioRegistry'));
 
-
+// Loading Fallback Component
+const LoadingFallback = () => (
+  <div className="min-h-screen bg-background flex items-center justify-center">
+    <div className="flex flex-col items-center gap-4">
+      <div className="w-12 h-12 border-4 border-accent border-t-transparent rounded-full animate-spin"></div>
+      <p className="text-[10px] font-black uppercase tracking-[0.2em] text-text-gray animate-pulse">Initializing Interface</p>
+    </div>
+  </div>
+);
 
 function App() {
   return (
     <ThemeProvider>
       <AuthProvider>
         <BrowserRouter>
-          <Routes>
-            {/* Public Routes */}
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/register" element={<RegisterPage />} />
+          <Suspense fallback={<LoadingFallback />}>
+            <Routes>
+              {/* Public Routes */}
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/register" element={<RegisterPage />} />
 
-            {/* Private Protected Routes (Operator/User Side) */}
-            <Route element={<ProtectedRoute />}>
-              <Route element={<AppLayout />}>
-                <Route path="/" element={<Dashboard />} />
-                <Route path="/neural-stream" element={<NeuralStream />} />
-                <Route path="/scenarios" element={<AIScenarios />} />
-                <Route path="/roster" element={<StaffRoster />} />
-                <Route path="/vault" element={<ActivityVault />} />
-                <Route path="/health" element={<SystemHealth />} />
-                <Route path="/training" element={<AITraining />} />
-                <Route path="/alerts" element={<Alerts />} />
-                <Route path="/settings" element={<Settings />} />
+              {/* Private Protected Routes (Operator/User Side) */}
+              <Route element={<ProtectedRoute />}>
+                <Route element={<AppLayout />}>
+                  <Route path="/" element={<Dashboard />} />
+                  <Route path="/neural-stream" element={<NeuralStream />} />
+                  <Route path="/scenarios" element={<AIScenarios />} />
+                  <Route path="/roster" element={<StaffRoster />} />
+                  <Route path="/vault" element={<ActivityVault />} />
+                  <Route path="/health" element={<SystemHealth />} />
+                  <Route path="/training" element={<AITraining />} />
+                  <Route path="/alerts" element={<Alerts />} />
+                  <Route path="/settings" element={<Settings />} />
+                </Route>
               </Route>
-            </Route>
 
-            {/* Dedicated Admin Panel (Laravel-style) */}
-            <Route path="/admin" element={<ProtectedRoute requiredModule="admin_hub" />}>
-              <Route element={<AdminLayout />}>
-                <Route index element={<Navigate to="/admin/dashboard" replace />} />
-                <Route path="dashboard" element={<AdminDashboard />} />
-                <Route path="users" element={<UserManagement />} />
-                <Route path="roles" element={<RoleManagement />} />
-                <Route path="areas" element={<AreaManagement />} />
-                <Route path="audit" element={<ActionAudit />} />
-                <Route path="settings" element={<SystemSettings />} />
-                <Route path="surveillance" element={<SurveillanceConfig />} />
-                <Route path="scenarios" element={<ScenarioOrchestration />} />
-                <Route path="scenario-registry" element={<AIScenarioRegistry />} />
-
-
+              {/* Dedicated Admin Panel (Laravel-style) */}
+              <Route path="/admin" element={<ProtectedRoute requiredModule="admin_hub" />}>
+                <Route element={<AdminLayout />}>
+                  <Route index element={<Navigate to="/admin/dashboard" replace />} />
+                  <Route path="dashboard" element={<AdminDashboard />} />
+                  <Route path="users" element={<UserManagement />} />
+                  <Route path="roles" element={<RoleManagement />} />
+                  <Route path="areas" element={<AreaManagement />} />
+                  <Route path="audit" element={<ActionAudit />} />
+                  <Route path="settings" element={<SystemSettings />} />
+                  <Route path="surveillance" element={<SurveillanceConfig />} />
+                  <Route path="scenarios" element={<ScenarioOrchestration />} />
+                  <Route path="scenario-registry" element={<AIScenarioRegistry />} />
+                </Route>
               </Route>
-            </Route>
 
-            {/* Fallback */}
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
+              {/* Fallback */}
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </Suspense>
         </BrowserRouter>
       </AuthProvider>
     </ThemeProvider>
@@ -92,3 +100,4 @@ function App() {
 }
 
 export default App;
+

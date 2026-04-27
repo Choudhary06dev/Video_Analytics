@@ -31,15 +31,15 @@ export default function LiveFeeds() {
           <h1 className="text-2xl font-bold text-text-dark">Live Camera Feeds</h1>
           <p className="text-text-gray text-sm">Monitoring {cameras.filter(c => c.status === 'active').length} active streams across all zones.</p>
         </div>
-        
+
         <div className="flex items-center gap-2 bg-card p-1 rounded-lg border border-border">
-          <button 
+          <button
             onClick={() => setViewMode('grid')}
             className={`p-2 rounded-lg transition-all ${viewMode === 'grid' ? 'bg-accent-soft text-accent shadow-sm' : 'text-text-gray hover:text-text-dark'}`}
           >
             <Grid className="w-5 h-5" />
           </button>
-          <button 
+          <button
             onClick={() => setViewMode('list')}
             className={`p-2 rounded-lg transition-all ${viewMode === 'list' ? 'bg-accent-soft text-accent shadow-sm' : 'text-text-gray hover:text-text-dark'}`}
           >
@@ -52,15 +52,15 @@ export default function LiveFeeds() {
       <div className="grid md:grid-cols-4 gap-4">
         <div className="md:col-span-2 relative">
           <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-text-gray" />
-          <input 
-            type="text" 
-            placeholder="Search by camera name or ID..." 
+          <input
+            type="text"
+            placeholder="Search by camera name or ID..."
             className="w-full bg-card border border-border focus:border-accent focus:ring-4 focus:ring-accent/10 text-sm text-text-dark rounded-lg pl-10 pr-4 py-2.5 outline-none transition-all"
           />
         </div>
         <div className="relative">
           <Filter className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-text-gray" />
-          <select 
+          <select
             value={filter}
             onChange={(e) => setFilter(e.target.value)}
             className="w-full bg-card border border-border focus:border-accent focus:ring-4 focus:ring-accent/10 text-sm text-text-dark rounded-lg pl-10 pr-4 py-2.5 outline-none appearance-none transition-all"
@@ -104,10 +104,10 @@ export default function LiveFeeds() {
                   </button>
                 </div>
                 {cam.is_active && (
-                   <span className="absolute bottom-2 right-2 flex h-2 w-2">
-                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                     <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-                   </span>
+                  <span className="absolute bottom-2 right-2 flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                  </span>
                 )}
               </div>
               <div className="p-4">
@@ -167,7 +167,7 @@ export default function LiveFeeds() {
             </tbody>
           </table>
         </div>
-      )}}
+      )}
     </div>
   );
 }
