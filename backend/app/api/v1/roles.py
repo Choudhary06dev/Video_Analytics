@@ -3,7 +3,7 @@ from sqlmodel import Session, select
 from typing import List
 from app.core.database import get_session
 from app.api.v1.auth import get_current_user
-from app.api.v1.users import verify_admin_access, verify_super_admin, verify_module_access
+from app.api.v1.users import verify_module_access
 from app.models import Role, ModulePermission, RoleModulePermission
 from app.schemas.user_schema import RoleCreateRequest, RoleUpdateRequest, PermissionUpdate
 from app.services.user_service import record_audit_log

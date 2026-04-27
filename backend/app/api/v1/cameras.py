@@ -5,7 +5,7 @@ from typing import List
 import httpx
 from app.core.database import get_session
 from app.api.v1.auth import get_current_user
-from app.api.v1.users import verify_admin_access, verify_super_admin, verify_admin_hub_access, verify_module_access
+from app.api.v1.users import verify_module_access
 from app.models import Camera, Area, CameraScenarioAssignment, AIScenario
 
 from app.schemas.camera_schema import CameraCreate, CameraUpdate, AreaCreate, AreaUpdate, ScenarioToggle, ScenarioBulkUpdate, ScenarioCreate, ScenarioUpdate
@@ -190,7 +190,7 @@ def get_enabled_camera_scenarios(camera_id: int, session: Session = Depends(get_
     return {"camera_id": camera_id, "enabled_scenarios": enabled_names}
 
 @router.put("/admin/cameras/{camera_id}/scenarios")
-async def sync_camera_scenarios(camera_id: int, data: ScenarioBulkUpdate, session: Session = Depends(get_session), admin_data: dict = Depends(lambda cur=Depends(get_current_user), s=Depends(get_session): verify_module_access("scenario_orchestration", cur, s))):
+async def sync_camera_scenarios(camera_id: int, data: ScenarioBulkUpdate, session: Session = Depends(get_session), admin_data: dict = Depends(lambda cur=Depends(get_current_user), s=Depends(get_session): verify_module_access("scenario_orchestration", cur, s, access_level="edit"))):
 
     """
     Bulk syncs enabled scenarios for a camera and notifies the AI service.
@@ -245,7 +245,7 @@ def get_all_scenarios(session: Session = Depends(get_session), admin_data: dict 
 
 
 @router.post("/admin/scenarios")
-def create_scenario(data: ScenarioCreate, session: Session = Depends(get_session), admin_data: dict = Depends(lambda cur=Depends(get_current_user), s=Depends(get_session): verify_module_access("intelligence_registry", cur, s))):
+def create_scenario(data: ScenarioCreate, session: Session = Depends(get_session), admin_data: dict = Depends(lambda cur=Depends(get_current_user), s=Depends(get_session): verify_module_access("intelligence_registry", cur, s, access_level="edit"))):
 
     """
     Adds a new AI scenario to the system registry.
@@ -268,7 +268,7 @@ def create_scenario(data: ScenarioCreate, session: Session = Depends(get_session
 
 
 @router.put("/admin/scenarios/{scenario_id}")
-def update_scenario(scenario_id: int, data: ScenarioUpdate, session: Session = Depends(get_session), admin_data: dict = Depends(lambda cur=Depends(get_current_user), s=Depends(get_session): verify_module_access("intelligence_registry", cur, s))):
+def update_scenario(scenario_id: int, data: ScenarioUpdate, session: Session = Depends(get_session), admin_data: dict = Depends(lambda cur=Depends(get_current_user), s=Depends(get_session): verify_module_access("intelligence_registry", cur, s, access_level="edit"))):
 
     """
     Updates an existing AI scenario.
@@ -289,7 +289,7 @@ def update_scenario(scenario_id: int, data: ScenarioUpdate, session: Session = D
 
 
 @router.delete("/admin/scenarios/{scenario_id}")
-def delete_scenario(scenario_id: int, session: Session = Depends(get_session), admin_data: dict = Depends(lambda cur=Depends(get_current_user), s=Depends(get_session): verify_module_access("intelligence_registry", cur, s))):
+def delete_scenario(scenario_id: int, session: Session = Depends(get_session), admin_data: dict = Depends(lambda cur=Depends(get_current_user), s=Depends(get_session): verify_module_access("intelligence_registry", cur, s, access_level="delete"))):
 
     """
     Removes a scenario from the system.
@@ -320,12 +320,24 @@ async def video_feed(camera_id: int, session: Session = Depends(get_session)):
     import urllib.parse
     source_url_encoded = urllib.parse.quote(camera_data.source_url, safe="")
     ai_service_url = f"http://localhost:8001/stream/{camera_id}?source={source_url_encoded}"
+    ai_health_url = f"http://localhost:8001/intelligence/{camera_id}"
+
+    try:
+        async with httpx.AsyncClient(timeout=1.0) as client:
+            await client.get(ai_health_url)
+    except httpx.HTTPError:
+        raise HTTPException(status_code=503, detail="AI video service is offline")
     
     async def stream_proxy():
-        async with httpx.AsyncClient() as client:
-            async with client.stream("GET", ai_service_url) as response:
-                async for chunk in response.aiter_bytes():
-                    yield chunk
+        try:
+            timeout = httpx.Timeout(None, connect=2.0)
+            async with httpx.AsyncClient(timeout=timeout) as client:
+                async with client.stream("GET", ai_service_url) as response:
+                    response.raise_for_status()
+                    async for chunk in response.aiter_bytes():
+                        yield chunk
+        except httpx.HTTPError as exc:
+            print(f"AI stream unavailable for camera {camera_id}: {exc}")
 
     return StreamingResponse(
         stream_proxy(),

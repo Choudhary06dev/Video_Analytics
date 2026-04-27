@@ -36,7 +36,8 @@ export const fetchAlerts = (opts = {}) =>
 export const fetchHealth = () => get("/health");
 
 export function subscribeToEvents({ onSnapshot, onDetection, onError }) {
-  const es = new EventSource(EVENTS_URL);
+  const token = encodeURIComponent(localStorage.getItem('token') || '');
+  const es = new EventSource(`${EVENTS_URL}?token=${token}`);
 
   es.onmessage = (e) => {
     try {

@@ -65,7 +65,7 @@ function App() {
             </Route>
 
             {/* Dedicated Admin Panel (Laravel-style) */}
-            <Route path="/admin" element={<ProtectedRoute allowedRoles={['super_admin', 'admin']} />}>
+            <Route path="/admin" element={<ProtectedRoute requiredModule="admin_hub" />}>
               <Route element={<AdminLayout />}>
                 <Route index element={<Navigate to="/admin/dashboard" replace />} />
                 <Route path="dashboard" element={<AdminDashboard />} />

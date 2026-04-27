@@ -26,19 +26,24 @@ def init_system_data():
         
         # 2. Seed Modules
         modules = [
-            ("Admin Management", "admin_hub"),
-            ("User Directory", "users"),
-            ("Access Roles", "roles"),
-            ("Facility Areas", "areas"),
-            ("Surveillance Nodes", "cameras"),
-            ("Audit Protocols", "audit"),
-            ("Scenario Control", "scenario_orchestration"),
-            ("AI Scenarios", "intelligence_registry"),
-
+            ("Command Hub", "dashboard"),
+            ("Neural Stream", "live_monitoring"),
+            ("AI Scenarios", "scenarios"),
             ("Staff Roster", "roster"),
-            ("Settings", "settings"),
             ("Activity Vault", "vault"),
             ("System Health", "health"),
+            ("AI Training", "training"),
+            ("Crisis Alerts", "alerts"),
+            ("Admin Control", "admin_hub"),
+            ("Dashboard", "admin_dashboard"),
+            ("Users", "users"),
+            ("Roles", "roles"),
+            ("Areas", "areas"),
+            ("Cameras", "cameras"),
+            ("Audit Protocols", "audit"),
+            ("Scenario Control", "scenario_orchestration"),
+            ("AI Scenario Registry", "intelligence_registry"),
+            ("Settings", "settings"),
         ]
 
 
@@ -49,6 +54,9 @@ def init_system_data():
                 mod = ModulePermission(name=name, key=key)
                 session.add(mod)
                 session.flush() # Get ID
+            elif mod.name != name:
+                mod.name = name
+                session.add(mod)
             
             # Auto-assign to Super Admin (Role ID 1)
             from app.models import RoleModulePermission

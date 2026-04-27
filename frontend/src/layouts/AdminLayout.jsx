@@ -7,12 +7,10 @@ import AdminSidebar from '../components/admin/AdminSidebar';
 import { useAuth } from '../context/AuthContext';
 
 export default function AdminLayout() {
-  const { user, isAuthenticated, loading } = useAuth();
+  const { canView } = useAuth();
   const [isSidebarOpen, setSidebarOpen] = useState(true);
-  const { role } = useAuth();
 
-  // Strict double-check for admin roles
-  if (role !== 'super_admin' && role !== 'admin') {
+  if (!canView('admin_hub')) {
     return <Navigate to="/" replace />;
   }
 

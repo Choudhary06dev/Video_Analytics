@@ -33,7 +33,7 @@ export default function AdminSidebar({ isSidebarOpen }) {
 
 
   const adminMenu = [
-    { name: 'Dashboard', icon: LayoutDashboard, path: '/admin/dashboard', moduleKey: 'dashboard' },
+    { name: 'Dashboard', icon: LayoutDashboard, path: '/admin/dashboard', moduleKey: 'admin_dashboard' },
     {
       id: 'management',
       name: 'User Management',

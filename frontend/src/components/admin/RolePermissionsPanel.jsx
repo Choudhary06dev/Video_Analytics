@@ -3,12 +3,7 @@ import { fetchModules as apiFetchModules, updateRolePermissions } from '../../se
 import { useAuth } from '../../context/AuthContext';
 import {
   ShieldCheck,
-  Eye,
-  Settings,
   Activity,
-  Lock,
-  Unlock,
-  ShieldAlert,
   Loader2,
   CheckCircle2,
   AlertCircle,
@@ -16,6 +11,26 @@ import {
   Cpu
 } from 'lucide-react';
 
+const MODULE_LABELS = {
+  dashboard: 'Command Hub',
+  live_monitoring: 'Neural Stream',
+  scenarios: 'AI Scenarios',
+  roster: 'Staff Roster',
+  vault: 'Activity Vault',
+  health: 'System Health',
+  training: 'AI Training',
+  alerts: 'Crisis Alerts',
+  admin_hub: 'Admin Control',
+  admin_dashboard: 'Dashboard',
+  users: 'Users',
+  roles: 'Roles',
+  cameras: 'Cameras',
+  areas: 'Areas',
+  intelligence_registry: 'AI Scenarios',
+  scenario_orchestration: 'Scenario Control',
+  audit: 'Audit Protocols',
+  settings: 'Settings'
+};
 
 export default function RolePermissionsPanel({ roleId, initialPermissions, onUpdated }) {
   const { token } = useAuth();
@@ -42,18 +57,26 @@ export default function RolePermissionsPanel({ roleId, initialPermissions, onUpd
   };
 
   const findPermission = (moduleId) => {
-    return permissions.find(p => p.module_id === moduleId) || { can_view: false, can_edit: false };
+    return permissions.find(p => p.module_id === moduleId) || { can_view: false, can_edit: false, can_delete: false };
   };
 
-  const togglePermission = (moduleId, field) => {
+  const hasModuleAccess = (perm) => !!(perm.can_view || perm.can_edit || perm.can_delete);
+
+  const toggleModuleAccess = (moduleId) => {
     setPermissions(prev => {
       const existingIdx = prev.findIndex(p => p.module_id === moduleId);
       if (existingIdx > -1) {
+        const enabled = !hasModuleAccess(prev[existingIdx]);
         const updated = [...prev];
-        updated[existingIdx] = { ...updated[existingIdx], [field]: !updated[existingIdx][field] };
+        updated[existingIdx] = {
+          ...updated[existingIdx],
+          can_view: enabled,
+          can_edit: enabled,
+          can_delete: enabled
+        };
         return updated;
       } else {
-        return [...prev, { role_id: roleId, module_id: moduleId, can_view: field === 'can_view', can_edit: field === 'can_edit' }];
+        return [...prev, { role_id: roleId, module_id: moduleId, can_view: true, can_edit: true, can_delete: true }];
       }
     });
   };
@@ -75,11 +98,12 @@ export default function RolePermissionsPanel({ roleId, initialPermissions, onUpd
       setSaving(true);
       const payload = modules.map((mod) => {
         const perm = findPermission(mod.id);
+        const enabled = hasModuleAccess(perm);
         return {
           module_key: mod.key,
-          can_view: !!perm.can_view,
-          can_edit: !!perm.can_edit,
-          can_delete: !!perm.can_delete
+          can_view: enabled,
+          can_edit: enabled,
+          can_delete: enabled
         };
       });
 
@@ -108,16 +132,16 @@ export default function RolePermissionsPanel({ roleId, initialPermissions, onUpd
       <div className="grid lg:grid-cols-2 gap-10">
         {[
           {
-            title: "FRONTEND /MANAGEMENT HUB",
+            title: "MAIN SIDEBAR",
             icon: Layout,
-            description: "Permissions for the real-time security dashboard and operator tools.",
-            categoryKeys: ["dashboard", "live_monitoring", "alerts", "scenarios", "roster", "vault", "health"]
+            description: "Same modules shown in the main application sidebar.",
+            categoryKeys: ["dashboard", "live_monitoring", "scenarios", "roster", "vault", "health", "training", "alerts", "admin_hub"]
           },
           {
-            title: "ADMIN / MANAGEMENT HUB",
+            title: "ADMIN SIDEBAR",
             icon: Cpu,
-            description: "Permissions for system configuration, user roles, and core engine settings.",
-            categoryKeys: ["admin_hub", "users", "roles", "areas", "cameras", "audit", "scenario_orchestration", "intelligence_registry", "settings"]
+            description: "Same modules shown in the admin control sidebar.",
+            categoryKeys: ["admin_dashboard", "users", "roles", "cameras", "areas", "intelligence_registry", "scenario_orchestration", "audit", "settings"]
           }
 
 
@@ -140,6 +164,7 @@ export default function RolePermissionsPanel({ roleId, initialPermissions, onUpd
               <div className="grid gap-3">
                 {groupModules.map((mod) => {
                   const perm = findPermission(mod.id);
+                  const enabled = hasModuleAccess(perm);
                   return (
                     <div key={mod.id} className="bg-card border border-border rounded-xl p-4 flex items-center justify-between group hover:border-accent/40 transition-all shadow-sm hover:shadow-md">
                       <div className="flex items-center gap-4">
@@ -147,31 +172,22 @@ export default function RolePermissionsPanel({ roleId, initialPermissions, onUpd
                           <Activity className="w-5 h-5 text-text-gray group-hover:text-white transition-colors" />
                         </div>
                         <div>
-                          <h4 className="text-[11px] font-black uppercase tracking-widest text-text-dark group-hover:text-accent transition-colors">{mod.name}</h4>
-                          <p className="text-[8px] font-bold text-text-gray uppercase tracking-tight mt-1 opacity-50">Link: {mod.key}</p>
+                          <h4 className="text-[11px] font-black uppercase tracking-widest text-text-dark group-hover:text-accent transition-colors">
+                            {MODULE_LABELS[mod.key] || mod.name}
+                          </h4>
                         </div>
                       </div>
 
-                      <div className="flex items-center gap-6">
-                        <div className="flex flex-col items-center gap-1.5">
-                          <span className={`text-[8px] font-black uppercase tracking-tighter ${perm.can_view ? 'text-accent' : 'text-text-gray opacity-40'}`}>View</span>
-                          <button
-                            onClick={() => togglePermission(mod.id, 'can_view')}
-                            className={`w-10 h-5 rounded-full relative transition-all ${perm.can_view ? 'bg-accent' : 'bg-slate-700'}`}
-                          >
-                            <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-all shadow-sm ${perm.can_view ? 'right-0.5' : 'left-0.5'}`}></div>
-                          </button>
-                        </div>
-
-                        <div className="flex flex-col items-center gap-1.5">
-                          <span className={`text-[8px] font-black uppercase tracking-tighter ${perm.can_edit ? 'text-success' : 'text-text-gray opacity-40'}`}>Edit</span>
-                          <button
-                            onClick={() => togglePermission(mod.id, 'can_edit')}
-                            className={`w-10 h-5 rounded-full relative transition-all ${perm.can_edit ? 'bg-success' : 'bg-slate-700'}`}
-                          >
-                            <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-all shadow-sm ${perm.can_edit ? 'right-0.5' : 'left-0.5'}`}></div>
-                          </button>
-                        </div>
+                      <div className="flex items-center gap-3">
+                        <span className={`text-[8px] font-black uppercase tracking-widest ${enabled ? 'text-success' : 'text-text-gray opacity-50'}`}>
+                          {enabled ? 'Access On' : 'Access Off'}
+                        </span>
+                        <button
+                          onClick={() => toggleModuleAccess(mod.id)}
+                          className={`w-12 h-6 rounded-full relative transition-all ${enabled ? 'bg-success' : 'bg-slate-700'}`}
+                        >
+                          <div className={`absolute top-0.5 w-5 h-5 rounded-full bg-white transition-all shadow-sm ${enabled ? 'right-0.5' : 'left-0.5'}`}></div>
+                        </button>
                       </div>
                     </div>
                   );

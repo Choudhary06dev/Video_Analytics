@@ -3,8 +3,8 @@ import { Navigate, Outlet } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { Loader2 } from 'lucide-react';
 
-export default function ProtectedRoute({ allowedRoles }) {
-  const { isAuthenticated, loading, role } = useAuth();
+export default function ProtectedRoute({ allowedRoles, requiredModule }) {
+  const { isAuthenticated, loading, role, canView } = useAuth();
 
   if (loading) {
     return (
@@ -23,6 +23,10 @@ export default function ProtectedRoute({ allowedRoles }) {
 
   // Check Role-Based Access Control if roles are defined
   if (allowedRoles && !allowedRoles.includes(role)) {
+    return <Navigate to="/" replace />;
+  }
+
+  if (requiredModule && !canView(requiredModule)) {
     return <Navigate to="/" replace />;
   }
 

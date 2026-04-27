@@ -21,7 +21,8 @@ export const fetchLogsSummary = (hours = 24, camera_id = undefined) =>
   get("/logs/summary", { hours, camera_id });
 
 export function subscribeToEvents({ onSnapshot, onDetection, onError }) {
-    const es = new EventSource(`${BASE}/events`);
+    const token = encodeURIComponent(localStorage.getItem('token') || '');
+    const es = new EventSource(`${BASE}/events?token=${token}`);
   
     es.onmessage = (e) => {
         try {

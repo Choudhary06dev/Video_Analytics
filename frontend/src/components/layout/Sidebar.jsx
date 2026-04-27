@@ -17,7 +17,7 @@ import {
 import { useAuth } from '../../context/AuthContext';
 
 export default function Sidebar({ isSidebarOpen }) {
-  const { role, canView } = useAuth();
+  const { canView } = useAuth();
 
   const mainMenu = [
     { name: 'Command Hub', icon: LayoutDashboard, path: '/', moduleKey: 'dashboard' },
@@ -29,18 +29,17 @@ export default function Sidebar({ isSidebarOpen }) {
 
   const analyticsMenu = [
     { name: 'System Health', icon: Cpu, path: '/health', moduleKey: 'health' },
-    { name: 'AI Training', icon: GraduationCap, path: '/training' },
+    { name: 'AI Training', icon: GraduationCap, path: '/training', moduleKey: 'training' },
     { name: 'Crisis Alerts', icon: Bell, path: '/alerts', moduleKey: 'alerts' },
   ];
 
   const adminMenu = [
-    { name: 'Admin Control', icon: ShieldAlert, path: '/admin', reqRole: 'admin_level', moduleKey: 'admin_hub' }
+    { name: 'Admin Control', icon: ShieldAlert, path: '/admin', moduleKey: 'admin_hub' }
   ];
 
   const renderNavLinks = (items) => (
     <ul className="flex flex-col gap-1">
       {items
-        .filter(item => !item.reqRole || (item.reqRole === 'admin_level' && (role === 'super_admin' || role === 'admin')))
         .filter(item => canView(item.moduleKey))
         .map((item, index) => (
           <li key={index}>
@@ -92,7 +91,7 @@ export default function Sidebar({ isSidebarOpen }) {
           {renderNavLinks(analyticsMenu)}
         </div>
 
-        {(role === 'super_admin' || role === 'admin') && (
+        {canView('admin_hub') && (
           <div className="mt-4 border-t border-danger/10 pt-4">
             <div className={`text-[0.65rem] text-danger/80 font-black uppercase tracking-[2px] mb-2 px-2.5 flex items-center gap-2 ${!isSidebarOpen && 'md:hidden'}`}>
               <div className="w-1.5 h-1.5 bg-danger rounded-full animate-pulse"></div>
