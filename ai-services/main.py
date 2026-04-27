@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, Depends
+from fastapi import FastAPI
 from fastapi.responses import StreamingResponse
 import asyncio
 import json
@@ -9,6 +9,14 @@ from typing import Dict
 app = FastAPI(title="AI Inference Service")
 
 active_engines: Dict[int, InferenceEngine] = {}
+
+def empty_intelligence():
+    return {
+        "person_count": 0,
+        "objects": [],
+        "stable_objects": [],
+        "last_update": 0.0
+    }
 
 async def get_engine(camera_id: int, source: str) -> InferenceEngine:
     if camera_id not in active_engines:
@@ -56,8 +64,20 @@ async def stream_camera(camera_id: int, source: str):
 @app.get("/intelligence/{camera_id}")
 async def get_intelligence(camera_id: int):
     if camera_id not in active_engines:
-        raise HTTPException(status_code=404, detail="Camera engine not active")
+        return empty_intelligence()
     return active_engines[camera_id].latest_intelligence
+
+@app.post("/control/reload/{camera_id}")
+async def reload_camera_config(camera_id: int, config: dict):
+    """
+    Updates the enabled scenarios for an active inference engine.
+    """
+    if camera_id in active_engines:
+        enabled_scenarios = config.get("enabled_scenarios", [])
+        active_engines[camera_id].update_config(enabled_scenarios)
+        return {"status": "success", "reloaded": enabled_scenarios}
+    return {"status": "skipped", "message": "Engine not active"}
+
 
 if __name__ == "__main__":
     import uvicorn

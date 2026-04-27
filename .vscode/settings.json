@@ -1,0 +1,15 @@
+{
+    "sqltools.connections": [
+        {
+            "ssh": "Disabled",
+            "previewLimit": 50,
+            "server": "localhost",
+            "port": 5432,
+            "driver": "PostgreSQL",
+            "name": "Video Analytics",
+            "group": " localhost Port: 5432",
+            "database": "video_analytics",
+            "username": "postgres"
+        }
+    ]
+}
