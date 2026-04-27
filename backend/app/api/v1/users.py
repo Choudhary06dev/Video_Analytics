@@ -10,21 +10,7 @@ from app.core.security import get_password_hash
 
 router = APIRouter(prefix="/admin/users", tags=["Admin User Management"])
 
-def verify_admin_access(current_user: dict = Depends(get_current_user)):
-    if current_user.get("role") not in ["super_admin", "admin"]:
-        raise HTTPException(status_code=403, detail="Forbidden: Admin access level required")
-    return current_user
-
-def verify_super_admin(current_user: dict = Depends(get_current_user)):
-    if current_user.get("role") != "super_admin":
-        raise HTTPException(status_code=403, detail="Forbidden: Super Admin access required")
-    return current_user
-
-def verify_admin_hub_access(current_user: dict = Depends(get_current_user), session: Session = Depends(get_session)):
-    """Verify user has access to admin_hub module with edit permissions"""
-    return verify_module_access("admin_hub", current_user, session)
-
-def verify_module_access(module_key: str, current_user: dict = Depends(get_current_user), session: Session = Depends(get_session)):
+def verify_module_access(module_key: str, current_user: dict = Depends(get_current_user), session: Session = Depends(get_session), access_level: str = "edit"):
     """Generic module-based permission verifier - NO HARDCODED BYPASSES"""
     user_id = current_user.get("id")
 
@@ -46,14 +32,33 @@ def verify_module_access(module_key: str, current_user: dict = Depends(get_curre
         )
     ).first()
     
-    if not role_perm or not role_perm.can_edit:
+    if not role_perm:
+        raise HTTPException(status_code=403, detail=f"Forbidden: No permissions assigned for {module.name}")
+
+    if access_level == "view" and not role_perm.can_view:
+        raise HTTPException(status_code=403, detail=f"Forbidden: View permission required for {module.name}")
+    elif access_level == "edit" and not role_perm.can_edit:
         raise HTTPException(status_code=403, detail=f"Forbidden: Edit permission required for {module.name}")
+    elif access_level == "delete" and not role_perm.can_delete:
+        raise HTTPException(status_code=403, detail=f"Forbidden: Delete permission required for {module.name}")
     
     return current_user
 
+def verify_admin_access(current_user: dict = Depends(get_current_user), session: Session = Depends(get_session)):
+    """Dynamic admin check: Requires VIEW access to admin_hub"""
+    return verify_module_access("admin_hub", current_user, session, access_level="view")
+
+def verify_super_admin(current_user: dict = Depends(get_current_user), session: Session = Depends(get_session)):
+    """Dynamic super admin check: Requires EDIT access to admin_hub"""
+    return verify_module_access("admin_hub", current_user, session, access_level="edit")
+
+def verify_admin_hub_access(current_user: dict = Depends(get_current_user), session: Session = Depends(get_session)):
+    """Verify user has access to admin_hub module with edit permissions"""
+    return verify_module_access("admin_hub", current_user, session, access_level="edit")
+
 
 @router.get("/")
-def get_all_users(session: Session = Depends(get_session), admin_data: dict = Depends(verify_admin_access)):
+def get_all_users(session: Session = Depends(get_session), admin_data: dict = Depends(lambda cur=Depends(get_current_user), s=Depends(get_session): verify_module_access("users", cur, s, access_level="view"))):
     users = session.exec(select(User)).all()
     result = []
     for u in users:
@@ -69,7 +74,7 @@ def get_all_users(session: Session = Depends(get_session), admin_data: dict = De
     return result
 
 @router.post("/")
-def create_user_by_admin(user_data: AdminUserCreate, session: Session = Depends(get_session), admin_data: dict = Depends(verify_super_admin)):
+def create_user_by_admin(user_data: AdminUserCreate, session: Session = Depends(get_session), admin_data: dict = Depends(lambda cur=Depends(get_current_user), s=Depends(get_session): verify_module_access("users", cur, s, access_level="edit"))):
     existing = get_user_by_email(session, user_data.email)
     if existing:
         raise HTTPException(status_code=400, detail="Email already registered")
@@ -95,8 +100,28 @@ def create_user_by_admin(user_data: AdminUserCreate, session: Session = Depends(
         print(f"Admin Registration Error: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Database Error: {str(e)}")
 
+@router.get("/audit-logs")
+def get_audit_logs(limit: int = 50, session: Session = Depends(get_session), admin_data: dict = Depends(lambda cur=Depends(get_current_user), s=Depends(get_session): verify_module_access("audit", cur, s, access_level="view"))):
+    from app.models import AuditLog
+    statement = select(AuditLog).order_by(AuditLog.timestamp.desc()).limit(limit)
+    logs = session.exec(statement).all()
+
+    result = []
+    for l in logs:
+        u = session.get(User, l.user_id)
+        result.append({
+            "id": l.id,
+            "user_name": u.full_name if u else "Unknown Node",
+            "user_email": u.email if u else "N/A",
+            "action": l.action,
+            "resource": l.resource,
+            "details": l.details,
+            "timestamp": l.timestamp
+        })
+    return result
+
 @router.put("/{user_id}")
-def update_user_by_admin(user_id: int, user_data: AdminUserUpdate, session: Session = Depends(get_session), admin_data: dict = Depends(verify_admin_access)):
+def update_user_by_admin(user_id: int, user_data: AdminUserUpdate, session: Session = Depends(get_session), admin_data: dict = Depends(lambda cur=Depends(get_current_user), s=Depends(get_session): verify_module_access("users", cur, s, access_level="edit"))):
     user = session.get(User, user_id)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
@@ -136,7 +161,7 @@ def update_user_by_admin(user_id: int, user_data: AdminUserUpdate, session: Sess
     return {"message": "User updated successfully", "id": user.id}
 
 @router.delete("/{user_id}")
-def delete_user(user_id: int, session: Session = Depends(get_session), admin_data: dict = Depends(verify_admin_access)):
+def delete_user(user_id: int, session: Session = Depends(get_session), admin_data: dict = Depends(lambda cur=Depends(get_current_user), s=Depends(get_session): verify_module_access("users", cur, s, access_level="delete"))):
     user = session.get(User, user_id)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
@@ -149,7 +174,7 @@ def delete_user(user_id: int, session: Session = Depends(get_session), admin_dat
     return {"message": "User deleted successfully"}
 
 @router.patch("/{user_id}/status")
-def toggle_user_status(user_id: int, status_data: dict, session: Session = Depends(get_session), admin_data: dict = Depends(verify_admin_access)):
+def toggle_user_status(user_id: int, status_data: dict, session: Session = Depends(get_session), admin_data: dict = Depends(lambda cur=Depends(get_current_user), s=Depends(get_session): verify_module_access("users", cur, s, access_level="edit"))):
     user = session.get(User, user_id)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
@@ -168,22 +193,3 @@ def toggle_user_status(user_id: int, status_data: dict, session: Session = Depen
     session.commit()
     return {"message": "User status updated", "is_active": user.is_active}
 
-@router.get("/audit-logs")
-def get_audit_logs(limit: int = 50, session: Session = Depends(get_session), admin_data: dict = Depends(verify_admin_access)):
-    from app.models import AuditLog
-    statement = select(AuditLog).order_by(AuditLog.timestamp.desc()).limit(limit)
-    logs = session.exec(statement).all()
-    
-    result = []
-    for l in logs:
-        u = session.get(User, l.user_id)
-        result.append({
-            "id": l.id,
-            "user_name": u.full_name if u else "Unknown Node",
-            "user_email": u.email if u else "N/A",
-            "action": l.action,
-            "resource": l.resource,
-            "details": l.details,
-            "timestamp": l.timestamp
-        })
-    return result

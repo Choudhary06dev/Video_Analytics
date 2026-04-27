@@ -10,13 +10,15 @@ export const fetchAlerts = (opts = {}) =>
 export const fetchLogs = (opts = {}) =>
   get("/logs", {
     hours: opts.hours ?? 24,
+    camera_id: opts.camera_id ?? opts.cameraId ?? undefined,
     object_class: opts.objectClass ?? undefined,
     severity: opts.severity ?? undefined,
     limit: opts.limit ?? 200,
+    skip: opts.skip ?? 0,
   });
 
-export const fetchLogsSummary = (hours = 24) =>
-  get("/logs/summary", { hours });
+export const fetchLogsSummary = (hours = 24, camera_id = undefined) =>
+  get("/logs/summary", { hours, camera_id });
 
 export function subscribeToEvents({ onSnapshot, onDetection, onError }) {
     const es = new EventSource(`${BASE}/events`);

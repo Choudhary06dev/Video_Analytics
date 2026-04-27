@@ -4,12 +4,14 @@ import { useTheme } from '../../context/ThemeContext';
 import { fetchIntelligence, fetchLogsSummary } from '../../api';
 
 function useCountUp(target, duration = 1200) {
-  const [count, setCount] = useState(0);
+  const [count, setCount] = useState(() => {
+    const numericTarget = parseFloat(target);
+    return isNaN(numericTarget) ? target : 0;
+  });
   const frame = useRef(null);
   useEffect(() => {
     const numericTarget = parseFloat(target);
-    if (isNaN(numericTarget)) { setCount(target); return; }
-    let start = 0;
+    if (isNaN(numericTarget)) return;
     const startTime = performance.now();
     const step = (now) => {
       const progress = Math.min((now - startTime) / duration, 1);
@@ -25,6 +27,7 @@ function useCountUp(target, duration = 1200) {
 
 const CARD_CONFIG = [
   {
+    key: 'active_feeds',
     label: 'Active Feeds',
     rawValue: 6,
     total: '/6',
@@ -36,6 +39,7 @@ const CARD_CONFIG = [
     unit: '',
   },
   {
+    key: 'objects_logged',
     label: 'Objects Logged',
     rawValue: 342,
     icon: Package,
@@ -46,6 +50,7 @@ const CARD_CONFIG = [
     unit: '',
   },
   {
+    key: 'high_threats',
     label: 'High Threats',
     rawValue: 2,
     icon: AlertCircle,
@@ -56,6 +61,7 @@ const CARD_CONFIG = [
     unit: '',
   },
   {
+    key: 'avg_precision',
     label: 'Avg Precision',
     rawValue: 91,
     icon: Target,
@@ -66,6 +72,7 @@ const CARD_CONFIG = [
     unit: '%',
   },
   {
+    key: 'latency',
     label: 'Latency',
     rawValue: 48,
     icon: Zap,
@@ -76,6 +83,7 @@ const CARD_CONFIG = [
     unit: 'ms',
   },
   {
+    key: 'cloud_sync',
     label: 'Cloud Sync',
     rawValue: 99,
     icon: Cloud,
@@ -201,6 +209,12 @@ function KPICard({ stat, index }) {
 
 export default function KPICards() {
   const [intel, setIntel] = useState({ person_count: 0, objects: [] });
+  const [summary, setSummary] = useState({
+    count: 0,
+    total_persons: 0,
+    total_vehicles: 0,
+    total_weapons: 0,
+  });
 
   useEffect(() => {
     const poll = async () => {
@@ -223,7 +237,7 @@ export default function KPICards() {
 
   const dynamicConfig = CARD_CONFIG.map(card => {
     if (card.key === 'objects_logged') {
-      const total = (summary.total_persons || 0) + (summary.total_vehicles || 0);
+      const total = summary.count || (summary.total_persons || 0) + (summary.total_vehicles || 0);
       return { ...card, rawValue: total, trend: `+${intel.person_count} Active` };
     }
     if (card.key === 'high_threats') {

@@ -3,7 +3,7 @@ from sqlmodel import Session, select
 from typing import List
 from app.core.database import get_session
 from app.api.v1.auth import get_current_user
-from app.api.v1.users import verify_admin_access, verify_super_admin
+from app.api.v1.users import verify_admin_access, verify_super_admin, verify_module_access
 from app.models import Role, ModulePermission, RoleModulePermission
 from app.schemas.user_schema import RoleCreateRequest, RoleUpdateRequest, PermissionUpdate
 from app.services.user_service import record_audit_log
@@ -11,7 +11,7 @@ from app.services.user_service import record_audit_log
 router = APIRouter(prefix="/admin/roles", tags=["Admin Role Management"])
 
 @router.get("/")
-def get_roles(session: Session = Depends(get_session), admin_data: dict = Depends(verify_admin_access)):
+def get_roles(session: Session = Depends(get_session), admin_data: dict = Depends(lambda cur=Depends(get_current_user), s=Depends(get_session): verify_module_access("roles", cur, s, access_level="view"))):
     roles = session.exec(select(Role)).all()
     result = []
     for r in roles:
@@ -38,8 +38,13 @@ def get_roles(session: Session = Depends(get_session), admin_data: dict = Depend
         })
     return result
 
+@router.get("/modules")
+def get_modules(session: Session = Depends(get_session), admin_data: dict = Depends(lambda cur=Depends(get_current_user), s=Depends(get_session): verify_module_access("roles", cur, s, access_level="view"))):
+    modules = session.exec(select(ModulePermission)).all()
+    return modules
+
 @router.post("/")
-def create_role(role_data: RoleCreateRequest, session: Session = Depends(get_session), admin_data: dict = Depends(verify_super_admin)):
+def create_role(role_data: RoleCreateRequest, session: Session = Depends(get_session), admin_data: dict = Depends(lambda cur=Depends(get_current_user), s=Depends(get_session): verify_module_access("roles", cur, s, access_level="edit"))):
     normalized_name = role_data.name.strip().lower().replace(" ", "_")
     if not normalized_name:
         raise HTTPException(status_code=400, detail="Role name is required")
@@ -67,7 +72,7 @@ def create_role(role_data: RoleCreateRequest, session: Session = Depends(get_ses
     return {"message": "Role created successfully", "role": new_role}
 
 @router.put("/{role_id}")
-def update_role(role_id: int, role_data: RoleUpdateRequest, session: Session = Depends(get_session), admin_data: dict = Depends(verify_super_admin)):
+def update_role(role_id: int, role_data: RoleUpdateRequest, session: Session = Depends(get_session), admin_data: dict = Depends(lambda cur=Depends(get_current_user), s=Depends(get_session): verify_module_access("roles", cur, s, access_level="edit"))):
     role = session.get(Role, role_id)
     if not role:
         raise HTTPException(status_code=404, detail="Role not found")
@@ -100,7 +105,7 @@ def update_role(role_id: int, role_data: RoleUpdateRequest, session: Session = D
     return {"message": "Role updated successfully", "role": role}
 
 @router.put("/{role_id}/permissions")
-def update_role_permissions(role_id: int, perms: List[PermissionUpdate], session: Session = Depends(get_session), admin_data: dict = Depends(verify_admin_access)):
+def update_role_permissions(role_id: int, perms: List[PermissionUpdate], session: Session = Depends(get_session), admin_data: dict = Depends(lambda cur=Depends(get_current_user), s=Depends(get_session): verify_module_access("roles", cur, s, access_level="edit"))):
     role = session.get(Role, role_id)
     if not role:
         raise HTTPException(status_code=404, detail="Role not found")
@@ -134,7 +139,3 @@ def update_role_permissions(role_id: int, perms: List[PermissionUpdate], session
     session.commit()
     return {"message": "Permissions updated successfully"}
 
-@router.get("/modules")
-def get_modules(session: Session = Depends(get_session), admin_data: dict = Depends(verify_admin_access)):
-    modules = session.exec(select(ModulePermission)).all()
-    return modules

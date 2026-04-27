@@ -166,7 +166,7 @@ export default function AdminSidebar({ isSidebarOpen }) {
       <div className="mb-2 shrink-0 h-12 px-2">
         <Logo isSidebarOpen={isSidebarOpen} className="h-12 w-12" />
       </div>
-      
+
       {/* Divider Line */}
       <div className={`mx-2 mb-4 border-t border-border/50 ${!isSidebarOpen && 'opacity-0'}`}></div>
 

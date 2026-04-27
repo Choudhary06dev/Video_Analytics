@@ -85,10 +85,13 @@ class InferenceEngine:
         try:
             # We use a synchronous request here because it's in __init__ (in a thread-friendly way)
             import requests
-            response = requests.get(f"http://localhost:8000/admin/cameras/{self.camera_id}/scenarios", timeout=2)
+            response = requests.get(
+                f"http://localhost:8000/internal/cameras/{self.camera_id}/scenarios/enabled",
+                timeout=2
+            )
             if response.status_code == 200:
-                scenarios = response.json()
-                self.enabled_scenarios = {s["name"] for s in scenarios if s.get("is_enabled")}
+                data = response.json()
+                self.enabled_scenarios = set(data.get("enabled_scenarios", []))
                 print(f"Engine {self.camera_id} loaded {len(self.enabled_scenarios)} scenarios.")
         except Exception as e:
             print(f"Engine {self.camera_id} failed to load config: {e}")

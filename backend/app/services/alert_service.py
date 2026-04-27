@@ -14,15 +14,33 @@ def get_alerts(session: Session, hours: float = 24.0, severity: Optional[str] = 
     statement = statement.order_by(DetectionEvent.timestamp.desc()).limit(limit)
     return session.exec(statement).all()
 
-def get_logs(session: Session, hours: float = 24.0, camera_id: Optional[int] = None):
+def get_logs(
+    session: Session,
+    hours: float = 24.0,
+    camera_id: Optional[int] = None,
+    object_class: Optional[str] = None,
+    severity: Optional[str] = None,
+    limit: int = 100,
+    skip: int = 0,
+):
     cutoff = datetime.now() - timedelta(hours=hours)
     statement = select(DetectionEvent).where(DetectionEvent.timestamp >= cutoff)
     if camera_id is not None:
         statement = statement.where(DetectionEvent.camera_id == camera_id)
-    statement = statement.order_by(DetectionEvent.timestamp.desc()).limit(100)
+    if object_class:
+        statement = statement.where(DetectionEvent.object_class == object_class)
+    if severity:
+        statement = statement.where(DetectionEvent.severity == severity)
+    statement = statement.order_by(DetectionEvent.timestamp.desc()).offset(skip).limit(limit)
     return session.exec(statement).all()
 
-def get_logs_summary(session: Session, hours: float = 24.0, camera_id: Optional[int] = None, latest_intelligence: Dict = {}):
+def get_logs_summary(
+    session: Session,
+    hours: float = 24.0,
+    camera_id: Optional[int] = None,
+    latest_intelligence: Optional[Dict] = None,
+):
+    latest_intelligence = latest_intelligence or {}
     cutoff = datetime.now() - timedelta(hours=hours)
     statement = select(DetectionEvent).where(DetectionEvent.timestamp >= cutoff)
     if camera_id is not None:
@@ -76,6 +94,7 @@ def get_logs_summary(session: Session, hours: float = 24.0, camera_id: Optional[
         "hours": hours,
         "camera_id": camera_id,
         "count": len(events),
+        "total_logs": len(events),
         "total_persons": total_persons,
         "total_weapons": total_weapons,
         "total_vehicles": total_vehicles,
