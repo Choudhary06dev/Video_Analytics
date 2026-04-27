@@ -24,6 +24,11 @@ export const createScenario = (data) => post("/admin/scenarios", data);
 export const updateScenario = (id, data) => put(`/admin/scenarios/${id}`, data);
 export const deleteScenario = (id) => del(`/admin/scenarios/${id}`);
 
+// Neural Stream read-only filters
+export const fetchLiveAreas = () => get("/live/areas");
+export const fetchLiveCameras = () => get("/live/cameras");
+export const fetchLiveScenarios = () => get("/live/scenarios");
+
 export const getStreamUrl = (cameraId) => {
     // Note: In production we'd use a stable config for BASE
     return `http://localhost:8000/video_feed/${cameraId}`;

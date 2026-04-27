@@ -12,6 +12,32 @@ from app.schemas.camera_schema import CameraCreate, CameraUpdate, AreaCreate, Ar
 
 router = APIRouter(prefix="", tags=["Camera Management"])
 
+
+def _camera_with_scenario_count(camera: Camera, session: Session):
+    stmt = select(CameraScenarioAssignment).where(
+        CameraScenarioAssignment.camera_id == camera.id,
+        CameraScenarioAssignment.is_enabled == True
+    )
+    cam_dict = camera.dict()
+    cam_dict["scenario_count"] = len(session.exec(stmt).all())
+    return cam_dict
+
+
+@router.get("/live/areas")
+def get_live_areas(session: Session = Depends(get_session), live_data: dict = Depends(lambda cur=Depends(get_current_user), s=Depends(get_session): verify_module_access("live_monitoring", cur, s, access_level="view"))):
+    return session.exec(select(Area)).all()
+
+
+@router.get("/live/cameras")
+def get_live_cameras(session: Session = Depends(get_session), live_data: dict = Depends(lambda cur=Depends(get_current_user), s=Depends(get_session): verify_module_access("live_monitoring", cur, s, access_level="view"))):
+    cameras = session.exec(select(Camera)).all()
+    return [_camera_with_scenario_count(cam, session) for cam in cameras]
+
+
+@router.get("/live/scenarios")
+def get_live_scenarios(session: Session = Depends(get_session), live_data: dict = Depends(lambda cur=Depends(get_current_user), s=Depends(get_session): verify_module_access("live_monitoring", cur, s, access_level="view"))):
+    return session.exec(select(AIScenario)).all()
+
 # --- AREAS ---
 
 @router.get("/admin/areas")
@@ -73,20 +99,7 @@ def delete_area(area_id: int, session: Session = Depends(get_session), admin_dat
 @router.get("/admin/cameras")
 def get_cameras(session: Session = Depends(get_session), admin_data: dict = Depends(lambda cur=Depends(get_current_user), s=Depends(get_session): verify_module_access("cameras", cur, s, access_level="view"))):
     cameras = session.exec(select(Camera)).all()
-    result = []
-    for cam in cameras:
-        # Count enabled assignments for this camera
-        stmt = select(CameraScenarioAssignment).where(
-            CameraScenarioAssignment.camera_id == cam.id,
-            CameraScenarioAssignment.is_enabled == True
-        )
-        count = len(session.exec(stmt).all())
-        
-        # Merge count into dict
-        cam_dict = cam.dict()
-        cam_dict["scenario_count"] = count
-        result.append(cam_dict)
-    return result
+    return [_camera_with_scenario_count(cam, session) for cam in cameras]
 
 
 @router.post("/admin/cameras")
