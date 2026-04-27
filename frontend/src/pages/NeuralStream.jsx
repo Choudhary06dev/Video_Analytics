@@ -1,7 +1,6 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { fetchIntelligence } from '../api';
-import { fetchAdminCameras, getStreamUrl } from '../services/cameraService';
-import { fetchLogs, fetchLogsSummary, subscribeToEvents } from '../services/alertService';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { fetchLiveAreas, fetchLiveCameras, fetchLiveScenarios } from '../services/cameraService';
+import { fetchLogs, fetchLogsSummary } from '../services/alertService';
 import { EVENTS_URL, VIDEO_FEED_URL } from '../api';
 import {
   Radio,
@@ -54,11 +53,14 @@ import CameraFeed from '../components/camera/CameraFeed';
 export default function NeuralStream() {
   const [logs, setLogs] = useState([]);
   const [cameras, setCameras] = useState([]);
+  const [areas, setAreas] = useState([]);
+  const [scenarios, setScenarios] = useState([]);
   const [activeCamera, setActiveCamera] = useState(null);
   const [isGlobalView, setIsGlobalView] = useState(true);
   const [gridSize, setGridSize] = useState(3); // 2x2 (2), 3x3 (3), 4x4 (4)
-  const [intel, setIntel] = useState({ person_count: 0, objects: [], stable_objects: [] });
   const [filterHours, setFilterHours] = useState(1);
+  const [selectedAreaId, setSelectedAreaId] = useState('all');
+  const [selectedScenarioKey, setSelectedScenarioKey] = useState('all');
   const [logsOffset, setLogsOffset] = useState(0);
   const PAGE_SIZE = 50;
   const [summary, setSummary] = useState({
@@ -73,27 +75,100 @@ export default function NeuralStream() {
   const [loadingLogs, setLoadingLogs] = useState(false);
   const [streamConnected, setStreamConnected] = useState(false);
 
-  useEffect(() => {
-    loadCameras();
-  }, []);
-
-  const loadCameras = async () => {
+  const loadCameras = useCallback(async () => {
     try {
-      const data = await fetchAdminCameras();
+      const data = await fetchLiveCameras();
       setCameras(data || []);
-      if (data && data.length > 0 && !activeCamera) {
-        // If we want a default selected camera, we could do it here
-      }
     } catch (err) {
       console.error('Failed to load cameras:', err);
     }
-  };
+  }, []);
+
+  const loadFilterOptions = useCallback(async () => {
+    const [areasResult, scenariosResult] = await Promise.allSettled([
+      fetchLiveAreas(),
+      fetchLiveScenarios()
+    ]);
+
+    if (areasResult.status === 'fulfilled') {
+      setAreas(areasResult.value || []);
+    } else {
+      console.error('Failed to load areas:', areasResult.reason);
+    }
+
+    if (scenariosResult.status === 'fulfilled') {
+      setScenarios(scenariosResult.value || []);
+    } else {
+      console.error('Failed to load scenarios:', scenariosResult.reason);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadCameras();
+    loadFilterOptions();
+  }, [loadCameras, loadFilterOptions]);
+
+  const areaNameById = useMemo(() => {
+    return new Map(areas.map(area => [area.id, area.name]));
+  }, [areas]);
+
+  const selectedAreaIds = useMemo(() => {
+    if (selectedAreaId === 'all') return null;
+
+    const rootId = Number(selectedAreaId);
+    const ids = new Set([rootId]);
+    let changed = true;
+
+    while (changed) {
+      changed = false;
+      areas.forEach(area => {
+        if (area.parent_id && ids.has(area.parent_id) && !ids.has(area.id)) {
+          ids.add(area.id);
+          changed = true;
+        }
+      });
+    }
+
+    return ids;
+  }, [areas, selectedAreaId]);
+
+  const visibleCameraIdsByScenario = useMemo(() => {
+    if (selectedScenarioKey === 'all') return null;
+    return new Set(summary.camera_ids || []);
+  }, [selectedScenarioKey, summary.camera_ids]);
+
+  const filteredCameras = useMemo(() => {
+    return cameras.filter(camera => {
+      const matchesArea = !selectedAreaIds || selectedAreaIds.has(camera.area_id);
+      const matchesScenario = !visibleCameraIdsByScenario || visibleCameraIdsByScenario.has(camera.id);
+      return matchesArea && matchesScenario;
+    });
+  }, [cameras, selectedAreaIds, visibleCameraIdsByScenario]);
+
+  const activeFilters = useMemo(() => ({
+    camera_id: isGlobalView ? undefined : activeCamera,
+    area_id: selectedAreaId === 'all' || !isGlobalView ? undefined : Number(selectedAreaId),
+    scenario_key: selectedScenarioKey === 'all' ? undefined : selectedScenarioKey
+  }), [activeCamera, isGlobalView, selectedAreaId, selectedScenarioKey]);
+
+  const activeAreaLabel = selectedAreaId === 'all'
+    ? 'All Areas'
+    : areaNameById.get(Number(selectedAreaId)) || 'Selected Area';
+
+  const activeScenarioLabel = selectedScenarioKey === 'all' ? 'All Scenarios' : selectedScenarioKey;
+
+  useEffect(() => {
+    if (!isGlobalView && activeCamera && !filteredCameras.some(camera => camera.id === activeCamera)) {
+      setActiveCamera(null);
+      setIsGlobalView(true);
+      setLogsOffset(0);
+    }
+  }, [activeCamera, filteredCameras, isGlobalView]);
 
   const fetchLogsData = useCallback(async (showSpinner = false) => {
     if (showSpinner) setLoadingLogs(true);
     try {
-      const camId = isGlobalView ? undefined : activeCamera;
-      const logsData = await fetchLogs({ hours: filterHours, camera_id: camId, limit: PAGE_SIZE, skip: logsOffset });
+      const logsData = await fetchLogs({ hours: filterHours, ...activeFilters, limit: PAGE_SIZE, skip: logsOffset });
 
       if (Array.isArray(logsData)) {
         setLogs(logsData.slice(0, 50).map(log => {
@@ -133,20 +208,20 @@ export default function NeuralStream() {
     } finally {
       setLoadingLogs(false);
     }
-  }, [filterHours, activeCamera, isGlobalView, logsOffset]);
+  }, [activeFilters, filterHours, logsOffset]);
 
   useEffect(() => {
     let source;
     let retryTimer;
 
     const connect = () => {
-      source = new EventSource(EVENTS_URL);
+      const token = encodeURIComponent(localStorage.getItem('token') || '');
+      source = new EventSource(`${EVENTS_URL}?token=${token}`);
       source.onopen = () => setStreamConnected(true);
       source.onmessage = (event) => {
         try {
           const data = JSON.parse(event.data);
           if (data && !data.detail) {
-            setIntel(data);
             fetchLogsData(false);
           }
         } catch (err) {
@@ -177,21 +252,21 @@ export default function NeuralStream() {
     const pollIntel = async () => {
       if (!isActive) return;
       try {
-        const camId = isGlobalView ? undefined : activeCamera;
-        const [intelRes, summaryRes] = await Promise.all([
-          fetchIntelligence(),
-          fetchLogsSummary(filterHours, camId)
-        ]);
-
-        if (intelRes && !intelRes.detail) setIntel(intelRes);
+        const summaryRes = await fetchLogsSummary(filterHours, activeFilters);
         if (summaryRes && !summaryRes.detail) setSummary(summaryRes);
-      } catch { }
+      } catch (err) {
+        console.error('Failed to poll stream summary:', err);
+      }
       intelTimeout = setTimeout(pollIntel, 1000);
     };
 
     const pollLogs = async () => {
       if (!isActive) return;
-      try { await fetchLogsData(false); } catch { }
+      try {
+        await fetchLogsData(false);
+      } catch (err) {
+        console.error('Failed to poll stream logs:', err);
+      }
       logsTimeout = setTimeout(pollLogs, 2000);
     };
 
@@ -203,7 +278,7 @@ export default function NeuralStream() {
       clearTimeout(intelTimeout);
       clearTimeout(logsTimeout);
     };
-  }, [fetchLogsData, filterHours, activeCamera, isGlobalView]);
+  }, [activeFilters, fetchLogsData, filterHours]);
 
   return (
     <div className="max-w-[1600px] mx-auto flex flex-col gap-4 bg-bg font-sans transition-colors duration-300">
@@ -251,6 +326,53 @@ export default function NeuralStream() {
             </div>
           )}
 
+          {/* Area & Scenario Filters (Global) */}
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 bg-surface border border-border rounded-lg px-2 py-1.5 h-[36px]">
+              <Filter className="w-3.5 h-3.5 text-accent shrink-0" />
+              <select
+                value={selectedAreaId}
+                onChange={(event) => {
+                  setSelectedAreaId(event.target.value);
+                  setIsGlobalView(true);
+                  setActiveCamera(null);
+                  setLogsOffset(0);
+                }}
+                className="bg-transparent text-[0.65rem] font-black uppercase tracking-wider text-text-dark outline-none max-w-[140px] cursor-pointer"
+                title="Filter streams by area"
+              >
+                <option value="all">All Areas</option>
+                {areas.map(area => (
+                  <option key={area.id} value={area.id}>
+                    {area.parent_id ? `${areaNameById.get(area.parent_id) || 'Zone'} / ${area.name}` : area.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="flex items-center gap-2 bg-surface border border-border rounded-lg px-2 py-1.5 h-[36px]">
+              <Target className="w-3.5 h-3.5 text-accent shrink-0" />
+              <select
+                value={selectedScenarioKey}
+                onChange={(event) => {
+                  setSelectedScenarioKey(event.target.value);
+                  setIsGlobalView(true);
+                  setActiveCamera(null);
+                  setLogsOffset(0);
+                }}
+                className="bg-transparent text-[0.65rem] font-black uppercase tracking-wider text-text-dark outline-none max-w-[180px] cursor-pointer"
+                title="Filter streams by detected scenario"
+              >
+                <option value="all">All Scenarios</option>
+                {scenarios.map(scenario => (
+                  <option key={scenario.id || scenario.key || scenario.name} value={scenario.key || scenario.name}>
+                    {scenario.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
           {/* Threat Assessment Badge */}
           <div className={`flex items-center gap-2 px-3 py-2 rounded-lg border transition-all duration-500
               ${summary.threat_level === 'Critical' ? 'bg-rose-500/15 border-rose-500/30' :
@@ -293,7 +415,7 @@ export default function NeuralStream() {
             <span className={`text-[0.55rem] font-black uppercase tracking-widest ${isGlobalView ? 'text-accent' : 'text-text-gray'} hidden md:block`}>Matrix</span>
           </div>
 
-          {cameras.map(cam => {
+          {filteredCameras.map(cam => {
             const isDisabled = cam.is_active === false;
             const isActive = activeCamera === cam.id && !isGlobalView && !isDisabled;
             return (
@@ -332,7 +454,13 @@ export default function NeuralStream() {
               className="grid h-full p-2 gap-2"
               style={{ gridTemplateColumns: `repeat(${gridSize}, minmax(0, 1fr))` }}
             >
-              {cameras.slice(0, gridSize * gridSize).map(cam => {
+              {filteredCameras.length === 0 ? (
+                <div className="col-span-full min-h-[320px] flex flex-col items-center justify-center text-center bg-slate-950 rounded-lg border border-white/10">
+                  <Filter className="w-8 h-8 text-white/25 mb-3" />
+                  <span className="text-xs font-black text-white/70 uppercase tracking-widest">No streams match filters</span>
+                  <span className="text-[0.65rem] font-bold text-white/35 uppercase tracking-wider mt-1">{activeAreaLabel} / {activeScenarioLabel}</span>
+                </div>
+              ) : filteredCameras.slice(0, gridSize * gridSize).map(cam => {
                 const isDisabled = cam.is_active === false;
                 return (
                   <div key={cam.id} className={`relative bg-slate-900 rounded-lg overflow-hidden border border-white/10 group ${isDisabled ? 'opacity-60 grayscale' : ''}`}>
@@ -390,7 +518,7 @@ export default function NeuralStream() {
         {/* LOGS TABLE OVERVIEW */}
         <div className="flex-1 bg-card rounded-lg border border-border shadow-premium flex flex-col overflow-hidden min-w-0">
           {/* LOGS HEADER + FILTERS */}
-          <div className="px-5 py-3 border-b border-border flex items-center justify-between">
+          <div className="px-5 py-3 border-b border-border flex flex-wrap items-center justify-between gap-3">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-accent/10 text-accent rounded-lg border border-accent/20">
                 <Activity className="w-4 h-4" />
@@ -403,11 +531,13 @@ export default function NeuralStream() {
                     <span className="text-[0.55rem] font-bold text-emerald-600 uppercase tracking-tighter">Live Sync</span>
                   </div>
                 </div>
-                <p className="text-[0.6rem] font-medium text-text-gray uppercase tracking-widest">{isGlobalView ? 'System Wide' : `Selected: CAM-0${activeCamera}`} — {logs.length} Events</p>
+                <p className="text-[0.6rem] font-medium text-text-gray uppercase tracking-widest">
+                  {isGlobalView ? activeAreaLabel : `Selected: CAM-${String(activeCamera).padStart(2, '0')}`} / {activeScenarioLabel} - {logs.length} Events
+                </p>
               </div>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center justify-end gap-2">
               {/* Status Message */}
               <div className={`hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-lg border text-[0.6rem] font-bold
                 ${summary.threat_level === 'Critical' ? 'bg-rose-500/10 border-rose-500/20 text-rose-600' :
@@ -485,7 +615,7 @@ export default function NeuralStream() {
                     {log.type}
                   </span>
                   {log.isAlert && (
-                    <span className="text-rose-500 text-[0.55rem] font-black animate-pulse uppercase tracking-wider shrink-0">⚠ Alert</span>
+                    <span className="text-rose-500 text-[0.55rem] font-black animate-pulse uppercase tracking-wider shrink-0">Alert</span>
                   )}
                 </div>
 
@@ -620,4 +750,3 @@ export default function NeuralStream() {
     </div>
   );
 }
-

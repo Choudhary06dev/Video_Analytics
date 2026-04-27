@@ -176,6 +176,8 @@ def fetch_alerts(
 def fetch_logs(
     hours: float = 24.0,
     camera_id: Optional[int] = None,
+    area_id: Optional[int] = None,
+    scenario_key: Optional[str] = None,
     object_class: Optional[str] = None,
     severity: Optional[str] = None,
     limit: int = 100,
@@ -185,13 +187,15 @@ def fetch_logs(
 ):
     limit = max(1, min(limit, 500))
     skip = max(0, skip)
-    return get_logs(session, hours, camera_id, object_class, severity, limit, skip)
+    return get_logs(session, hours, camera_id, area_id, scenario_key, object_class, severity, limit, skip)
 
 @router.get("/logs/summary")
 def fetch_logs_summary(
     hours: float = 24.0,
     camera_id: Optional[int] = None,
+    area_id: Optional[int] = None,
+    scenario_key: Optional[str] = None,
     session: Session = Depends(get_session),
     auth_data: dict = Depends(lambda cur=Depends(get_current_user), s=Depends(get_session): verify_module_access("alerts", cur, s, access_level="view")),
 ):
-    return get_logs_summary(session, hours, camera_id, latest_intelligence_cache)
+    return get_logs_summary(session, hours, camera_id, area_id, scenario_key, latest_intelligence_cache)
