@@ -17,13 +17,20 @@ import {
   Building2,
   GitBranch,
   FolderTree,
-  MapPin
+  MapPin,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 
 export default function AreaManagement() {
   const [areas, setAreas] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('');
+
+  // Pagination State
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize] = useState(10);
+  const [totalItems, setTotalItems] = useState(0);
 
   // Modal States
   const [showAddModal, setShowAddModal] = useState(false);
@@ -37,13 +44,15 @@ export default function AreaManagement() {
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [currentPage]);
 
   const fetchData = async () => {
     try {
       setLoading(true);
-      const data = await fetchAdminAreas();
-      setAreas(data || []);
+      const skip = (currentPage - 1) * pageSize;
+      const response = await fetchAdminAreas(skip, pageSize);
+      setAreas(response.areas || []);
+      setTotalItems(response.total || 0);
     } catch (err) {
       console.error("Failed to fetch areas", err);
     } finally {
@@ -261,6 +270,49 @@ export default function AreaManagement() {
               )}
             </tbody>
           </table>
+        </div>
+
+        {/* Pagination Bar */}
+        <div className="px-6 py-4 bg-surface/30 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="text-[10px] font-black uppercase tracking-widest text-text-gray">
+            Showing <span className="text-text-dark">{Math.min(totalItems, (currentPage - 1) * pageSize + 1)}</span> to <span className="text-text-dark">{Math.min(totalItems, currentPage * pageSize)}</span> of <span className="text-text-dark">{totalItems}</span> zone records
+          </div>
+          
+          <div className="flex items-center gap-2">
+            <button 
+              disabled={currentPage === 1}
+              onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+              className="p-2 rounded-lg border border-border bg-card text-text-gray hover:text-emerald-500 hover:border-emerald-500 disabled:opacity-30 disabled:hover:text-text-gray disabled:hover:border-border transition-all"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+            
+            <div className="flex items-center gap-1">
+              {Array.from({ length: Math.ceil(totalItems / pageSize) }, (_, i) => i + 1)
+                .filter(p => p === 1 || p === Math.ceil(totalItems / pageSize) || Math.abs(p - currentPage) <= 1)
+                .map((p, i, arr) => (
+                  <React.Fragment key={p}>
+                    {i > 0 && p - arr[i-1] > 1 && <span className="text-text-gray px-1">...</span>}
+                    <button
+                      onClick={() => setCurrentPage(p)}
+                      className={`min-w-[32px] h-8 rounded-lg text-[10px] font-black transition-all border ${currentPage === p 
+                        ? 'bg-emerald-500 text-white border-emerald-500 shadow-lg shadow-emerald-500/20' 
+                        : 'bg-card text-text-gray border-border hover:border-emerald-500/50 hover:text-emerald-500'}`}
+                    >
+                      {p}
+                    </button>
+                  </React.Fragment>
+                ))}
+            </div>
+
+            <button 
+              disabled={currentPage >= Math.ceil(totalItems / pageSize)}
+              onClick={() => setCurrentPage(prev => prev + 1)}
+              className="p-2 rounded-lg border border-border bg-card text-text-gray hover:text-emerald-500 hover:border-emerald-500 disabled:opacity-30 disabled:hover:text-text-gray disabled:hover:border-border transition-all"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
         </div>
       </div>
 

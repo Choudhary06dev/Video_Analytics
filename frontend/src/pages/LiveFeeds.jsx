@@ -14,7 +14,7 @@ export default function LiveFeeds() {
   const loadCameras = async () => {
     try {
       const data = await fetchAdminCameras();
-      setCameras(data || []);
+      setCameras(data.cameras || data || []);
     } catch (err) {
       console.error('Failed to load cameras:', err);
     } finally {

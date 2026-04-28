@@ -486,6 +486,7 @@ export default function ActivityVault() {
   const [sortKey, setSortKey] = useState('time');
   const [sortDir, setSortDir] = useState('desc');
   const [liveEnabled, setLiveEnabled] = useState(true);
+  const [filterHours, setFilterHours] = useState(24);
   const [loaded, setLoaded] = useState(false);
   const counterRef = useRef(200);
   const ITEMS_PER_PAGE = 15;
@@ -518,7 +519,7 @@ export default function ActivityVault() {
       frames: 420,
       procTime: "1.2",
       confidence: event.confidence * 100,
-      timeAgo: ago < 60 ? `${ago}m ago` : `${Math.floor(ago / 60)}h ago`,
+      timeAgo: ago < 60 ? `${ago}m ago` : (ago < 1440 ? `${Math.floor(ago / 60)}h ago` : `${Math.floor(ago / 1440)}d ago`),
       timestamp: new Date(event.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       date: new Date(event.timestamp).toLocaleDateString([], { month: 'short', day: 'numeric' }),
       sparkline: Array.from({ length: 12 }, () => Math.floor(Math.random() * 100)),
@@ -539,7 +540,7 @@ export default function ActivityVault() {
   // Fetch real logs from backend
   const loadLogs = useCallback(async () => {
     try {
-      const data = await apiFetchLogs({ hours: 24 });
+      const data = await apiFetchLogs({ hours: filterHours });
       if (Array.isArray(data)) {
         setActivities(data.map(event => formatBackendEvent(event)));
       }
@@ -552,7 +553,7 @@ export default function ActivityVault() {
   useEffect(() => {
     loadLogs();
     setTimeout(() => setLoaded(true), 200);
-  }, [loadLogs]);
+  }, [loadLogs, filterHours]);
 
   // Live updates
   useEffect(() => {
@@ -594,6 +595,27 @@ export default function ActivityVault() {
     avgTime: activities.length ? (activities.reduce((s, a) => s + parseFloat(a.procTime), 0) / activities.length).toFixed(1) : '0',
     highConf: activities.filter(a => a.confidence >= 90).length,
   }), [activities]);
+
+  const handleExportCSV = () => {
+    if (filtered.length === 0) return;
+    
+    const headers = ['ID', 'Date', 'Time', 'Worker', 'Role', 'Department', 'Task', 'Category', 'Zone', 'Camera', 'Confidence', 'Status', 'Priority', 'Notes'];
+    const rows = filtered.map(a => [
+      a.id, a.date, a.timestamp, a.worker.name, a.worker.role, a.worker.dept,
+      a.task.name, a.task.category, a.zone, a.camId, `${a.confidence}%`,
+      a.status, a.priority, a.notes
+    ]);
+    
+    const csvContent = [headers, ...rows].map(row => row.map(cell => `"${cell}"`).join(',')).join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `Activity_Report_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   useEffect(() => { setCurrentPage(1); }, [activeTab, searchQuery]);
 
@@ -644,14 +666,16 @@ export default function ActivityVault() {
                 <span style={{ width: 8, height: 8, borderRadius: '50%', background: liveEnabled ? '#22c55e' : '#64748b', boxShadow: liveEnabled ? '0 0 10px rgba(34,197,94,.6)' : 'none', animation: liveEnabled ? 'vpPulse 1.5s ease-in-out infinite' : 'none' }} />
                 {liveEnabled ? 'LIVE FEED' : 'PAUSED'}
               </button>
-              <button style={{
-                display: 'flex', alignItems: 'center', gap: 6, padding: '9px 16px', borderRadius: 12, cursor: 'pointer',
-                border: '1.5px solid rgba(14,165,233,.3)', background: 'linear-gradient(135deg,rgba(14,165,233,.15),rgba(139,92,246,.1))',
-                color: '#38bdf8', fontSize: 12, fontWeight: 800, transition: 'all 0.2s',
-              }}
+              <button 
+                onClick={handleExportCSV}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 6, padding: '9px 16px', borderRadius: 12, cursor: 'pointer',
+                  border: '1.5px solid rgba(14,165,233,.3)', background: 'linear-gradient(135deg,rgba(14,165,233,.15),rgba(139,92,246,.1))',
+                  color: '#38bdf8', fontSize: 12, fontWeight: 800, transition: 'all 0.2s',
+                }}
                 onMouseEnter={e => e.currentTarget.style.background = 'linear-gradient(135deg,rgba(14,165,233,.25),rgba(139,92,246,.15))'}
                 onMouseLeave={e => e.currentTarget.style.background = 'linear-gradient(135deg,rgba(14,165,233,.15),rgba(139,92,246,.1))'}>
-                <Download size={13} />Export Report
+                <Download size={13} />Export CSV
               </button>
             </div>
           </div>
@@ -760,6 +784,31 @@ export default function ActivityVault() {
               onMouseLeave={e => { e.currentTarget.style.borderColor = isDark ? '#334155' : '#e2e8f0'; e.currentTarget.style.color = textSecondary; }}>
               <SlidersHorizontal size={13} />Advanced Filter
             </button>
+
+            {/* Time Filter */}
+            <div style={{ display: 'flex', background: surfaceBg, p: 1, borderRadius: 12, border: `1.5px solid ${isDark ? '#334155' : '#e2e8f0'}`, padding: 2 }}>
+              {[
+                { label: '1H', val: 1 },
+                { label: '24H', val: 24 },
+                { label: '7D', val: 168 },
+                { label: '1M', val: 720 },
+                { label: '6M', val: 4320 },
+                { label: '1Y', val: 8760 }
+              ].map(f => (
+                <button
+                  key={f.val}
+                  onClick={() => setFilterHours(f.val)}
+                  style={{
+                    padding: '6px 12px', borderRadius: 8, fontSize: 10, fontWeight: 800, transition: 'all 0.2s', border: 'none', cursor: 'pointer',
+                    background: filterHours === f.val ? '#0ea5e9' : 'transparent',
+                    color: filterHours === f.val ? '#fff' : textSecondary,
+                    boxShadow: filterHours === f.val ? '0 4px 12px rgba(14,165,233,.3)' : 'none',
+                  }}
+                >
+                  {f.label}
+                </button>
+              ))}
+            </div>
           </div>
 
           {/* bulk actions */}

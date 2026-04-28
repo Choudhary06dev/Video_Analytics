@@ -39,7 +39,7 @@ export default function ScenarioOrchestration() {
     try {
       setLoading(true);
       const data = await fetchAdminCameras();
-      setCameras(data);
+      setCameras(data.cameras || data || []);
     } catch (err) {
       console.error("Failed to load cameras", err);
     } finally {
@@ -79,6 +79,10 @@ export default function ScenarioOrchestration() {
     setScenarioData(prev => prev.map(s =>
       s.id === id ? { ...s, is_enabled: !s.is_enabled } : s
     ));
+  };
+
+  const toggleAllScenarios = (enable) => {
+    setScenarioData(prev => prev.map(s => ({ ...s, is_enabled: enable })));
   };
 
   const filteredCameras = cameras.filter(cam =>
@@ -214,9 +218,26 @@ export default function ScenarioOrchestration() {
                 </div>
               ) : (
                 <>
-                  <div className="flex items-center gap-3 text-text-gray mb-6">
-                    <LayoutGrid className="w-4 h-4" />
-                    <h3 className="text-[9px] font-black uppercase tracking-[3px]">Select Algorithms to Deploy</h3>
+                  <div className="flex items-center justify-between mb-6 bg-surface/50 p-3 rounded-lg border border-border">
+                    <div className="flex items-center gap-3 text-text-gray">
+                        <LayoutGrid className="w-4 h-4" />
+                        <h3 className="text-[9px] font-black uppercase tracking-[3px]">Scenario Selection Matrix</h3>
+                    </div>
+                    <div className="flex gap-4">
+                        <button 
+                            onClick={() => toggleAllScenarios(true)}
+                            className="text-[9px] font-black uppercase tracking-[3px] text-violet-600 hover:text-violet-700 font-bold transition-all"
+                        >
+                            Select All
+                        </button>
+                        <div className="w-px h-3 bg-border my-auto"></div>
+                        <button 
+                            onClick={() => toggleAllScenarios(false)}
+                            className="text-[9px] font-black uppercase tracking-[3px] text-text-gray hover:text-text-dark font-bold transition-all"
+                        >
+                            Clear All
+                        </button>
+                    </div>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 overflow-y-auto pr-2 custom-scrollbar max-h-[380px]">

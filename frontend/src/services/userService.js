@@ -1,8 +1,9 @@
 import { get, post, put, del, patch } from './api';
 
-export const fetchAdminUsers = () => get("/admin/users/");
+export const fetchAdminUsers = (skip = 0, limit = 20) => get("/admin/users/", { skip, limit });
 
 export const createUser = (userData) => post("/admin/users", userData);
+
 
 export const updateUser = (userId, userData) => put(`/admin/users/${userId}`, userData);
 
@@ -10,7 +11,7 @@ export const deleteUser = (userId) => del(`/admin/users/${userId}`);
 
 export const updateUserStatus = (userId, isActive) => patch(`/admin/users/${userId}/status`, { is_active: isActive });
 
-export const fetchAuditLogs = (limit = 50) => get("/admin/users/audit-logs", { limit });
+export const fetchAuditLogs = (skip = 0, limit = 50) => get("/admin/users/audit-logs", { skip, limit });
 
 export const fetchRoles = () => get("/admin/roles");
 export const createRole = (roleData) => post("/admin/roles", roleData);

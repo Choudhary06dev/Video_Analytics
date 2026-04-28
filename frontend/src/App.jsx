@@ -2,6 +2,8 @@ import React, { Suspense, lazy } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider } from './context/ThemeContext';
 import { AuthProvider } from './context/AuthContext';
+import { NotificationProvider } from './context/NotificationContext';
+import { AlertNotificationContainer } from './components/ui/AlertNotification';
 
 // Layout
 const AppLayout = lazy(() => import('./layouts/AppLayout'));
@@ -37,22 +39,13 @@ const AreaManagement = lazy(() => import('./pages/admin/AreaManagement'));
 const ScenarioOrchestration = lazy(() => import('./pages/admin/ScenarioOrchestration'));
 const AIScenarioRegistry = lazy(() => import('./pages/admin/AIScenarioRegistry'));
 
-// Loading Fallback Component
-const LoadingFallback = () => (
-  <div className="min-h-screen bg-background flex items-center justify-center">
-    <div className="flex flex-col items-center gap-4">
-      <div className="w-12 h-12 border-4 border-accent border-t-transparent rounded-full animate-spin"></div>
-      <p className="text-[10px] font-black uppercase tracking-[0.2em] text-text-gray animate-pulse">Initializing Interface</p>
-    </div>
-  </div>
-);
-
 function App() {
   return (
     <ThemeProvider>
       <AuthProvider>
-        <BrowserRouter>
-          <Suspense fallback={<LoadingFallback />}>
+        <NotificationProvider>
+          <BrowserRouter>
+            <AlertNotificationContainer />
             <Routes>
               {/* Public Routes */}
               <Route path="/login" element={<LoginPage />} />
@@ -92,8 +85,8 @@ function App() {
               {/* Fallback */}
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
-          </Suspense>
-        </BrowserRouter>
+          </BrowserRouter>
+        </NotificationProvider>
       </AuthProvider>
     </ThemeProvider>
   );

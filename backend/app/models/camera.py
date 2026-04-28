@@ -1,4 +1,4 @@
-from sqlmodel import SQLModel, Field, Relationship
+from sqlmodel import SQLModel, Field, Relationship, Column, JSON
 from typing import Optional, List
 
 
@@ -25,18 +25,10 @@ class Camera(SQLModel, table=True):
     area_id: int = Field(foreign_key="area.id")
     status: str = Field(default="offline")  # online, offline, maintenance
     is_active: bool = Field(default=True)
+    
+    # Store enabled scenario IDs as a JSON list in a single row
+    enabled_scenario_ids: List[int] = Field(default=[], sa_column=Column(JSON))
 
     # Relationship
     area: Area = Relationship(back_populates="cameras")
-    scenario_assignments: List["CameraScenarioAssignment"] = Relationship(back_populates="camera")
 
-
-class CameraScenarioAssignment(SQLModel, table=True):
-    """
-    Toggling specific AI scenarios per camera.
-    """
-    camera_id: int = Field(foreign_key="camera.id", primary_key=True)
-    scenario_id: int = Field(foreign_key="aiscenario.id", primary_key=True)
-    is_enabled: bool = Field(default=False)
-
-    camera: Camera = Relationship(back_populates="scenario_assignments")

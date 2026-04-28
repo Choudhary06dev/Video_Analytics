@@ -1,12 +1,12 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
 from fastapi.responses import StreamingResponse
-from sqlmodel import Session, select
+from sqlmodel import Session, select, delete
 from typing import List
 import httpx
 from app.core.database import get_session
 from app.api.v1.auth import get_current_user
 from app.api.v1.users import verify_module_access
-from app.models import Camera, Area, CameraScenarioAssignment, AIScenario
+from app.models import Camera, Area, AIScenario
 
 from app.schemas.camera_schema import CameraCreate, CameraUpdate, AreaCreate, AreaUpdate, ScenarioToggle, ScenarioBulkUpdate, ScenarioCreate, ScenarioUpdate
 
@@ -14,12 +14,8 @@ router = APIRouter(prefix="", tags=["Camera Management"])
 
 
 def _camera_with_scenario_count(camera: Camera, session: Session):
-    stmt = select(CameraScenarioAssignment).where(
-        CameraScenarioAssignment.camera_id == camera.id,
-        CameraScenarioAssignment.is_enabled == True
-    )
     cam_dict = camera.dict()
-    cam_dict["scenario_count"] = len(session.exec(stmt).all())
+    cam_dict["scenario_count"] = len(camera.enabled_scenario_ids or [])
     return cam_dict
 
 
@@ -41,9 +37,10 @@ def get_live_scenarios(session: Session = Depends(get_session), live_data: dict 
 # --- AREAS ---
 
 @router.get("/admin/areas")
-def get_areas(session: Session = Depends(get_session), admin_data: dict = Depends(lambda cur=Depends(get_current_user), s=Depends(get_session): verify_module_access("areas", cur, s, access_level="view"))):
-    areas = session.exec(select(Area)).all()
-    return areas
+def get_areas(skip: int = 0, limit: int = 20, session: Session = Depends(get_session), admin_data: dict = Depends(lambda cur=Depends(get_current_user), s=Depends(get_session): verify_module_access("areas", cur, s, access_level="view"))):
+    total_count = len(session.exec(select(Area)).all())
+    areas = session.exec(select(Area).offset(skip).limit(limit)).all()
+    return {"total": total_count, "areas": areas}
 
 @router.post("/admin/areas")
 def create_area(area_data: AreaCreate, session: Session = Depends(get_session), admin_data: dict = Depends(lambda cur=Depends(get_current_user), s=Depends(get_session): verify_module_access("areas", cur, s, access_level="edit"))):
@@ -97,9 +94,10 @@ def delete_area(area_id: int, session: Session = Depends(get_session), admin_dat
 # --- CAMERAS ---
 
 @router.get("/admin/cameras")
-def get_cameras(session: Session = Depends(get_session), admin_data: dict = Depends(lambda cur=Depends(get_current_user), s=Depends(get_session): verify_module_access("cameras", cur, s, access_level="view"))):
-    cameras = session.exec(select(Camera)).all()
-    return [_camera_with_scenario_count(cam, session) for cam in cameras]
+def get_cameras(skip: int = 0, limit: int = 20, session: Session = Depends(get_session), admin_data: dict = Depends(lambda cur=Depends(get_current_user), s=Depends(get_session): verify_module_access("cameras", cur, s, access_level="view"))):
+    total_count = len(session.exec(select(Camera)).all())
+    cameras = session.exec(select(Camera).offset(skip).limit(limit)).all()
+    return {"total": total_count, "cameras": [_camera_with_scenario_count(cam, session) for cam in cameras]}
 
 
 @router.post("/admin/cameras")
@@ -153,7 +151,7 @@ def delete_camera(camera_id: int, session: Session = Depends(get_session), admin
 @router.get("/admin/cameras/{camera_id}/scenarios")
 def get_camera_scenarios(camera_id: int, session: Session = Depends(get_session), admin_data: dict = Depends(lambda cur=Depends(get_current_user), s=Depends(get_session): verify_module_access("scenario_orchestration", cur, s, access_level="view"))):
     """
-    Returns all 21 scenarios with their is_enabled status for a specific camera.
+    Returns all scenarios with their is_enabled status from the JSON field.
     """
     camera = session.get(Camera, camera_id)
     if not camera:
@@ -162,9 +160,8 @@ def get_camera_scenarios(camera_id: int, session: Session = Depends(get_session)
     # Get all system scenarios
     all_scenarios = session.exec(select(AIScenario)).all()
     
-    # Get current assignments
-    stmt = select(CameraScenarioAssignment).where(CameraScenarioAssignment.camera_id == camera_id)
-    assignments = {a.scenario_id: a.is_enabled for a in session.exec(stmt).all()}
+    # Get enabled IDs from the camera JSON field
+    enabled_ids = set(camera.enabled_scenario_ids or [])
     
     result = []
     for s in all_scenarios:
@@ -173,7 +170,7 @@ def get_camera_scenarios(camera_id: int, session: Session = Depends(get_session)
             "name": s.name,
             "key": s.key,
             "severity": s.default_severity,
-            "is_enabled": assignments.get(s.id, False)
+            "is_enabled": s.id in enabled_ids
         })
     
     return result
@@ -183,68 +180,58 @@ def get_camera_scenarios(camera_id: int, session: Session = Depends(get_session)
 def get_enabled_camera_scenarios(camera_id: int, session: Session = Depends(get_session)):
     """
     Internal service endpoint used by the AI process at startup.
-    It returns only enabled scenario names and does not expose admin metadata.
+    Reads from the JSON field.
     """
     camera = session.get(Camera, camera_id)
     if not camera:
         raise HTTPException(status_code=404, detail="Camera not found")
 
-    stmt = select(CameraScenarioAssignment).where(
-        CameraScenarioAssignment.camera_id == camera_id,
-        CameraScenarioAssignment.is_enabled == True
-    )
-    assignments = session.exec(stmt).all()
     enabled_names = []
-    for assignment in assignments:
-        scenario = session.get(AIScenario, assignment.scenario_id)
+    enabled_ids = camera.enabled_scenario_ids or []
+    for sid in enabled_ids:
+        scenario = session.get(AIScenario, sid)
         if scenario:
             enabled_names.append(scenario.name)
 
     return {"camera_id": camera_id, "enabled_scenarios": enabled_names}
 
 @router.put("/admin/cameras/{camera_id}/scenarios")
-async def sync_camera_scenarios(camera_id: int, data: ScenarioBulkUpdate, session: Session = Depends(get_session), admin_data: dict = Depends(lambda cur=Depends(get_current_user), s=Depends(get_session): verify_module_access("scenario_orchestration", cur, s, access_level="edit"))):
-
+async def sync_camera_scenarios(camera_id: int, data: ScenarioBulkUpdate, background_tasks: BackgroundTasks, session: Session = Depends(get_session), admin_data: dict = Depends(lambda cur=Depends(get_current_user), s=Depends(get_session): verify_module_access("scenario_orchestration", cur, s, access_level="edit"))):
     """
-    Bulk syncs enabled scenarios for a camera and notifies the AI service.
+    Updates enabled scenarios in a single JSON column and notifies AI service.
     """
     camera = session.get(Camera, camera_id)
     if not camera:
         raise HTTPException(status_code=404, detail="Camera not found")
     
-    # 1. Remove existing assignments for this camera
-    stmt = select(CameraScenarioAssignment).where(CameraScenarioAssignment.camera_id == camera_id)
-    existing = session.exec(stmt).all()
-    for e in existing:
-        session.delete(e)
+    # 1. Update JSON field directly (No more multiple rows!)
+    camera.enabled_scenario_ids = data.enabled_scenario_ids
     
-    # 2. Add new enabled assignments
+    # Get names for AI service notification
     enabled_names = []
     for sid in data.enabled_scenario_ids:
         scenario = session.get(AIScenario, sid)
         if scenario:
-            assignment = CameraScenarioAssignment(
-                camera_id=camera_id,
-                scenario_id=sid,
-                is_enabled=True
-            )
-            session.add(assignment)
             enabled_names.append(scenario.name)
     
+    session.add(camera)
     session.commit()
 
-    # 3. Notify AI Service (Handshake)
-    try:
-        async with httpx.AsyncClient() as client:
-            # Tell AI service to reload config for this camera
-            await client.post(f"http://localhost:8001/control/reload/{camera_id}", json={
-                "enabled_scenarios": enabled_names
-            })
-    except Exception as e:
-        # Don't fail the whole request if AI service is down, but log it
-        print(f"Failed to notify AI service: {e}")
+    # 2. Notify AI Service in Background
+    background_tasks.add_task(notify_ai_service_reload, camera_id, enabled_names)
 
     return {"status": "success", "message": f"Synced {len(enabled_names)} scenarios for camera {camera_id}"}
+
+
+async def notify_ai_service_reload(camera_id: int, enabled_names: list):
+    """Helper to notify AI service in background"""
+    try:
+        async with httpx.AsyncClient() as client:
+            await client.post(f"http://localhost:8001/control/reload/{camera_id}", json={
+                "enabled_scenarios": enabled_names
+            }, timeout=5.0)
+    except Exception as e:
+        print(f"Failed to notify AI service in background: {e}")
     
 
 # --- AI SCENARIOS (CRUD) ---
@@ -329,28 +316,26 @@ async def video_feed(camera_id: int, session: Session = Depends(get_session)):
     if not camera_data:
         raise HTTPException(status_code=404, detail="Camera not found")
     
-    # Assuming AI service runs on localhost:8001
     import urllib.parse
     source_url_encoded = urllib.parse.quote(camera_data.source_url, safe="")
     ai_service_url = f"http://localhost:8001/stream/{camera_id}?source={source_url_encoded}"
-    ai_health_url = f"http://localhost:8001/intelligence/{camera_id}"
-
-    try:
-        async with httpx.AsyncClient(timeout=1.0) as client:
-            await client.get(ai_health_url)
-    except httpx.HTTPError:
-        raise HTTPException(status_code=503, detail="AI video service is offline")
     
     async def stream_proxy():
-        try:
-            timeout = httpx.Timeout(None, connect=2.0)
-            async with httpx.AsyncClient(timeout=timeout) as client:
-                async with client.stream("GET", ai_service_url) as response:
-                    response.raise_for_status()
-                    async for chunk in response.aiter_bytes():
-                        yield chunk
-        except httpx.HTTPError as exc:
-            print(f"AI stream unavailable for camera {camera_id}: {exc}")
+        import asyncio
+        max_retries = 3
+        for attempt in range(max_retries):
+            try:
+                timeout = httpx.Timeout(None, connect=10.0)
+                async with httpx.AsyncClient(timeout=timeout) as client:
+                    async with client.stream("GET", ai_service_url) as response:
+                        response.raise_for_status()
+                        async for chunk in response.aiter_bytes():
+                            yield chunk
+                return
+            except Exception as exc:
+                print(f"AI stream attempt {attempt+1}/{max_retries} failed for camera {camera_id}: {exc}")
+                if attempt < max_retries - 1:
+                    await asyncio.sleep(2)
 
     return StreamingResponse(
         stream_proxy(),
