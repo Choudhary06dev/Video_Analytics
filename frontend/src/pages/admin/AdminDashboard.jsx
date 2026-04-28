@@ -70,28 +70,36 @@ export default function AdminDashboard() {
   const fetchStats = async () => {
     try {
       setLoading(true);
-      const [users, cameras, areas, scenarios, alerts, audits] = await Promise.all([
-        fetchAdminUsers(),
-        fetchAdminCameras(),
-        fetchAdminAreas(),
-        fetchScenarios(),
-        fetchAlerts({ hours: 24 }),
-        fetchAuditLogs()
+      const [usersData, camerasData, areasData, scenariosData, alertsData, auditsData] = await Promise.all([
+        fetchAdminUsers().catch(() => []),
+        fetchAdminCameras().catch(() => []),
+        fetchAdminAreas().catch(() => []),
+        fetchScenarios().catch(() => []),
+        fetchAlerts({ hours: 24 }).catch(() => []),
+        fetchAuditLogs().catch(() => [])
       ]);
 
+      // Normalize data (handle both direct arrays and nested objects like { users: [] })
+      const u = Array.isArray(usersData) ? usersData : (usersData?.users || []);
+      const c = Array.isArray(camerasData) ? camerasData : (camerasData?.cameras || []);
+      const ar = Array.isArray(areasData) ? areasData : (areasData?.areas || []);
+      const s = Array.isArray(scenariosData) ? scenariosData : (scenariosData?.scenarios || []);
+      const al = Array.isArray(alertsData) ? alertsData : (alertsData?.alerts || []);
+      const au = Array.isArray(auditsData) ? auditsData : (auditsData?.logs || auditsData || []);
+
       setStats({
-        users: users?.users?.length || users?.length || 0,
-        cameras: cameras?.cameras?.length || cameras?.length || 0,
-        areas: areas?.areas?.length || areas?.length || 0,
-        scenarios: scenarios?.scenarios?.length || scenarios?.length || 0,
-        alerts: alerts?.alerts?.length || alerts?.length || 0,
-        audits: audits?.logs?.length || audits?.length || 0,
+        users: u.length,
+        cameras: c.length,
+        areas: ar.length,
+        scenarios: s.length,
+        alerts: al.length,
+        audits: au.length,
       });
 
       setRawStats({
-        cameras: cameras?.cameras || cameras || [],
-        scenarios: scenarios?.scenarios || scenarios || [],
-        audits: audits?.logs || audits || []
+        cameras: c,
+        scenarios: s,
+        audits: au
       });
 
       setLoading(false);
