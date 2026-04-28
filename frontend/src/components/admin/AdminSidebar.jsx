@@ -156,8 +156,7 @@ export default function AdminSidebar({ isSidebarOpen }) {
       })}
     </ul>
   );
-
-  return (
+  return (
     <aside
       className={`${isSidebarOpen ? 'w-[260px] translate-x-0' : 'w-20 -translate-x-full md:translate-x-0'} 
       transition-all duration-300 ease-in-out fixed md:relative z-50 h-full bg-card border-r border-border flex flex-col pt-4 px-4 pb-9 overflow-hidden shadow-premium`}
