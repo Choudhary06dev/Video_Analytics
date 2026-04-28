@@ -27,6 +27,9 @@ import {
   Bar,
   BarChart,
   CartesianGrid,
+  Cell,
+  Pie,
+  PieChart,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -198,8 +201,8 @@ export default function Dashboard() {
       load('health', fetchHealth, { status: 'unknown' })
     ]);
 
-    setCameras(safeArray(cameraData));
-    setAreas(safeArray(areaData));
+    setCameras(safeArray(cameraData.cameras || cameraData));
+    setAreas(safeArray(areaData.areas || areaData));
     setAlerts(safeArray(alertData));
     setLogs(safeArray(logData));
     setSummary(summaryData || {});
@@ -254,6 +257,14 @@ export default function Dashboard() {
 
     return rows.sort((a, b) => b.cameras - a.cameras).slice(0, 6);
   }, [areas, cameras]);
+
+  const areaDistributionData = useMemo(() => {
+    return areaRows
+      .filter(row => row.cameras > 0)
+      .map(row => ({ name: row.name, value: row.cameras }));
+  }, [areaRows]);
+
+  const COLORS = ['#0ea5e9', '#8b5cf6', '#ec4899', '#f59e0b', '#22c55e', '#ef4444'];
 
   const modelRows = useMemo(() => {
     const counts = {};
@@ -416,25 +427,38 @@ export default function Dashboard() {
 
       <div className="grid xl:grid-cols-3 gap-6">
         <div className="bg-card border border-border rounded-lg p-5 shadow-sm">
-          <SectionHeader icon={MapPin} title="Area Coverage" subtitle="Hospital zones and active camera count" />
-          <div className="space-y-3">
-            {areaRows.length ? areaRows.map((area) => {
-              const percent = area.cameras ? Math.round((area.active / area.cameras) * 100) : 0;
-              return (
-                <div key={area.id} className="border border-border rounded-lg p-3 bg-surface/30">
-                  <div className="flex items-center justify-between gap-3">
-                    <div>
-                      <p className="text-xs font-black text-text-dark">{area.name}</p>
-                      <p className="text-[10px] font-semibold text-text-gray">{area.active}/{area.cameras} cameras active</p>
-                    </div>
-                    <span className="text-sm font-black text-accent">{percent}%</span>
-                  </div>
-                  <div className="h-1.5 bg-border rounded-full mt-3 overflow-hidden">
-                    <div className="h-full bg-accent rounded-full" style={{ width: `${percent}%` }} />
-                  </div>
-                </div>
-              );
-            }) : <EmptyState text={errors.areas || 'No hospital areas configured'} />}
+          <SectionHeader icon={MapPin} title="Area Distribution" subtitle="Camera density across hospital zones" />
+          <div className="h-[290px] flex items-center justify-center">
+            {areaDistributionData.length ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={areaDistributionData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={60}
+                    outerRadius={80}
+                    paddingAngle={5}
+                    dataKey="value"
+                  >
+                    {areaDistributionData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip 
+                    contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            ) : <EmptyState text="No areas configured" />}
+          </div>
+          <div className="mt-4 grid grid-cols-2 gap-2">
+            {areaDistributionData.slice(0, 4).map((d, i) => (
+              <div key={d.name} className="flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full" style={{ backgroundColor: COLORS[i % COLORS.length] }} />
+                <span className="text-[10px] font-bold text-text-gray truncate">{d.name}</span>
+              </div>
+            ))}
           </div>
         </div>
 

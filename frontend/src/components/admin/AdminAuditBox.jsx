@@ -26,8 +26,8 @@ export default function AdminAuditBox() {
   const loadAuditLogs = async () => {
     try {
       // Direct call to /admin/users/audit-logs
-      const data = await get("/admin/users/audit-logs?limit=10");
-      setLogs(data || []);
+      const response = await get("/admin/users/audit-logs?limit=10");
+      setLogs(response.logs || []);
     } catch (err) {
       console.error("Failed to fetch audit logs", err);
     } finally {

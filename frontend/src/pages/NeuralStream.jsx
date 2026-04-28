@@ -162,6 +162,7 @@ export default function NeuralStream() {
       setActiveCamera(null);
       setIsGlobalView(true);
       setLogsOffset(0);
+      setLogs([]); // Clear logs when losing focus
     }
   }, [activeCamera, filteredCameras, isGlobalView]);
 
@@ -337,13 +338,17 @@ export default function NeuralStream() {
                   setIsGlobalView(true);
                   setActiveCamera(null);
                   setLogsOffset(0);
+                  setLogs([]);
                 }}
                 className="bg-transparent text-[0.65rem] font-black uppercase tracking-wider text-text-dark outline-none max-w-[140px] cursor-pointer"
                 title="Filter streams by area"
               >
                 <option value="all">All Areas</option>
                 {areas.map(area => (
-                  <option key={area.id} value={area.id}>
+                  <option 
+                    key={area.id} 
+                    value={area.id}
+                  >
                     {area.parent_id ? `${areaNameById.get(area.parent_id) || 'Zone'} / ${area.name}` : area.name}
                   </option>
                 ))}
@@ -359,13 +364,17 @@ export default function NeuralStream() {
                   setIsGlobalView(true);
                   setActiveCamera(null);
                   setLogsOffset(0);
+                  setLogs([]);
                 }}
                 className="bg-transparent text-[0.65rem] font-black uppercase tracking-wider text-text-dark outline-none max-w-[180px] cursor-pointer"
                 title="Filter streams by detected scenario"
               >
                 <option value="all">All Scenarios</option>
                 {scenarios.map(scenario => (
-                  <option key={scenario.id || scenario.key || scenario.name} value={scenario.key || scenario.name}>
+                  <option 
+                    key={scenario.id || scenario.key || scenario.name} 
+                    value={scenario.key || scenario.name}
+                  >
                     {scenario.name}
                   </option>
                 ))}
@@ -408,7 +417,7 @@ export default function NeuralStream() {
         {/* CAMERA SELECTION SIDEBAR (Small Strip) */}
         <div className="w-20 md:w-40 flex flex-col gap-2 overflow-y-auto custom-scrollbar pr-2 shrink-0 border-r border-border/50">
           <div
-            onClick={() => { setIsGlobalView(true); setActiveCamera(null); setLogsOffset(0); }}
+            onClick={() => { setIsGlobalView(true); setActiveCamera(null); setLogsOffset(0); setLogs([]); }}
             className={`aspect-video rounded-lg border-2 flex flex-col items-center justify-center cursor-pointer transition-all ${isGlobalView ? 'border-accent bg-accent/10 shadow-[0_0_15px_rgba(14,165,233,0.3)]' : 'border-border/50 bg-surface hover:border-accent/40'}`}
           >
             <LayoutGrid className={`w-5 h-5 mb-1 ${isGlobalView ? 'text-accent' : 'text-text-gray'}`} />
@@ -421,21 +430,21 @@ export default function NeuralStream() {
             return (
               <div
                 key={cam.id}
-                onClick={() => { if (!isDisabled) { setActiveCamera(cam.id); setIsGlobalView(false); setLogsOffset(0); } }}
+                onClick={() => { if (!isDisabled) { setActiveCamera(cam.id); setIsGlobalView(false); setLogsOffset(0); setLogs([]); } }}
                 className={`aspect-video rounded-lg border-2 transition-all overflow-hidden relative group
                        ${isActive ? 'border-accent shadow-[0_0_15px_rgba(14,165,233,0.3)] cursor-pointer' : isDisabled ? 'border-danger/30 opacity-60 cursor-not-allowed' : 'border-black hover:border-accent/40 cursor-pointer'}
                      `}
               >
                 {/* Thumbnail preview */}
-                {isActive ? (
+                {!isDisabled ? (
                   <CameraFeed streamUrl={`${VIDEO_FEED_URL}/${cam.id}`} hideOverlay={true} />
                 ) : (
                   <div className="w-full h-full bg-slate-900 border border-white/5 flex items-center justify-center relative">
                     <div className="absolute inset-0 bg-[repeating-linear-gradient(0deg,transparent,transparent_2px,rgba(255,255,255,0.02)_2px,rgba(255,255,255,0.02)_4px)]" />
-                    {isDisabled ? <Settings className="w-4 h-4 text-danger/50" /> : <Radio className="w-4 h-4 text-white/20" />}
+                    <Settings className="w-4 h-4 text-danger/50" />
                   </div>
                 )}
-                <div className="absolute top-0 left-0 right-0 bg-gradient-to-b from-black/80 to-transparent p-1.5 opacity-0 group-hover:opacity-100 transition-opacity flex justify-between items-start">
+                <div className="absolute top-0 left-0 right-0 bg-gradient-to-b from-black/80 to-transparent p-1.5 transition-opacity flex justify-between items-start z-10">
                   <span className="text-[0.45rem] font-black text-white uppercase tracking-widest">{cam.name}</span>
                   {isDisabled && <span className="text-[0.45rem] font-black text-danger uppercase tracking-widest">OFF</span>}
                 </div>
@@ -463,7 +472,11 @@ export default function NeuralStream() {
               ) : filteredCameras.slice(0, gridSize * gridSize).map(cam => {
                 const isDisabled = cam.is_active === false;
                 return (
-                  <div key={cam.id} className={`relative bg-slate-900 rounded-lg overflow-hidden border border-white/10 group ${isDisabled ? 'opacity-60 grayscale' : ''}`}>
+                  <div 
+                    key={cam.id} 
+                    onClick={() => { if (!isDisabled) { setActiveCamera(cam.id); setIsGlobalView(false); setLogsOffset(0); setLogs([]); } }}
+                    className={`relative bg-slate-900 rounded-lg overflow-hidden border border-white/10 group transition-all ${isDisabled ? 'opacity-60 grayscale cursor-not-allowed' : 'cursor-pointer hover:border-accent/40'}`}
+                  >
                     {isDisabled ? (
                       <div className="w-full h-full flex flex-col items-center justify-center bg-slate-900 border border-white/5 relative">
                         <div className="absolute inset-0 bg-[repeating-linear-gradient(0deg,transparent,transparent_2px,rgba(255,255,255,0.02)_2px,rgba(255,255,255,0.02)_4px)]" />
@@ -559,15 +572,16 @@ export default function NeuralStream() {
                   { label: '15M', val: 0.25 },
                   { label: '1H', val: 1 },
                   { label: '6H', val: 6 },
-                  { label: '12H', val: 12 },
                   { label: '24H', val: 24 },
                   { label: '7D', val: 168 },
-                  { label: '30D', val: 720 }
+                  { label: '1M', val: 720 },
+                  { label: '6M', val: 4320 },
+                  { label: '1Y', val: 8760 }
                 ].map(f => (
                   <button
                     key={f.val}
                     onClick={() => { setFilterHours(f.val); setLogsOffset(0); }}
-                    className={`px-3 py-1 rounded-md font-bold text-[0.65rem] transition-all
+                    className={`px-2.5 py-1 rounded-md font-bold text-[0.6rem] transition-all uppercase tracking-tight
                   ${filterHours === f.val ? 'bg-card text-accent shadow-premium border border-border' : 'text-text-gray hover:text-text-dark'}`}
                   >
                     {f.label}

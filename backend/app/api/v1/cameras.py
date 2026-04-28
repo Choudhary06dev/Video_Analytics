@@ -41,9 +41,10 @@ def get_live_scenarios(session: Session = Depends(get_session), live_data: dict 
 # --- AREAS ---
 
 @router.get("/admin/areas")
-def get_areas(session: Session = Depends(get_session), admin_data: dict = Depends(lambda cur=Depends(get_current_user), s=Depends(get_session): verify_module_access("areas", cur, s, access_level="view"))):
-    areas = session.exec(select(Area)).all()
-    return areas
+def get_areas(skip: int = 0, limit: int = 20, session: Session = Depends(get_session), admin_data: dict = Depends(lambda cur=Depends(get_current_user), s=Depends(get_session): verify_module_access("areas", cur, s, access_level="view"))):
+    total_count = len(session.exec(select(Area)).all())
+    areas = session.exec(select(Area).offset(skip).limit(limit)).all()
+    return {"total": total_count, "areas": areas}
 
 @router.post("/admin/areas")
 def create_area(area_data: AreaCreate, session: Session = Depends(get_session), admin_data: dict = Depends(lambda cur=Depends(get_current_user), s=Depends(get_session): verify_module_access("areas", cur, s, access_level="edit"))):
@@ -97,9 +98,10 @@ def delete_area(area_id: int, session: Session = Depends(get_session), admin_dat
 # --- CAMERAS ---
 
 @router.get("/admin/cameras")
-def get_cameras(session: Session = Depends(get_session), admin_data: dict = Depends(lambda cur=Depends(get_current_user), s=Depends(get_session): verify_module_access("cameras", cur, s, access_level="view"))):
-    cameras = session.exec(select(Camera)).all()
-    return [_camera_with_scenario_count(cam, session) for cam in cameras]
+def get_cameras(skip: int = 0, limit: int = 20, session: Session = Depends(get_session), admin_data: dict = Depends(lambda cur=Depends(get_current_user), s=Depends(get_session): verify_module_access("cameras", cur, s, access_level="view"))):
+    total_count = len(session.exec(select(Camera)).all())
+    cameras = session.exec(select(Camera).offset(skip).limit(limit)).all()
+    return {"total": total_count, "cameras": [_camera_with_scenario_count(cam, session) for cam in cameras]}
 
 
 @router.post("/admin/cameras")
@@ -329,28 +331,26 @@ async def video_feed(camera_id: int, session: Session = Depends(get_session)):
     if not camera_data:
         raise HTTPException(status_code=404, detail="Camera not found")
     
-    # Assuming AI service runs on localhost:8001
     import urllib.parse
     source_url_encoded = urllib.parse.quote(camera_data.source_url, safe="")
     ai_service_url = f"http://localhost:8001/stream/{camera_id}?source={source_url_encoded}"
-    ai_health_url = f"http://localhost:8001/intelligence/{camera_id}"
-
-    try:
-        async with httpx.AsyncClient(timeout=1.0) as client:
-            await client.get(ai_health_url)
-    except httpx.HTTPError:
-        raise HTTPException(status_code=503, detail="AI video service is offline")
     
     async def stream_proxy():
-        try:
-            timeout = httpx.Timeout(None, connect=2.0)
-            async with httpx.AsyncClient(timeout=timeout) as client:
-                async with client.stream("GET", ai_service_url) as response:
-                    response.raise_for_status()
-                    async for chunk in response.aiter_bytes():
-                        yield chunk
-        except httpx.HTTPError as exc:
-            print(f"AI stream unavailable for camera {camera_id}: {exc}")
+        import asyncio
+        max_retries = 3
+        for attempt in range(max_retries):
+            try:
+                timeout = httpx.Timeout(None, connect=10.0)
+                async with httpx.AsyncClient(timeout=timeout) as client:
+                    async with client.stream("GET", ai_service_url) as response:
+                        response.raise_for_status()
+                        async for chunk in response.aiter_bytes():
+                            yield chunk
+                return
+            except Exception as exc:
+                print(f"AI stream attempt {attempt+1}/{max_retries} failed for camera {camera_id}: {exc}")
+                if attempt < max_retries - 1:
+                    await asyncio.sleep(2)
 
     return StreamingResponse(
         stream_proxy(),

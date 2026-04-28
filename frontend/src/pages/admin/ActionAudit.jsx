@@ -16,7 +16,9 @@ import {
   Database,
   ArrowUpRight,
   Terminal,
-  Loader2
+  Loader2,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 
 const actionColors = {
@@ -34,15 +36,22 @@ export default function ActionAudit() {
   const [error, setError] = useState(null);
   const [filterAction, setFilterAction] = useState('ALL');
 
+  // Pagination State
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize] = useState(50);
+  const [totalItems, setTotalItems] = useState(0);
+
   useEffect(() => {
     fetchLogs();
-  }, []);
+  }, [currentPage]);
 
   const fetchLogs = async () => {
     try {
       setLoading(true);
-      const data = await apiFetchAuditLogs();
-      setLogs(data);
+      const skip = (currentPage - 1) * pageSize;
+      const response = await apiFetchAuditLogs(skip, pageSize);
+      setLogs(response.logs || []);
+      setTotalItems(response.total || 0);
       setError(null);
     } catch (err) {
       setError("Failed to decrypt temporal audit logs.");
@@ -163,6 +172,51 @@ export default function ActionAudit() {
                         <Activity className="w-12 h-12 text-text-gray/20 mx-auto mb-4" />
                         <h3 className="text-sm font-black uppercase tracking-widest text-white/40">No Protocol Records Detected</h3>
                     </div>
+                )}
+
+                {/* Pagination Bar */}
+                {totalItems > pageSize && (
+                  <div className="bg-card border border-border rounded-lg px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <div className="text-[10px] font-black uppercase tracking-widest text-text-gray">
+                      Showing <span className="text-text-dark">{Math.min(totalItems, (currentPage - 1) * pageSize + 1)}</span> to <span className="text-text-dark">{Math.min(totalItems, currentPage * pageSize)}</span> of <span className="text-text-dark">{totalItems}</span> logs
+                    </div>
+                    
+                    <div className="flex items-center gap-2">
+                      <button 
+                        disabled={currentPage === 1}
+                        onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                        className="p-2 rounded-lg border border-border bg-card text-text-gray hover:text-accent hover:border-accent disabled:opacity-30 disabled:hover:text-text-gray disabled:hover:border-border transition-all"
+                      >
+                        <ChevronLeft className="w-4 h-4" />
+                      </button>
+                      
+                      <div className="flex items-center gap-1">
+                        {Array.from({ length: Math.ceil(totalItems / pageSize) }, (_, i) => i + 1)
+                          .filter(p => p === 1 || p === Math.ceil(totalItems / pageSize) || Math.abs(p - currentPage) <= 1)
+                          .map((p, i, arr) => (
+                            <React.Fragment key={p}>
+                              {i > 0 && p - arr[i-1] > 1 && <span className="text-text-gray px-1">...</span>}
+                              <button
+                                onClick={() => setCurrentPage(p)}
+                                className={`min-w-[32px] h-8 rounded-lg text-[10px] font-black transition-all border ${currentPage === p 
+                                  ? 'bg-accent text-white border-accent shadow-lg shadow-accent/20' 
+                                  : 'bg-card text-text-gray border-border hover:border-accent/50 hover:text-accent'}`}
+                              >
+                                {p}
+                              </button>
+                            </React.Fragment>
+                          ))}
+                      </div>
+
+                      <button 
+                        disabled={currentPage >= Math.ceil(totalItems / pageSize)}
+                        onClick={() => setCurrentPage(prev => prev + 1)}
+                        className="p-2 rounded-lg border border-border bg-card text-text-gray hover:text-accent hover:border-accent disabled:opacity-30 disabled:hover:text-text-gray disabled:hover:border-border transition-all"
+                      >
+                        <ChevronRight className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
                 )}
             </div>
 

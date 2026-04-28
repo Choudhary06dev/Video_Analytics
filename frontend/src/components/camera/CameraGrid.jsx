@@ -195,7 +195,7 @@ export default function CameraGrid({ selectedAreaId }) {
     try {
       setLoading(true);
       const data = await fetchAdminCameras();
-      setCameras(data || []);
+      setCameras(data.cameras || data || []);
     } catch (err) {
       console.error('Failed to load cameras:', err);
     } finally {

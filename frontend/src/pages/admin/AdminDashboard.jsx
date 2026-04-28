@@ -63,13 +63,13 @@ export default function AdminDashboard() {
 
   const fetchAdminStats = async () => {
     try {
-      const [usersData, logsData] = await Promise.all([
+      const [usersResponse, logsData] = await Promise.all([
         fetchAdminUsers(),
         fetchLogs({ hours: 24 })
       ]);
 
       setStats({
-        totalUsers: usersData.length,
+        totalUsers: usersResponse.total || 0,
         totalDetections: logsData.length,
         activeCameras: 4,
         criticalAlerts: logsData.filter(l => l.severity === 'Critical').length,

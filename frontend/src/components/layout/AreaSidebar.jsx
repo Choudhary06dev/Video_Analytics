@@ -21,7 +21,7 @@ export default function AreaSidebar({ onSelectArea }) {
     try {
       setLoading(true);
       const data = await fetchAdminAreas();
-      setAreas(data || []);
+      setAreas(data.areas || data || []);
     } catch (error) {
       console.error("Failed to load areas:", error);
     } finally {

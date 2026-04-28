@@ -24,7 +24,9 @@ import {
   Trash2,
   X,
   BrainCircuit,
-  CheckCircle2
+  CheckCircle2,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 
 import { useNavigate } from 'react-router-dom';
@@ -34,6 +36,12 @@ export default function SurveillanceConfig() {
   const [areas, setAreas] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('');
+
+  // Pagination State
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize] = useState(10);
+  const [totalItems, setTotalItems] = useState(0);
+
   const navigate = useNavigate();
 
   // Modal States
@@ -52,17 +60,19 @@ export default function SurveillanceConfig() {
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, [currentPage]);
 
   const loadData = async () => {
     try {
       setLoading(true);
-      const [camData, areaData] = await Promise.all([
-        fetchAdminCameras(),
+      const skip = (currentPage - 1) * pageSize;
+      const [camResponse, areaData] = await Promise.all([
+        fetchAdminCameras(skip, pageSize),
         fetchAdminAreas()
       ]);
-      setCameras(camData || []);
-      setAreas(areaData || []);
+      setCameras(camResponse.cameras || []);
+      setTotalItems(camResponse.total || 0);
+      setAreas(areaData.areas || areaData || []);
     } catch (err) {
       console.error("Failed to load surveillance data", err);
     } finally {
@@ -324,12 +334,51 @@ export default function SurveillanceConfig() {
                     )}
                 </tbody>
             </table>
-         </div>
+          </div>
 
-         <div className="p-8 border-t border-border bg-surface/30 flex justify-center">
-            <p className="text-[10px] font-black uppercase tracking-[0.5em] text-text-gray/50">End of Hardware Registry Ledger</p>
-         </div>
-      </div>
+          {/* Pagination Bar */}
+          <div className="px-8 py-4 bg-surface/30 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="text-[10px] font-black uppercase tracking-widest text-text-gray">
+              Showing <span className="text-text-dark">{Math.min(totalItems, (currentPage - 1) * pageSize + 1)}</span> to <span className="text-text-dark">{Math.min(totalItems, currentPage * pageSize)}</span> of <span className="text-text-dark">{totalItems}</span> hardware nodes
+            </div>
+            
+            <div className="flex items-center gap-2">
+              <button 
+                disabled={currentPage === 1}
+                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                className="p-2 rounded-lg border border-border bg-card text-text-gray hover:text-accent hover:border-accent disabled:opacity-30 disabled:hover:text-text-gray disabled:hover:border-border transition-all"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+              
+              <div className="flex items-center gap-1">
+                {Array.from({ length: Math.ceil(totalItems / pageSize) }, (_, i) => i + 1)
+                  .filter(p => p === 1 || p === Math.ceil(totalItems / pageSize) || Math.abs(p - currentPage) <= 1)
+                  .map((p, i, arr) => (
+                    <React.Fragment key={p}>
+                      {i > 0 && p - arr[i-1] > 1 && <span className="text-text-gray px-1">...</span>}
+                      <button
+                        onClick={() => setCurrentPage(p)}
+                        className={`min-w-[32px] h-8 rounded-lg text-[10px] font-black transition-all border ${currentPage === p 
+                          ? 'bg-accent text-white border-accent shadow-lg shadow-accent/20' 
+                          : 'bg-card text-text-gray border-border hover:border-accent/50 hover:text-accent'}`}
+                      >
+                        {p}
+                      </button>
+                    </React.Fragment>
+                  ))}
+              </div>
+
+              <button 
+                disabled={currentPage >= Math.ceil(totalItems / pageSize)}
+                onClick={() => setCurrentPage(prev => prev + 1)}
+                className="p-2 rounded-lg border border-border bg-card text-text-gray hover:text-accent hover:border-accent disabled:opacity-30 disabled:hover:text-text-gray disabled:hover:border-border transition-all"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        </div>
 
       {/* Add / Edit Camera Modal */}
       {(showAddModal || showEditModal) && (

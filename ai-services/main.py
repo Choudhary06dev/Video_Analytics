@@ -57,7 +57,7 @@ async def stream_camera(camera_id: int, source: str):
                 + frame_bytes
                 + b"\r\n\r\n"
             )
-            await asyncio.sleep(0.1)
+            await asyncio.sleep(0.03) # Smoother 30FPS feel
 
     return StreamingResponse(frame_generator(), media_type="multipart/x-mixed-replace; boundary=frame")
 

@@ -58,8 +58,10 @@ def verify_admin_hub_access(current_user: dict = Depends(get_current_user), sess
 
 
 @router.get("/")
-def get_all_users(session: Session = Depends(get_session), admin_data: dict = Depends(lambda cur=Depends(get_current_user), s=Depends(get_session): verify_module_access("users", cur, s, access_level="view"))):
-    users = session.exec(select(User)).all()
+def get_all_users(skip: int = 0, limit: int = 20, session: Session = Depends(get_session), admin_data: dict = Depends(lambda cur=Depends(get_current_user), s=Depends(get_session): verify_module_access("users", cur, s, access_level="view"))):
+    total_count = len(session.exec(select(User)).all())
+    
+    users = session.exec(select(User).offset(skip).limit(limit)).all()
     result = []
     for u in users:
         role_obj = session.get(Role, u.role_id)
@@ -71,7 +73,7 @@ def get_all_users(session: Session = Depends(get_session), admin_data: dict = De
             "is_active": u.is_active,
             "created_at": u.created_at
         })
-    return result
+    return {"total": total_count, "users": result}
 
 @router.post("/")
 def create_user_by_admin(user_data: AdminUserCreate, session: Session = Depends(get_session), admin_data: dict = Depends(lambda cur=Depends(get_current_user), s=Depends(get_session): verify_module_access("users", cur, s, access_level="edit"))):
@@ -101,9 +103,12 @@ def create_user_by_admin(user_data: AdminUserCreate, session: Session = Depends(
         raise HTTPException(status_code=500, detail=f"Database Error: {str(e)}")
 
 @router.get("/audit-logs")
-def get_audit_logs(limit: int = 50, session: Session = Depends(get_session), admin_data: dict = Depends(lambda cur=Depends(get_current_user), s=Depends(get_session): verify_module_access("audit", cur, s, access_level="view"))):
+def get_audit_logs(skip: int = 0, limit: int = 50, session: Session = Depends(get_session), admin_data: dict = Depends(lambda cur=Depends(get_current_user), s=Depends(get_session): verify_module_access("audit", cur, s, access_level="view"))):
     from app.models import AuditLog
-    statement = select(AuditLog).order_by(AuditLog.timestamp.desc()).limit(limit)
+    
+    total_count = len(session.exec(select(AuditLog)).all())
+    
+    statement = select(AuditLog).order_by(AuditLog.timestamp.desc()).offset(skip).limit(limit)
     logs = session.exec(statement).all()
 
     result = []
@@ -118,7 +123,7 @@ def get_audit_logs(limit: int = 50, session: Session = Depends(get_session), adm
             "details": l.details,
             "timestamp": l.timestamp
         })
-    return result
+    return {"total": total_count, "logs": result}
 
 @router.put("/{user_id}")
 def update_user_by_admin(user_id: int, user_data: AdminUserUpdate, session: Session = Depends(get_session), admin_data: dict = Depends(lambda cur=Depends(get_current_user), s=Depends(get_session): verify_module_access("users", cur, s, access_level="edit"))):
@@ -192,4 +197,3 @@ def toggle_user_status(user_id: int, status_data: dict, session: Session = Depen
 
     session.commit()
     return {"message": "User status updated", "is_active": user.is_active}
-

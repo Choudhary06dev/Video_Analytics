@@ -161,7 +161,7 @@ export default function AIScenarioRegistry() {
       {/* Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
         {filteredScenarios.map(scenario => (
-          <div key={scenario.id} className="bg-card border border-border rounded-xl p-4 hover:shadow-xl hover:shadow-violet-500/5 transition-all group border-l-4 border-l-violet-500">
+          <div key={scenario.id} className="bg-card border border-border rounded-xl p-4 hover:shadow-xl hover:shadow-violet-500/5 transition-all group border-l-4 border-l-violet-500 flex flex-col h-full">
             <div className="flex justify-between items-start mb-3">
 
               <div className="flex items-center gap-3">
@@ -182,10 +182,10 @@ export default function AIScenarioRegistry() {
                 </button>
               </div>
             </div>
-            <p className="text-[11px] text-text-gray font-medium line-clamp-2 h-6 overflow-hidden">
+            <p className="text-[11px] text-text-gray font-medium line-clamp-2 h-8 overflow-hidden mb-2">
               {scenario.description || "No description provided."}
             </p>
-            <div className="mt-4 pt-3 border-t border-border flex items-center justify-between">
+            <div className="mt-auto pt-3 border-t border-border flex items-center justify-between">
 
               <span className={`px-2 py-1 rounded text-[9px] font-black uppercase tracking-widest
                 ${scenario.default_severity === 'Critical' ? 'bg-rose-500/10 text-rose-600' :
