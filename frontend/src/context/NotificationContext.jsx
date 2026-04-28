@@ -23,6 +23,9 @@ export const NotificationProvider = ({ children }) => {
   }, []);
 
   const pollAlerts = useCallback(async () => {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+
     try {
       // Fetch latest 5 alerts from the last 1 hour
       const logs = await fetchLogs({ hours: 1, limit: 5 });
