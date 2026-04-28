@@ -182,10 +182,12 @@ export default function NeuralStream() {
           const diffMs = Math.max(0, now - logDate);
           const diffMins = Math.floor(diffMs / 60000);
           const diffHrs = Math.floor(diffMins / 60);
+          const diffDays = Math.floor(diffHrs / 24);
           let timeAgo = '';
           if (diffMins < 1) timeAgo = 'Just now';
           else if (diffMins < 60) timeAgo = `${diffMins}m ago`;
-          else timeAgo = `${diffHrs}h ${diffMins % 60}m ago`;
+          else if (diffHrs < 24) timeAgo = `${diffHrs}h ${diffMins % 60}m ago`;
+          else timeAgo = `${diffDays}d ago`;
 
           return {
             id: log.id,

@@ -519,7 +519,7 @@ export default function ActivityVault() {
       frames: 420,
       procTime: "1.2",
       confidence: event.confidence * 100,
-      timeAgo: ago < 60 ? `${ago}m ago` : `${Math.floor(ago / 60)}h ago`,
+      timeAgo: ago < 60 ? `${ago}m ago` : (ago < 1440 ? `${Math.floor(ago / 60)}h ago` : `${Math.floor(ago / 1440)}d ago`),
       timestamp: new Date(event.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       date: new Date(event.timestamp).toLocaleDateString([], { month: 'short', day: 'numeric' }),
       sparkline: Array.from({ length: 12 }, () => Math.floor(Math.random() * 100)),

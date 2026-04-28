@@ -173,6 +173,10 @@ export default function SurveillanceConfig() {
     ));
   };
 
+  const toggleAllScenarios = (enable) => {
+    setScenarioData(prev => prev.map(s => ({ ...s, is_enabled: enable })));
+  };
+
 
   const filteredCameras = cameras.filter(cam => 
     cam.name.toLowerCase().includes(filter.toLowerCase()) || 
@@ -503,6 +507,24 @@ export default function SurveillanceConfig() {
                 </div>
               ) : (
                 <>
+                  <div className="flex items-center justify-between mb-4 bg-surface/50 p-2.5 rounded-lg border border-border">
+                    <span className="text-[10px] font-black uppercase tracking-widest text-text-gray">Scenario Selection Matrix</span>
+                    <div className="flex gap-2">
+                        <button 
+                            onClick={() => toggleAllScenarios(true)}
+                            className="text-[9px] font-black uppercase tracking-widest text-violet-500 hover:text-violet-600 px-2 py-1 rounded hover:bg-violet-500/5 transition-all"
+                        >
+                            Select All
+                        </button>
+                        <div className="w-px h-3 bg-border my-auto"></div>
+                        <button 
+                            onClick={() => toggleAllScenarios(false)}
+                            className="text-[9px] font-black uppercase tracking-widest text-text-gray hover:text-text-dark px-2 py-1 rounded hover:bg-surface transition-all"
+                        >
+                            Clear All
+                        </button>
+                    </div>
+                  </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
                     {scenarioData.map(scenario => (
                       <div 
