@@ -46,45 +46,52 @@ function App() {
         <NotificationProvider>
           <BrowserRouter>
             <AlertNotificationContainer />
-            <Routes>
-              {/* Public Routes */}
-              <Route path="/login" element={<LoginPage />} />
-              <Route path="/register" element={<RegisterPage />} />
+            <Suspense fallback={
+              <div className="h-screen w-screen flex flex-col items-center justify-center gap-4 bg-surface">
+                <div className="w-12 h-12 border-4 border-accent border-t-transparent rounded-full animate-spin"></div>
+                <p className="text-[10px] font-black uppercase tracking-[0.4em] text-text-gray animate-pulse">Initializing Neural Interface...</p>
+              </div>
+            }>
+              <Routes>
+                {/* Public Routes */}
+                <Route path="/login" element={<LoginPage />} />
+                <Route path="/register" element={<RegisterPage />} />
 
-              {/* Private Protected Routes (Operator/User Side) */}
-              <Route element={<ProtectedRoute />}>
-                <Route element={<AppLayout />}>
-                  <Route path="/" element={<Dashboard />} />
-                  <Route path="/neural-stream" element={<NeuralStream />} />
-                  <Route path="/scenarios" element={<AIScenarios />} />
-                  <Route path="/roster" element={<StaffRoster />} />
-                  <Route path="/vault" element={<ActivityVault />} />
-                  <Route path="/health" element={<SystemHealth />} />
-                  <Route path="/training" element={<AITraining />} />
-                  <Route path="/alerts" element={<Alerts />} />
-                  <Route path="/settings" element={<Settings />} />
+                {/* Private Protected Routes (Operator/User Side) */}
+                <Route element={<ProtectedRoute />}>
+                  <Route element={<AppLayout />}>
+                    <Route path="/" element={<Dashboard />} />
+                    <Route path="/neural-stream" element={<NeuralStream />} />
+                    <Route path="/scenarios" element={<AIScenarios />} />
+                    <Route path="/roster" element={<StaffRoster />} />
+                    <Route path="/vault" element={<ActivityVault />} />
+                    <Route path="/health" element={<SystemHealth />} />
+                    <Route path="/training" element={<AITraining />} />
+                    <Route path="/alerts" element={<Alerts />} />
+                    <Route path="/settings" element={<Settings />} />
+                  </Route>
                 </Route>
-              </Route>
 
-              {/* Dedicated Admin Panel (Laravel-style) */}
-              <Route path="/admin" element={<ProtectedRoute requiredModule="admin_hub" />}>
-                <Route element={<AdminLayout />}>
-                  <Route index element={<Navigate to="/admin/dashboard" replace />} />
-                  <Route path="dashboard" element={<AdminDashboard />} />
-                  <Route path="users" element={<UserManagement />} />
-                  <Route path="roles" element={<RoleManagement />} />
-                  <Route path="areas" element={<AreaManagement />} />
-                  <Route path="audit" element={<ActionAudit />} />
-                  <Route path="settings" element={<SystemSettings />} />
-                  <Route path="surveillance" element={<SurveillanceConfig />} />
-                  <Route path="scenarios" element={<ScenarioOrchestration />} />
-                  <Route path="scenario-registry" element={<AIScenarioRegistry />} />
+                {/* Dedicated Admin Panel (Laravel-style) */}
+                <Route path="/admin" element={<ProtectedRoute requiredModule="admin_hub" />}>
+                  <Route element={<AdminLayout />}>
+                    <Route index element={<Navigate to="/admin/dashboard" replace />} />
+                    <Route path="dashboard" element={<AdminDashboard />} />
+                    <Route path="users" element={<UserManagement />} />
+                    <Route path="roles" element={<RoleManagement />} />
+                    <Route path="areas" element={<AreaManagement />} />
+                    <Route path="audit" element={<ActionAudit />} />
+                    <Route path="settings" element={<SystemSettings />} />
+                    <Route path="surveillance" element={<SurveillanceConfig />} />
+                    <Route path="scenarios" element={<ScenarioOrchestration />} />
+                    <Route path="scenario-registry" element={<AIScenarioRegistry />} />
+                  </Route>
                 </Route>
-              </Route>
 
-              {/* Fallback */}
-              <Route path="*" element={<Navigate to="/" replace />} />
-            </Routes>
+                {/* Fallback */}
+                <Route path="*" element={<Navigate to="/" replace />} />
+              </Routes>
+            </Suspense>
           </BrowserRouter>
         </NotificationProvider>
       </AuthProvider>

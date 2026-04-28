@@ -80,18 +80,18 @@ export default function AdminDashboard() {
       ]);
 
       setStats({
-        users: users?.length || 0,
-        cameras: cameras?.length || 0,
-        areas: areas?.length || 0,
-        scenarios: scenarios?.length || 0,
-        alerts: alerts?.length || 0,
-        audits: audits?.length || 0,
+        users: users?.users?.length || users?.length || 0,
+        cameras: cameras?.cameras?.length || cameras?.length || 0,
+        areas: areas?.areas?.length || areas?.length || 0,
+        scenarios: scenarios?.scenarios?.length || scenarios?.length || 0,
+        alerts: alerts?.alerts?.length || alerts?.length || 0,
+        audits: audits?.logs?.length || audits?.length || 0,
       });
 
       setRawStats({
-        cameras: cameras || [],
-        scenarios: scenarios || [],
-        audits: audits || []
+        cameras: cameras?.cameras || cameras || [],
+        scenarios: scenarios?.scenarios || scenarios || [],
+        audits: audits?.logs || audits || []
       });
 
       setLoading(false);
@@ -178,11 +178,15 @@ export default function AdminDashboard() {
           <div className="space-y-4">
             <div className="flex justify-between items-center p-3 bg-surface/50 rounded-xl border border-border/30">
               <span className="text-[11px] font-bold text-text-gray uppercase tracking-wider">🟢 Online Nodes</span>
-              <span className="text-sm font-black text-emerald-500">{rawStats.cameras.filter(c => c.is_active || c.status === 'online').length} Units</span>
+              <span className="text-sm font-black text-emerald-500">
+                {(rawStats?.cameras || []).filter(c => c && (c.status === 'online' || c.is_active)).length} Units
+              </span>
             </div>
             <div className="flex justify-between items-center p-3 bg-surface/50 rounded-xl border border-border/30">
               <span className="text-[11px] font-bold text-text-gray uppercase tracking-wider">🔴 Offline Nodes</span>
-              <span className="text-sm font-black text-red-500">{rawStats.cameras.filter(c => !c.is_active && c.status !== 'online').length} Units</span>
+              <span className="text-sm font-black text-red-500">
+                {(rawStats?.cameras || []).filter(c => c && c.status !== 'online' && !c.is_active).length} Units
+              </span>
             </div>
             <div className="flex justify-between items-center p-3 bg-surface/50 rounded-xl border border-border/30">
               <span className="text-[11px] font-bold text-text-gray uppercase tracking-wider">📍 Coverage Areas</span>
@@ -192,7 +196,7 @@ export default function AdminDashboard() {
             </div>
             <div className="flex justify-between items-center p-3 bg-gradient-to-r from-emerald-500/10 to-transparent rounded-xl border border-emerald-500/20">
               <span className="text-[11px] font-bold text-emerald-600 uppercase tracking-wider">🤖 Neural Inference</span>
-              <span className="text-sm font-black text-emerald-600">{rawStats.cameras.length} Enabled</span>
+              <span className="text-sm font-black text-emerald-600">{(rawStats?.cameras || []).length} Enabled</span>
             </div>
           </div>
         </div>
@@ -205,9 +209,9 @@ export default function AdminDashboard() {
             AI Intelligence Mesh
           </h2>
           <div className="space-y-3">
-            {rawStats.scenarios.length > 0 ? rawStats.scenarios.slice(0, 5).map((scenario, i) => (
+            {rawStats?.scenarios?.length > 0 ? rawStats.scenarios.slice(0, 5).map((scenario, i) => (
               <div key={i} className="flex justify-between items-center p-2.5 hover:bg-surface transition-colors rounded-lg">
-                <span className="text-[11px] font-bold text-text-gray">{scenario.name}</span>
+                <span className="text-[11px] font-bold text-text-gray">{scenario?.name || 'Unknown Scenario'}</span>
                 <span className={`text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded border border-emerald-500/20 bg-emerald-500/10 text-emerald-500`}>
                   ACTIVE
                 </span>
@@ -226,13 +230,17 @@ export default function AdminDashboard() {
             Intelligence Audit
           </h2>
           <div className="space-y-4 overflow-y-auto flex-1 scrollbar-none">
-            {rawStats.audits.length > 0 ? rawStats.audits.slice(0, 5).map((log, i) => (
+            {rawStats?.audits?.length > 0 ? rawStats.audits.slice(0, 5).map((log, i) => (
               <div key={i} className="flex gap-3 items-start p-2 rounded-lg hover:bg-surface/50 transition-colors">
                 <span className="text-lg">👤</span>
                 <div className="min-w-0 flex-1">
-                  <p className="text-[11px] font-bold text-text-dark truncate">{log.action || log.message}</p>
+                  <p className="text-[11px] font-bold text-text-dark truncate">{log?.action || log?.message || 'Activity Recorded'}</p>
                   <p className="text-[9px] font-medium text-text-gray/60 uppercase mt-0.5">
-                    {log.timestamp ? new Date(log.timestamp).toLocaleTimeString() : 'Recent'}
+                    {(() => {
+                      if (!log?.timestamp) return 'Recent';
+                      const date = new Date(log.timestamp);
+                      return isNaN(date.getTime()) ? 'Recent' : date.toLocaleTimeString();
+                    })()}
                   </p>
                 </div>
               </div>
