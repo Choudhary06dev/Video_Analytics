@@ -3,6 +3,7 @@ from fastapi.responses import StreamingResponse
 import asyncio
 import json
 import httpx
+import base64
 from pipelines.inference import InferenceEngine
 from typing import Dict
 
@@ -23,15 +24,19 @@ async def get_engine(camera_id: int, source: str) -> InferenceEngine:
         active_engines[camera_id] = InferenceEngine(camera_id, source)
     return active_engines[camera_id]
 
-async def send_events_to_backend(camera_id: int, events: list):
+async def send_events_to_backend(camera_id: int, events: list, frame_bytes: bytes):
     if not events: return
+    
+    image_base64 = base64.b64encode(frame_bytes).decode('utf-8')
+    
     payload = []
     for ev in events:
         payload.append({
             "camera_id": camera_id,
             "scenario_key": ev["scenario_key"],
             "confidence": ev["confidence"],
-            "metadata": ev["metadata"]
+            "metadata": ev["metadata"],
+            "image_base64": image_base64
         })
     try:
         async with httpx.AsyncClient() as client:
@@ -47,7 +52,7 @@ async def stream_camera(camera_id: int, source: str):
         while True:
             frame_bytes, events = engine.process_frame()
             if events:
-                asyncio.create_task(send_events_to_backend(camera_id, events))
+                asyncio.create_task(send_events_to_backend(camera_id, events, frame_bytes))
             # In a real microservice, we would send 'events' to a message broker (Redis/RabbitMQ) 
             # or provide an endpoint for the backend to poll.
             # For simplicity, we'll just stream the video for now.

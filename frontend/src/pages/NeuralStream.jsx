@@ -22,7 +22,10 @@ import {
   AlertTriangle,
   Users,
   AlertCircle,
-  LayoutGrid
+  LayoutGrid,
+  RotateCcw,
+  Eye,
+  X
 } from 'lucide-react';
 
 const SCENARIO_UI = {
@@ -74,6 +77,7 @@ export default function NeuralStream() {
   });
   const [loadingLogs, setLoadingLogs] = useState(false);
   const [streamConnected, setStreamConnected] = useState(false);
+  const [selectedLog, setSelectedLog] = useState(null);
 
   const loadCameras = useCallback(async () => {
     try {
@@ -202,7 +206,8 @@ export default function NeuralStream() {
             confidence: `${(log.confidence * 100).toFixed(1)}%`,
             timestamp: logDate.toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' }),
             timeAgo: timeAgo,
-            severity: log.severity.toUpperCase()
+            severity: log.severity.toUpperCase(),
+            rawLog: log
           };
         }));
       }
@@ -347,8 +352,8 @@ export default function NeuralStream() {
               >
                 <option value="all">All Areas</option>
                 {areas.map(area => (
-                  <option 
-                    key={area.id} 
+                  <option
+                    key={area.id}
                     value={area.id}
                   >
                     {area.parent_id ? `${areaNameById.get(area.parent_id) || 'Zone'} / ${area.name}` : area.name}
@@ -373,8 +378,8 @@ export default function NeuralStream() {
               >
                 <option value="all">All Scenarios</option>
                 {scenarios.map(scenario => (
-                  <option 
-                    key={scenario.id || scenario.key || scenario.name} 
+                  <option
+                    key={scenario.id || scenario.key || scenario.name}
                     value={scenario.key || scenario.name}
                   >
                     {scenario.name}
@@ -382,6 +387,21 @@ export default function NeuralStream() {
                 ))}
               </select>
             </div>
+
+            <button
+              onClick={() => {
+                setSelectedAreaId('all');
+                setSelectedScenarioKey('all');
+                setIsGlobalView(true);
+                setActiveCamera(null);
+                setLogsOffset(0);
+                setLogs([]);
+              }}
+              className="p-1.5 ml-1 border rounded-lg transition-colors bg-surface text-text-gray hover:text-rose-500 border-border hover:border-rose-500/50 cursor-pointer"
+              title="Clear Filters"
+            >
+              <RotateCcw className="w-3.5 h-3.5" />
+            </button>
           </div>
 
           {/* Threat Assessment Badge */}
@@ -474,8 +494,8 @@ export default function NeuralStream() {
               ) : filteredCameras.slice(0, gridSize * gridSize).map(cam => {
                 const isDisabled = cam.is_active === false;
                 return (
-                  <div 
-                    key={cam.id} 
+                  <div
+                    key={cam.id}
                     onClick={() => { if (!isDisabled) { setActiveCamera(cam.id); setIsGlobalView(false); setLogsOffset(0); setLogs([]); } }}
                     className={`relative bg-slate-900 rounded-lg overflow-hidden border border-white/10 group transition-all ${isDisabled ? 'opacity-60 grayscale cursor-not-allowed' : 'cursor-pointer hover:border-accent/40'}`}
                   >
@@ -596,13 +616,14 @@ export default function NeuralStream() {
           {/* TABLE HEADER */}
           <div className="grid grid-cols-12 gap-2 px-5 py-2 bg-surface/50 border-b border-border text-[0.6rem] font-black text-text-gray uppercase tracking-widest">
             <div className="col-span-1">Status</div>
-            <div className="col-span-3">Event</div>
+            <div className="col-span-2">Event</div>
             <div className="col-span-2">Event ID</div>
             <div className="col-span-1">Camera</div>
-            <div className="col-span-1">Confidence</div>
+            <div className="col-span-1">Conf.</div>
             <div className="col-span-1">Severity</div>
             <div className="col-span-2">Timestamp</div>
             <div className="col-span-1">Elapsed</div>
+            <div className="col-span-1 text-center">Action</div>
           </div>
 
           {/* LOG ROWS */}
@@ -618,16 +639,38 @@ export default function NeuralStream() {
                 className={`grid grid-cols-12 gap-2 px-5 py-2.5 items-center transition-all duration-200 border-b hover:bg-card-hover cursor-default
               ${log.isAlert ? 'bg-rose-500/5 border-rose-500/20 hover:bg-rose-500/10' : 'border-border/30'}`}
               >
-                {/* Icon */}
+                {/* Icon or Thumbnail */}
                 <div className="col-span-1">
-                  <div className={`w-8 h-8 rounded-lg ${log.bg} flex items-center justify-center border border-border/10`}>
-                    <log.icon className={`w-4 h-4 ${log.iconColor}`} />
-                  </div>
+                  {log.rawLog?.image_base64 ? (
+                    <div className="w-8 h-8 rounded-lg overflow-hidden border border-border/50 shadow-sm relative group cursor-pointer" onClick={() => setSelectedLog(log)}>
+                      <img
+                        src={`data:image/jpeg;base64,${log.rawLog.image_base64}`}
+                        alt="Event"
+                        className="w-full h-full object-cover transition-transform group-hover:scale-110"
+                      />
+                      {log.isAlert && <div className="absolute inset-0 border border-rose-500 rounded-lg pointer-events-none"></div>}
+                    </div>
+                  ) : (
+                    <div className={`w-8 h-8 rounded-lg ${log.bg} flex items-center justify-center border border-border/10`}>
+                      <log.icon className={`w-4 h-4 ${log.iconColor}`} />
+                    </div>
+                  )}
                 </div>
 
                 {/* Event Detail */}
-                <div className="col-span-3 flex items-center gap-2 min-w-0">
-                  <span className={`text-[0.7rem] font-extrabold tracking-wide uppercase ${log.iconColor} truncate`}>
+                <div
+                  className="col-span-2 flex items-center gap-2 min-w-0 cursor-pointer group/event"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setSelectedScenarioKey(log.rawLog.scenario_key);
+                    setIsGlobalView(true);
+                    setActiveCamera(null);
+                    setLogsOffset(0);
+                    setLogs([]);
+                  }}
+                  title={`Filter by ${log.type}`}
+                >
+                  <span className={`text-[0.7rem] font-extrabold tracking-wide uppercase ${log.iconColor} truncate group-hover/event:text-accent transition-colors`}>
                     {log.type}
                   </span>
                   {log.isAlert && (
@@ -655,7 +698,7 @@ export default function NeuralStream() {
 
                 {/* Severity */}
                 <div className="col-span-1">
-                  <span className={`text-[0.5rem] px-1.5 py-0.5 rounded font-black tracking-widest uppercase border ${log.severity === 'CRITICAL' ? 'bg-rose-500/20 text-rose-500 border-rose-500/30' :
+                  <span className={`inline-block w-[60px] mr-4 text-center text-[0.5rem] px-1.5 py-0.5 rounded font-black tracking-widest uppercase border ${log.severity === 'CRITICAL' ? 'bg-rose-500/20 text-rose-500 border-rose-500/30' :
                     log.severity === 'HIGH' ? 'bg-amber-500/20 text-amber-500 border-amber-500/30' :
                       log.severity === 'MEDIUM' ? 'bg-blue-500/20 text-blue-500 border-blue-500/30' :
                         'bg-slate-500/20 text-slate-500 border-slate-500/30'
@@ -672,6 +715,17 @@ export default function NeuralStream() {
                 {/* Elapsed */}
                 <div className="col-span-1">
                   <span className="text-[0.6rem] text-text-gray font-medium font-mono">{log.timeAgo}</span>
+                </div>
+
+                {/* Action */}
+                <div className="col-span-1 flex justify-center">
+                  <button
+                    onClick={() => setSelectedLog(log)}
+                    className="p-1.5 text-text-gray hover:text-accent hover:bg-accent/10 rounded-lg transition-colors"
+                    title="View Log Details"
+                  >
+                    <Eye className="w-4 h-4" />
+                  </button>
                 </div>
               </div>
             )) : (
@@ -733,7 +787,18 @@ export default function NeuralStream() {
                   .map(([name, count]) => {
                     const scenario = SCENARIO_UI[name] || SCENARIO_UI['Default'];
                     return (
-                      <div key={name} className="flex items-center p-2 rounded-lg hover:bg-surface transition-colors group">
+                      <div
+                        key={name}
+                        className="flex items-center p-2 rounded-lg hover:bg-surface transition-colors group cursor-pointer"
+                        onClick={() => {
+                          setSelectedScenarioKey(name);
+                          setIsGlobalView(true);
+                          setActiveCamera(null);
+                          setLogsOffset(0);
+                          setLogs([]);
+                        }}
+                        title={`Filter by ${name}`}
+                      >
                         <div className={`w-8 h-8 rounded-md ${scenario.bg} flex items-center justify-center border border-border/10 shrink-0`}>
                           <scenario.icon className={`w-3.5 h-3.5 ${scenario.iconColor}`} />
                         </div>
@@ -763,6 +828,87 @@ export default function NeuralStream() {
           </div>
         </div>
       </div>
+
+      {/* LOG DETAILS MODAL */}
+      {selectedLog && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-card border border-border shadow-premium rounded-xl w-full max-w-2xl overflow-hidden flex flex-col animate-in zoom-in-95 duration-200">
+            {/* Header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-surface/50">
+              <div className="flex items-center gap-3">
+                <div className={`w-10 h-10 rounded-lg ${selectedLog.bg} flex items-center justify-center border border-border/10`}>
+                  <selectedLog.icon className={`w-5 h-5 ${selectedLog.iconColor}`} />
+                </div>
+                <div>
+                  <h2 className="text-lg font-bold text-text-dark tracking-tight">Log Details</h2>
+                  <p className="text-xs text-text-gray font-mono">{selectedLog.eventId}</p>
+                </div>
+              </div>
+              <button onClick={() => setSelectedLog(null)} className="p-2 text-text-gray hover:text-text-dark transition-colors rounded-lg hover:bg-surface border border-transparent hover:border-border">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Body */}
+            <div className="p-6 overflow-y-auto max-h-[70vh] custom-scrollbar space-y-6">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="bg-surface p-4 rounded-lg border border-border">
+                  <span className="text-[0.65rem] font-bold text-text-gray uppercase tracking-widest block mb-1">Event Type</span>
+                  <span className="text-sm font-bold text-text-dark">{selectedLog.type}</span>
+                </div>
+                <div className="bg-surface p-4 rounded-lg border border-border">
+                  <span className="text-[0.65rem] font-bold text-text-gray uppercase tracking-widest block mb-1">Camera</span>
+                  <span className="text-sm font-bold text-text-dark flex items-center gap-2">
+                    <span className="w-2 h-2 bg-accent rounded-full animate-pulse"></span>
+                    {selectedLog.camera}
+                  </span>
+                </div>
+                <div className="bg-surface p-4 rounded-lg border border-border">
+                  <span className="text-[0.65rem] font-bold text-text-gray uppercase tracking-widest block mb-1">Severity & Confidence</span>
+                  <div className="flex items-center gap-3">
+                    <span className={`text-[0.6rem] px-2 py-0.5 rounded font-black tracking-widest uppercase border ${selectedLog.severity === 'CRITICAL' ? 'bg-rose-500/20 text-rose-500 border-rose-500/30' :
+                      selectedLog.severity === 'HIGH' ? 'bg-amber-500/20 text-amber-500 border-amber-500/30' :
+                        selectedLog.severity === 'MEDIUM' ? 'bg-blue-500/20 text-blue-500 border-blue-500/30' :
+                          'bg-slate-500/20 text-slate-500 border-slate-500/30'
+                      }`}>
+                      {selectedLog.severity}
+                    </span>
+                    <span className="text-sm font-bold text-text-dark">{selectedLog.confidence}</span>
+                  </div>
+                </div>
+                <div className="bg-surface p-4 rounded-lg border border-border">
+                  <span className="text-[0.65rem] font-bold text-text-gray uppercase tracking-widest block mb-1">Timestamp</span>
+                  <span className="text-sm font-mono text-text-dark">{new Date(selectedLog.rawLog.timestamp).toLocaleString()}</span>
+                </div>
+              </div>
+
+              {selectedLog.rawLog.image_base64 && (
+                <div className="flex flex-col gap-2">
+                  <h3 className="text-sm font-bold text-text-dark tracking-tight">Detection Snapshot</h3>
+                  <div className="bg-black rounded-lg border border-border overflow-hidden relative shadow-inner">
+                    <div className="absolute top-3 left-3 flex items-center gap-1.5 px-2 py-0.5 bg-black/60 backdrop-blur-md border border-white/20 rounded font-black text-[0.55rem] uppercase tracking-widest text-white z-10">
+                      <span className="w-1.5 h-1.5 bg-rose-500 rounded-full animate-pulse" />
+                      Captured Frame
+                    </div>
+                    <img
+                      src={`data:image/jpeg;base64,${selectedLog.rawLog.image_base64}`}
+                      alt="Detection Event"
+                      className="w-full object-contain max-h-[350px] border border-white/5"
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Footer */}
+            <div className="px-6 py-4 border-t border-border bg-surface/30 flex justify-end">
+              <button onClick={() => setSelectedLog(null)} className="px-4 py-2 bg-surface border border-border rounded-lg text-sm font-bold text-text-dark hover:bg-border transition-colors">
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

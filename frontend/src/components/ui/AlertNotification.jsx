@@ -51,8 +51,10 @@ const Toast = ({ notification }) => {
 
   return (
     <div 
-      className={`w-80 sm:w-96 ${config.bg} border ${config.border} rounded-xl shadow-2xl ${config.shadow} backdrop-blur-md p-4 flex gap-4 animate-in slide-in-from-right duration-300 pointer-events-auto group relative overflow-hidden`}
+      className={`w-80 sm:w-96 bg-card border ${config.border} rounded-xl shadow-2xl ${config.shadow} p-4 flex gap-4 animate-in slide-in-from-right duration-300 pointer-events-auto group relative overflow-hidden`}
     >
+      {/* Tint Overlay */}
+      <div className={`absolute inset-0 ${config.bg} pointer-events-none`} />
       {/* Background glow for critical alerts */}
       {notification.severity === 'Critical' && (
         <div className="absolute inset-0 bg-danger/5 animate-pulse -z-10" />

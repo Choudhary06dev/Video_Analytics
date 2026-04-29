@@ -37,6 +37,7 @@ class WebhookEvent(BaseModel):
     scenario_key: str
     confidence: float
     metadata: dict
+    image_base64: Optional[str] = None
 
 def verify_event_stream_access(
     token: str = Query(None),
@@ -57,12 +58,15 @@ async def receive_events(events: list[WebhookEvent], session: Session = Depends(
     stable_objects = []
     person_count = 0
 
+    from sqlmodel import select
+    from app.models import AIScenario
+    scenarios = session.exec(select(AIScenario)).all()
+    scenario_severity_map = {s.key: s.default_severity for s in scenarios}
+
     for ev in events:
-        severity = "Medium"
-        is_alert = False
-        if ev.confidence > 0.7:
-            severity = "High"
-            is_alert = True
+        severity = scenario_severity_map.get(ev.scenario_key, "Medium")
+        # Har detection ko as an alert mark karenge taake wo crisis center me show ho
+        is_alert = True
         
         db_event = DetectionEvent(
             camera_id=ev.camera_id,
@@ -71,7 +75,8 @@ async def receive_events(events: list[WebhookEvent], session: Session = Depends(
             confidence=ev.confidence,
             severity=severity,
             is_alert=is_alert,
-            metadata_json=ev.metadata
+            metadata_json=ev.metadata,
+            image_base64=ev.image_base64
         )
         session.add(db_event)
 

@@ -194,7 +194,6 @@ class InferenceEngine:
                     should_log = True
                     present = True
             elif present and absent_frames >= MIN_STABLE_FRAMES_TO_LOG * 2:
-                should_log = True
                 present = False
 
             if present and current_count > 0: stable_objects.append(scenario_name)

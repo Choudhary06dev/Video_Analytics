@@ -29,6 +29,7 @@ class DetectionEvent(SQLModel, table=True):
 
     # Store additional data like bounding boxes as JSON
     metadata_json: Optional[Dict] = Field(default=None, sa_type=JSON)
+    image_base64: Optional[str] = Field(default=None)
 
     class Config:
         arbitrary_types_allowed = True
