@@ -12,68 +12,63 @@ import {
   RefreshCw
 } from 'lucide-react';
 import {
-  LineChart,
-  Line,
+  AreaChart,
+  Area,
   XAxis,
   YAxis,
   CartesianGrid,
   Tooltip,
-  ResponsiveContainer,
-  AreaChart,
-  Area
+  ResponsiveContainer
 } from 'recharts';
-
-const SYSTEM_CHART_DATA = [
-  { time: '00:00', cpu: 45, memory: 52, network: 8 },
-  { time: '04:00', cpu: 38, memory: 48, network: 6 },
-  { time: '08:00', cpu: 68, memory: 62, network: 12 },
-  { time: '12:00', cpu: 65, memory: 58, network: 11 },
-  { time: '16:00', cpu: 62, memory: 60, network: 13 },
-  { time: '20:00', cpu: 48, memory: 52, network: 7 },
-  { time: '24:00', cpu: 52, memory: 54, network: 8 },
-];
-
-const SECTOR_COMPLIANCE = [
-  { name: 'ICU-West Wing', score: 98.2, trend: '+2.1%', status: 'excellent' },
-  { name: 'Emergency Bay', score: 96.8, trend: '+1.4%', status: 'excellent' },
-  { name: 'Main Reception', score: 94.5, trend: '+0.8%', status: 'good' },
-  { name: 'Ward Sector A', score: 91.2, trend: '-0.6%', status: 'good' },
-  { name: 'Research Lab', score: 89.7, trend: '+1.9%', status: 'good' },
-  { name: 'Staff Lounge', score: 87.3, trend: '-1.2%', status: 'warning' },
-];
-
-const KERNEL_LOGS = [
-  "> Initializing CUDA context...",
-  "> Found NVIDIA A100-SXM4-80GB",
-  "> Memory: 81920 MiB",
-  "> Loading weights: yolov8s.pt",
-  "> Optimization level: TensorRT-FP16",
-  "> Starting inference cycle...",
-  "> Syncing neural stream...",
-  "> Monitoring 6 camera nodes",
-  "> API Gateway: Connected"
-];
+import { fetchHealthStats } from '../services/healthService';
 
 export default function SystemHealth() {
-  const [logs, setLogs] = useState(KERNEL_LOGS);
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [logs, setLogs] = useState([
+      "> Initializing CUDA context...",
+      "> Found NVIDIA hardware profile",
+      "> Syncing neural stream nodes...",
+      "> API Gateway: Connected"
+  ]);
   const logEndRef = useRef(null);
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-      const batch = Math.floor(Math.random() * 168);
-      const boxLoss = (0.12 + Math.random() * 0.01).toFixed(4);
-      const newLog = `> [${time}] [Batch ${batch}/168] box_loss: ${boxLoss} | sync_ok`;
-
+  const getHealth = async () => {
+    try {
+      const res = await fetchHealthStats();
+      setData(res);
+      setLoading(false);
+      
+      // Simulate real-time logs based on actual status
+      const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      const newLog = `> [${time}] HEALTH_CHECK: CPU ${res.metrics.cpu_load} | CAM_ONLINE ${res.cameras.ratio} | OK`;
+      
       setLogs(prev => {
         const next = [...prev, newLog];
-        if (next.length > 20) next.shift();
+        if (next.length > 15) next.shift();
         return next;
       });
-    }, 2000);
+    } catch (err) {
+      console.error("Failed to fetch health intel:", err);
+    }
+  };
 
+  useEffect(() => {
+    getHealth();
+    const interval = setInterval(getHealth, 5000);
     return () => clearInterval(interval);
   }, []);
+
+  if (loading || !data) {
+    return (
+      <div className="h-[60vh] flex flex-col items-center justify-center gap-4">
+        <div className="w-12 h-12 border-4 border-accent border-t-transparent rounded-full animate-spin"></div>
+        <p className="text-[10px] font-black uppercase tracking-[0.4em] text-text-gray animate-pulse">Scanning System Integrity...</p>
+      </div>
+    );
+  }
+
+  const { metrics, cameras, compliance, chart_data } = data;
 
   return (
     <div className="flex flex-col gap-8 pb-10 max-w-[1600px] mx-auto">
@@ -84,7 +79,7 @@ export default function SystemHealth() {
           <div className="text-[0.9rem] text-text-gray font-semibold flex items-center gap-2">
             Vision Core Diagnostics Matrix
             <span className="w-1 h-1 bg-text-gray rounded-full opacity-30" />
-            99.9% Uptime
+            {metrics.uptime} Uptime
           </div>
         </div>
         <div className="flex items-center gap-3">
@@ -92,7 +87,10 @@ export default function SystemHealth() {
             <ShieldCheck className="w-4 h-4" />
             SECURE DEPLOYMENT
           </div>
-          <button className="flex items-center gap-2 px-4 py-2 bg-card text-text-dark border border-border rounded-lg text-[0.75rem] font-bold cursor-pointer hover:border-accent hover:text-accent shadow-sm">
+          <button 
+            onClick={getHealth}
+            className="flex items-center gap-2 px-4 py-2 bg-card text-text-dark border border-border rounded-lg text-[0.75rem] font-bold cursor-pointer hover:border-accent hover:text-accent shadow-sm"
+          >
             <RefreshCw className="w-4 h-4" />
             Relaunch Kernels
           </button>
@@ -102,10 +100,10 @@ export default function SystemHealth() {
       {/* HW Stats Row */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {[
-          { label: 'CPU Load', value: '42%', icon: Cpu, color: 'text-accent', bg: 'bg-accent/10' },
-          { label: 'GPU Temp', value: '58°C', icon: Activity, color: 'text-danger', bg: 'bg-danger/10' },
-          { label: 'I/O Rate', value: '1.2 GB/s', icon: HardDrive, color: 'text-warning', bg: 'bg-warning/10' },
-          { label: 'Nodes Online', value: '18/18', icon: Globe, color: 'text-success', bg: 'bg-success/10' },
+          { label: 'CPU Load', value: metrics.cpu_load, icon: Cpu, color: 'text-accent', bg: 'bg-accent/10' },
+          { label: 'RAM Usage', value: metrics.ram_usage.split(' /')[0], icon: Database, color: 'text-danger', bg: 'bg-danger/10' },
+          { label: 'Storage Usage', value: metrics.disk_usage, icon: HardDrive, color: 'text-warning', bg: 'bg-warning/10' },
+          { label: 'Nodes Online', value: cameras.ratio, icon: Globe, color: 'text-success', bg: 'bg-success/10' },
         ].map((s, i) => (
           <div key={i} className="bg-card rounded-lg p-6 border border-border shadow-premium flex items-center gap-5 hover:-translate-y-1 transition-all">
             <div className={`w-14 h-14 rounded-lg ${s.bg} flex items-center justify-center ${s.color}`}>
@@ -135,26 +133,88 @@ export default function SystemHealth() {
           </div>
           <div className="w-full h-[320px] relative min-w-0">
             <ResponsiveContainer width="100%" height="100%" debounce={50}>
-              <LineChart data={SYSTEM_CHART_DATA} margin={{ top: 0, right: 10, left: -25, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--color-border)" />
+              <AreaChart data={chart_data} margin={{ top: 10, right: 10, left: -25, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="colorCpu" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="var(--color-accent)" stopOpacity={0.3}/>
+                    <stop offset="95%" stopColor="var(--color-accent)" stopOpacity={0}/>
+                  </linearGradient>
+                  <linearGradient id="colorMem" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="var(--color-success)" stopOpacity={0.3}/>
+                    <stop offset="95%" stopColor="var(--color-success)" stopOpacity={0}/>
+                  </linearGradient>
+                  <linearGradient id="colorNet" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="var(--color-warning)" stopOpacity={0.3}/>
+                    <stop offset="95%" stopColor="var(--color-warning)" stopOpacity={0}/>
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--color-border)" opacity={0.5} />
                 <XAxis
                   dataKey="time"
                   axisLine={false}
                   tickLine={false}
-                  tick={{ fill: 'var(--color-text-gray)', fontSize: 13, fontWeight: 600 }}
+                  tick={{ fill: 'var(--color-text-gray)', fontSize: 11, fontWeight: 700 }}
                 />
                 <YAxis
                   axisLine={false}
                   tickLine={false}
-                  tick={{ fill: 'var(--color-text-gray)', fontSize: 13, fontWeight: 600 }}
+                  tick={{ fill: 'var(--color-text-gray)', fontSize: 11, fontWeight: 700 }}
+                  domain={[0, 100]}
                 />
                 <Tooltip
-                  contentStyle={{ borderRadius: 8, border: '1px solid var(--color-border)', boxShadow: '0 10px 30px rgba(0,0,0,0.05)' }}
+                  content={({ active, payload, label }) => {
+                    if (active && payload && payload.length) {
+                      return (
+                        <div className="bg-white/95 backdrop-blur-md border border-border p-4 rounded-xl shadow-2xl scale-105 transition-all">
+                          <p className="text-[10px] font-black text-text-gray uppercase tracking-widest mb-3 border-b border-border pb-2">{label} Diagnostics</p>
+                          <div className="space-y-2">
+                            {payload.map((entry, index) => (
+                              <div key={index} className="flex items-center justify-between gap-8">
+                                <div className="flex items-center gap-2">
+                                  <div className="w-2 h-2 rounded-full" style={{ backgroundColor: entry.color }} />
+                                  <span className="text-[11px] font-bold text-text-gray uppercase">{entry.name}</span>
+                                </div>
+                                <span className="text-[12px] font-black text-text-dark">{entry.value}{entry.name === 'network' ? ' MB' : '%'}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    }
+                    return null;
+                  }}
                 />
-                <Line type="monotone" dataKey="cpu" stroke="var(--color-accent)" strokeWidth={4} dot={false} tension={0.4} />
-                <Line type="monotone" dataKey="memory" stroke="var(--color-success)" strokeWidth={4} dot={false} tension={0.4} />
-                <Line type="monotone" dataKey="network" stroke="var(--color-warning)" strokeWidth={4} dot={false} tension={0.4} />
-              </LineChart>
+                <Area 
+                    type="monotone" 
+                    dataKey="cpu" 
+                    name="cpu"
+                    stroke="var(--color-accent)" 
+                    strokeWidth={3}
+                    fillOpacity={1} 
+                    fill="url(#colorCpu)" 
+                    tension={0.4}
+                />
+                <Area 
+                    type="monotone" 
+                    dataKey="memory" 
+                    name="memory"
+                    stroke="var(--color-success)" 
+                    strokeWidth={3}
+                    fillOpacity={1} 
+                    fill="url(#colorMem)" 
+                    tension={0.4}
+                />
+                <Area 
+                    type="monotone" 
+                    dataKey="network" 
+                    name="network"
+                    stroke="var(--color-warning)" 
+                    strokeWidth={3}
+                    fillOpacity={1} 
+                    fill="url(#colorNet)" 
+                    tension={0.4}
+                />
+              </AreaChart>
             </ResponsiveContainer>
           </div>
         </div>
@@ -162,7 +222,7 @@ export default function SystemHealth() {
         <div className="lg:col-span-1 bg-card rounded-lg p-8 border border-border shadow-premium flex flex-col">
           <h3 className="text-[1.1rem] font-bold text-text-dark mb-8 uppercase tracking-tight">Zone Compliance</h3>
           <div className="space-y-6 flex-1 overflow-y-auto pr-2 scrollbar-none">
-            {SECTOR_COMPLIANCE.map((sector, i) => (
+            {compliance.map((sector, i) => (
               <div key={i} className="group">
                 <div className="flex justify-between items-center mb-2">
                   <span className="text-[0.85rem] font-bold text-text-gray">{sector.name}</span>

@@ -168,6 +168,7 @@ export default function AITraining() {
                   yAxisId="left"
                   axisLine={false} 
                   tickLine={false} 
+                  domain={[0, 100]}
                   tick={{fill: 'var(--color-text-gray)', fontSize: 11, fontWeight: 700}} 
                   tickFormatter={v => `${v}%`}
                 />
