@@ -15,7 +15,7 @@ const SEARCH_INDEX = [
   { name: 'Command Hub', category: 'Pages', path: '/', icon: LayoutDashboard },
   { name: 'Neural Stream', category: 'Pages', path: '/neural-stream', icon: Radio },
   { name: 'AI Scenarios', category: 'Pages', path: '/scenarios', icon: Brain },
-  { name: 'Staff Roster', category: 'Pages', path: '/roster', icon: Users },
+
   { name: 'Activity Vault', category: 'Pages', path: '/vault', icon: ClipboardList },
   { name: 'System Health', category: 'Pages', path: '/health', icon: Cpu },
   { name: 'AI Training', category: 'Pages', path: '/training', icon: GraduationCap },

@@ -23,7 +23,7 @@ export default function Sidebar({ isSidebarOpen }) {
     { name: 'Command Hub', icon: LayoutDashboard, path: '/', moduleKey: 'dashboard' },
     { name: 'Neural Stream', icon: Radio, path: '/neural-stream', moduleKey: 'live_monitoring' },
     { name: 'AI Scenarios', icon: Brain, path: '/scenarios', moduleKey: 'scenarios' },
-    { name: 'Staff Roster', icon: Users, path: '/roster', moduleKey: 'roster' },
+
     { name: 'Activity Vault', icon: ClipboardList, path: '/vault', moduleKey: 'vault' },
   ];
 

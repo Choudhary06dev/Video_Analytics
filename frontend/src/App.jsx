@@ -20,7 +20,7 @@ const RegisterPage = lazy(() => import('./pages/auth/Signup'));
 const Dashboard = lazy(() => import('./pages/Dashboard'));
 const NeuralStream = lazy(() => import('./pages/NeuralStream'));
 const AIScenarios = lazy(() => import('./pages/AIScenarios'));
-const StaffRoster = lazy(() => import('./pages/StaffRoster'));
+
 const ActivityVault = lazy(() => import('./pages/ActivityVault'));
 const SystemHealth = lazy(() => import('./pages/SystemHealth'));
 const AITraining = lazy(() => import('./pages/AITraining'));
@@ -63,7 +63,7 @@ function App() {
                     <Route path="/" element={<Dashboard />} />
                     <Route path="/neural-stream" element={<NeuralStream />} />
                     <Route path="/scenarios" element={<AIScenarios />} />
-                    <Route path="/roster" element={<StaffRoster />} />
+
                     <Route path="/vault" element={<ActivityVault />} />
                     <Route path="/health" element={<SystemHealth />} />
                     <Route path="/training" element={<AITraining />} />

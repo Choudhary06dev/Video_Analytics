@@ -5,7 +5,7 @@ from sqlmodel import Session, select
 
 from app.core.database import init_db, engine
 from app.models import Role, ModulePermission, AIScenario
-from app.api.v1 import auth, users, roles, cameras, alerts
+from app.api.v1 import auth, users, roles, cameras, alerts, training
 
 
 def init_system_data():
@@ -29,7 +29,7 @@ def init_system_data():
             ("Command Hub", "dashboard"),
             ("Neural Stream", "live_monitoring"),
             ("AI Scenarios", "scenarios"),
-            ("Staff Roster", "roster"),
+
             ("Activity Vault", "vault"),
             ("System Health", "health"),
             ("AI Training", "training"),
@@ -189,6 +189,7 @@ app.include_router(users.router)
 app.include_router(roles.router)
 app.include_router(cameras.router)
 app.include_router(alerts.router)
+app.include_router(training.router)
 
 if __name__ == "__main__":
     import uvicorn
