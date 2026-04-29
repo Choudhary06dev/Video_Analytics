@@ -15,7 +15,7 @@ const MODULE_LABELS = {
   dashboard: 'Command Hub',
   live_monitoring: 'Neural Stream',
   scenarios: 'AI Scenarios',
-  roster: 'Staff Roster',
+
   vault: 'Activity Vault',
   health: 'System Health',
   training: 'AI Training',
@@ -135,7 +135,7 @@ export default function RolePermissionsPanel({ roleId, initialPermissions, onUpd
             title: "MAIN SIDEBAR",
             icon: Layout,
             description: "Same modules shown in the main application sidebar.",
-            categoryKeys: ["dashboard", "live_monitoring", "scenarios", "roster", "vault", "health", "training", "alerts", "admin_hub"]
+            categoryKeys: ["dashboard", "live_monitoring", "scenarios", "vault", "health", "training", "alerts", "admin_hub"]
           },
           {
             title: "ADMIN SIDEBAR",

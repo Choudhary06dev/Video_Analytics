@@ -1,0 +1,59 @@
+{
+    "is_training": true,
+    "current_epoch": 4,
+    "total_epochs": 300,
+    "metrics": {
+        "mAP": 0.063,
+        "loss": 2.374,
+        "precision": 0.0,
+        "recall": 0.0
+    },
+    "history": [
+        {
+            "epoch": 1,
+            "map": 0.1,
+            "trainLoss": 2.498,
+            "valLoss": 2.548
+        },
+        {
+            "epoch": 2,
+            "map": 1.6,
+            "trainLoss": 2.468,
+            "valLoss": 2.518
+        },
+        {
+            "epoch": 3,
+            "map": 3.2,
+            "trainLoss": 2.436,
+            "valLoss": 2.4859999999999998
+        },
+        {
+            "epoch": 4,
+            "map": 4.9,
+            "trainLoss": 2.402,
+            "valLoss": 2.452
+        }
+    ],
+    "logs": [
+        "> [Epoch 3] Batch 48: loss=2.412 mAP=0.044",
+        "> [Epoch 3] Batch 29: loss=2.41 mAP=0.045",
+        "> [Epoch 3] Batch 89: loss=2.408 mAP=0.046",
+        "> [Epoch 3] Batch 67: loss=2.406 mAP=0.047",
+        "> [Epoch 3] Batch 68: loss=2.404 mAP=0.048",
+        "> [Epoch 4] Batch 19: loss=2.402 mAP=0.049",
+        "> [Epoch 4] Batch 96: loss=2.4 mAP=0.05",
+        "> [Epoch 4] Batch 31: loss=2.398 mAP=0.051",
+        "> [Epoch 4] Batch 26: loss=2.396 mAP=0.052",
+        "> [Epoch 4] Batch 93: loss=2.394 mAP=0.053",
+        "> [Epoch 4] Batch 4: loss=2.392 mAP=0.054",
+        "> [Epoch 4] Batch 49: loss=2.39 mAP=0.055",
+        "> [Epoch 4] Batch 13: loss=2.388 mAP=0.056",
+        "> [Epoch 4] Batch 78: loss=2.386 mAP=0.057",
+        "> [Epoch 4] Batch 49: loss=2.384 mAP=0.058",
+        "> [Epoch 4] Batch 77: loss=2.382 mAP=0.059",
+        "> [Epoch 4] Batch 36: loss=2.38 mAP=0.06",
+        "> [Epoch 4] Batch 50: loss=2.378 mAP=0.061",
+        "> [Epoch 4] Batch 48: loss=2.376 mAP=0.062",
+        "> [Epoch 4] Batch 77: loss=2.374 mAP=0.063"
+    ]
+}
