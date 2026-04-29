@@ -3,8 +3,8 @@
     "current_epoch": 4,
     "total_epochs": 300,
     "metrics": {
-        "mAP": 0.061,
-        "loss": 2.378,
+        "mAP": 0.063,
+        "loss": 2.374,
         "precision": 0.0,
         "recall": 0.0
     },
@@ -35,8 +35,6 @@
         }
     ],
     "logs": [
-        "> [Epoch 3] Batch 35: loss=2.416 mAP=0.042",
-        "> [Epoch 3] Batch 86: loss=2.414 mAP=0.043",
         "> [Epoch 3] Batch 48: loss=2.412 mAP=0.044",
         "> [Epoch 3] Batch 29: loss=2.41 mAP=0.045",
         "> [Epoch 3] Batch 89: loss=2.408 mAP=0.046",
@@ -54,6 +52,8 @@
         "> [Epoch 4] Batch 49: loss=2.384 mAP=0.058",
         "> [Epoch 4] Batch 77: loss=2.382 mAP=0.059",
         "> [Epoch 4] Batch 36: loss=2.38 mAP=0.06",
-        "> [Epoch 4] Batch 50: loss=2.378 mAP=0.061"
+        "> [Epoch 4] Batch 50: loss=2.378 mAP=0.061",
+        "> [Epoch 4] Batch 48: loss=2.376 mAP=0.062",
+        "> [Epoch 4] Batch 77: loss=2.374 mAP=0.063"
     ]
 }
