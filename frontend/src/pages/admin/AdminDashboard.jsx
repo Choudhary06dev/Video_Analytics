@@ -186,12 +186,12 @@ export default function AdminDashboard() {
 
       {/* ── Hospital KPI Matrix ── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-5">
-        <MetricCard title="Total Personnel" value={stats.users} icon={Users} colorClass="text-blue-500" gradientClass="bg-blue-500" subtext="Active IDs" />
-        <MetricCard title="Stream Nodes" value={stats.cameras} icon={Camera} colorClass="text-emerald-500" gradientClass="bg-emerald-500" subtext="Online" />
-        <MetricCard title="Hospital Sectors" value={stats.areas} icon={MapPin} colorClass="text-purple-500" gradientClass="bg-purple-500" />
+        <MetricCard title="Total Users" value={stats.users} icon={Users} colorClass="text-blue-500" gradientClass="bg-blue-500" subtext="Active IDs" />
+        <MetricCard title="Cameras" value={stats.cameras} icon={Camera} colorClass="text-emerald-500" gradientClass="bg-emerald-500" subtext="Online" />
+        <MetricCard title="Areas" value={stats.areas} icon={MapPin} colorClass="text-purple-500" gradientClass="bg-purple-500" />
         <MetricCard title="AI Scenarios" value={stats.scenarios} icon={Settings} colorClass="text-amber-500" gradientClass="bg-amber-500" subtext="Running" />
-        <MetricCard title="Active Alerts" value={stats.alerts} icon={AlertTriangle} colorClass="text-red-500" gradientClass="bg-red-500" subtext="Priority 1" />
-        <MetricCard title="Audit Signals" value={stats.audits} icon={FileText} colorClass="text-slate-500" gradientClass="bg-slate-500" />
+        <MetricCard title="Alerts" value={stats.alerts} icon={AlertTriangle} colorClass="text-red-500" gradientClass="bg-red-500" subtext="Priority 1" />
+        <MetricCard title="Audit Logs" value={stats.audits} icon={FileText} colorClass="text-slate-500" gradientClass="bg-slate-500" />
       </div>
 
       {/* ── Deep Analytics Section ── */}
@@ -275,7 +275,7 @@ export default function AdminDashboard() {
                 <div className="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center shrink-0 group-hover/item:scale-110 transition-transform">
                    <User size={14} className="text-blue-500" />
                 </div>
-                <div className="min-w-0 flex-1">
+                <div className="min-w-0 flex-1 relative group/detail">
                   <div className="flex items-center justify-between mb-1">
                     <p className={`text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded border ${actionColors[log?.action] || 'bg-slate-500/10 text-slate-500 border-slate-500/20'}`}>
                       {log?.action || 'Activity'}
@@ -284,7 +284,7 @@ export default function AdminDashboard() {
                       {log?.timestamp ? new Date(log.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Recent'}
                     </p>
                   </div>
-                  <p className="text-[11px] font-bold text-text-dark line-clamp-1 leading-tight mb-1">{log?.details || log?.message || 'Activity Recorded'}</p>
+                  <p className="text-[11px] font-bold text-text-dark line-clamp-1 group-hover/item:line-clamp-none transition-all duration-500 leading-tight mb-1">{log?.details || log?.message || 'Activity Recorded'}</p>
                   <div className="flex items-center gap-2">
                     <p className="text-[8px] font-black text-text-gray/40 uppercase tracking-tighter truncate max-w-[100px]">
                       {log?.user_name || 'Unknown'}
