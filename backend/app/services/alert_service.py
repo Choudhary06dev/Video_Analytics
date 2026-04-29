@@ -104,6 +104,7 @@ def get_logs_summary(
     cutoff = datetime.now() - timedelta(hours=hours)
     statement = select(DetectionEvent).where(DetectionEvent.timestamp >= cutoff)
     statement = _apply_event_filters(statement, session, camera_id, area_id, scenario_key)
+    
     if statement is None:
         events = []
     else:
@@ -115,10 +116,21 @@ def get_logs_summary(
     object_counts = {}
     camera_ids = set()
     
+    # Activity Vault stats
+    hourly_distribution = [0] * 24
+    severity_distribution = {"Low": 0, "Medium": 0, "High": 0, "Critical": 0}
+    
     for ev in events:
         obj = ev.object_class
         camera_ids.add(ev.camera_id)
         object_counts[obj] = object_counts.get(obj, 0) + 1
+        
+        # Time and Severity distribution
+        hour = ev.timestamp.hour
+        hourly_distribution[hour] += 1
+        sev = ev.severity
+        if sev in severity_distribution:
+            severity_distribution[sev] += 1
         
         obj_lower = obj.lower()
         if "person" in obj_lower or "entry" in obj_lower:
@@ -167,5 +179,7 @@ def get_logs_summary(
         "threat_level": threat_level,
         "status_message": status_msg,
         "object_breakdown": object_counts,
+        "hourly_distribution": hourly_distribution,
+        "severity_distribution": severity_distribution,
         "timestamp": datetime.now().isoformat()
     }

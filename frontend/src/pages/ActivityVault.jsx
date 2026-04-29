@@ -23,13 +23,14 @@ const VAULT_PAGE_CSS = `
 const ZONES = ['ICU-Zone-A', 'Reception', 'Perimeter-B', 'Ward-C', 'Lab-1', 'Emergency-B', 'Hallway-3', 'Server-Room'];
 function randInt(a, b) { return Math.floor(Math.random() * (b - a + 1)) + a; }
 
-function StatusDonut({ stats, size = 140 }) {
+function StatusDonut({ stats, summary, size = 140 }) {
   const { isDark } = useTheme();
+  const dist = summary?.severity_distribution || {};
   const data = [
-    { key: 'completed', value: stats.completed, color: '#22c55e' },
-    { key: 'in-progress', value: stats.inProgress, color: '#6366f1' },
-    { key: 'pending', value: stats.pending, color: '#f59e0b' },
-    { key: 'flagged', value: stats.flagged, color: '#ef4444' },
+    { key: 'Critical', value: dist.Critical || 0, color: '#ef4444' },
+    { key: 'High', value: dist.High || 0, color: '#f59e0b' },
+    { key: 'Medium', value: dist.Medium || 0, color: '#6366f1' },
+    { key: 'Low', value: dist.Low || 0, color: '#22c55e' },
   ];
   const total = data.reduce((s, d) => s + d.value, 0) || 1;
   const r = (size - 20) / 2, cx = size / 2, cy = size / 2, circ = 2 * Math.PI * r;
@@ -50,37 +51,33 @@ function StatusDonut({ stats, size = 140 }) {
       </svg>
       <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
         <div style={{ fontSize: 28, fontWeight: 900, color: isDark ? '#f8fafc' : '#0f172a', lineHeight: 1, fontFamily: 'JetBrains Mono,monospace' }}>{total}</div>
-        <div style={{ fontSize: 9, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 1.5, marginTop: 3 }}>Total</div>
+        <div style={{ fontSize: 9, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 1.5, marginTop: 3 }}>Events</div>
       </div>
     </div>
   );
 }
 
-function TimelineChart() {
-  const HOURS = Array.from({ length: 24 }, (_, i) => i);
-  const [data] = useState(() => HOURS.map(() => ({
-    completed: randInt(5, 25), flagged: randInt(0, 5), inProgress: randInt(2, 12),
-  })));
-  const maxVal = Math.max(...data.map(d => d.completed + d.flagged + d.inProgress));
+function TimelineChart({ hourlyData }) {
+  const data = hourlyData || Array.from({ length: 24 }, () => 0);
+  const maxVal = Math.max(...data) || 1;
   return (
     <div>
       <div style={{ display: 'flex', alignItems: 'flex-end', gap: 2, height: 80 }}>
-        {data.map((d, i) => {
-          const total = d.completed + d.flagged + d.inProgress;
-          const h = (total / maxVal) * 100;
+        {data.map((val, i) => {
+          const h = (val / maxVal) * 100;
           return (
             <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0 }}>
-              <div style={{ width: '100%', height: `${h}%`, minHeight: 3, borderRadius: '3px 3px 0 0', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-                <div style={{ flex: d.completed, background: '#22c55e' }} />
-                <div style={{ flex: d.inProgress, background: '#6366f1' }} />
-                <div style={{ flex: d.flagged, background: '#ef4444' }} />
-              </div>
+              <div style={{
+                width: '100%', height: `${Math.max(5, h)}%`, background: val > 0 ? '#0ea5e9' : 'rgba(148,163,184,0.1)',
+                borderRadius: '2px 2px 0 0', transition: 'all 0.5s ease',
+                opacity: val > 0 ? 0.8 : 0.3
+              }} />
             </div>
           );
         })}
       </div>
       <div style={{ display: 'flex', gap: 2, marginTop: 4 }}>
-        {data.map((d, i) => (
+        {data.map((_, i) => (
           <div key={i} style={{ flex: 1, textAlign: 'center', fontSize: 7, color: '#94a3b8', fontWeight: 700, fontFamily: 'JetBrains Mono,monospace' }}>
             {i % 4 === 0 ? `${i.toString().padStart(2, '0')}` : ''}
           </div>
@@ -144,16 +141,53 @@ function HeatmapBlock() {
   );
 }
 
+import { fetchActivityData, fetchActivitySummary } from '../services/activityService';
+
 export default function ActivityVault() {
+  const [events, setEvents] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [summary, setSummary] = useState(null);
   const [stats, setStats] = useState({
-    total: 247, completed: 189, inProgress: 32, flagged: 8, pending: 18, avgConf: 92.4, avgTime: 2.1, highConf: 156
+    total: 0, completed: 0, inProgress: 0, flagged: 0, pending: 0, avgConf: 0, avgTime: 0, highConf: 0
   });
   const { isDark } = useTheme();
 
   useEffect(() => {
     const s = document.createElement('style'); s.id = 'vp-css'; s.textContent = VAULT_PAGE_CSS; document.head.appendChild(s);
+    loadData();
     return () => document.getElementById('vp-css')?.remove();
   }, []);
+
+  const loadData = async () => {
+    try {
+      setLoading(true);
+      const data = await fetchActivityData();
+      setEvents(data.events);
+      setSummary(data.summary);
+
+      // Map backend summary to frontend stats
+      if (data.summary) {
+        const total = data.total || 0;
+        const critical = data.summary.severity_distribution?.Critical || 0;
+        const high = data.summary.severity_distribution?.High || 0;
+
+        setStats({
+          total: total,
+          completed: total - (critical + high),
+          inProgress: 0,
+          flagged: critical + high,
+          pending: 0,
+          avgConf: 88.5, // Mock or calculate if available
+          avgTime: 1.8,
+          highConf: data.events.filter(e => e.confidence >= 0.9).length
+        });
+      }
+    } catch (err) {
+      console.error("Vault load error:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const cardBg = isDark ? '#111827' : '#fff';
   const cardBorder = isDark ? 'rgba(255,255,255,.06)' : 'rgba(0,0,0,.06)';
@@ -187,7 +221,7 @@ export default function ActivityVault() {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 12 }}>
             {[
               { label: 'Total Audits', value: stats.total.toLocaleString(), color: '#38bdf8', Icon: Activity, sub: 'All time records' },
-              { label: 'High Confidence', value: `${((stats.highConf / stats.total) * 100 || 0).toFixed(1)}%`, color: '#4ade80', Icon: ShieldCheck, sub: `${stats.highConf} ≥90%` },
+              { label: 'High Confidence', value: stats.total > 0 ? `${((stats.highConf / stats.total) * 100).toFixed(1)}%` : '0%', color: '#4ade80', Icon: ShieldCheck, sub: `${stats.highConf} ≥90%` },
               { label: 'Avg Process Time', value: `${stats.avgTime}s`, color: '#fbbf24', Icon: Zap, sub: 'Per frame analysis' },
               { label: 'Active Alerts', value: stats.flagged.toString(), color: '#f87171', Icon: AlertCircle, sub: 'Requires attention' },
             ].map(({ label, value, color, Icon, sub }, i) => (
@@ -209,10 +243,10 @@ export default function ActivityVault() {
         </div>
       </div>
 
-      {/* ═══════════════ INSIGHTS ROW (Kept: Donut, Timeline, Heatmap) ═══════════════ */}
+      {/* ═══════════════ INSIGHTS ROW ═══════════════ */}
       <div style={{ display: 'grid', gridTemplateColumns: '160px 1fr 1fr', gap: 16 }}>
         <div style={{ background: cardBg, borderRadius: 8, border: `1px solid ${cardBorder}`, padding: '20px 16px', display: 'flex', flexDirection: 'column', alignItems: 'center', boxShadow: '0 2px 16px rgba(0,0,0,.04)' }}>
-          <StatusDonut stats={stats} size={120} />
+          <StatusDonut summary={summary} size={120} />
         </div>
         <div style={{ background: cardBg, borderRadius: 8, border: `1px solid ${cardBorder}`, padding: '20px 24px', boxShadow: '0 2px 16px rgba(0,0,0,.04)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
@@ -221,7 +255,7 @@ export default function ActivityVault() {
               <div style={{ fontSize: 10, color: '#94a3b8', fontWeight: 600, marginTop: 2 }}>Events distribution over 24 hours</div>
             </div>
           </div>
-          <TimelineChart />
+          <TimelineChart hourlyData={summary?.hourly_distribution} />
         </div>
         <div style={{ background: cardBg, borderRadius: 8, border: `1px solid ${cardBorder}`, padding: '20px 24px', boxShadow: '0 2px 16px rgba(0,0,0,.04)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
@@ -234,6 +268,77 @@ export default function ActivityVault() {
         </div>
       </div>
 
+      {/* ═══════════════ DATA TABLE ═══════════════ */}
+      <div style={{ background: cardBg, borderRadius: 8, border: `1px solid ${cardBorder}`, overflow: 'hidden', boxShadow: '0 2px 16px rgba(0,0,0,.04)' }}>
+        <div style={{ padding: '20px 24px', borderBottom: `1px solid ${cardBorder}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div>
+            <div style={{ fontSize: 15, fontWeight: 900, color: isDark ? '#f1f5f9' : '#1e293b' }}>Audit Log Records</div>
+            <div style={{ fontSize: 11, color: '#64748b', fontWeight: 600, marginTop: 2 }}>Real-time feed of all AI-audited events</div>
+          </div>
+          <button onClick={loadData} style={{ padding: '8px 16px', background: '#0ea5e9', color: '#fff', border: 'none', borderRadius: 6, fontSize: 11, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}>
+            <Activity size={14} /> Refresh Feed
+          </button>
+        </div>
+
+        <div style={{ overflowX: 'auto' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+            <thead>
+              <tr style={{ background: isDark ? 'rgba(255,255,255,.02)' : 'rgba(0,0,0,.02)', borderBottom: `1px solid ${cardBorder}` }}>
+                {['Event ID', 'Scenario', 'Location', 'Severity', 'Confidence', 'Timestamp', 'Threat'].map(h => (
+                  <th key={h} style={{ padding: '14px 24px', fontSize: 10, fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: 1 }}>{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {loading ? (
+                <tr><td colSpan={7} style={{ padding: 60, textAlign: 'center', color: '#94a3b8', fontSize: 13, fontWeight: 600 }}>Syncing with AI vault matrix...</td></tr>
+              ) : events.length === 0 ? (
+                <tr><td colSpan={7} style={{ padding: 60, textAlign: 'center', color: '#94a3b8', fontSize: 13, fontWeight: 600 }}>No records found in current timeline.</td></tr>
+              ) : events.map(ev => (
+                <tr key={ev.id} style={{ borderBottom: `1px solid ${cardBorder}`, transition: 'all 0.2s' }}>
+                  <td style={{ padding: '16px 24px', fontSize: 12, fontWeight: 700, color: isDark ? '#94a3b8' : '#64748b', fontFamily: 'JetBrains Mono,monospace' }}>#{ev.id}</td>
+                  <td style={{ padding: '16px 24px' }}>
+                    <div style={{ fontSize: 13, fontWeight: 800, color: isDark ? '#f1f5f9' : '#1e293b' }}>{ev.scenario_key}</div>
+                    <div style={{ fontSize: 10, color: '#64748b', fontWeight: 600 }}>{ev.object_class}</div>
+                  </td>
+                  <td style={{ padding: '16px 24px' }}>
+                    <div style={{ fontSize: 12, fontWeight: 700, color: isDark ? '#cbd5e1' : '#475569' }}>{ev.camera_name}</div>
+                    <div style={{ fontSize: 10, color: '#94a3b8', fontWeight: 600 }}>{ev.area_name}</div>
+                  </td>
+                  <td style={{ padding: '16px 24px' }}>
+                    <span style={{
+                      padding: '4px 10px', borderRadius: 4, fontSize: 9, fontWeight: 900, textTransform: 'uppercase', letterSpacing: 1,
+                      background: ev.severity === 'Critical' ? '#ef444420' : ev.severity === 'High' ? '#f59e0b20' : '#3b82f620',
+                      color: ev.severity === 'Critical' ? '#ef4444' : ev.severity === 'High' ? '#f59e0b' : '#3b82f6',
+                      border: `1px solid ${ev.severity === 'Critical' ? '#ef444430' : ev.severity === 'High' ? '#f59e0b30' : '#3b82f630'}`
+                    }}>
+                      {ev.severity}
+                    </span>
+                  </td>
+                  <td style={{ padding: '16px 24px' }}>
+                    <div style={{ width: 80, height: 6, background: isDark ? '#1e293b' : '#f1f5f9', borderRadius: 3, overflow: 'hidden', marginBottom: 4 }}>
+                      <div style={{ width: `${ev.confidence * 100}%`, height: '100%', background: ev.confidence > .9 ? '#22c55e' : '#eab308' }} />
+                    </div>
+                    <div style={{ fontSize: 10, fontWeight: 800, color: isDark ? '#64748b' : '#94a3b8' }}>{(ev.confidence * 100).toFixed(1)}%</div>
+                  </td>
+                  <td style={{ padding: '16px 24px' }}>
+                    <div style={{ fontSize: 12, fontWeight: 700, color: isDark ? '#94a3b8' : '#64748b' }}>{ev.time_ago}</div>
+                    <div style={{ fontSize: 10, color: '#475569', fontWeight: 600 }}>{new Date(ev.timestamp).toLocaleTimeString()}</div>
+                  </td>
+                  <td style={{ padding: '16px 24px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <div style={{ fontSize: 14, fontWeight: 900, color: ev.threat_score > 70 ? '#ef4444' : ev.threat_score > 40 ? '#f59e0b' : '#22c55e' }}>{ev.threat_score.toFixed(0)}</div>
+                      <div style={{ height: 4, width: 40, background: isDark ? '#1e293b' : '#f1f5f9', borderRadius: 2 }}>
+                        <div style={{ height: '100%', width: `${ev.threat_score}%`, background: ev.threat_score > 70 ? '#ef4444' : ev.threat_score > 40 ? '#f59e0b' : '#22c55e', borderRadius: 2 }} />
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   );
 }

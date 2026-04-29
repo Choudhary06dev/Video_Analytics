@@ -24,7 +24,7 @@ def get_activity_vault_data(
     limit: int = 100,
     skip: int = 0,
     session: Session = Depends(get_session),
-    current_user = Depends(get_current_active_user)
+    auth_data: dict = Depends(lambda cur=Depends(get_current_user), s=Depends(get_session): verify_module_access("vault", cur, s, access_level="view"))
 ):
     """
     Activity Vault endpoint - returns AI detection events with camera/area context.
@@ -110,14 +110,14 @@ def _format_time_ago(timestamp):
         return f"{int(ago/1440)}d ago"
 
 
-from app.api.v1 import auth
-from app.core.security import verify_module_access
+from app.api.v1.users import verify_module_access
+
 @router.get("/summary")
 def get_activity_summary(
     hours: float = 24.0,
     camera_id: Optional[int] = None,
     session: Session = Depends(get_session),
-    current_user = Depends(get_current_active_user)
+    auth_data: dict = Depends(lambda cur=Depends(get_current_user), s=Depends(get_session): verify_module_access("vault", cur, s, access_level="view"))
 ):
     """Summary stats for ActivityVault charts."""
     return get_logs_summary(session, hours, camera_id, None, None)
