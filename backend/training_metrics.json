@@ -1,10 +1,10 @@
 {
     "is_training": true,
-    "current_epoch": 4,
+    "current_epoch": 16,
     "total_epochs": 300,
     "metrics": {
-        "mAP": 0.063,
-        "loss": 2.374,
+        "mAP": 0.232,
+        "loss": 2.036,
         "precision": 0.0,
         "recall": 0.0
     },
@@ -32,28 +32,100 @@
             "map": 4.9,
             "trainLoss": 2.402,
             "valLoss": 2.452
+        },
+        {
+            "epoch": 5,
+            "map": 7.199999999999999,
+            "trainLoss": 2.356,
+            "valLoss": 2.4059999999999997
+        },
+        {
+            "epoch": 6,
+            "map": 7.7,
+            "trainLoss": 2.346,
+            "valLoss": 2.396
+        },
+        {
+            "epoch": 7,
+            "map": 9.2,
+            "trainLoss": 2.316,
+            "valLoss": 2.3659999999999997
+        },
+        {
+            "epoch": 8,
+            "map": 13.0,
+            "trainLoss": 2.24,
+            "valLoss": 2.29
+        },
+        {
+            "epoch": 9,
+            "map": 13.4,
+            "trainLoss": 2.232,
+            "valLoss": 2.282
+        },
+        {
+            "epoch": 10,
+            "map": 14.7,
+            "trainLoss": 2.206,
+            "valLoss": 2.256
+        },
+        {
+            "epoch": 11,
+            "map": 17.2,
+            "trainLoss": 2.156,
+            "valLoss": 2.206
+        },
+        {
+            "epoch": 12,
+            "map": 18.0,
+            "trainLoss": 2.14,
+            "valLoss": 2.19
+        },
+        {
+            "epoch": 13,
+            "map": 19.8,
+            "trainLoss": 2.104,
+            "valLoss": 2.154
+        },
+        {
+            "epoch": 14,
+            "map": 21.099999999999998,
+            "trainLoss": 2.078,
+            "valLoss": 2.1279999999999997
+        },
+        {
+            "epoch": 15,
+            "map": 22.7,
+            "trainLoss": 2.046,
+            "valLoss": 2.0959999999999996
+        },
+        {
+            "epoch": 16,
+            "map": 22.8,
+            "trainLoss": 2.044,
+            "valLoss": 2.094
         }
     ],
     "logs": [
-        "> [Epoch 3] Batch 48: loss=2.412 mAP=0.044",
-        "> [Epoch 3] Batch 29: loss=2.41 mAP=0.045",
-        "> [Epoch 3] Batch 89: loss=2.408 mAP=0.046",
-        "> [Epoch 3] Batch 67: loss=2.406 mAP=0.047",
-        "> [Epoch 3] Batch 68: loss=2.404 mAP=0.048",
-        "> [Epoch 4] Batch 19: loss=2.402 mAP=0.049",
-        "> [Epoch 4] Batch 96: loss=2.4 mAP=0.05",
-        "> [Epoch 4] Batch 31: loss=2.398 mAP=0.051",
-        "> [Epoch 4] Batch 26: loss=2.396 mAP=0.052",
-        "> [Epoch 4] Batch 93: loss=2.394 mAP=0.053",
-        "> [Epoch 4] Batch 4: loss=2.392 mAP=0.054",
-        "> [Epoch 4] Batch 49: loss=2.39 mAP=0.055",
-        "> [Epoch 4] Batch 13: loss=2.388 mAP=0.056",
-        "> [Epoch 4] Batch 78: loss=2.386 mAP=0.057",
-        "> [Epoch 4] Batch 49: loss=2.384 mAP=0.058",
-        "> [Epoch 4] Batch 77: loss=2.382 mAP=0.059",
-        "> [Epoch 4] Batch 36: loss=2.38 mAP=0.06",
-        "> [Epoch 4] Batch 50: loss=2.378 mAP=0.061",
-        "> [Epoch 4] Batch 48: loss=2.376 mAP=0.062",
-        "> [Epoch 4] Batch 77: loss=2.374 mAP=0.063"
+        "> [Epoch 14] Batch 84: loss=2.074 mAP=0.213",
+        "> [Epoch 14] Batch 49: loss=2.072 mAP=0.214",
+        "> [Epoch 14] Batch 87: loss=2.07 mAP=0.215",
+        "> [Epoch 14] Batch 64: loss=2.068 mAP=0.216",
+        "> [Epoch 14] Batch 44: loss=2.066 mAP=0.217",
+        "> [Epoch 14] Batch 50: loss=2.064 mAP=0.218",
+        "> [Epoch 14] Batch 81: loss=2.062 mAP=0.219",
+        "> [Epoch 14] Batch 84: loss=2.06 mAP=0.22",
+        "> [Epoch 14] Batch 13: loss=2.058 mAP=0.221",
+        "> [Epoch 14] Batch 49: loss=2.056 mAP=0.222",
+        "> [Epoch 14] Batch 78: loss=2.054 mAP=0.223",
+        "> [Epoch 14] Batch 60: loss=2.052 mAP=0.224",
+        "> [Epoch 14] Batch 83: loss=2.05 mAP=0.225",
+        "> [Epoch 14] Batch 17: loss=2.048 mAP=0.226",
+        "> [Epoch 15] Batch 48: loss=2.046 mAP=0.227",
+        "> [Epoch 16] Batch 77: loss=2.044 mAP=0.228",
+        "> [Epoch 16] Batch 28: loss=2.042 mAP=0.229",
+        "> [Epoch 16] Batch 70: loss=2.04 mAP=0.23",
+        "> [Epoch 16] Batch 20: loss=2.038 mAP=0.231",
+        "> [Epoch 16] Batch 49: loss=2.036 mAP=0.232"
     ]
 }
