@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import {
   Users,
+  User,
   Shield,
   Camera,
   MapPin,
@@ -19,7 +20,15 @@ import {
 
 import { fetchAdminUsers, fetchAuditLogs } from '../../services/userService';
 import { fetchAdminAreas, fetchAdminCameras, fetchScenarios } from '../../services/cameraService';
-import { fetchAlerts } from '../../services/alertService';
+import { fetchAlerts, fetchLogsSummary } from '../../services/alertService';
+
+const actionColors = {
+  CREATE: 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20',
+  UPDATE: 'bg-blue-500/10 text-blue-500 border-blue-500/20',
+  DELETE: 'bg-red-500/10 text-red-500 border-red-500/20',
+  STATUS_CHANGE: 'bg-amber-500/10 text-amber-500 border-amber-500/20',
+  AUTH: 'bg-purple-500/10 text-purple-500 border-purple-500/20'
+};
 
 // Sub-component for premium cards
 const MetricCard = ({ title, value, icon: Icon, colorClass, gradientClass, subtext }) => (
@@ -55,7 +64,8 @@ export default function AdminDashboard() {
   const [rawStats, setRawStats] = useState({
     cameras: [],
     scenarios: [],
-    audits: []
+    audits: [],
+    summary: {}
   });
 
   const [loading, setLoading] = useState(true);
@@ -70,13 +80,14 @@ export default function AdminDashboard() {
   const fetchStats = async () => {
     try {
       setLoading(true);
-      const [usersData, camerasData, areasData, scenariosData, alertsData, auditsData] = await Promise.all([
+      const [usersData, camerasData, areasData, scenariosData, alertsData, auditsData, summaryData] = await Promise.all([
         fetchAdminUsers().catch(() => []),
         fetchAdminCameras().catch(() => []),
         fetchAdminAreas().catch(() => []),
         fetchScenarios().catch(() => []),
         fetchAlerts({ hours: 24 }).catch(() => []),
-        fetchAuditLogs().catch(() => [])
+        fetchAuditLogs().catch(() => []),
+        fetchLogsSummary(24).catch(() => ({}))
       ]);
 
       // Normalize data (handle both direct arrays and nested objects like { users: [] })
@@ -87,19 +98,29 @@ export default function AdminDashboard() {
       const al = Array.isArray(alertsData) ? alertsData : (alertsData?.alerts || []);
       const au = Array.isArray(auditsData) ? auditsData : (auditsData?.logs || auditsData || []);
 
+      // 💡 Filter scenarios to only show those active on at least one camera
+      const enabledIds = new Set();
+      c.forEach(cam => {
+        if (cam.enabled_scenario_ids) {
+          cam.enabled_scenario_ids.forEach(id => enabledIds.add(id));
+        }
+      });
+      const activeScenarios = s.filter(scenario => enabledIds.has(scenario.id));
+
       setStats({
         users: u.length,
         cameras: c.length,
         areas: ar.length,
-        scenarios: s.length,
+        scenarios: activeScenarios.length, // Update count to reflect active ones
         alerts: al.length,
         audits: au.length,
       });
 
       setRawStats({
         cameras: c,
-        scenarios: s,
-        audits: au
+        scenarios: activeScenarios, // Store only active scenarios
+        audits: au,
+        summary: summaryData
       });
 
       setLoading(false);
@@ -165,25 +186,25 @@ export default function AdminDashboard() {
 
       {/* ── Hospital KPI Matrix ── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-5">
-        <MetricCard title="Total Personnel" value={stats.users} icon={Users} colorClass="text-blue-500" gradientClass="bg-blue-500" subtext="Active IDs" />
-        <MetricCard title="Stream Nodes" value={stats.cameras} icon={Camera} colorClass="text-emerald-500" gradientClass="bg-emerald-500" subtext="Online" />
-        <MetricCard title="Hospital Sectors" value={stats.areas} icon={MapPin} colorClass="text-purple-500" gradientClass="bg-purple-500" />
+        <MetricCard title="Total Users" value={stats.users} icon={Users} colorClass="text-blue-500" gradientClass="bg-blue-500" subtext="Active IDs" />
+        <MetricCard title="Cameras" value={stats.cameras} icon={Camera} colorClass="text-emerald-500" gradientClass="bg-emerald-500" subtext="Online" />
+        <MetricCard title="Areas" value={stats.areas} icon={MapPin} colorClass="text-purple-500" gradientClass="bg-purple-500" />
         <MetricCard title="AI Scenarios" value={stats.scenarios} icon={Settings} colorClass="text-amber-500" gradientClass="bg-amber-500" subtext="Running" />
-        <MetricCard title="Active Alerts" value={stats.alerts} icon={AlertTriangle} colorClass="text-red-500" gradientClass="bg-red-500" subtext="Priority 1" />
-        <MetricCard title="Audit Signals" value={stats.audits} icon={FileText} colorClass="text-slate-500" gradientClass="bg-slate-500" />
+        <MetricCard title="Alerts" value={stats.alerts} icon={AlertTriangle} colorClass="text-red-500" gradientClass="bg-red-500" subtext="Priority 1" />
+        <MetricCard title="Audit Logs" value={stats.audits} icon={FileText} colorClass="text-slate-500" gradientClass="bg-slate-500" />
       </div>
 
       {/* ── Deep Analytics Section ── */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
         {/* CAMERA OVERVIEW MODULE */}
-        <div className="bg-card border border-border/60 rounded-2xl p-6 shadow-sm relative overflow-hidden group">
+        <div className="bg-card border border-border/60 rounded-2xl p-6 shadow-sm relative overflow-hidden group h-[340px] flex flex-col">
           <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 blur-[40px] -mr-16 -mt-16 group-hover:bg-emerald-500/10 transition-all" />
           <h2 className="text-xs font-black uppercase tracking-[0.2em] text-text-dark mb-6 flex items-center gap-3">
             <div className="p-1.5 bg-emerald-500/10 rounded-lg"><Camera size={16} className="text-emerald-500" /></div>
             Cameras Overview
           </h2>
-          <div className="space-y-4">
+          <div className="space-y-4 overflow-y-auto flex-1 pr-2 scrollbar-thin scrollbar-thumb-emerald-500/10 scrollbar-track-transparent">
             <div className="flex justify-between items-center p-3 bg-surface/50 rounded-xl border border-border/30">
               <span className="text-[11px] font-bold text-text-gray uppercase tracking-wider">🟢 Online Nodes</span>
               <span className="text-sm font-black text-emerald-500">
@@ -198,8 +219,8 @@ export default function AdminDashboard() {
             </div>
             <div className="flex justify-between items-center p-3 bg-surface/50 rounded-xl border border-border/30">
               <span className="text-[11px] font-bold text-text-gray uppercase tracking-wider">📍 Coverage Areas</span>
-              <span className="text-[10px] font-black text-text-dark italic truncate ml-4">
-                {stats.areas > 0 ? `${stats.areas} Registered Sectors` : 'No Areas Found'}
+              <span className="text-sm font-black text-emerald-500">
+                {stats.areas} Sectors
               </span>
             </div>
             <div className="flex justify-between items-center p-3 bg-gradient-to-r from-emerald-500/10 to-transparent rounded-xl border border-emerald-500/20">
@@ -210,46 +231,69 @@ export default function AdminDashboard() {
         </div>
 
         {/* AI SCENARIOS MODULE */}
-        <div className="bg-card border border-border/60 rounded-2xl p-6 shadow-sm relative overflow-hidden group">
+        <div className="bg-card border border-border/60 rounded-2xl p-6 shadow-sm relative overflow-hidden group h-[340px] flex flex-col">
           <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/5 blur-[40px] -mr-16 -mt-16 group-hover:bg-amber-500/10 transition-all" />
           <h2 className="text-xs font-black uppercase tracking-[0.2em] text-text-dark mb-6 flex items-center gap-3">
             <div className="p-1.5 bg-amber-500/10 rounded-lg"><Settings size={16} className="text-amber-500" /></div>
             AI Intelligence Mesh
           </h2>
-          <div className="space-y-3">
-            {rawStats?.scenarios?.length > 0 ? rawStats.scenarios.slice(0, 5).map((scenario, i) => (
-              <div key={i} className="flex justify-between items-center p-2.5 hover:bg-surface transition-colors rounded-lg">
-                <span className="text-[11px] font-bold text-text-gray">{scenario?.name || 'Unknown Scenario'}</span>
-                <span className={`text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded border border-emerald-500/20 bg-emerald-500/10 text-emerald-500`}>
-                  ACTIVE
-                </span>
-              </div>
-            )) : (
+          <div className="space-y-3 overflow-y-auto flex-1 pr-2 scrollbar-thin scrollbar-thumb-amber-500/10 scrollbar-track-transparent">
+            {rawStats?.scenarios?.length > 0 ? rawStats.scenarios.map((scenario, i) => {
+              const alertCount = rawStats.summary?.object_breakdown?.[scenario.name] || 0;
+              const isCritical = scenario.default_severity === 'Critical' || scenario.default_severity === 'High';
+              
+              return (
+                <div key={i} className="flex justify-between items-center p-2.5 hover:bg-surface transition-colors rounded-lg group/scen">
+                  <div className="flex flex-col">
+                    <span className="text-[11px] font-bold text-text-dark group-hover/scen:text-accent transition-colors">{scenario?.name || 'Unknown Scenario'}</span>
+                    <span className="text-[8px] font-medium text-text-gray/50 uppercase tracking-tighter">{scenario.default_severity} Priority</span>
+                  </div>
+                  <span className={`text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded border transition-all
+                    ${alertCount > 0 
+                      ? (isCritical ? 'bg-red-500/10 text-red-500 border-red-500/20' : 'bg-amber-500/10 text-amber-500 border-amber-500/20')
+                      : 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20'}`}>
+                    {alertCount > 0 ? `${alertCount} Alerts` : 'Stable'}
+                  </span>
+                </div>
+              );
+            }) : (
               <p className="text-[10px] text-text-gray/60 italic text-center py-4 uppercase font-black">No Scenarios Configured</p>
             )}
           </div>
         </div>
 
         {/* AUDIT LOG MODULE */}
-        <div className="bg-card border border-border/60 rounded-2xl p-6 shadow-sm relative overflow-hidden group flex flex-col h-full">
+        <div className="bg-card border border-border/60 rounded-2xl p-6 shadow-sm relative overflow-hidden group flex flex-col h-[340px]">
           <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/5 blur-[40px] -mr-16 -mt-16 group-hover:bg-blue-500/10 transition-all" />
           <h2 className="text-xs font-black uppercase tracking-[0.2em] text-text-dark mb-6 flex items-center gap-3">
             <div className="p-1.5 bg-blue-500/10 rounded-lg"><FileText size={16} className="text-blue-500" /></div>
             Intelligence Audit
           </h2>
-          <div className="space-y-4 overflow-y-auto flex-1 scrollbar-none">
-            {rawStats?.audits?.length > 0 ? rawStats.audits.slice(0, 5).map((log, i) => (
-              <div key={i} className="flex gap-3 items-start p-2 rounded-lg hover:bg-surface/50 transition-colors">
-                <span className="text-lg">👤</span>
-                <div className="min-w-0 flex-1">
-                  <p className="text-[11px] font-bold text-text-dark truncate">{log?.action || log?.message || 'Activity Recorded'}</p>
-                  <p className="text-[9px] font-medium text-text-gray/60 uppercase mt-0.5">
-                    {(() => {
-                      if (!log?.timestamp) return 'Recent';
-                      const date = new Date(log.timestamp);
-                      return isNaN(date.getTime()) ? 'Recent' : date.toLocaleTimeString();
-                    })()}
-                  </p>
+          <div className="space-y-4 overflow-y-auto flex-1 pr-2 scrollbar-thin scrollbar-thumb-blue-500/10 scrollbar-track-transparent">
+            {rawStats?.audits?.length > 0 ? rawStats.audits.slice(0, 6).map((log, i) => (
+              <div key={i} className="flex gap-3 items-start p-3 rounded-xl hover:bg-surface/80 transition-all border border-transparent hover:border-border/40 group/item">
+                <div className="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center shrink-0 group-hover/item:scale-110 transition-transform">
+                   <User size={14} className="text-blue-500" />
+                </div>
+                <div className="min-w-0 flex-1 relative group/detail">
+                  <div className="flex items-center justify-between mb-1">
+                    <p className={`text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded border ${actionColors[log?.action] || 'bg-slate-500/10 text-slate-500 border-slate-500/20'}`}>
+                      {log?.action || 'Activity'}
+                    </p>
+                    <p className="text-[8px] font-bold text-text-gray/50 uppercase">
+                      {log?.timestamp ? new Date(log.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Recent'}
+                    </p>
+                  </div>
+                  <p className="text-[11px] font-bold text-text-dark line-clamp-1 group-hover/item:line-clamp-none transition-all duration-500 leading-tight mb-1">{log?.details || log?.message || 'Activity Recorded'}</p>
+                  <div className="flex items-center gap-2">
+                    <p className="text-[8px] font-black text-text-gray/40 uppercase tracking-tighter truncate max-w-[100px]">
+                      {log?.user_name || 'Unknown'}
+                    </p>
+                    <div className="w-1 h-1 rounded-full bg-border" />
+                    <p className="text-[8px] font-bold text-accent/60 uppercase tracking-widest truncate">
+                      {log?.resource || 'Global'}
+                    </p>
+                  </div>
                 </div>
               </div>
             )) : (
