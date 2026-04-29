@@ -12,7 +12,7 @@ export async function get(path, params = {}) {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
       }
   });
-  if (res.status === 401) {
+  if (res.status === 401 && path !== '/auth/login') {
       localStorage.removeItem('token');
       localStorage.removeItem('user');
       window.location.href = '/login';
@@ -30,7 +30,7 @@ export async function post(path, body) {
         },
         body: JSON.stringify(body),
     });
-    if (res.status === 401) {
+    if (res.status === 401 && path !== '/auth/login') {
         localStorage.removeItem('token');
         localStorage.removeItem('user');
         window.location.href = '/login';
@@ -54,7 +54,7 @@ export async function put(path, body) {
         },
         body: JSON.stringify(body),
     });
-    if (res.status === 401) {
+    if (res.status === 401 && path !== '/auth/login') {
         localStorage.removeItem('token');
         localStorage.removeItem('user');
         window.location.href = '/login';
@@ -79,7 +79,7 @@ export async function patch(path, body) {
         },
         body: JSON.stringify(body),
     });
-    if (res.status === 401) {
+    if (res.status === 401 && path !== '/auth/login') {
         localStorage.removeItem('token');
         localStorage.removeItem('user');
         window.location.href = '/login';
@@ -102,7 +102,7 @@ export async function del(path) {
             'Authorization': `Bearer ${localStorage.getItem('token')}`
         },
     });
-    if (res.status === 401) {
+    if (res.status === 401 && path !== '/auth/login') {
         localStorage.removeItem('token');
         localStorage.removeItem('user');
         window.location.href = '/login';
