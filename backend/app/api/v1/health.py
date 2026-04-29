@@ -4,7 +4,7 @@ import psutil
 import random
 from datetime import datetime
 from app.core.database import engine
-from app.models import Camera, Area
+from app.models import Camera, Area, DetectionEvent
 
 router = APIRouter(prefix="/health", tags=["System Health"])
 
@@ -40,18 +40,43 @@ async def get_health_stats():
         # Fetch Areas for Sector Compliance
         areas = session.exec(select(Area)).all()
         
-    # 2. Get Hardware Metrics
-    metrics = get_system_metrics()
-    
-    # 3. Dynamic Sector Compliance (using DB Areas)
-    compliance = []
-    for area in areas[:6]: # Show top 6
-        compliance.append({
-            "name": area.name,
-            "score": random.randint(85, 99),
-            "trend": f"{'+' if random.random() > 0.5 else '-'}{random.randint(0, 3)}.{random.randint(1, 9)}%",
-            "status": "excellent" if random.random() > 0.5 else "good"
-        })
+        # 2. Get Hardware Metrics
+        metrics = get_system_metrics()
+        
+        # 3. Dynamic Sector Compliance (Real Data)
+        compliance = []
+        for area in areas[:6]:
+            # Get cameras for this area
+            area_cams_statement = select(func.count(Camera.id)).where(Camera.area_id == area.id)
+            total_area_cams = session.exec(area_cams_statement).one()
+            
+            online_area_cams_statement = select(func.count(Camera.id)).where(Camera.area_id == area.id, Camera.status == "online")
+            online_area_cams = session.exec(online_area_cams_statement).one()
+            
+            # Check for critical alerts in this area in last 24h
+            from datetime import datetime, timedelta
+            cutoff = datetime.now() - timedelta(hours=24)
+            # This is a bit complex since events link to camera_id. We join through Camera.
+            critical_alerts_statement = select(func.count(DetectionEvent.id)).join(Camera).where(
+                Camera.area_id == area.id,
+                DetectionEvent.timestamp >= cutoff,
+                DetectionEvent.severity == "Critical"
+            )
+            critical_count = session.exec(critical_alerts_statement).one()
+            
+            # Calculate REAL Score
+            # Base score is based on camera availability
+            availability_score = (online_area_cams / total_area_cams * 100) if total_area_cams > 0 else 100
+            # Deduct points for critical alerts (max deduction 30 points)
+            security_deduction = min(critical_count * 10, 30)
+            final_score = int(availability_score - security_deduction)
+            
+            compliance.append({
+                "name": area.name,
+                "score": final_score,
+                "trend": f"-{critical_count}" if critical_count > 0 else "Stable",
+                "status": "excellent" if final_score >= 90 else "good" if final_score >= 70 else "warning"
+            })
 
     # 4. Generate Chart Data (Real-time snapshot + mock history)
     chart_data = [
