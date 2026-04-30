@@ -35,7 +35,12 @@ async def get_health_stats():
     # 1. Fetch Real Camera Stats
     with Session(engine) as session:
         total_cameras = session.exec(select(func.count(Camera.id))).one()
-        online_cameras = session.exec(select(func.count(Camera.id)).where(Camera.status == "online")).one()
+        # Count cameras that are either online OR active (is_active=True)
+        online_cameras = session.exec(
+            select(func.count(Camera.id)).where(
+                (Camera.status == "online") | (Camera.is_active == True)
+            )
+        ).one()
         
         # Fetch Areas for Sector Compliance
         areas = session.exec(select(Area)).all()
@@ -78,13 +83,32 @@ async def get_health_stats():
                 "status": "excellent" if final_score >= 90 else "good" if final_score >= 70 else "warning"
             })
 
-    # 4. Generate Chart Data (Real-time snapshot + mock history)
+    # 4. Generate Chart Data - Full 24-hour view
+    from datetime import datetime
+    current_hour = datetime.now().hour
+    cpu_now = int(metrics["cpu_load"].replace('%',''))
+    mem_now = int(float(metrics["ram_usage"].split('GB')[0]) / float(metrics["ram_usage"].split('/ ')[1].split('GB')[0]) * 100)
+
+    # Static historical data for all 24h slots
+    base_data = {
+        "00:00": {"cpu": 35, "memory": 50, "network": 5},
+        "04:00": {"cpu": 42, "memory": 48, "network": 8},
+        "08:00": {"cpu": 55, "memory": 55, "network": 12},
+        "12:00": {"cpu": 70, "memory": 60, "network": 15},
+        "16:00": {"cpu": 58, "memory": 63, "network": 13},
+        "20:00": {"cpu": 45, "memory": 58, "network": 9},
+        "24:00": {"cpu": 30, "memory": 52, "network": 6},
+    }
+
+    # Overwrite the closest time slot with real current metrics
+    hour_slots = [0, 4, 8, 12, 16, 20, 24]
+    closest_slot = min(hour_slots, key=lambda h: abs(h - current_hour))
+    closest_key = f"{closest_slot:02d}:00"
+    base_data[closest_key] = {"cpu": cpu_now, "memory": mem_now, "network": 10}
+
     chart_data = [
-        {"time": "00:00", "cpu": 35, "memory": 50, "network": 5},
-        {"time": "04:00", "cpu": 42, "memory": 48, "network": 8},
-        {"time": "08:00", "cpu": 55, "memory": 55, "network": 12},
-        {"time": "12:00", "cpu": 70, "memory": 60, "network": 15},
-        {"time": "16:00", "cpu": int(metrics["cpu_load"].replace('%','')), "memory": int(float(metrics["ram_usage"].split('GB')[0]) / float(metrics["ram_usage"].split('/ ')[1].split('GB')[0]) * 100), "network": 10},
+        {"time": t, "cpu": v["cpu"], "memory": v["memory"], "network": v["network"]}
+        for t, v in base_data.items()
     ]
 
     return {
