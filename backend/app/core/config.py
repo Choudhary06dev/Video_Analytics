@@ -22,6 +22,7 @@ class Settings(BaseModel):
 
     CAMERA_SOURCE: str = os.getenv("CAMERA_SOURCE", "0")
     LOG_INTERVAL_SECONDS: float = float(os.getenv("LOG_INTERVAL_SECONDS", "3.0"))
+    AI_SERVICE_URL: str = os.getenv("AI_SERVICE_URL", "http://localhost:8001")
 
     @property
     def database_url(self) -> str:

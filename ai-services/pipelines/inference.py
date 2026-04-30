@@ -2,9 +2,11 @@ import cv2
 import numpy as np
 import time
 import threading
+import requests
 from datetime import datetime
 from ultralytics import YOLO
 import os
+from config import BACKEND_URL
 
 # Optimize OpenCV/FFmpeg for RTSP stability (IMOU/Dahua specialized)
 os.environ["OPENCV_FFMPEG_CAPTURE_OPTIONS"] = "rtsp_transport;tcp|rtsp_flags;prefer_tcp|stimeout;10000000" # 10s timeout, TCP
@@ -88,8 +90,7 @@ class InferenceEngine:
 
     def _load_initial_config(self):
         try:
-            import requests
-            response = requests.get(f"http://localhost:8000/internal/cameras/{self.camera_id}/scenarios/enabled", timeout=2)
+            response = requests.get(f"{BACKEND_URL}/internal/cameras/{self.camera_id}/scenarios/enabled", timeout=2)
             if response.status_code == 200:
                 data = response.json()
                 self.enabled_scenarios = set(data.get("enabled_scenarios", []))

@@ -4,6 +4,7 @@ from sqlmodel import Session, select, delete
 from typing import List
 import httpx
 from app.core.database import get_session
+from app.core.config import settings
 from app.api.v1.auth import get_current_user
 from app.api.v1.users import verify_module_access
 from app.models import Camera, Area, AIScenario
@@ -234,7 +235,7 @@ async def notify_ai_service_reload(camera_id: int, enabled_names: list, scenario
     """Helper to notify AI service in background"""
     try:
         async with httpx.AsyncClient() as client:
-            await client.post(f"http://localhost:8001/control/reload/{camera_id}", json={
+            await client.post(f"{settings.AI_SERVICE_URL}/control/reload/{camera_id}", json={
                 "enabled_scenarios": enabled_names,
                 "scenario_configs": scenario_configs
             }, timeout=5.0)

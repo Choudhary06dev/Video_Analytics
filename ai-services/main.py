@@ -4,6 +4,8 @@ import asyncio
 import json
 import httpx
 import base64
+import uvicorn
+from config import BACKEND_URL, AI_PORT
 from pipelines.inference import InferenceEngine
 from typing import Dict
 
@@ -40,7 +42,7 @@ async def send_events_to_backend(camera_id: int, events: list, frame_bytes: byte
         })
     try:
         async with httpx.AsyncClient() as client:
-            await client.post("http://localhost:8000/webhook/events", json=payload)
+            await client.post(f"{BACKEND_URL}/webhook/events", json=payload)
     except Exception as e:
         print("Webhook error:", e)
 
@@ -87,4 +89,4 @@ async def reload_camera_config(camera_id: int, config: dict):
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8001)
+    uvicorn.run(app, host="0.0.0.0", port=AI_PORT)

@@ -1,4 +1,4 @@
-export const BASE = "http://localhost:8000";
+export const BASE = import.meta.env.VITE_API_URL || "http://localhost:8000";
 export const EVENTS_URL = `${BASE}/events`;
 export const VIDEO_FEED_URL = `${BASE}/video_feed`;
 
