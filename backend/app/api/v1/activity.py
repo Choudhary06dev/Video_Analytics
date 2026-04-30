@@ -23,17 +23,17 @@ def get_activity_vault_data(
     severity: Optional[str] = None,
     limit: int = 100,
     skip: int = 0,
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
     session: Session = Depends(get_session),
     auth_data: dict = Depends(lambda cur=Depends(get_current_user), s=Depends(get_session): verify_module_access("vault", cur, s, access_level="view"))
 ):
     """
     Activity Vault endpoint - returns AI detection events with camera/area context.
     """
-    cutoff = datetime.now() - timedelta(hours=hours)
-    
     # Get logs (existing service)
     events = get_logs(
-        session, hours, camera_id, area_id, scenario_key, None, severity, limit, skip
+        session, hours, camera_id, area_id, scenario_key, None, severity, limit, skip, start_date, end_date
     )
     
     # Get summary (existing service)  
@@ -68,11 +68,25 @@ def get_activity_vault_data(
             "is_alert": event.is_alert,
             "threat_score": _calculate_threat(event),
             "metadata": event.metadata_json or {},
-            "time_ago": _format_time_ago(event.timestamp)
+            "time_ago": _format_time_ago(event.timestamp),
+            "image_base64": event.image_base64 or None
         })
     
     # Total count query
-    total_stmt = select(DetectionEvent).where(DetectionEvent.timestamp >= cutoff)
+    if start_date and end_date:
+        try:
+            start_dt = datetime.fromisoformat(start_date.replace('Z', '+00:00').split('.')[0])
+            end_dt = datetime.fromisoformat(end_date.replace('Z', '+00:00').split('.')[0])
+            if len(end_date) <= 10:
+                end_dt = end_dt + timedelta(days=1)
+            total_stmt = select(DetectionEvent).where(DetectionEvent.timestamp >= start_dt, DetectionEvent.timestamp <= end_dt)
+        except ValueError:
+            cutoff = datetime.now() - timedelta(hours=hours)
+            total_stmt = select(DetectionEvent).where(DetectionEvent.timestamp >= cutoff)
+    else:
+        cutoff = datetime.now() - timedelta(hours=hours)
+        total_stmt = select(DetectionEvent).where(DetectionEvent.timestamp >= cutoff)
+        
     total_count = len(session.exec(total_stmt).all())
     
     return {
