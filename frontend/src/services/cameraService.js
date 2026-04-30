@@ -14,8 +14,8 @@ export const deleteCamera = (cameraId) => del(`/admin/cameras/${cameraId}`);
 
 // Intelligence & Feeds
 export const fetchCameraScenarios = (cameraId) => get(`/admin/cameras/${cameraId}/scenarios`);
-export const syncCameraScenarios = (cameraId, scenarioIds) =>
-    put(`/admin/cameras/${cameraId}/scenarios`, { enabled_scenario_ids: scenarioIds });
+export const syncCameraScenarios = (cameraId, scenarioIds, configs = {}) =>
+    put(`/admin/cameras/${cameraId}/scenarios`, { enabled_scenario_ids: scenarioIds, scenario_configs: configs });
 
 
 // AI Scenarios (Dynamic Module)

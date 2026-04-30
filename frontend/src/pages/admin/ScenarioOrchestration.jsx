@@ -63,9 +63,16 @@ export default function ScenarioOrchestration() {
 
   const handleSaveScenarios = async () => {
     const enabledIds = scenarioData.filter(s => s.is_enabled).map(s => s.id);
+    const configs = {};
+    scenarioData.forEach(s => {
+      if (s.is_enabled && s.config) {
+        configs[s.name] = s.config;
+      }
+    });
+
     try {
       setSubmitting(true);
-      await syncCameraScenarios(selectedCamera.id, enabledIds);
+      await syncCameraScenarios(selectedCamera.id, enabledIds, configs);
       setShowConfigModal(false);
       loadCameras(); // Refresh counts
     } catch (err) {
@@ -78,6 +85,12 @@ export default function ScenarioOrchestration() {
   const toggleScenarioInState = (id) => {
     setScenarioData(prev => prev.map(s =>
       s.id === id ? { ...s, is_enabled: !s.is_enabled } : s
+    ));
+  };
+
+  const updateScenarioConfig = (id, key, value) => {
+    setScenarioData(prev => prev.map(s =>
+      s.id === id ? { ...s, config: { ...s.config, [key]: value } } : s
     ));
   };
 
@@ -244,21 +257,36 @@ export default function ScenarioOrchestration() {
                     {scenarioData.map(scenario => (
                       <div
                         key={scenario.id}
-                        onClick={() => toggleScenarioInState(scenario.id)}
-                        className={`group flex items-center justify-between p-4 rounded-lg border transition-all duration-200 cursor-pointer
+                        className={`group flex flex-col p-4 rounded-lg border transition-all duration-200
                           ${scenario.is_enabled
                             ? 'bg-violet-600 border-violet-600 shadow-lg shadow-violet-100'
                             : 'bg-card border-border hover:border-violet-500/30 hover:bg-surface'}`}
                       >
-                        <div className="flex items-center gap-3 max-w-[85%]">
-                          <div className={`w-3.5 h-3.5 rounded-full border-2 transition-all shrink-0
-                            ${scenario.is_enabled ? 'bg-white border-white scale-110' : 'bg-transparent border-border group-hover:border-violet-500/30'}`} />
-                          <span className={`text-[11px] font-black uppercase tracking-tight truncate 
-                              ${scenario.is_enabled ? 'text-white' : 'text-text-gray'}`}>
-                            {scenario.name}
-                          </span>
+                        <div className="flex items-center justify-between cursor-pointer" onClick={() => toggleScenarioInState(scenario.id)}>
+                          <div className="flex items-center gap-3 max-w-[85%]">
+                            <div className={`w-3.5 h-3.5 rounded-full border-2 transition-all shrink-0
+                              ${scenario.is_enabled ? 'bg-white border-white scale-110' : 'bg-transparent border-border group-hover:border-violet-500/30'}`} />
+                            <span className={`text-[11px] font-black uppercase tracking-tight truncate 
+                                ${scenario.is_enabled ? 'text-white' : 'text-text-gray'}`}>
+                              {scenario.name}
+                            </span>
+                          </div>
+                          {scenario.is_enabled && <Zap className="w-3.5 h-3.5 text-white animate-pulse" />}
                         </div>
-                        {scenario.is_enabled && <Zap className="w-3.5 h-3.5 text-white animate-pulse" />}
+                        
+                        {/* Config Input */}
+                        {scenario.is_enabled && scenario.name === "Visitor count limit (only 1 attendant per patient)" && (
+                          <div className="mt-3 pt-3 border-t border-white/20 flex items-center justify-between" onClick={e => e.stopPropagation()}>
+                            <span className="text-[10px] font-black uppercase tracking-widest text-white/80">Max Limit:</span>
+                            <input 
+                              type="number" 
+                              min="1"
+                              value={scenario.config?.limit || 2}
+                              onChange={(e) => updateScenarioConfig(scenario.id, 'limit', parseInt(e.target.value) || 2)}
+                              className="w-16 bg-white/10 border border-white/20 rounded px-2 py-1 text-[11px] font-bold text-white outline-none focus:border-white/50 text-center"
+                            />
+                          </div>
+                        )}
                       </div>
                     ))}
                   </div>

@@ -27,7 +27,8 @@ SCENARIO_MAPPING = {
 
 CONF_THRESHOLD = 0.55
 IOU_THRESHOLD = 0.45
-MIN_STABLE_FRAMES_TO_LOG = 4
+MIN_STABLE_FRAMES_TO_LOG = 1
+VISITOR_LIMIT = 2  # Max allowed visitors (e.g., 1 patient + 1 attendant)
 
 SCENARIO_MIN_CONFIDENCE = {
     "person": 0.55,
@@ -65,6 +66,7 @@ class InferenceEngine:
         }
         
         self.enabled_scenarios = set()
+        self.scenario_configs = {}
         self._load_initial_config()
         
         self.latest_raw_frame = None
@@ -91,11 +93,14 @@ class InferenceEngine:
             if response.status_code == 200:
                 data = response.json()
                 self.enabled_scenarios = set(data.get("enabled_scenarios", []))
+                self.scenario_configs = data.get("scenario_configs", {})
         except:
             pass
 
-    def update_config(self, enabled_names: list):
+    def update_config(self, enabled_names: list, scenario_configs: dict = None):
         self.enabled_scenarios = set(enabled_names)
+        if scenario_configs is not None:
+            self.scenario_configs = scenario_configs
 
     def _capture_loop(self):
         """Thread 1: Keeps the OpenCV buffer empty and always has the LATEST frame ready."""
@@ -127,8 +132,8 @@ class InferenceEngine:
                 self.processed_events = events
             else:
                 time.sleep(0.1)
-            # Yield slightly to prevent CPU pinning
-            time.sleep(0.01)
+            # Minimal yield to keep CPU responsive but fast
+            time.sleep(0.001)
 
     def _ensure_camera(self) -> bool:
         if self.video is None or not self.video.isOpened():
@@ -145,12 +150,11 @@ class InferenceEngine:
         return self.processed_frame_bytes, self.processed_events
 
     def _perform_inference(self, frame):
-        # Resize frame for faster processing if it's too large
-        h, w = frame.shape[:2]
-        if w > 1280:
-            frame = cv2.resize(frame, (1280, 720))
+        # Optimized for speed: Resize to 640p (Standard YOLO size)
+        frame = cv2.resize(frame, (640, 360))
 
-        results = model.predict(frame, conf=CONF_THRESHOLD, iou=IOU_THRESHOLD, verbose=False)
+        # Direct predict with stream=True for speed if needed, but keeping it simple for now
+        results = model.predict(frame, conf=CONF_THRESHOLD, iou=IOU_THRESHOLD, verbose=False, imgsz=640)
         person_count = 0
         detected_scenarios = {}
         events_to_log = []
@@ -173,6 +177,19 @@ class InferenceEngine:
                         detected_scenarios[scenario_name]["max_conf"] = max(detected_scenarios[scenario_name]["max_conf"], confidence)
                         detected_scenarios[scenario_name]["count"] += 1
                         detected_scenarios[scenario_name]["labels"].add(label)
+
+        # Check for visitor limit
+        visitor_scenario_name = "Visitor count limit (only 1 attendant per patient)"
+        
+        # Get dynamic limit from configs, default to global VISITOR_LIMIT
+        dynamic_limit = int(self.scenario_configs.get(visitor_scenario_name, {}).get("limit", VISITOR_LIMIT))
+        
+        if person_count > dynamic_limit and visitor_scenario_name in self.enabled_scenarios:
+            detected_scenarios[visitor_scenario_name] = {
+                "max_conf": 0.9, # High confidence assumed for limit breach
+                "count": person_count, 
+                "labels": {"person"}
+            }
 
         current_objects = sorted(list(detected_scenarios.keys()))
         current_time = time.time()

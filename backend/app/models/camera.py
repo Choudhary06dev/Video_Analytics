@@ -28,6 +28,9 @@ class Camera(SQLModel, table=True):
     
     # Store enabled scenario IDs as a JSON list in a single row
     enabled_scenario_ids: List[int] = Field(default=[], sa_column=Column(JSON))
+    
+    # Store scenario-specific configurations (e.g., {"Visitor count limit...": {"limit": 3}})
+    scenario_configs: dict = Field(default={}, sa_column=Column(JSON))
 
     # Relationship
     area: Area = Relationship(back_populates="cameras")

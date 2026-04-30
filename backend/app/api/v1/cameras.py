@@ -160,8 +160,9 @@ def get_camera_scenarios(camera_id: int, session: Session = Depends(get_session)
     # Get all system scenarios
     all_scenarios = session.exec(select(AIScenario)).all()
     
-    # Get enabled IDs from the camera JSON field
+    # Get enabled IDs and configs from the camera JSON fields
     enabled_ids = set(camera.enabled_scenario_ids or [])
+    configs = camera.scenario_configs or {}
     
     result = []
     for s in all_scenarios:
@@ -170,7 +171,8 @@ def get_camera_scenarios(camera_id: int, session: Session = Depends(get_session)
             "name": s.name,
             "key": s.key,
             "severity": s.default_severity,
-            "is_enabled": s.id in enabled_ids
+            "is_enabled": s.id in enabled_ids,
+            "config": configs.get(s.name, {})
         })
     
     return result
@@ -193,7 +195,11 @@ def get_enabled_camera_scenarios(camera_id: int, session: Session = Depends(get_
         if scenario:
             enabled_names.append(scenario.name)
 
-    return {"camera_id": camera_id, "enabled_scenarios": enabled_names}
+    return {
+        "camera_id": camera_id, 
+        "enabled_scenarios": enabled_names,
+        "scenario_configs": camera.scenario_configs or {}
+    }
 
 @router.put("/admin/cameras/{camera_id}/scenarios")
 async def sync_camera_scenarios(camera_id: int, data: ScenarioBulkUpdate, background_tasks: BackgroundTasks, session: Session = Depends(get_session), admin_data: dict = Depends(lambda cur=Depends(get_current_user), s=Depends(get_session): verify_module_access("scenario_orchestration", cur, s, access_level="edit"))):
@@ -204,8 +210,9 @@ async def sync_camera_scenarios(camera_id: int, data: ScenarioBulkUpdate, backgr
     if not camera:
         raise HTTPException(status_code=404, detail="Camera not found")
     
-    # 1. Update JSON field directly (No more multiple rows!)
+    # 1. Update JSON fields
     camera.enabled_scenario_ids = data.enabled_scenario_ids
+    camera.scenario_configs = data.scenario_configs
     
     # Get names for AI service notification
     enabled_names = []
@@ -218,17 +225,18 @@ async def sync_camera_scenarios(camera_id: int, data: ScenarioBulkUpdate, backgr
     session.commit()
 
     # 2. Notify AI Service in Background
-    background_tasks.add_task(notify_ai_service_reload, camera_id, enabled_names)
+    background_tasks.add_task(notify_ai_service_reload, camera_id, enabled_names, data.scenario_configs)
 
     return {"status": "success", "message": f"Synced {len(enabled_names)} scenarios for camera {camera_id}"}
 
 
-async def notify_ai_service_reload(camera_id: int, enabled_names: list):
+async def notify_ai_service_reload(camera_id: int, enabled_names: list, scenario_configs: dict):
     """Helper to notify AI service in background"""
     try:
         async with httpx.AsyncClient() as client:
             await client.post(f"http://localhost:8001/control/reload/{camera_id}", json={
-                "enabled_scenarios": enabled_names
+                "enabled_scenarios": enabled_names,
+                "scenario_configs": scenario_configs
             }, timeout=5.0)
     except Exception as e:
         print(f"Failed to notify AI service in background: {e}")

@@ -79,7 +79,8 @@ async def reload_camera_config(camera_id: int, config: dict):
     """
     if camera_id in active_engines:
         enabled_scenarios = config.get("enabled_scenarios", [])
-        active_engines[camera_id].update_config(enabled_scenarios)
+        scenario_configs = config.get("scenario_configs", {})
+        active_engines[camera_id].update_config(enabled_scenarios, scenario_configs)
         return {"status": "success", "reloaded": enabled_scenarios}
     return {"status": "skipped", "message": "Engine not active"}
 

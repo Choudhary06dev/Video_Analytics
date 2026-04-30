@@ -28,6 +28,7 @@ def upgrade() -> None:
     # 2. Schema Fixes (Added for JSON scenario storage)
     # Add column if not exists
     op.execute(sa.text("ALTER TABLE camera ADD COLUMN IF NOT EXISTS enabled_scenario_ids JSONB DEFAULT '[]'::jsonb"))
+    op.execute(sa.text("ALTER TABLE camera ADD COLUMN IF NOT EXISTS scenario_configs JSONB DEFAULT '{}'::jsonb"))
     op.execute(sa.text("ALTER TABLE detectionevent ADD COLUMN IF NOT EXISTS image_base64 TEXT"))
     
     # Drop the redundant junction table if it exists

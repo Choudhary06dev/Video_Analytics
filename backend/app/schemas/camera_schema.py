@@ -34,6 +34,7 @@ class ScenarioToggle(BaseModel):
 
 class ScenarioBulkUpdate(BaseModel):
     enabled_scenario_ids: list[int]
+    scenario_configs: dict = {}
 
 
 class ScenarioCreate(BaseModel):
