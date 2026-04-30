@@ -118,6 +118,12 @@ def get_logs_summary(
     
     # Activity Vault stats
     hourly_distribution = [0] * 24
+    weekly_distribution = [[0] * 24 for _ in range(7)]  # 7 days (Mon=0, Sun=6) x 24 hours
+    categorical_hourly = {
+        "Completed": [0] * 24,
+        "In Progress": [0] * 24,
+        "Flagged": [0] * 24
+    }
     severity_distribution = {"Low": 0, "Medium": 0, "High": 0, "Critical": 0}
     
     for ev in events:
@@ -128,6 +134,19 @@ def get_logs_summary(
         # Time and Severity distribution
         hour = ev.timestamp.hour
         hourly_distribution[hour] += 1
+        
+        # Weekly Heatmap (0=Monday, 6=Sunday)
+        weekday = ev.timestamp.weekday()
+        weekly_distribution[weekday][hour] += 1
+        
+        # Categorical Hourly
+        if ev.is_alert or ev.severity in ['High', 'Critical']:
+            categorical_hourly["Flagged"][hour] += 1
+        elif ev.severity == 'Medium':
+            categorical_hourly["In Progress"][hour] += 1
+        else: # Low severity
+            categorical_hourly["Completed"][hour] += 1
+
         sev = ev.severity
         if sev in severity_distribution:
             severity_distribution[sev] += 1
@@ -180,6 +199,8 @@ def get_logs_summary(
         "status_message": status_msg,
         "object_breakdown": object_counts,
         "hourly_distribution": hourly_distribution,
+        "categorical_hourly": categorical_hourly,
+        "weekly_distribution": weekly_distribution,
         "severity_distribution": severity_distribution,
         "timestamp": datetime.now().isoformat()
     }

@@ -1,4 +1,7 @@
 import React, { useState } from 'react';
+import { useAuth } from '../context/AuthContext';
+import { useNotifications } from '../context/NotificationContext';
+import { updateUser } from '../services/userService';
 import { 
   User, 
   Camera, 
@@ -17,7 +20,45 @@ import {
 } from 'lucide-react';
 
 export default function Settings() {
+  const { user, updateProfile } = useAuth();
+  const { addNotification } = useNotifications();
   const [activeTab, setActiveTab] = useState('profile');
+  
+  // Local state for profile inputs
+  const [profileData, setProfileData] = useState({
+    name: user?.name || '',
+    email: user?.email || ''
+  });
+
+  const handleSave = async () => {
+    try {
+      // Update backend (requires user edit permissions)
+      await updateUser(user.id, { full_name: profileData.name, email: profileData.email });
+      
+      // Update global state immediately
+      updateProfile({ name: profileData.name, email: profileData.email });
+      
+      addNotification({
+        type: 'success', 
+        title: 'System Synced', 
+        message: 'Your profile settings have been updated and synchronized.'
+      });
+    } catch (err) {
+      addNotification({
+        type: 'Critical', 
+        title: 'Sync Failed', 
+        message: 'Failed to update profile. Ensure you have the required matrix permissions.'
+      });
+    }
+  };
+
+  const handleCameraClick = () => {
+    addNotification({
+      type: 'info', 
+      title: 'Image Module Disabled', 
+      message: 'Avatar upload functionality will be unlocked in the v4.3 matrix update.'
+    });
+  };
 
   const tabs = [
     { id: 'profile', title: 'Admin Profile', icon: User },
@@ -39,7 +80,10 @@ export default function Settings() {
             Global V4.2
           </div>
         </div>
-        <button className="flex items-center gap-2 px-6 py-3 bg-accent text-white rounded-lg text-[0.85rem] font-bold cursor-pointer hover:opacity-90 shadow-premium transition-all">
+        <button 
+          onClick={handleSave}
+          className="flex items-center gap-2 px-6 py-3 bg-accent text-white rounded-lg text-[0.85rem] font-bold cursor-pointer hover:opacity-90 shadow-premium transition-all"
+        >
           <Save className="w-4.5 h-4.5" />
           Synchronize Changes
         </button>
@@ -74,15 +118,18 @@ export default function Settings() {
                 <div className="flex items-center gap-8 border-b border-border pb-10">
                   <div className="relative group">
                     <div className="w-24 h-24 rounded-lg bg-accent flex items-center justify-center text-white font-black text-3xl shadow-xl border-4 border-card group-hover:scale-[1.02] transition-transform">
-                      AD
+                      {user?.name ? user.name.substring(0, 2).toUpperCase() : 'AD'}
                     </div>
-                    <button className="absolute -bottom-2 -right-2 p-2.5 bg-card border border-border text-text-dark rounded-lg shadow-lg hover:text-accent transition-all">
+                    <button 
+                      onClick={handleCameraClick}
+                      className="absolute -bottom-2 -right-2 p-2.5 bg-card border border-border text-text-dark rounded-lg shadow-lg hover:text-accent transition-all"
+                    >
                       <Camera className="w-4 h-4" />
                     </button>
                   </div>
                   <div>
-                    <h3 className="text-[1.2rem] font-black text-text-dark uppercase tracking-tight">System Administrator</h3>
-                    <p className="text-[0.85rem] text-text-gray font-bold">Master Operator • Full Access Credentials</p>
+                    <h3 className="text-[1.2rem] font-black text-text-dark uppercase tracking-tight">{user?.role ? user.role.replace('_', ' ').toUpperCase() : 'System Administrator'}</h3>
+                    <p className="text-[0.85rem] text-text-gray font-bold">Account ID: #{user?.id || '1024'}</p>
                     <div className="mt-2 inline-flex items-center gap-2 px-3 py-1 bg-success/10 text-success rounded-lg text-[0.65rem] font-black uppercase tracking-widest border border-success/20">
                       <Shield className="w-3 h-3" /> Identity Verified
                     </div>
@@ -92,23 +139,29 @@ export default function Settings() {
                 <div className="grid md:grid-cols-2 gap-8">
                   <div className="flex flex-col gap-2">
                     <label className="text-[0.65rem] font-black text-text-gray uppercase tracking-widest ml-1">Supervisor Full Name</label>
-                    <input type="text" defaultValue="Admin User" className="bg-bg border border-border focus:border-accent rounded-lg px-5 py-3.5 text-[0.85rem] font-bold text-text-dark outline-none transition-all shadow-inner" />
+                    <input 
+                      type="text" 
+                      value={profileData.name} 
+                      onChange={(e) => setProfileData({...profileData, name: e.target.value})}
+                      className="bg-bg border border-border focus:border-accent rounded-lg px-5 py-3.5 text-[0.85rem] font-bold text-text-dark outline-none transition-all shadow-inner" 
+                    />
                   </div>
                   <div className="flex flex-col gap-2">
                     <label className="text-[0.65rem] font-black text-text-gray uppercase tracking-widest ml-1">Email Terminal</label>
-                    <input type="email" defaultValue="admin@sentinel.ai" className="bg-bg border border-border focus:border-accent rounded-lg px-5 py-3.5 text-[0.85rem] font-bold text-text-dark outline-none transition-all shadow-inner" />
+                    <input 
+                      type="email" 
+                      value={profileData.email} 
+                      onChange={(e) => setProfileData({...profileData, email: e.target.value})}
+                      className="bg-bg border border-border focus:border-accent rounded-lg px-5 py-3.5 text-[0.85rem] font-bold text-text-dark outline-none transition-all shadow-inner" 
+                    />
                   </div>
                   <div className="flex flex-col gap-2">
-                    <label className="text-[0.65rem] font-black text-text-gray uppercase tracking-widest ml-1">Assigned Division</label>
-                    <input type="text" readOnly defaultValue="Global Security Operations" className="bg-bg/50 border border-border text-text-gray/60 rounded-lg px-5 py-3.5 text-[0.85rem] font-bold outline-none cursor-not-allowed italic" />
+                    <label className="text-[0.65rem] font-black text-text-gray uppercase tracking-widest ml-1">Assigned Role</label>
+                    <input type="text" readOnly value={user?.role?.replace('_', ' ').toUpperCase() || 'OPERATOR'} className="bg-bg/50 border border-border text-text-gray/60 rounded-lg px-5 py-3.5 text-[0.85rem] font-bold outline-none cursor-not-allowed" />
                   </div>
                   <div className="flex flex-col gap-2">
-                    <label className="text-[0.65rem] font-black text-text-gray uppercase tracking-widest ml-1">Regional Matrix</label>
-                    <select className="bg-bg border border-border focus:border-accent rounded-lg px-5 py-3.5 text-[0.85rem] font-bold text-text-dark outline-none transition-all appearance-none cursor-pointer shadow-inner">
-                      <option>Pacific Sector (UTC-8)</option>
-                      <option>European Cluster (UTC+1)</option>
-                      <option>Asian Hub (UTC+8)</option>
-                    </select>
+                    <label className="text-[0.65rem] font-black text-text-gray uppercase tracking-widest ml-1">Account Status</label>
+                    <input type="text" readOnly value="Active" className="bg-bg/50 border border-border text-success/80 rounded-lg px-5 py-3.5 text-[0.85rem] font-bold outline-none cursor-not-allowed" />
                   </div>
                 </div>
               </div>

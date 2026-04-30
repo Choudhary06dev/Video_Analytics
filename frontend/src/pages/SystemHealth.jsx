@@ -165,7 +165,7 @@ export default function SystemHealth() {
                   content={({ active, payload, label }) => {
                     if (active && payload && payload.length) {
                       return (
-                        <div className="bg-white/95 backdrop-blur-md border border-border p-4 rounded-xl shadow-2xl scale-105 transition-all">
+                        <div className="bg-card/95 backdrop-blur-md border border-border p-4 rounded-xl shadow-2xl scale-105 transition-all">
                           <p className="text-[10px] font-black text-text-gray uppercase tracking-widest mb-3 border-b border-border pb-2">{label} Diagnostics</p>
                           <div className="space-y-2">
                             {payload.map((entry, index) => (

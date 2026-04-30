@@ -235,7 +235,13 @@ export default function Header({ isSidebarOpen, setSidebarOpen }) {
                 <div className="text-[10px] text-text-gray font-medium truncate">{user?.email}</div>
               </div>
               <div className="p-2">
-                <button className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-surface text-text-gray transition-all">
+                <button 
+                  onClick={() => {
+                    navigate('/settings');
+                    setShowProfileMenu(false);
+                  }}
+                  className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-surface text-text-gray transition-all"
+                >
                   <Settings className="w-4 h-4" />
                   <span className="text-xs font-bold">Profile Settings</span>
                 </button>

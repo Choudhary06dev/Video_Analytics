@@ -80,10 +80,10 @@ async def get_health_stats():
 
     # 4. Generate Chart Data (Real-time snapshot + mock history)
     chart_data = [
-        {"time": "00:00", "cpu": random.randint(30, 45), "memory": 50, "network": 5},
-        {"time": "04:00", "cpu": random.randint(35, 50), "memory": 48, "network": 8},
-        {"time": "08:00", "cpu": random.randint(45, 65), "memory": 55, "network": 12},
-        {"time": "12:00", "cpu": random.randint(50, 75), "memory": 60, "network": 15},
+        {"time": "00:00", "cpu": 35, "memory": 50, "network": 5},
+        {"time": "04:00", "cpu": 42, "memory": 48, "network": 8},
+        {"time": "08:00", "cpu": 55, "memory": 55, "network": 12},
+        {"time": "12:00", "cpu": 70, "memory": 60, "network": 15},
         {"time": "16:00", "cpu": int(metrics["cpu_load"].replace('%','')), "memory": int(float(metrics["ram_usage"].split('GB')[0]) / float(metrics["ram_usage"].split('/ ')[1].split('GB')[0]) * 100), "network": 10},
     ]
 
