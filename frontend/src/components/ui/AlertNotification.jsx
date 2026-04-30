@@ -1,5 +1,5 @@
 import React from 'react';
-import { Siren, X, ExternalLink, ShieldAlert, AlertTriangle, Info, Bell } from 'lucide-react';
+import { Siren, X, ExternalLink, ShieldAlert, AlertTriangle, Info, Bell, Check } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useNotifications } from '../../context/NotificationContext';
 
@@ -35,13 +35,29 @@ const severityConfig = {
     border: 'border-success/20',
     shadow: 'shadow-success/20',
     pulse: ''
+  },
+  success: {
+    icon: Check,
+    color: 'text-success',
+    bg: 'bg-success/10',
+    border: 'border-success/20',
+    shadow: 'shadow-success/20',
+    pulse: ''
+  },
+  info: {
+    icon: Info,
+    color: 'text-accent',
+    bg: 'bg-accent/10',
+    border: 'border-accent/20',
+    shadow: 'shadow-accent/20',
+    pulse: ''
   }
 };
 
 const Toast = ({ notification }) => {
   const { removeNotification } = useNotifications();
   const navigate = useNavigate();
-  const config = severityConfig[notification.severity] || severityConfig.Medium;
+  const config = severityConfig[notification.severity] || severityConfig[notification.type] || severityConfig.Medium;
   const Icon = config.icon;
 
   const handleView = () => {
@@ -67,7 +83,7 @@ const Toast = ({ notification }) => {
       <div className="flex-1 min-w-0">
         <div className="flex items-center justify-between gap-2">
           <span className={`text-[10px] font-black uppercase tracking-widest ${config.color}`}>
-            {notification.severity} Alert
+            {notification.severity ? `${notification.severity} Alert` : 'System Notification'}
           </span>
           <button 
             onClick={() => removeNotification(notification.id)}
@@ -86,16 +102,24 @@ const Toast = ({ notification }) => {
         </p>
 
         <div className="flex items-center justify-between mt-3">
-          <span className="text-[10px] font-bold text-text-gray/60 uppercase">
-            CAM-{notification.cameraId} • {new Date(notification.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-          </span>
-          <button 
-            onClick={handleView}
-            className="flex items-center gap-1.5 px-2.5 py-1.5 bg-card hover:bg-surface border border-border rounded-lg text-[9px] font-black uppercase tracking-widest text-text-dark transition-all"
-          >
-            <ExternalLink size={10} />
-            View Detail
-          </button>
+          {notification.type === 'alert' || notification.severity ? (
+            <>
+              <span className="text-[10px] font-bold text-text-gray/60 uppercase">
+                CAM-{notification.cameraId} • {new Date(notification.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+              </span>
+              <button 
+                onClick={handleView}
+                className="flex items-center gap-1.5 px-2.5 py-1.5 bg-card hover:bg-surface border border-border rounded-lg text-[9px] font-black uppercase tracking-widest text-text-dark transition-all"
+              >
+                <ExternalLink size={10} />
+                View Detail
+              </button>
+            </>
+          ) : (
+            <span className="text-[10px] font-bold text-text-gray/60 uppercase">
+              {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+            </span>
+          )}
         </div>
       </div>
 

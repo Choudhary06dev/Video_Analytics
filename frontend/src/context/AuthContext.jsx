@@ -68,8 +68,14 @@ export const AuthProvider = ({ children }) => {
     setPermissions({});
   };
 
+  const updateProfile = (updatedFields) => {
+    const newData = { ...user, ...updatedFields };
+    setUser(newData);
+    localStorage.setItem('user', JSON.stringify(newData));
+  };
+
   return (
-    <AuthContext.Provider value={{ user, token, role: user?.role, permissions, canView, canEdit, canDelete, login, logout, isAuthenticated: !!token, loading }}>
+    <AuthContext.Provider value={{ user, token, role: user?.role, permissions, canView, canEdit, canDelete, login, logout, updateProfile, isAuthenticated: !!token, loading }}>
       {!loading && children}
     </AuthContext.Provider>
   );
