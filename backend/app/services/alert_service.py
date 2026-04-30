@@ -83,9 +83,25 @@ def get_logs(
     severity: Optional[str] = None,
     limit: int = 100,
     skip: int = 0,
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
 ):
-    cutoff = datetime.now() - timedelta(hours=hours)
-    statement = select(DetectionEvent).where(DetectionEvent.timestamp >= cutoff)
+    if start_date and end_date:
+        try:
+            # Handle ISO formats
+            start_dt = datetime.fromisoformat(start_date.replace('Z', '+00:00').split('.')[0])
+            end_dt = datetime.fromisoformat(end_date.replace('Z', '+00:00').split('.')[0])
+            # Add 1 day to end_date to include the whole day if it's just a date
+            if len(end_date) <= 10:
+                end_dt = end_dt + timedelta(days=1)
+            statement = select(DetectionEvent).where(DetectionEvent.timestamp >= start_dt, DetectionEvent.timestamp <= end_dt)
+        except ValueError:
+            cutoff = datetime.now() - timedelta(hours=hours)
+            statement = select(DetectionEvent).where(DetectionEvent.timestamp >= cutoff)
+    else:
+        cutoff = datetime.now() - timedelta(hours=hours)
+        statement = select(DetectionEvent).where(DetectionEvent.timestamp >= cutoff)
+        
     statement = _apply_event_filters(statement, session, camera_id, area_id, scenario_key, object_class, severity)
     if statement is None:
         return []

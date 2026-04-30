@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import {
-  Archive, Activity, Zap, ShieldCheck, AlertCircle, BarChart3, Layers, Radio
+  Archive, Activity, Zap, ShieldCheck, AlertCircle, BarChart3, Layers, Radio, Eye, X
 } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 import { fetchLogs as apiFetchLogs } from '../services/alertService';
@@ -240,6 +240,11 @@ export default function ActivityVault() {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [summary, setSummary] = useState(null);
+  const [page, setPage] = useState(0);
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+  const limit = 30;
+  const [selectedEvent, setSelectedEvent] = useState(null);
   const [stats, setStats] = useState({
     total: 0, completed: 0, inProgress: 0, flagged: 0, pending: 0, avgConf: 0, avgTime: 0, highConf: 0
   });
@@ -247,15 +252,21 @@ export default function ActivityVault() {
 
   useEffect(() => {
     const s = document.createElement('style'); s.id = 'vp-css'; s.textContent = VAULT_PAGE_CSS; document.head.appendChild(s);
-    loadData();
     return () => document.getElementById('vp-css')?.remove();
   }, []);
+
+  useEffect(() => {
+    loadData();
+  }, [page, startDate, endDate]);
 
   const loadData = async () => {
     try {
       setLoading(true);
-      // Fetch 7 days worth of data for the heatmap and stats
-      const data = await fetchActivityData({ hours: 168 });
+      const params = { hours: 168, limit: limit, skip: page * limit };
+      if (startDate) params.start_date = startDate;
+      if (endDate) params.end_date = endDate;
+      
+      const data = await fetchActivityData(params);
       setEvents(data.events);
       setSummary(data.summary);
 
@@ -395,18 +406,41 @@ export default function ActivityVault() {
         <div style={{ padding: '20px 24px', borderBottom: `1px solid ${cardBorder}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
             <div style={{ fontSize: 15, fontWeight: 900, color: isDark ? '#f1f5f9' : '#1e293b' }}>Audit Log Records</div>
-            <div style={{ fontSize: 11, color: '#64748b', fontWeight: 600, marginTop: 2 }}>Real-time feed of all AI-audited events</div>
+            <div style={{ fontSize: 11, color: '#64748b', fontWeight: 600, marginTop: 2 }}>Real-time feed of latest AI-audited events</div>
           </div>
-          <button onClick={loadData} style={{ padding: '8px 16px', background: '#0ea5e9', color: '#fff', border: 'none', borderRadius: 6, fontSize: 11, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}>
-            <Activity size={14} /> Refresh Feed
-          </button>
+          <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <span style={{ fontSize: 10, fontWeight: 700, color: '#64748b' }}>FROM</span>
+              <input 
+                type="date" 
+                value={startDate} 
+                onChange={(e) => { setStartDate(e.target.value); setPage(0); }}
+                style={{ padding: '6px 12px', background: isDark ? '#0f172a' : '#f8fafc', border: `1px solid ${cardBorder}`, borderRadius: 4, color: isDark ? '#f8fafc' : '#0f172a', fontSize: 11, outline: 'none' }}
+              />
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <span style={{ fontSize: 10, fontWeight: 700, color: '#64748b' }}>TO</span>
+              <input 
+                type="date" 
+                value={endDate} 
+                onChange={(e) => { setEndDate(e.target.value); setPage(0); }}
+                style={{ padding: '6px 12px', background: isDark ? '#0f172a' : '#f8fafc', border: `1px solid ${cardBorder}`, borderRadius: 4, color: isDark ? '#f8fafc' : '#0f172a', fontSize: 11, outline: 'none' }}
+              />
+            </div>
+            <button onClick={() => { setStartDate(''); setEndDate(''); setPage(0); }} style={{ padding: '6px 12px', background: 'transparent', color: '#64748b', border: `1px solid ${cardBorder}`, borderRadius: 6, fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>
+              Clear
+            </button>
+            <button onClick={loadData} style={{ padding: '8px 16px', background: '#0ea5e9', color: '#fff', border: 'none', borderRadius: 6, fontSize: 11, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}>
+              <Activity size={14} /> Refresh Feed
+            </button>
+          </div>
         </div>
 
         <div style={{ overflowX: 'auto' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
             <thead>
               <tr style={{ background: isDark ? 'rgba(255,255,255,.02)' : 'rgba(0,0,0,.02)', borderBottom: `1px solid ${cardBorder}` }}>
-                {['Event ID', 'Scenario', 'Location', 'Severity', 'Confidence', 'Timestamp', 'Threat'].map(h => (
+                {['Event ID', 'Scenario', 'Location', 'Severity', 'Confidence', 'Timestamp', ''].map(h => (
                   <th key={h} style={{ padding: '14px 24px', fontSize: 10, fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: 1 }}>{h}</th>
                 ))}
               </tr>
@@ -448,19 +482,134 @@ export default function ActivityVault() {
                     <div style={{ fontSize: 10, color: '#475569', fontWeight: 600 }}>{new Date(ev.timestamp).toLocaleTimeString()}</div>
                   </td>
                   <td style={{ padding: '16px 24px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <div style={{ fontSize: 14, fontWeight: 900, color: ev.threat_score > 70 ? '#ef4444' : ev.threat_score > 40 ? '#f59e0b' : '#22c55e' }}>{ev.threat_score.toFixed(0)}</div>
-                      <div style={{ height: 4, width: 40, background: isDark ? '#1e293b' : '#f1f5f9', borderRadius: 2 }}>
-                        <div style={{ height: '100%', width: `${ev.threat_score}%`, background: ev.threat_score > 70 ? '#ef4444' : ev.threat_score > 40 ? '#f59e0b' : '#22c55e', borderRadius: 2 }} />
-                      </div>
-                    </div>
+                    <button
+                      onClick={() => setSelectedEvent(ev)}
+                      title="View Details"
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748b', display: 'flex', alignItems: 'center', padding: 4, borderRadius: 4, transition: 'color 0.2s' }}
+                      onMouseEnter={e => e.currentTarget.style.color = '#0ea5e9'}
+                      onMouseLeave={e => e.currentTarget.style.color = '#64748b'}
+                    >
+                      <Eye size={16} />
+                    </button>
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
+        
+        {/* Pagination Controls */}
+        <div style={{ padding: '16px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: `1px solid ${cardBorder}` }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: '#64748b' }}>
+            Showing {events.length > 0 ? (page * limit) + 1 : 0} - {Math.min((page + 1) * limit, stats.total)} of {stats.total} records
+          </div>
+          <div style={{ display: 'flex', gap: 12 }}>
+            <button 
+              onClick={() => setPage(p => Math.max(0, p - 1))}
+              disabled={page === 0 || loading}
+              style={{ 
+                padding: '8px 16px', background: isDark ? 'rgba(255,255,255,.05)' : '#f8fafc', 
+                border: `1px solid ${cardBorder}`, borderRadius: 6, fontSize: 11, fontWeight: 700, 
+                color: page === 0 ? '#94a3b8' : isDark ? '#f1f5f9' : '#1e293b',
+                cursor: page === 0 ? 'not-allowed' : 'pointer', transition: 'all 0.2s'
+              }}
+            >
+              Previous
+            </button>
+            <button 
+              onClick={() => setPage(p => p + 1)}
+              disabled={((page + 1) * limit) >= stats.total || loading}
+              style={{ 
+                padding: '8px 16px', background: isDark ? 'rgba(255,255,255,.05)' : '#f8fafc', 
+                border: `1px solid ${cardBorder}`, borderRadius: 6, fontSize: 11, fontWeight: 700, 
+                color: ((page + 1) * limit) >= stats.total ? '#94a3b8' : isDark ? '#f1f5f9' : '#1e293b',
+                cursor: ((page + 1) * limit) >= stats.total ? 'not-allowed' : 'pointer', transition: 'all 0.2s'
+              }}
+            >
+              Next
+            </button>
+          </div>
+        </div>
       </div>
+
+      {/* ═══════════════ EVENT DETAIL MODAL ═══════════════ */}
+      {selectedEvent && (
+        <div
+          onClick={() => setSelectedEvent(null)}
+          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(6px)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}
+        >
+          <div
+            onClick={e => e.stopPropagation()}
+            style={{ background: isDark ? '#0f172a' : '#fff', border: `1px solid ${cardBorder}`, borderRadius: 12, padding: 32, width: '100%', maxWidth: 660, maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 24px 80px rgba(0,0,0,0.4)', position: 'relative' }}
+          >
+            {/* Modal Header */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 }}>
+              <div>
+                <div style={{ fontSize: 11, fontWeight: 800, color: '#0ea5e9', textTransform: 'uppercase', letterSpacing: 2, marginBottom: 6 }}>Event Details</div>
+                <div style={{ fontSize: 20, fontWeight: 900, color: isDark ? '#f1f5f9' : '#0f172a', fontFamily: 'JetBrains Mono,monospace' }}>#{selectedEvent.id}</div>
+              </div>
+              <button
+                onClick={() => setSelectedEvent(null)}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748b', padding: 4 }}
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            {/* Snapshot Image */}
+            <div style={{ marginBottom: 20, borderRadius: 8, overflow: 'hidden', border: `1px solid ${cardBorder}`, position: 'relative', background: '#000', minHeight: 220 }}>
+              {selectedEvent.image_base64 ? (
+                <img
+                  src={`data:image/jpeg;base64,${selectedEvent.image_base64}`}
+                  alt="Event snapshot"
+                  style={{ width: '100%', maxHeight: 320, objectFit: 'contain', display: 'block' }}
+                />
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: 220, gap: 12, background: isDark ? '#0a0f1a' : '#f1f5f9' }}>
+                  <div style={{ width: 56, height: 56, borderRadius: '50%', background: 'rgba(14,165,233,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid rgba(14,165,233,0.3)' }}>
+                    <Eye size={24} color="#0ea5e9" />
+                  </div>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: '#64748b', textAlign: 'center', letterSpacing: 1 }}>No Snapshot Stored</div>
+                  <div style={{ fontSize: 9, color: '#475569', fontWeight: 600 }}>{selectedEvent.camera_name} • {selectedEvent.area_name}</div>
+                </div>
+              )}
+              <div style={{ position: 'absolute', top: 10, left: 10, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(4px)', borderRadius: 6, padding: '4px 10px', fontSize: 10, fontWeight: 800, color: '#f8fafc', letterSpacing: 1 }}>
+                📷 {selectedEvent.camera_name}
+              </div>
+              <div style={{ position: 'absolute', top: 10, right: 10, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(4px)', borderRadius: 6, padding: '4px 10px', fontSize: 9, fontWeight: 800, color: '#94a3b8', letterSpacing: 0.5, fontFamily: 'JetBrains Mono,monospace' }}>
+                {new Date(selectedEvent.timestamp).toLocaleTimeString()}
+              </div>
+            </div>
+
+            {/* Detail Grid */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+              {[
+                { label: 'Scenario', value: selectedEvent.scenario_key },
+                { label: 'Object Class', value: selectedEvent.object_class },
+                { label: 'Camera', value: selectedEvent.camera_name },
+                { label: 'Area / Zone', value: selectedEvent.area_name },
+                { label: 'Severity', value: selectedEvent.severity },
+                { label: 'Confidence', value: `${(selectedEvent.confidence * 100).toFixed(1)}%` },
+                { label: 'Recorded', value: selectedEvent.time_ago },
+                { label: 'Timestamp', value: new Date(selectedEvent.timestamp).toLocaleString() },
+              ].map(({ label, value }) => (
+                <div key={label} style={{ background: isDark ? 'rgba(255,255,255,.03)' : '#f8fafc', border: `1px solid ${cardBorder}`, borderRadius: 8, padding: '12px 16px' }}>
+                  <div style={{ fontSize: 9, fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: 1.5, marginBottom: 6 }}>{label}</div>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: isDark ? '#f1f5f9' : '#0f172a', fontFamily: 'JetBrains Mono,monospace', wordBreak: 'break-word' }}>{value}</div>
+                </div>
+              ))}
+            </div>
+
+            {/* Close Button */}
+            <button
+              onClick={() => setSelectedEvent(null)}
+              style={{ marginTop: 24, width: '100%', padding: '12px', background: '#0ea5e9', color: '#fff', border: 'none', borderRadius: 8, fontSize: 12, fontWeight: 800, cursor: 'pointer', letterSpacing: 1 }}
+            >
+              CLOSE
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
