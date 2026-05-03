@@ -203,8 +203,8 @@ export default function ScenarioOrchestration() {
             {/* Modal Header */}
             <div className="px-8 py-6 border-b border-border flex items-center justify-between bg-surface">
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-violet-600 rounded-lg flex items-center justify-center shadow-lg shadow-violet-200">
-                  <Brain className="w-7 h-7 text-white" />
+                <div className="w-12 h-12 bg-violet-50 rounded-xl flex items-center justify-center border border-violet-100 shadow-sm">
+                  <Brain className="w-7 h-7 text-violet-600" />
                 </div>
                 <div>
                   <h2 className="text-lg font-black uppercase tracking-tight text-text-dark leading-none">
@@ -259,31 +259,34 @@ export default function ScenarioOrchestration() {
                         key={scenario.id}
                         className={`group flex flex-col p-4 rounded-lg border transition-all duration-200
                           ${scenario.is_enabled
-                            ? 'bg-violet-600 border-violet-600 shadow-lg shadow-violet-100'
+                            ? 'bg-violet-50 border-violet-200 shadow-sm'
                             : 'bg-card border-border hover:border-violet-500/30 hover:bg-surface'}`}
                       >
                         <div className="flex items-center justify-between cursor-pointer" onClick={() => toggleScenarioInState(scenario.id)}>
                           <div className="flex items-center gap-3 max-w-[85%]">
-                            <div className={`w-3.5 h-3.5 rounded-full border-2 transition-all shrink-0
-                              ${scenario.is_enabled ? 'bg-white border-white scale-110' : 'bg-transparent border-border group-hover:border-violet-500/30'}`} />
+                            {scenario.is_enabled ? (
+                              <CheckCircle2 className="w-4 h-4 text-violet-600 shrink-0" />
+                            ) : (
+                              <div className="w-4 h-4 rounded-full border-2 border-border group-hover:border-violet-300 shrink-0" />
+                            )}
                             <span className={`text-[11px] font-black uppercase tracking-tight truncate 
-                                ${scenario.is_enabled ? 'text-white' : 'text-text-gray'}`}>
+                                ${scenario.is_enabled ? 'text-violet-700' : 'text-text-gray'}`}>
                               {scenario.name}
                             </span>
                           </div>
-                          {scenario.is_enabled && <Zap className="w-3.5 h-3.5 text-white animate-pulse" />}
+                          {scenario.is_enabled && <Zap className="w-3.5 h-3.5 text-violet-500 animate-pulse" />}
                         </div>
                         
                         {/* Config Input */}
                         {scenario.is_enabled && scenario.name === "Visitor count limit (only 1 attendant per patient)" && (
-                          <div className="mt-3 pt-3 border-t border-white/20 flex items-center justify-between" onClick={e => e.stopPropagation()}>
-                            <span className="text-[10px] font-black uppercase tracking-widest text-white/80">Max Limit:</span>
+                          <div className="mt-3 pt-3 border-t border-violet-200 flex items-center justify-between" onClick={e => e.stopPropagation()}>
+                            <span className="text-[10px] font-black uppercase tracking-widest text-violet-600/80">Max Limit:</span>
                             <input 
                               type="number" 
                               min="1"
                               value={scenario.config?.limit || 2}
                               onChange={(e) => updateScenarioConfig(scenario.id, 'limit', parseInt(e.target.value) || 2)}
-                              className="w-16 bg-white/10 border border-white/20 rounded px-2 py-1 text-[11px] font-bold text-white outline-none focus:border-white/50 text-center"
+                              className="w-16 bg-white border border-violet-200 rounded px-2 py-1 text-[11px] font-bold text-violet-700 outline-none focus:border-violet-400 text-center shadow-sm"
                             />
                           </div>
                         )}

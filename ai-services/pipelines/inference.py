@@ -151,8 +151,11 @@ class InferenceEngine:
         return self.processed_frame_bytes, self.processed_events
 
     def _perform_inference(self, frame):
-        # Optimized for speed: Resize to 640p (Standard YOLO size)
-        frame = cv2.resize(frame, (640, 360))
+        # Resize to 720p for HD quality while maintaining real-time FPS
+        # (1280x720 is the sweet spot for surveillance streaming)
+        h, w = frame.shape[:2]
+        if w > 1280:
+            frame = cv2.resize(frame, (1280, 720))
 
         # Direct predict with stream=True for speed if needed, but keeping it simple for now
         results = model.predict(frame, conf=CONF_THRESHOLD, iou=IOU_THRESHOLD, verbose=False, imgsz=640)
@@ -235,7 +238,7 @@ class InferenceEngine:
             "stable_objects": sorted(stable_objects), "last_update": current_time
         })
 
-        ret, jpeg = cv2.imencode(".jpg", annotated_frame, [int(cv2.IMWRITE_JPEG_QUALITY), 70])
+        ret, jpeg = cv2.imencode(".jpg", annotated_frame, [int(cv2.IMWRITE_JPEG_QUALITY), 80])
         return (jpeg.tobytes() if ret else self.placeholder_frame), events_to_log
 
     def _build_placeholder_frame(self, message: str) -> bytes:
