@@ -278,7 +278,7 @@ export default function ScenarioOrchestration() {
                         </div>
                         
                         {/* Config Input */}
-                        {scenario.is_enabled && scenario.name === "Visitor count limit (only 1 attendant per patient)" && (
+                        {scenario.is_enabled && scenario.name === "Visitor Count Limit Exceeded" && (
                           <div className="mt-3 pt-3 border-t border-violet-200 flex items-center justify-between" onClick={e => e.stopPropagation()}>
                             <span className="text-[10px] font-black uppercase tracking-widest text-violet-600/80">Max Limit:</span>
                             <input 

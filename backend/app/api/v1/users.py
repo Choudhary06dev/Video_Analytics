@@ -3,7 +3,7 @@ from sqlmodel import Session, select
 from typing import List
 from app.core.database import get_session
 from app.api.v1.auth import get_current_user
-from app.models import User, Role, ModulePermission, RoleModulePermission
+from app.models import User, Role, ModulePermission, RoleModulePermission, Area, RoleAreaPermission
 from app.schemas.user_schema import AdminUserCreate, AdminUserUpdate, RoleUpdate
 from app.services.user_service import get_user_by_email, record_audit_log
 from app.core.security import get_password_hash
@@ -44,6 +44,27 @@ def verify_module_access(module_key: str, current_user: dict = Depends(get_curre
     
     return current_user
 
+def get_allowed_area_ids(user_id: int, session: Session):
+    """
+    Returns a list of area IDs that the user has permission to view.
+    Only explicitly enabled areas are returned (no inheritance).
+    """
+    user = session.get(User, user_id)
+    if not user:
+        return []
+    
+    # Get direct area permissions for the role
+    role_perms = session.exec(
+        select(RoleAreaPermission).where(
+            RoleAreaPermission.role_id == user.role_id,
+            RoleAreaPermission.can_view == True
+        )
+    ).all()
+    
+    allowed_ids = [p.area_id for p in role_perms]
+    return allowed_ids
+
+
 def verify_admin_access(current_user: dict = Depends(get_current_user), session: Session = Depends(get_session)):
     """Dynamic admin check: Requires VIEW access to admin_hub"""
     return verify_module_access("admin_hub", current_user, session, access_level="view")
@@ -61,7 +82,7 @@ def verify_admin_hub_access(current_user: dict = Depends(get_current_user), sess
 def get_all_users(skip: int = 0, limit: int = 20, session: Session = Depends(get_session), admin_data: dict = Depends(lambda cur=Depends(get_current_user), s=Depends(get_session): verify_module_access("users", cur, s, access_level="view"))):
     total_count = len(session.exec(select(User)).all())
     
-    users = session.exec(select(User).offset(skip).limit(limit)).all()
+    users = session.exec(select(User).order_by(User.id).offset(skip).limit(limit)).all()
     result = []
     for u in users:
         role_obj = session.get(Role, u.role_id)

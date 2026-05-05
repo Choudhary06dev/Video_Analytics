@@ -6,7 +6,7 @@ import httpx
 from app.core.database import get_session
 from app.core.config import settings
 from app.api.v1.auth import get_current_user
-from app.api.v1.users import verify_module_access
+from app.api.v1.users import verify_module_access, get_allowed_area_ids
 from app.models import Camera, Area, AIScenario
 
 from app.schemas.camera_schema import CameraCreate, CameraUpdate, AreaCreate, AreaUpdate, ScenarioToggle, ScenarioBulkUpdate, ScenarioCreate, ScenarioUpdate
@@ -22,12 +22,18 @@ def _camera_with_scenario_count(camera: Camera, session: Session):
 
 @router.get("/live/areas")
 def get_live_areas(session: Session = Depends(get_session), live_data: dict = Depends(lambda cur=Depends(get_current_user), s=Depends(get_session): verify_module_access("live_monitoring", cur, s, access_level="view"))):
-    return session.exec(select(Area)).all()
+    allowed_area_ids = get_allowed_area_ids(live_data.get("id"), session)
+    if not allowed_area_ids:
+        return []
+    return session.exec(select(Area).where(Area.id.in_(allowed_area_ids)).order_by(Area.id)).all()
 
 
 @router.get("/live/cameras")
 def get_live_cameras(session: Session = Depends(get_session), live_data: dict = Depends(lambda cur=Depends(get_current_user), s=Depends(get_session): verify_module_access("live_monitoring", cur, s, access_level="view"))):
-    cameras = session.exec(select(Camera)).all()
+    allowed_area_ids = get_allowed_area_ids(live_data.get("id"), session)
+    if not allowed_area_ids:
+        return []
+    cameras = session.exec(select(Camera).where(Camera.area_id.in_(allowed_area_ids)).order_by(Camera.id)).all()
     return [_camera_with_scenario_count(cam, session) for cam in cameras]
 
 
@@ -39,8 +45,11 @@ def get_live_scenarios(session: Session = Depends(get_session), live_data: dict 
 
 @router.get("/admin/areas")
 def get_areas(skip: int = 0, limit: int = 20, session: Session = Depends(get_session), admin_data: dict = Depends(lambda cur=Depends(get_current_user), s=Depends(get_session): verify_module_access("areas", cur, s, access_level="view"))):
-    total_count = len(session.exec(select(Area)).all())
-    areas = session.exec(select(Area).offset(skip).limit(limit)).all()
+    allowed_area_ids = get_allowed_area_ids(admin_data.get("id"), session)
+    if not allowed_area_ids:
+        return {"total": 0, "areas": []}
+    total_count = len(session.exec(select(Area).where(Area.id.in_(allowed_area_ids))).all())
+    areas = session.exec(select(Area).where(Area.id.in_(allowed_area_ids)).order_by(Area.id).offset(skip).limit(limit)).all()
     return {"total": total_count, "areas": areas}
 
 @router.post("/admin/areas")
@@ -69,10 +78,12 @@ def update_area(area_id: int, area_data: AreaUpdate, session: Session = Depends(
         area.name = area_data.name
     if area_data.description:
         area.description = area_data.description
-    if area_data.parent_id is not None:
+    # Check if parent_id was provided (even if it's None/null)
+    if "parent_id" in area_data.dict(exclude_unset=True) or area_data.parent_id is not None:
         if area_data.parent_id == area_id:
             raise HTTPException(status_code=400, detail="An area cannot be its own parent")
-        area.parent_id = area_data.parent_id if area_data.parent_id != 0 else None
+        # Treat 0 or None as resetting to root (None)
+        area.parent_id = area_data.parent_id if (area_data.parent_id is not None and area_data.parent_id != 0) else None
     session.add(area)
     session.commit()
     session.refresh(area)
@@ -96,8 +107,11 @@ def delete_area(area_id: int, session: Session = Depends(get_session), admin_dat
 
 @router.get("/admin/cameras")
 def get_cameras(skip: int = 0, limit: int = 20, session: Session = Depends(get_session), admin_data: dict = Depends(lambda cur=Depends(get_current_user), s=Depends(get_session): verify_module_access("cameras", cur, s, access_level="view"))):
-    total_count = len(session.exec(select(Camera)).all())
-    cameras = session.exec(select(Camera).offset(skip).limit(limit)).all()
+    allowed_area_ids = get_allowed_area_ids(admin_data.get("id"), session)
+    if not allowed_area_ids:
+        return {"total": 0, "cameras": []}
+    total_count = len(session.exec(select(Camera).where(Camera.area_id.in_(allowed_area_ids))).all())
+    cameras = session.exec(select(Camera).where(Camera.area_id.in_(allowed_area_ids)).order_by(Camera.id).offset(skip).limit(limit)).all()
     return {"total": total_count, "cameras": [_camera_with_scenario_count(cam, session) for cam in cameras]}
 
 
@@ -250,7 +264,7 @@ def get_all_scenarios(session: Session = Depends(get_session), admin_data: dict 
     """
     Returns the list of all AI scenarios in the system.
     """
-    return session.exec(select(AIScenario)).all()
+    return session.exec(select(AIScenario).order_by(AIScenario.id)).all()
 
 
 @router.post("/admin/scenarios")

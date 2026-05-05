@@ -44,10 +44,23 @@ def decode_access_token(token: str):
     except JWTError:
         return None
 
-def get_authorization_token(authorization: str = Header(None)) -> str:
-    if not authorization or not authorization.startswith("Bearer "):
-        raise HTTPException(status_code=401, detail="Authorization header missing or invalid")
-    return authorization.split(" ", 1)[1].strip()
+from fastapi import Header, HTTPException, Query
+
+def get_authorization_token(
+    authorization: Optional[str] = Header(None),
+    token: Optional[str] = Query(None)
+) -> str:
+    """
+    Extracts token from either the Authorization header or a 'token' query parameter.
+    Query parameter support is essential for EventSource (SSE) connections.
+    """
+    if authorization and authorization.startswith("Bearer "):
+        return authorization.split(" ", 1)[1].strip()
+    
+    if token:
+        return token
+        
+    raise HTTPException(status_code=401, detail="Authorization token missing")
 
 def verify_token(token: str):
     payload = decode_access_token(token)

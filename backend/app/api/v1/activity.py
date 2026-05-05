@@ -2,17 +2,16 @@ from fastapi import APIRouter, Depends
 from typing import Optional
 from sqlmodel import Session, select
 from sqlalchemy.orm import joinedload
+from datetime import datetime, timedelta
 
 from app.core.database import get_session
 from app.api.v1.auth import get_current_user
 from app.services.alert_service import get_logs, get_logs_summary
 from app.models import DetectionEvent, Camera, Area
+from app.api.v1.users import verify_module_access, get_allowed_area_ids
 
 router = APIRouter(prefix="/activity", tags=["Activity Vault"])
 
-
-from datetime import datetime, timedelta
-from app.models import Camera, Area, DetectionEvent
 
 @router.get("")
 def get_activity_vault_data(
@@ -26,18 +25,22 @@ def get_activity_vault_data(
     start_date: Optional[str] = None,
     end_date: Optional[str] = None,
     session: Session = Depends(get_session),
+    current_user: dict = Depends(get_current_user),
     auth_data: dict = Depends(lambda cur=Depends(get_current_user), s=Depends(get_session): verify_module_access("vault", cur, s, access_level="view"))
 ):
     """
     Activity Vault endpoint - returns AI detection events with camera/area context.
     """
+    # Filter by allowed areas
+    allowed_area_ids = get_allowed_area_ids(current_user["id"], session)
+    
     # Get logs (existing service)
     events = get_logs(
-        session, hours, camera_id, area_id, scenario_key, None, severity, limit, skip, start_date, end_date
+        session, hours, camera_id, area_id, scenario_key, None, severity, limit, skip, start_date, end_date, allowed_area_ids=allowed_area_ids
     )
     
     # Get summary (existing service)  
-    summary = get_logs_summary(session, hours, camera_id, area_id, scenario_key)
+    summary = get_logs_summary(session, hours, camera_id, area_id, scenario_key, allowed_area_ids=allowed_area_ids)
     
     # Join with Camera and Area names
     event_list = []
@@ -87,7 +90,14 @@ def get_activity_vault_data(
         cutoff = datetime.now() - timedelta(hours=hours)
         total_stmt = select(DetectionEvent).where(DetectionEvent.timestamp >= cutoff)
         
-    total_count = len(session.exec(total_stmt).all())
+    # Apply global permission filter to total count as well
+    allowed_cams = session.exec(select(Camera.id).where(Camera.area_id.in_(allowed_area_ids))).all()
+    if allowed_cams:
+        total_stmt = total_stmt.where(DetectionEvent.camera_id.in_(allowed_cams))
+    else:
+        total_stmt = None # Force zero if no cams accessible
+        
+    total_count = len(session.exec(total_stmt).all()) if total_stmt else 0
     
     return {
         "events": event_list,
@@ -124,15 +134,14 @@ def _format_time_ago(timestamp):
         return f"{int(ago/1440)}d ago"
 
 
-from app.api.v1.users import verify_module_access
-
 @router.get("/summary")
 def get_activity_summary(
     hours: float = 24.0,
     camera_id: Optional[int] = None,
     session: Session = Depends(get_session),
+    current_user: dict = Depends(get_current_user),
     auth_data: dict = Depends(lambda cur=Depends(get_current_user), s=Depends(get_session): verify_module_access("vault", cur, s, access_level="view"))
 ):
     """Summary stats for ActivityVault charts."""
-    return get_logs_summary(session, hours, camera_id, None, None)
-
+    allowed_area_ids = get_allowed_area_ids(current_user["id"], session)
+    return get_logs_summary(session, hours, camera_id, None, None, allowed_area_ids=allowed_area_ids)

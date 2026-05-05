@@ -4,15 +4,15 @@ from typing import List
 from app.core.database import get_session
 from app.api.v1.auth import get_current_user
 from app.api.v1.users import verify_module_access
-from app.models import Role, ModulePermission, RoleModulePermission
-from app.schemas.user_schema import RoleCreateRequest, RoleUpdateRequest, PermissionUpdate
+from app.models import Role, ModulePermission, RoleModulePermission, Area, RoleAreaPermission
+from app.schemas.user_schema import RoleCreateRequest, RoleUpdateRequest, PermissionUpdate, AreaPermissionUpdate
 from app.services.user_service import record_audit_log
 
 router = APIRouter(prefix="/admin/roles", tags=["Admin Role Management"])
 
 @router.get("/")
 def get_roles(session: Session = Depends(get_session), admin_data: dict = Depends(lambda cur=Depends(get_current_user), s=Depends(get_session): verify_module_access("roles", cur, s, access_level="view"))):
-    roles = session.exec(select(Role)).all()
+    roles = session.exec(select(Role).order_by(Role.id)).all()
     result = []
     for r in roles:
         stmt = select(RoleModulePermission).where(RoleModulePermission.role_id == r.id)
@@ -139,3 +139,64 @@ def update_role_permissions(role_id: int, perms: List[PermissionUpdate], session
     session.commit()
     return {"message": "Permissions updated successfully"}
 
+
+@router.get("/{role_id}/areas")
+def get_role_area_permissions(role_id: int, session: Session = Depends(get_session), admin_data: dict = Depends(lambda cur=Depends(get_current_user), s=Depends(get_session): verify_module_access("roles", cur, s, access_level="view"))):
+    """
+    Returns all areas with their view permission status for the specific role.
+    """
+    role = session.get(Role, role_id)
+    if not role:
+        raise HTTPException(status_code=404, detail="Role not found")
+        
+    all_areas = session.exec(select(Area).order_by(Area.id)).all()
+    role_perms = session.exec(select(RoleAreaPermission).where(RoleAreaPermission.role_id == role_id)).all()
+    
+    perm_map = {p.area_id: p.can_view for p in role_perms}
+    
+    result = []
+    for area in all_areas:
+        result.append({
+            "area_id": area.id,
+            "area_name": area.name,
+            "parent_id": area.parent_id,
+            "can_view": perm_map.get(area.id, False)
+        })
+    
+    return result
+
+
+@router.put("/{role_id}/areas")
+def update_role_area_permissions(role_id: int, perms: List[AreaPermissionUpdate], session: Session = Depends(get_session), admin_data: dict = Depends(lambda cur=Depends(get_current_user), s=Depends(get_session): verify_module_access("roles", cur, s, access_level="edit"))):
+    """
+    Updates area-level permissions for a role.
+    """
+    role = session.get(Role, role_id)
+    if not role:
+        raise HTTPException(status_code=404, detail="Role not found")
+        
+    for p in perms:
+        area = session.get(Area, p.area_id)
+        if not area: continue
+        
+        stmt = select(RoleAreaPermission).where(
+            RoleAreaPermission.role_id == role_id,
+            RoleAreaPermission.area_id == p.area_id
+        )
+        existing_perm = session.exec(stmt).first()
+        
+        if existing_perm:
+            existing_perm.can_view = p.can_view
+            session.add(existing_perm)
+        else:
+            new_perm = RoleAreaPermission(
+                role_id=role_id,
+                area_id=p.area_id,
+                can_view=p.can_view
+            )
+            session.add(new_perm)
+            
+    session.commit()
+    record_audit_log(session, admin_data.get("id"), "UPDATE", "Access Authority", f"Updated area permissions for role: {role.name}")
+    session.commit()
+    return {"message": "Area permissions updated successfully"}

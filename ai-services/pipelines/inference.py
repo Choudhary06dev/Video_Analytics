@@ -29,12 +29,14 @@ SCENARIO_MAPPING = {
 
 CONF_THRESHOLD = 0.55
 IOU_THRESHOLD = 0.45
-MIN_STABLE_FRAMES_TO_LOG = 1
+MIN_STABLE_FRAMES_TO_LOG = 5
+LOG_COOLDOWN = 10.0 # Prevent spam for the same event
 VISITOR_LIMIT = 2  # Max allowed visitors (e.g., 1 patient + 1 attendant)
 
 SCENARIO_MIN_CONFIDENCE = {
     "person": 0.55,
     "knife": 0.60,
+    "scissors": 0.60,
     "cell phone": 0.65,
     "car": 0.60,
     "truck": 0.60,
@@ -141,7 +143,14 @@ class InferenceEngine:
             if self.video is not None:
                 try: self.video.release()
                 except: pass
-            self.video = cv2.VideoCapture(self.source, cv2.CAP_FFMPEG)
+            
+            # Use default backend for local hardware cameras (integer indices)
+            # Use CAP_FFMPEG for RTSP/Network streams
+            if isinstance(self.source, int):
+                self.video = cv2.VideoCapture(self.source)
+            else:
+                self.video = cv2.VideoCapture(self.source, cv2.CAP_FFMPEG)
+                
             self.video.set(cv2.CAP_PROP_BUFFERSIZE, 1)
             self.video.set(cv2.CAP_PROP_OPEN_TIMEOUT_MSEC, 15000)
             self.video.set(cv2.CAP_PROP_READ_TIMEOUT_MSEC, 15000)
@@ -173,17 +182,21 @@ class InferenceEngine:
                 
                 if label == "person": person_count += 1
                 
-                scenario_name = SCENARIO_MAPPING.get(label)
-                if scenario_name and scenario_name in self.enabled_scenarios:
-                    if scenario_name not in detected_scenarios:
-                        detected_scenarios[scenario_name] = {"max_conf": confidence, "count": 1, "labels": {label}}
-                    else:
-                        detected_scenarios[scenario_name]["max_conf"] = max(detected_scenarios[scenario_name]["max_conf"], confidence)
-                        detected_scenarios[scenario_name]["count"] += 1
-                        detected_scenarios[scenario_name]["labels"].add(label)
+                # Check if this label meets its specific scenario confidence threshold
+                min_required_conf = SCENARIO_MIN_CONFIDENCE.get(label, CONF_THRESHOLD)
+                
+                if confidence >= min_required_conf:
+                    scenario_name = SCENARIO_MAPPING.get(label)
+                    if scenario_name and scenario_name in self.enabled_scenarios:
+                        if scenario_name not in detected_scenarios:
+                            detected_scenarios[scenario_name] = {"max_conf": confidence, "count": 1, "labels": {label}}
+                        else:
+                            detected_scenarios[scenario_name]["max_conf"] = max(detected_scenarios[scenario_name]["max_conf"], confidence)
+                            detected_scenarios[scenario_name]["count"] += 1
+                            detected_scenarios[scenario_name]["labels"].add(label)
 
         # Check for visitor limit
-        visitor_scenario_name = "Visitor count limit (only 1 attendant per patient)"
+        visitor_scenario_name = "Visitor Count Limit Exceeded"
         
         # Get dynamic limit from configs, default to global VISITOR_LIMIT
         dynamic_limit = int(self.scenario_configs.get(visitor_scenario_name, {}).get("limit", VISITOR_LIMIT))
@@ -205,16 +218,26 @@ class InferenceEngine:
             current_count = data["count"]
             prev = self.scene_state.get(scenario_name, {"count": 0, "stable_frames": 0, "absent_frames": 0, "present": False, "last_logged": 0})
 
+            # Check for stability
             stable_frames = prev["stable_frames"] + 1 if current_count == prev["count"] else 1
             absent_frames = prev["absent_frames"] + 1 if current_count == 0 else 0
             present = prev["present"]
             should_log = False
 
+            # Logging Logic:
+            # 1. Log if it's a NEW detection (0 -> >0) and stable
+            # 2. Log if the count INCREASES (e.g. 1 person -> 2 persons) and stable
+            # 3. BUT only if cooldown has passed or count changed
+            time_since_log = current_time - prev["last_logged"]
+
             if current_count > 0:
-                if stable_frames >= MIN_STABLE_FRAMES_TO_LOG and not present:
-                    should_log = True
-                    present = True
-            elif present and absent_frames >= MIN_STABLE_FRAMES_TO_LOG * 2:
+                # Scenario 1: New appearance or count increase
+                if stable_frames >= MIN_STABLE_FRAMES_TO_LOG:
+                    if not present or current_count > prev["count"]:
+                        if time_since_log > LOG_COOLDOWN or current_count > prev["count"]:
+                            should_log = True
+                            present = True
+            elif present and absent_frames >= 30: # Wait ~1sec (30 frames) before clearing
                 present = False
 
             if present and current_count > 0: stable_objects.append(scenario_name)

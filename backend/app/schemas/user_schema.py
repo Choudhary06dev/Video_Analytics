@@ -53,3 +53,8 @@ class PermissionUpdate(BaseModel):
     can_view: bool
     can_edit: bool
     can_delete: bool
+
+
+class AreaPermissionUpdate(BaseModel):
+    area_id: int
+    can_view: bool

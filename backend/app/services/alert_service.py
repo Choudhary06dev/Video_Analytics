@@ -44,7 +44,21 @@ def _apply_event_filters(
     scenario_key: Optional[str] = None,
     object_class: Optional[str] = None,
     severity: Optional[str] = None,
+    allowed_area_ids: Optional[List[int]] = None,
 ):
+    # 1. Global Area Permission Filter (Security)
+    if allowed_area_ids is not None:
+        # Get all camera IDs in these allowed areas
+        allowed_cams = session.exec(
+            select(Camera.id).where(Camera.area_id.in_(allowed_area_ids))
+        ).all()
+        
+        if not allowed_cams:
+            return None # No cameras accessible = No logs
+            
+        statement = statement.where(DetectionEvent.camera_id.in_(allowed_cams))
+
+    # 2. Specific Filters (User Request)
     if camera_id is not None:
         statement = statement.where(DetectionEvent.camera_id == camera_id)
     elif area_id is not None:
@@ -85,6 +99,7 @@ def get_logs(
     skip: int = 0,
     start_date: Optional[str] = None,
     end_date: Optional[str] = None,
+    allowed_area_ids: Optional[List[int]] = None,
 ):
     if start_date and end_date:
         try:
@@ -102,7 +117,7 @@ def get_logs(
         cutoff = datetime.now() - timedelta(hours=hours)
         statement = select(DetectionEvent).where(DetectionEvent.timestamp >= cutoff)
         
-    statement = _apply_event_filters(statement, session, camera_id, area_id, scenario_key, object_class, severity)
+    statement = _apply_event_filters(statement, session, camera_id, area_id, scenario_key, object_class, severity, allowed_area_ids)
     if statement is None:
         return []
     statement = statement.order_by(DetectionEvent.timestamp.desc()).offset(skip).limit(limit)
@@ -115,11 +130,12 @@ def get_logs_summary(
     area_id: Optional[int] = None,
     scenario_key: Optional[str] = None,
     latest_intelligence: Optional[Dict] = None,
+    allowed_area_ids: Optional[List[int]] = None,
 ):
     latest_intelligence = latest_intelligence or {}
     cutoff = datetime.now() - timedelta(hours=hours)
     statement = select(DetectionEvent).where(DetectionEvent.timestamp >= cutoff)
-    statement = _apply_event_filters(statement, session, camera_id, area_id, scenario_key)
+    statement = _apply_event_filters(statement, session, camera_id, area_id, scenario_key, allowed_area_ids=allowed_area_ids)
     
     if statement is None:
         events = []

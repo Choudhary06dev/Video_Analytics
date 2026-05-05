@@ -18,3 +18,5 @@ export const createRole = (roleData) => post("/admin/roles", roleData);
 export const updateRole = (roleId, roleData) => put(`/admin/roles/${roleId}`, roleData);
 export const fetchModules = () => get("/admin/roles/modules");
 export const updateRolePermissions = (roleId, permissions) => put(`/admin/roles/${roleId}/permissions`, permissions);
+export const fetchRoleAreaPermissions = (roleId) => get(`/admin/roles/${roleId}/areas`);
+export const updateRoleAreaPermissions = (roleId, permissions) => put(`/admin/roles/${roleId}/areas`, permissions);

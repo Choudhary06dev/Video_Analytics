@@ -290,43 +290,46 @@ export default function NeuralStream() {
 
   return (
     <div className="max-w-[1600px] mx-auto flex flex-col gap-4 bg-bg font-sans transition-colors duration-300">
-      {/* COMPACT HEADER */}
-      <div className="flex justify-between items-center bg-card px-5 py-3 rounded-lg border border-border shadow-premium shrink-0">
-        <div className="flex items-center gap-4">
-          <div className="w-10 h-10 bg-accent rounded-lg flex items-center justify-center text-white shadow-lg shadow-accent/20">
+      {/* COMPACT & ROBUST COMMAND HUB HEADER */}
+      <div className="flex flex-col lg:flex-row justify-between lg:items-center bg-card px-5 py-2 rounded-lg border border-border shadow-premium gap-3 shrink-0">
+        
+        {/* Left Section: Compact Branding */}
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 bg-accent rounded-lg flex items-center justify-center text-white shadow-lg shadow-accent/20 shrink-0">
             <Radio className="w-5 h-5 animate-pulse" />
           </div>
-          <div>
-            <div className="flex items-center gap-3">
-              <h1 className="text-xl font-bold text-text-dark tracking-tight">Command Hub</h1>
-              <div className="px-2 py-0.5 bg-success/10 text-success border border-success/20 rounded text-[0.55rem] font-bold tracking-widest flex items-center gap-1.5 uppercase">
-                <div className="relative flex">
-                  <div className="w-1.5 h-1.5 bg-success rounded-full animate-ping absolute opacity-75" />
-                  <div className="w-1.5 h-1.5 bg-success rounded-full" />
-                </div>
+          <div className="flex flex-col">
+            <div className="flex items-center gap-2.5">
+              <h1 className="text-lg font-black text-text-dark tracking-tight uppercase italic leading-none">Command Hub</h1>
+              <div className="px-2 py-0.5 bg-success/10 text-success border border-success/20 rounded text-[0.55rem] font-black tracking-widest flex items-center gap-1.5 uppercase">
+                <div className="w-1.5 h-1.5 bg-success rounded-full animate-pulse" />
                 Live
               </div>
             </div>
-            <div className="flex items-center gap-3 text-[0.65rem] text-text-gray font-medium">
-              <span className="flex items-center gap-1"><Cpu className="w-3 h-3" /> Engine v4.8</span>
-              <span className="w-1 h-1 bg-border rounded-full" />
+            <div className="flex items-center gap-2.5 text-[0.6rem] text-text-gray font-bold mt-0.5">
+              <span className="flex items-center gap-1"><Cpu className="w-3 h-3" /> v4.8</span>
+              <div className="w-1 h-1 bg-border rounded-full" />
               <span className="text-accent">Sync: 99.9%</span>
-              <span className={`px-2 py-0.5 rounded-full text-[0.65rem] font-bold ${streamConnected ? 'bg-emerald-500/10 text-emerald-600' : 'bg-rose-500/10 text-rose-600'}`}>{streamConnected ? 'Events Online' : 'Reconnecting'}</span>
+              <div className="w-1 h-1 bg-border rounded-full" />
+              <div className={`flex items-center gap-1 ${streamConnected ? 'text-emerald-500' : 'text-rose-500'}`}>
+                {streamConnected ? 'Events Online' : 'Reconnecting'}
+              </div>
             </div>
           </div>
         </div>
 
-        {/* STATS BAR IN HEADER */}
-        <div className="flex flex-wrap items-center gap-3">
-          {/* Grid Layout Switcher (Only visible in Global View) */}
+        {/* Right Section: Compact Controls & Stats */}
+        <div className="flex items-center gap-3 flex-nowrap overflow-x-auto lg:overflow-visible no-scrollbar">
+          
+          {/* Grid Layout (Only visible in Global View) */}
           {isGlobalView && (
-            <div className="flex bg-surface p-1 rounded-lg border border-border mr-2">
+            <div className="flex bg-surface p-1 rounded-lg border border-border shrink-0">
               {[2, 3, 4].map(num => (
                 <button
                   key={num}
                   onClick={() => setGridSize(num)}
-                  className={`px-3 py-1 rounded-md font-bold text-[0.65rem] transition-all uppercase tracking-widest
-                     ${gridSize === num ? 'bg-card text-accent shadow-premium border border-border' : 'text-text-gray hover:text-text-dark'}`}
+                  className={`px-2.5 py-1 rounded-md font-bold text-[0.6rem] transition-all uppercase tracking-widest
+                     ${gridSize === num ? 'bg-card text-accent shadow-sm border border-border' : 'text-text-gray hover:text-text-dark'}`}
                 >
                   {num}x{num}
                 </button>
@@ -334,102 +337,72 @@ export default function NeuralStream() {
             </div>
           )}
 
-          {/* Area & Scenario Filters (Global) */}
-          <div className="flex items-center gap-2">
-            <div className="flex items-center gap-2 bg-surface border border-border rounded-lg px-2 py-1.5 h-[36px]">
-              <Filter className="w-3.5 h-3.5 text-accent shrink-0" />
+          {/* Compact Filters */}
+          <div className="flex items-center gap-2 shrink-0">
+            <div className="flex items-center gap-1.5 bg-surface border border-border rounded-lg px-2 py-1.5 h-[34px]">
+              <Filter className="w-3 h-3 text-accent shrink-0" />
               <select
                 value={selectedAreaId}
-                onChange={(event) => {
-                  setSelectedAreaId(event.target.value);
-                  setIsGlobalView(true);
-                  setActiveCamera(null);
-                  setLogsOffset(0);
-                  setLogs([]);
-                }}
-                className="bg-transparent text-[0.65rem] font-black uppercase tracking-wider text-text-dark outline-none max-w-[140px] cursor-pointer"
-                title="Filter streams by area"
+                onChange={(e) => { setSelectedAreaId(e.target.value); setIsGlobalView(true); setActiveCamera(null); setLogsOffset(0); setLogs([]); }}
+                className="bg-transparent text-[0.65rem] font-black uppercase tracking-wider text-text-dark outline-none max-w-[120px] cursor-pointer"
               >
-                <option value="all">All Areas</option>
-                {areas.map(area => (
-                  <option
-                    key={area.id}
-                    value={area.id}
-                  >
-                    {area.parent_id ? `${areaNameById.get(area.parent_id) || 'Zone'} / ${area.name}` : area.name}
+                <option value="all">Areas</option>
+                {areas.map(a => (
+                  <option key={a.id} value={a.id}>
+                    {a.parent_id ? `${areaNameById.get(a.parent_id) || 'Zone'} / ${a.name}` : a.name}
                   </option>
                 ))}
               </select>
             </div>
 
-            <div className="flex items-center gap-2 bg-surface border border-border rounded-lg px-2 py-1.5 h-[36px]">
-              <Target className="w-3.5 h-3.5 text-accent shrink-0" />
+            <div className="flex items-center gap-1.5 bg-surface border border-border rounded-lg px-2 py-1.5 h-[34px]">
+              <Target className="w-3 h-3 text-accent shrink-0" />
               <select
                 value={selectedScenarioKey}
-                onChange={(event) => {
-                  setSelectedScenarioKey(event.target.value);
-                  setIsGlobalView(true);
-                  setActiveCamera(null);
-                  setLogsOffset(0);
-                  setLogs([]);
-                }}
-                className="bg-transparent text-[0.65rem] font-black uppercase tracking-wider text-text-dark outline-none max-w-[180px] cursor-pointer"
-                title="Filter streams by detected scenario"
+                onChange={(e) => { setSelectedScenarioKey(e.target.value); setIsGlobalView(true); setActiveCamera(null); setLogsOffset(0); setLogs([]); }}
+                className="bg-transparent text-[0.65rem] font-black uppercase tracking-wider text-text-dark outline-none max-w-[150px] cursor-pointer"
               >
-                <option value="all">All Scenarios</option>
-                {scenarios.map(scenario => (
-                  <option
-                    key={scenario.id || scenario.key || scenario.name}
-                    value={scenario.key || scenario.name}
-                  >
-                    {scenario.name}
-                  </option>
+                <option value="all">Scenarios</option>
+                {scenarios.map(s => (
+                  <option key={s.id || s.key || s.name} value={s.key || s.name}>{s.name}</option>
                 ))}
               </select>
             </div>
-
+            
             <button
-              onClick={() => {
-                setSelectedAreaId('all');
-                setSelectedScenarioKey('all');
-                setIsGlobalView(true);
-                setActiveCamera(null);
-                setLogsOffset(0);
-                setLogs([]);
-              }}
-              className="p-1.5 ml-1 border rounded-lg transition-colors bg-surface text-text-gray hover:text-rose-500 border-border hover:border-rose-500/50 cursor-pointer"
-              title="Clear Filters"
+                onClick={() => { setSelectedAreaId('all'); setSelectedScenarioKey('all'); setIsGlobalView(true); setActiveCamera(null); setLogsOffset(0); setLogs([]); }}
+                className="p-1.5 border rounded-lg transition-colors bg-surface text-text-gray hover:text-rose-500 border-border cursor-pointer"
+                title="Clear Filters"
             >
-              <RotateCcw className="w-3.5 h-3.5" />
+                <RotateCcw className="w-3 h-3" />
             </button>
           </div>
 
-          {/* Threat Assessment Badge */}
-          <div className={`flex items-center gap-2 px-3 py-2 rounded-lg border transition-all duration-500
-              ${summary.threat_level === 'Critical' ? 'bg-rose-500/15 border-rose-500/30' :
-              summary.threat_level === 'Elevated' ? 'bg-amber-500/15 border-amber-500/30' :
-                'bg-emerald-500/10 border-emerald-500/20'}`}>
-            <div className={`w-2 h-2 rounded-full animate-pulse ${summary.threat_level === 'Critical' ? 'bg-rose-500' :
-              summary.threat_level === 'Elevated' ? 'bg-amber-500' : 'bg-emerald-500'}`} />
-            <span className={`text-[0.6rem] font-black uppercase tracking-widest ${summary.threat_level === 'Critical' ? 'text-rose-600' :
-              summary.threat_level === 'Elevated' ? 'text-amber-600' : 'text-emerald-600'}`}>
-              {summary.threat_level || 'Checking...'}
-            </span>
-            <Shield className={`w-3.5 h-3.5 ${summary.threat_level === 'Critical' ? 'text-rose-600' :
-              summary.threat_level === 'Elevated' ? 'text-amber-600' : 'text-emerald-600'}`} />
+          {/* Intelligence Stats (Compact) */}
+          <div className="flex items-center gap-2 shrink-0 ml-1 border-l border-border pl-3">
+             {/* Threat Level */}
+             <div className={`flex items-center gap-2 px-2.5 py-1.5 rounded-lg border transition-all duration-500
+                ${summary.threat_level === 'Critical' ? 'bg-rose-500/10 border-rose-500/30' : 'bg-surface border-border'}`}>
+              <div className={`w-1.5 h-1.5 rounded-full ${summary.threat_level === 'Critical' ? 'bg-rose-500 animate-pulse' : 'bg-emerald-500'}`} />
+              <span className={`text-[0.6rem] font-black uppercase tracking-widest ${summary.threat_level === 'Critical' ? 'text-rose-600' : 'text-text-gray'}`}>
+                {summary.threat_level || 'Safe'}
+              </span>
+              <Shield className={`w-3 h-3 ${summary.threat_level === 'Critical' ? 'text-rose-600' : 'text-text-gray'}`} />
+            </div>
+
+            {/* Quick Counters */}
+            <div className="flex items-center gap-1.5">
+              <div className={`h-8 px-2.5 rounded-lg border flex items-center gap-2 ${summary.total_weapons > 0 ? 'bg-rose-500 border-rose-600' : 'bg-surface border-border'}`}>
+                <Crosshair className={`w-3.5 h-3.5 ${summary.total_weapons > 0 ? 'text-white' : 'text-rose-500'}`} />
+                <span className={`text-[0.8rem] font-black ${summary.total_weapons > 0 ? 'text-white' : 'text-text-dark'}`}>{summary.total_weapons || 0}</span>
+              </div>
+              <div className="h-8 px-2.5 bg-surface rounded-lg border border-border flex items-center gap-2">
+                <AlertCircle className="w-3.5 h-3.5 text-accent" />
+                <span className="text-[0.8rem] font-black text-text-dark">{summary.count || 0}</span>
+              </div>
+            </div>
           </div>
 
-          {/* Quick Stats */}
-          <div className="flex items-center gap-2">
-            <div className={`px-3 py-1.5 rounded-lg border flex items-center gap-2 ${summary.total_weapons > 0 ? 'bg-rose-500 border-rose-600' : 'bg-surface border-border'}`}>
-              <Target className={`w-3.5 h-3.5 ${summary.total_weapons > 0 ? 'text-white' : 'text-text-gray'}`} />
-              <span className={`text-sm font-black ${summary.total_weapons > 0 ? 'text-white' : 'text-text-dark'}`}>{summary.total_weapons || 0}</span>
-            </div>
-            <div className="bg-surface px-3 py-1.5 rounded-lg border border-border flex items-center gap-2">
-              <AlertCircle className="w-3.5 h-3.5 text-accent" />
-              <span className="text-sm font-black text-text-dark">{summary.count || 0}</span>
-            </div>
-          </div>
         </div>
       </div>
 
@@ -482,7 +455,7 @@ export default function NeuralStream() {
           {isGlobalView ? (
             /* Dynamic Grid Reflow */
             <div
-              className="grid h-full p-2 gap-2"
+              className="grid content-start p-2 gap-2"
               style={{ gridTemplateColumns: `repeat(${gridSize}, minmax(0, 1fr))` }}
             >
               {filteredCameras.length === 0 ? (
@@ -552,44 +525,38 @@ export default function NeuralStream() {
       <div className="flex-1 flex gap-4 overflow-hidden">
         {/* LOGS TABLE OVERVIEW */}
         <div className="flex-1 bg-card rounded-lg border border-border shadow-premium flex flex-col overflow-hidden min-w-0">
-          {/* LOGS HEADER + FILTERS */}
-          <div className="px-5 py-3 border-b border-border flex flex-wrap items-center justify-between gap-3">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-accent/10 text-accent rounded-lg border border-accent/20">
+          {/* LOGS HEADER + FILTERS (SINGLE LINE COMPACT) */}
+          <div className="px-5 py-2 border-b border-border flex items-center justify-between gap-4 bg-surface/10">
+            <div className="flex items-center gap-3 shrink-0">
+              <div className="p-1.5 bg-accent/10 text-accent rounded-md border border-accent/20">
                 <Activity className="w-4 h-4" />
               </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <h2 className="text-base font-bold text-text-dark tracking-tight">Intelligence Logs</h2>
-                  <div className="flex items-center gap-1.5 px-2 py-0.5 bg-emerald-500/10 rounded-full border border-emerald-500/20">
-                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                    <span className="text-[0.55rem] font-bold text-emerald-600 uppercase tracking-tighter">Live Sync</span>
-                  </div>
+              <div className="flex items-center gap-3">
+                <h2 className="text-sm font-black text-text-dark tracking-tight uppercase">Logs</h2>
+                <div className="flex items-center gap-1.5 px-2 py-0.5 bg-emerald-500/10 rounded-full border border-emerald-500/20">
+                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                  <span className="text-[0.5rem] font-black text-emerald-600 uppercase tracking-tighter">Live</span>
                 </div>
-                <p className="text-[0.6rem] font-medium text-text-gray uppercase tracking-widest">
-                  {isGlobalView ? activeAreaLabel : `Selected: CAM-${String(activeCamera).padStart(2, '0')}`} / {activeScenarioLabel} - {logs.length} Events
-                </p>
+                <span className="text-[0.6rem] font-bold text-text-gray uppercase tracking-widest border-l border-border pl-3 hidden xl:block">
+                  {isGlobalView ? 'Global' : `CAM-${String(activeCamera).padStart(2, '0')}`} / {activeScenarioLabel}
+                </span>
               </div>
             </div>
 
-            <div className="flex flex-wrap items-center justify-end gap-2">
-              {/* Status Message */}
-              <div className={`hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-lg border text-[0.6rem] font-bold
-                ${summary.threat_level === 'Critical' ? 'bg-rose-500/10 border-rose-500/20 text-rose-600' :
-                  summary.threat_level === 'Elevated' ? 'bg-amber-500/10 border-amber-500/20 text-amber-600' :
-                    'bg-emerald-500/10 border-emerald-500/20 text-emerald-600'}`}>
-                {summary.status_message || 'Initializing...'}
-              </div>
+            <div className="flex items-center gap-3 flex-1 justify-end">
+              {/* Compact Inline Status Message */}
+              {summary.status_message && (
+                <div className={`hidden lg:flex items-center gap-2 px-2.5 py-1 rounded-md border text-[0.6rem] font-black uppercase tracking-tight
+                  ${summary.threat_level === 'Critical' ? 'bg-rose-500/10 border-rose-500/20 text-rose-600' :
+                    summary.threat_level === 'Elevated' ? 'bg-amber-500/10 border-amber-500/20 text-amber-600' :
+                      'bg-emerald-500/5 border-emerald-500/20 text-emerald-600'}`}>
+                  <div className={`w-1.5 h-1.5 rounded-full ${summary.threat_level === 'Critical' ? 'bg-rose-500 animate-pulse' : 'bg-emerald-500'}`} />
+                  {summary.status_message}
+                </div>
+              )}
 
-              <button
-                onClick={() => { setIsGlobalView(!isGlobalView); setLogsOffset(0); }}
-                className={`p-2 rounded-lg text-xs font-semibold transition-all border
-              ${isGlobalView ? 'bg-accent text-white border-accent' : 'bg-surface text-text-gray border-border hover:border-accent/40'}`}
-                title="Toggle Global View"
-              >
-                <Filter className="w-4 h-4" />
-              </button>
-              <div className="flex bg-surface p-1 rounded-lg border border-border">
+              {/* Time Filters (Restored All) */}
+              <div className="flex bg-surface p-0.5 rounded-lg border border-border shrink-0 overflow-hidden">
                 {[
                   { label: '15M', val: 0.25 },
                   { label: '1H', val: 1 },
@@ -603,13 +570,22 @@ export default function NeuralStream() {
                   <button
                     key={f.val}
                     onClick={() => { setFilterHours(f.val); setLogsOffset(0); }}
-                    className={`px-2.5 py-1 rounded-md font-bold text-[0.6rem] transition-all uppercase tracking-tight
-                  ${filterHours === f.val ? 'bg-card text-accent shadow-premium border border-border' : 'text-text-gray hover:text-text-dark'}`}
+                    className={`px-1.5 py-0.5 rounded font-black text-[0.5rem] transition-all uppercase tracking-tighter
+                  ${filterHours === f.val ? 'bg-card text-accent shadow-sm border border-border' : 'text-text-gray hover:text-text-dark'}`}
                   >
                     {f.label}
                   </button>
                 ))}
               </div>
+
+              <button
+                onClick={() => { setIsGlobalView(!isGlobalView); setLogsOffset(0); }}
+                className={`p-1.5 rounded-md text-xs transition-all border shrink-0
+                ${isGlobalView ? 'bg-accent text-white border-accent' : 'bg-surface text-text-gray border-border hover:border-accent/40'}`}
+                title="Toggle View Mode"
+              >
+                <Filter className="w-3.5 h-3.5" />
+              </button>
             </div>
           </div>
 

@@ -16,6 +16,7 @@ import {
   X
 } from 'lucide-react';
 import RolePermissionsPanel from '../../components/admin/RolePermissionsPanel';
+import RoleAreaPermissionsPanel from '../../components/admin/RoleAreaPermissionsPanel';
 
 export default function RoleManagement() {
   const { token } = useAuth();
@@ -26,6 +27,7 @@ export default function RoleManagement() {
   const [showRoleModal, setShowRoleModal] = useState(false);
   const [editingRole, setEditingRole] = useState(null);
   const [roleFormData, setRoleFormData] = useState({ name: '', description: '' });
+  const [activeTab, setActiveTab] = useState('modules'); // 'modules' or 'areas'
 
   useEffect(() => {
     fetchRoles();
@@ -157,10 +159,10 @@ export default function RoleManagement() {
               <button
                 key={role.id}
                 onClick={() => setSelectedRole(role)}
-                className={`px-6 py-3 rounded-xl border transition-all flex items-center gap-4 group/btn relative
+                className={`px-6 py-3 rounded-xl border transition-all flex items-center gap-4 group/btn relative cursor-pointer
                               ${selectedRole?.id === role.id
                     ? 'bg-accent/10 border-accent/30 text-accent shadow-lg shadow-accent/5'
-                    : 'border-border bg-surface hover:bg-white text-text-gray hover:text-text-dark hover:border-accent/30'}`}
+                    : 'border-border bg-surface hover:bg-card text-text-gray hover:text-text-dark hover:border-accent/30'}`}
               >
                 <div className={`w-2.5 h-2.5 rounded-full ${selectedRole?.id === role.id ? 'bg-accent animate-pulse shadow-[0_0_8px_rgba(14,165,233,0.5)]' : 'bg-text-gray/20'}`} />
                 <div className="text-left min-w-[100px]">
@@ -215,12 +217,43 @@ export default function RoleManagement() {
               </div>
             </div>
 
+            {/* Tabs */}
+            <div className="flex border-b border-border bg-surface/10 px-6 pt-4 gap-6">
+              <button
+                onClick={() => setActiveTab('modules')}
+                className={`pb-3 text-xs font-black uppercase tracking-widest transition-all ${
+                  activeTab === 'modules'
+                    ? 'text-accent border-b-2 border-accent'
+                    : 'text-text-gray hover:text-text-dark'
+                }`}
+              >
+                Module Access
+              </button>
+              <button
+                onClick={() => setActiveTab('areas')}
+                className={`pb-3 text-xs font-black uppercase tracking-widest transition-all ${
+                  activeTab === 'areas'
+                    ? 'text-accent border-b-2 border-accent'
+                    : 'text-text-gray hover:text-text-dark'
+                }`}
+              >
+                Area Permissions
+              </button>
+            </div>
+
             <div className="p-6">
-              <RolePermissionsPanel
-                roleId={selectedRole.id}
-                initialPermissions={selectedRole.permissions}
-                onUpdated={fetchRoles}
-              />
+              {activeTab === 'modules' ? (
+                <RolePermissionsPanel
+                  roleId={selectedRole.id}
+                  initialPermissions={selectedRole.permissions}
+                  onUpdated={fetchRoles}
+                />
+              ) : (
+                <RoleAreaPermissionsPanel
+                  roleId={selectedRole.id}
+                  onUpdated={fetchRoles}
+                />
+              )}
             </div>
           </div>
         ) : (
