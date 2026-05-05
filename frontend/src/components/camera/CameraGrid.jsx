@@ -219,45 +219,45 @@ export default function CameraGrid({ selectedAreaId }) {
      );
   }
 
-  return (
-    <div className="bg-card rounded-lg border border-border shadow-premium p-[22px]">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-5 gap-3">
-        <div>
-          <h3 className="text-[1.05rem] font-black text-text-dark flex items-center gap-2">
-            <Eye className="w-4 h-4 text-sky-500" />
-            Neural Feed Matrix
-          </h3>
-          <p className="text-[0.7rem] text-text-gray font-semibold">
-            {selectedAreaId ? `Viewing Area Cluster: ${selectedAreaId}` : "Observing Total Facility Landscape"}
-          </p>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <div className="bg-sky-50 border border-sky-200 text-sky-700 flex items-center gap-1.5 px-3 py-1 rounded-full text-[0.65rem] font-black">
-            <Radio className="w-3 h-3" />
-            {filteredCameras.length} SENSORS
-          </div>
-          <div className="bg-emerald-50 border border-emerald-200 text-emerald-700 flex items-center gap-1.5 px-3 py-1 rounded-full text-[0.65rem] font-black">
-            <ShieldCheck className="w-3.5 h-3.5" />
-            AES-256 SYNC
-          </div>
-        </div>
-      </div>
+  // return (
+  //   <div className="bg-card rounded-lg border border-border shadow-premium p-[22px]">
+  //     {/* Header */}
+  //     <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-5 gap-3">
+  //       <div>
+  //         <h3 className="text-[1.05rem] font-black text-text-dark flex items-center gap-2">
+  //           <Eye className="w-4 h-4 text-sky-500" />
+  //           Neural Feed Matrix
+  //         </h3>
+  //         <p className="text-[0.7rem] text-text-gray font-semibold">
+  //           {selectedAreaId ? `Viewing Area Cluster: ${selectedAreaId}` : "Observing Total Facility Landscape"}
+  //         </p>
+  //       </div>
+  //       <div className="flex flex-wrap gap-2">
+  //         <div className="bg-sky-50 border border-sky-200 text-sky-700 flex items-center gap-1.5 px-3 py-1 rounded-full text-[0.65rem] font-black">
+  //           <Radio className="w-3 h-3" />
+  //           {filteredCameras.length} SENSORS
+  //         </div>
+  //         <div className="bg-emerald-50 border border-emerald-200 text-emerald-700 flex items-center gap-1.5 px-3 py-1 rounded-full text-[0.65rem] font-black">
+  //           <ShieldCheck className="w-3.5 h-3.5" />
+  //           AES-256 SYNC
+  //         </div>
+  //       </div>
+  //     </div>
 
-      {/* Grid */}
-      {filteredCameras.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filteredCameras.map(cam => (
-            <CameraCard key={cam.id} cam={cam} intel={intel} />
-          ))}
-        </div>
-      ) : (
-        <div className="py-20 flex flex-col items-center justify-center border-2 border-dashed border-border rounded-lg opacity-50">
-           <VideoOff className="w-12 h-12 text-text-gray mb-4" />
-           <p className="text-[0.8rem] font-black text-text-gray uppercase tracking-widest">No Cameras detected in this sector</p>
-           <p className="text-[0.65rem] text-text-gray font-semibold mt-1">Initialize sensor nodes via Admin Hub to view streams.</p>
-        </div>
-      )}
-    </div>
-  );
+  //     {/* Grid */}
+  //     {filteredCameras.length > 0 ? (
+  //       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+  //         {filteredCameras.map(cam => (
+  //           <CameraCard key={cam.id} cam={cam} intel={intel} />
+  //         ))}
+  //       </div>
+  //     ) : (
+  //       <div className="py-20 flex flex-col items-center justify-center border-2 border-dashed border-border rounded-lg opacity-50">
+  //          <VideoOff className="w-12 h-12 text-text-gray mb-4" />
+  //          <p className="text-[0.8rem] font-black text-text-gray uppercase tracking-widest">No Cameras detected in this sector</p>
+  //          <p className="text-[0.65rem] text-text-gray font-semibold mt-1">Initialize sensor nodes via Admin Hub to view streams.</p>
+  //       </div>
+  //     )}
+  //   </div>
+  // );
 }
