@@ -249,7 +249,7 @@ export default function AITraining() {
       </div>
 
       {/* Training Console Row */}
-      <div className="grid lg:grid-cols-4 gap-8">
+      {/* <div className="grid lg:grid-cols-4 gap-8">
         <div className="lg:col-span-3 bg-[#0f172a] rounded-lg p-8 shadow-2xl border border-white/5 font-mono relative overflow-hidden group h-[380px] flex flex-col">
           <div className="absolute inset-0 bg-gradient-to-br from-accent/5 to-transparent pointer-events-none" />
           <div className="flex items-center justify-between mb-6 relative z-10">
@@ -266,11 +266,14 @@ export default function AITraining() {
               </div>
             </div>
           </div>
-          <div className="flex-1 overflow-y-auto text-accent/90 text-[0.85rem] leading-8 custom-scrollbar relative z-10 flex flex-col-reverse">
+          <div className="flex-1 overflow-y-auto text-accent/90 text-[0.8rem] leading-7 custom-scrollbar relative z-10 flex flex-col-reverse p-2 font-mono">
             {logs.map((log, i) => (
-              <div key={i} className="flex gap-4">
-                <span className="text-white/60 select-none">[{i+482}]</span>
-                <p className="animate-in fade-in slide-in-from-left-2 duration-300 transition-all group-hover:text-white/80">{log}</p>
+              <div key={i} className="flex gap-4 border-l border-accent/20 pl-4 mb-1 hover:bg-white/5 transition-colors">
+                <span className="text-white/30 select-none w-10 shrink-0">{i+1024}</span>
+                <p className="animate-in fade-in slide-in-from-left-2 duration-300">
+                  <span className="text-success/80 mr-2">➜</span>
+                  {log}
+                </p>
               </div>
             ))}
           </div>
@@ -293,7 +296,7 @@ export default function AITraining() {
                 </div>
             ))}
         </div>
-      </div>
+      </div> */}
     </div>
   );
 }
