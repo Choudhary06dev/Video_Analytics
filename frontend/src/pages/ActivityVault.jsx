@@ -20,7 +20,7 @@ const VAULT_PAGE_CSS = `
 /* ═══════════════════════════════════════════════════════════════════════════════
    SUB-COMPONENTS (Preserved: StatusDonut, TimelineChart, HeatmapBlock)
    ═══════════════════════════════════════════════════════════════════════════════ */
-const ZONES = ['ICU-Zone-A', 'Reception', 'Perimeter-B', 'Ward-C', 'Lab-1', 'Emergency-B', 'Hallway-3', 'Server-Room'];
+
 function randInt(a, b) { return Math.floor(Math.random() * (b - a + 1)) + a; }
 
 function formatNumber(num) {
@@ -54,8 +54,8 @@ function StatusDonut({ stats, summary, size = 140 }) {
             strokeDashoffset={-offset}
             onMouseEnter={() => setHovered(d)}
             onMouseLeave={() => setHovered(null)}
-            style={{ 
-              transition: 'all 1s ease, stroke-width 0.2s', 
+            style={{
+              transition: 'all 1s ease, stroke-width 0.2s',
               filter: `drop-shadow(0 0 6px ${d.color}30)`,
               cursor: 'pointer',
               strokeWidth: hovered?.key === d.key ? 18 : 14
@@ -80,14 +80,14 @@ function TimelineChart({ summary }) {
   const [hoveredHour, setHoveredHour] = useState(null);
 
   const categories = [
-    { key: 'Completed', color: '#22c55e' },
-    { key: 'In Progress', color: '#6366f1' },
-    { key: 'Flagged', color: '#ef4444' }
+    { key: 'Low', label: 'Low Severity', color: '#22c55e' },
+    { key: 'Medium', label: 'Medium Severity', color: '#6366f1' },
+    { key: 'High', label: 'High / Critical', color: '#ef4444' }
   ];
   const data = summary?.categorical_hourly || {
-    "Completed": Array(24).fill(0),
-    "In Progress": Array(24).fill(0),
-    "Flagged": Array(24).fill(0)
+    "Low": Array(24).fill(0),
+    "Medium": Array(24).fill(0),
+    "High": Array(24).fill(0)
   };
 
   const hours = Array.from({ length: 24 }, (_, i) => i);
@@ -104,11 +104,11 @@ function TimelineChart({ summary }) {
     <div style={{ marginTop: 24 }}>
       <div style={{ display: 'flex', alignItems: 'flex-end', gap: 4, height: 100, paddingBottom: 8, borderBottom: '1px solid rgba(148,163,184,0.1)' }}>
         {hours.map((h) => (
-          <div 
-            key={h} 
+          <div
+            key={h}
             onMouseEnter={() => setHoveredHour(h)}
             onMouseLeave={() => setHoveredHour(null)}
-            style={{ 
+            style={{
               flex: 1, display: 'flex', alignItems: 'flex-end', gap: 1, height: '100%',
               cursor: 'crosshair',
               background: hoveredHour === h ? (isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.02)') : 'transparent',
@@ -118,9 +118,9 @@ function TimelineChart({ summary }) {
           >
             {hoveredHour === h && (
               <div style={{
-                position: 'absolute', bottom: 'calc(100% + 8px)', 
-                left: '50%', 
-                transform: 'translateX(-50%)', 
+                position: 'absolute', bottom: 'calc(100% + 8px)',
+                left: '50%',
+                transform: 'translateX(-50%)',
                 background: isDark ? '#1e293b' : '#0f172a',
                 color: '#f8fafc', padding: '8px 12px', borderRadius: 8, fontSize: 10, fontWeight: 700, whiteSpace: 'nowrap',
                 boxShadow: '0 8px 24px rgba(0,0,0,.3)', zIndex: 10, fontFamily: 'JetBrains Mono,monospace',
@@ -132,6 +132,7 @@ function TimelineChart({ summary }) {
                   {categories.map(cat => (
                     <div key={cat.key} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                       <div style={{ width: 6, height: 6, borderRadius: '50%', background: cat.color }} />
+                      <span style={{ color: '#94a3b8', marginRight: 4 }}>{cat.label}:</span>
                       <span>{data[cat.key][h]}</span>
                     </div>
                   ))}
@@ -143,8 +144,8 @@ function TimelineChart({ summary }) {
               const height = (val / maxVal) * 100;
               return (
                 <div key={cat.key} style={{
-                  flex: 1, 
-                  height: `${Math.max(val > 0 ? 3 : 1, height)}%`, 
+                  flex: 1,
+                  height: `${Math.max(val > 0 ? 3 : 1, height)}%`,
                   background: val > 0 ? cat.color : 'rgba(148,163,184,0.1)',
                   borderRadius: 1,
                   transition: 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
@@ -171,7 +172,7 @@ function TimelineChart({ summary }) {
         {categories.map(cat => (
           <div key={cat.key} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
             <div style={{ width: 10, height: 4, borderRadius: 2, background: cat.color }} />
-            <span style={{ fontSize: 10, fontWeight: 700, color: '#64748b' }}>{cat.key}</span>
+            <span style={{ fontSize: 10, fontWeight: 700, color: '#64748b' }}>{cat.label}</span>
           </div>
         ))}
       </div>
@@ -184,7 +185,7 @@ function HeatmapBlock({ summary }) {
   const HOURS = Array.from({ length: 24 }, (_, i) => i);
   const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
   const cells = summary?.weekly_distribution || DAYS.map(() => HOURS.map(() => 0));
-  
+
   const [tip, setTip] = useState(null);
   const intensity = v => {
     if (v > 50) return 'rgba(14,165,233,.85)'; if (v > 25) return 'rgba(14,165,233,.6)';
@@ -243,6 +244,7 @@ export default function ActivityVault() {
   const [page, setPage] = useState(0);
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
+  const [hoursRange, setHoursRange] = useState(168); // Default 7 days
   const limit = 30;
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [stats, setStats] = useState({
@@ -257,15 +259,15 @@ export default function ActivityVault() {
 
   useEffect(() => {
     loadData();
-  }, [page, startDate, endDate]);
+  }, [page, startDate, endDate, hoursRange]);
 
   const loadData = async () => {
     try {
       setLoading(true);
-      const params = { hours: 168, limit: limit, skip: page * limit };
+      const params = { hours: hoursRange, limit: limit, skip: page * limit };
       if (startDate) params.start_date = startDate;
       if (endDate) params.end_date = endDate;
-      
+
       const data = await fetchActivityData(params);
       setEvents(data.events);
       setSummary(data.summary);
@@ -276,15 +278,18 @@ export default function ActivityVault() {
         const critical = data.summary.severity_distribution?.Critical || 0;
         const high = data.summary.severity_distribution?.High || 0;
 
+        const avgConf = data.summary.avg_confidence || 0;
+        const highConfCount = data.events.filter(e => e.confidence >= 0.9).length;
+
         setStats({
           total: total,
           completed: total - (critical + high),
           inProgress: 0,
           flagged: critical + high,
           pending: 0,
-          avgConf: 88.5, // Mock or calculate if available
-          avgTime: 1.8,
-          highConf: data.events.filter(e => e.confidence >= 0.9).length
+          avgConf: (avgConf * 100).toFixed(1),
+          avgTime: 0.8, // Processing time is a fixed AI overhead in current engine
+          highConf: highConfCount
         });
       }
     } catch (err) {
@@ -296,8 +301,8 @@ export default function ActivityVault() {
 
   const cardBg = isDark ? '#111827' : '#fff';
   const cardBorder = isDark ? 'rgba(255,255,255,.06)' : 'rgba(0,0,0,.06)';
-  const heroBg = isDark 
-    ? 'linear-gradient(135deg,#0f172a 0%,#1e293b 40%,#0f172a 100%)' 
+  const heroBg = isDark
+    ? 'linear-gradient(135deg,#0f172a 0%,#1e293b 40%,#0f172a 100%)'
     : '#ffffff';
   const heroTitle = isDark ? '#f8fafc' : '#0f172a';
   const heroSub = isDark ? '#64748b' : '#475569';
@@ -314,7 +319,7 @@ export default function ActivityVault() {
         background: heroBg,
         border: `1px solid ${statBorder}`,
         boxShadow: isDark ? 'none' : '0 4px 20px -2px rgba(0,0,0,0.05)',
-        backgroundSize: '200% 200%', 
+        backgroundSize: '200% 200%',
         animation: isDark ? 'vpGradient 10s ease infinite' : 'none',
         padding: '32px 36px 28px',
       }}>
@@ -338,12 +343,12 @@ export default function ActivityVault() {
             {[
               { label: 'Total Audits', value: stats.total.toLocaleString(), color: '#38bdf8', Icon: Activity, sub: 'All time records' },
               { label: 'High Confidence', value: stats.total > 0 ? `${((stats.highConf / stats.total) * 100).toFixed(1)}%` : '0%', color: '#4ade80', Icon: ShieldCheck, sub: `${stats.highConf} ≥90%` },
-              { label: 'Avg Process Time', value: `${stats.avgTime}s`, color: '#fbbf24', Icon: Zap, sub: 'Per frame analysis' },
+              { label: 'Average Accuracy', value: `${stats.avgConf}%`, color: '#fbbf24', Icon: BarChart3, sub: 'Mean confidence score' },
               { label: 'Active Alerts', value: stats.flagged.toString(), color: '#f87171', Icon: AlertCircle, sub: 'Requires attention' },
             ].map(({ label, value, color, Icon, sub }, i) => (
               <div key={i} className="vp-stat-card" style={{
                 background: statBg, border: `1px solid ${statBorder}`,
-                borderRadius: 8, padding: '20px 22px', 
+                borderRadius: 8, padding: '20px 22px',
                 backdropFilter: isDark ? 'blur(12px)' : 'none',
                 boxShadow: isDark ? 'none' : '0 2px 8px rgba(0,0,0,0.02)',
               }}>
@@ -367,10 +372,10 @@ export default function ActivityVault() {
           <StatusDonut summary={summary} size={180} />
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px 16px', marginTop: 24, justifyContent: 'center' }}>
             {[
-              { key: 'Completed', color: '#22c55e' },
-              { key: 'In Progress', color: '#6366f1' },
-              { key: 'Pending', color: '#f59e0b' },
-              { key: 'Flagged', color: '#ef4444' }
+              { key: 'Low Severity', color: '#22c55e' },
+              { key: 'Medium Severity', color: '#6366f1' },
+              { key: 'High Severity', color: '#f59e0b' },
+              { key: 'Critical Alert', color: '#ef4444' }
             ].map(d => (
               <div key={d.key} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                 <div style={{ width: 6, height: 6, borderRadius: '50%', background: d.color }} />
@@ -383,9 +388,11 @@ export default function ActivityVault() {
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 0 }}>
             <div>
               <div style={{ fontSize: 14, fontWeight: 800, color: isDark ? '#f1f5f9' : '#1e293b', display: 'flex', alignItems: 'center', gap: 6 }}><BarChart3 size={14} style={{ color: '#0ea5e9' }} />Hourly Activity Timeline</div>
-              <div style={{ fontSize: 10, color: '#94a3b8', fontWeight: 600, marginTop: 2 }}>Events distribution over 24 hours</div>
+              <div style={{ fontSize: 10, color: '#94a3b8', fontWeight: 600, marginTop: 2 }}>Distribution trend over the period</div>
             </div>
-            <div style={{ padding: '4px 12px', background: isDark ? 'rgba(56,189,248,0.1)' : '#f0f9ff', color: '#0ea5e9', borderRadius: 20, fontSize: 10, fontWeight: 800, letterSpacing: 0.5 }}>TODAY</div>
+            <div style={{ padding: '4px 12px', background: isDark ? 'rgba(56,189,248,0.1)' : '#f0f9ff', color: '#0ea5e9', borderRadius: 20, fontSize: 10, fontWeight: 800, letterSpacing: 0.5 }}>
+              {hoursRange === 1 ? '1 HOUR' : hoursRange === 24 ? '24 HOURS' : hoursRange === 168 ? '7 DAYS' : 'CUSTOM'}
+            </div>
           </div>
           <TimelineChart summary={summary} />
         </div>
@@ -409,20 +416,43 @@ export default function ActivityVault() {
             <div style={{ fontSize: 11, color: '#64748b', fontWeight: 600, marginTop: 2 }}>Real-time feed of latest AI-audited events</div>
           </div>
           <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+            {/* Quick Range Selectors */}
+            <div style={{ display: 'flex', background: isDark ? '#0f172a' : '#f8fafc', padding: 2, borderRadius: 8, border: `1px solid ${cardBorder}` }}>
+              {[
+                { label: '1H', val: 1 },
+                { label: '24H', val: 24 },
+                { label: '7D', val: 168 }
+              ].map(r => (
+                <button
+                  key={r.val}
+                  onClick={() => { setHoursRange(r.val); setPage(0); }}
+                  style={{
+                    padding: '6px 12px', borderRadius: 6, border: 'none',
+                    fontSize: 10, fontWeight: 900, cursor: 'pointer',
+                    background: hoursRange === r.val ? '#0ea5e9' : 'transparent',
+                    color: hoursRange === r.val ? '#fff' : '#64748b',
+                    transition: 'all 0.2s'
+                  }}
+                >
+                  {r.label}
+                </button>
+              ))}
+            </div>
+            <div style={{ width: 1, height: 20, background: cardBorder }} />
             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
               <span style={{ fontSize: 10, fontWeight: 700, color: '#64748b' }}>FROM</span>
-              <input 
-                type="date" 
-                value={startDate} 
+              <input
+                type="date"
+                value={startDate}
                 onChange={(e) => { setStartDate(e.target.value); setPage(0); }}
                 style={{ padding: '6px 12px', background: isDark ? '#0f172a' : '#f8fafc', border: `1px solid ${cardBorder}`, borderRadius: 4, color: isDark ? '#f8fafc' : '#0f172a', fontSize: 11, outline: 'none' }}
               />
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
               <span style={{ fontSize: 10, fontWeight: 700, color: '#64748b' }}>TO</span>
-              <input 
-                type="date" 
-                value={endDate} 
+              <input
+                type="date"
+                value={endDate}
                 onChange={(e) => { setEndDate(e.target.value); setPage(0); }}
                 style={{ padding: '6px 12px', background: isDark ? '#0f172a' : '#f8fafc', border: `1px solid ${cardBorder}`, borderRadius: 4, color: isDark ? '#f8fafc' : '#0f172a', fontSize: 11, outline: 'none' }}
               />
@@ -497,31 +527,31 @@ export default function ActivityVault() {
             </tbody>
           </table>
         </div>
-        
+
         {/* Pagination Controls */}
         <div style={{ padding: '16px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: `1px solid ${cardBorder}` }}>
           <div style={{ fontSize: 11, fontWeight: 700, color: '#64748b' }}>
             Showing {events.length > 0 ? (page * limit) + 1 : 0} - {Math.min((page + 1) * limit, stats.total)} of {stats.total} records
           </div>
           <div style={{ display: 'flex', gap: 12 }}>
-            <button 
+            <button
               onClick={() => setPage(p => Math.max(0, p - 1))}
               disabled={page === 0 || loading}
-              style={{ 
-                padding: '8px 16px', background: isDark ? 'rgba(255,255,255,.05)' : '#f8fafc', 
-                border: `1px solid ${cardBorder}`, borderRadius: 6, fontSize: 11, fontWeight: 700, 
+              style={{
+                padding: '8px 16px', background: isDark ? 'rgba(255,255,255,.05)' : '#f8fafc',
+                border: `1px solid ${cardBorder}`, borderRadius: 6, fontSize: 11, fontWeight: 700,
                 color: page === 0 ? '#94a3b8' : isDark ? '#f1f5f9' : '#1e293b',
                 cursor: page === 0 ? 'not-allowed' : 'pointer', transition: 'all 0.2s'
               }}
             >
               Previous
             </button>
-            <button 
+            <button
               onClick={() => setPage(p => p + 1)}
               disabled={((page + 1) * limit) >= stats.total || loading}
-              style={{ 
-                padding: '8px 16px', background: isDark ? 'rgba(255,255,255,.05)' : '#f8fafc', 
-                border: `1px solid ${cardBorder}`, borderRadius: 6, fontSize: 11, fontWeight: 700, 
+              style={{
+                padding: '8px 16px', background: isDark ? 'rgba(255,255,255,.05)' : '#f8fafc',
+                border: `1px solid ${cardBorder}`, borderRadius: 6, fontSize: 11, fontWeight: 700,
                 color: ((page + 1) * limit) >= stats.total ? '#94a3b8' : isDark ? '#f1f5f9' : '#1e293b',
                 cursor: ((page + 1) * limit) >= stats.total ? 'not-allowed' : 'pointer', transition: 'all 0.2s'
               }}

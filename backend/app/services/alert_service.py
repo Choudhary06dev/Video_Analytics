@@ -152,9 +152,9 @@ def get_logs_summary(
     hourly_distribution = [0] * 24
     weekly_distribution = [[0] * 24 for _ in range(7)]  # 7 days (Mon=0, Sun=6) x 24 hours
     categorical_hourly = {
-        "Completed": [0] * 24,
-        "In Progress": [0] * 24,
-        "Flagged": [0] * 24
+        "Low": [0] * 24,
+        "Medium": [0] * 24,
+        "High": [0] * 24
     }
     severity_distribution = {"Low": 0, "Medium": 0, "High": 0, "Critical": 0}
     
@@ -171,13 +171,13 @@ def get_logs_summary(
         weekday = ev.timestamp.weekday()
         weekly_distribution[weekday][hour] += 1
         
-        # Categorical Hourly
-        if ev.is_alert or ev.severity in ['High', 'Critical']:
-            categorical_hourly["Flagged"][hour] += 1
+        # Categorical Hourly based strictly on severity
+        if ev.severity in ['High', 'Critical']:
+            categorical_hourly["High"][hour] += 1
         elif ev.severity == 'Medium':
-            categorical_hourly["In Progress"][hour] += 1
+            categorical_hourly["Medium"][hour] += 1
         else: # Low severity
-            categorical_hourly["Completed"][hour] += 1
+            categorical_hourly["Low"][hour] += 1
 
         sev = ev.severity
         if sev in severity_distribution:
@@ -216,6 +216,8 @@ def get_logs_summary(
         threat_level = "Notice"
         status_msg = f"Increased transit activity: {live_vehicles} units"
 
+    avg_conf = sum(ev.confidence for ev in events) / len(events) if events else 0
+    
     return {
         "hours": hours,
         "camera_id": camera_id,
@@ -234,5 +236,6 @@ def get_logs_summary(
         "categorical_hourly": categorical_hourly,
         "weekly_distribution": weekly_distribution,
         "severity_distribution": severity_distribution,
+        "avg_confidence": float(avg_conf),
         "timestamp": datetime.now().isoformat()
     }

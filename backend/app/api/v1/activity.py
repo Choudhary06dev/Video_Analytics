@@ -97,7 +97,7 @@ def get_activity_vault_data(
     else:
         total_stmt = None # Force zero if no cams accessible
         
-    total_count = len(session.exec(total_stmt).all()) if total_stmt else 0
+    total_count = len(session.exec(total_stmt).all()) if total_stmt is not None else 0
     
     return {
         "events": event_list,
