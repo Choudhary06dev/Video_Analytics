@@ -97,6 +97,7 @@ def init_system_data():
             "More than allowed attendants during night",
             "Movement in closed departments/areas",
             "Person climbing or jumping over boundary wall",
+            "Blacklisted person alert (facial recognition)",
         ]
         
         # Mapping for default severities
@@ -133,7 +134,7 @@ def init_system_data():
                 session.add(AIScenario(name=name, key=key, default_severity=severities[name]))
             else:
                 existing.key = key
-                existing.default_severity = severities[name]
+                # Do NOT overwrite default_severity here, let the user manage it via Admin Panel
                 session.add(existing)
 
         # Remove extra scenarios

@@ -16,9 +16,11 @@ import {
   BellRing,
   Loader2,
   X,
-  Target
+  Target,
+  Calendar,
+  RotateCcw
 } from 'lucide-react';
-import { fetchAlerts } from '../services/alertService';
+import { fetchAlerts, resolveAlert } from '../services/alertService';
 import { BASE } from '../api';
 import { formatDistanceToNow } from 'date-fns';
 import { useNotifications } from '../context/NotificationContext';
@@ -30,25 +32,30 @@ export default function Alerts() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedAlert, setSelectedAlert] = useState(null);
   const [resolvedAlertIds, setResolvedAlertIds] = useState(new Set());
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
   const { addNotification } = useNotifications();
 
   useEffect(() => {
     loadAlerts();
     const iv = setInterval(loadAlerts, 5000); // Poll every 5s
     return () => clearInterval(iv);
-  }, [activeTab]);
+  }, [activeTab, startDate, endDate]);
 
   const loadAlerts = async () => {
     try {
       const severityMap = {
         'critical': 'Critical',
-        'warning': 'High', // High and Medium are warnings in the UI
-        'info': 'Low'
+        'high': 'High',
+        'medium': 'Medium',
+        'low': 'Low'
       };
 
       const opts = {
         hours: 24,
         severity: activeTab !== 'all' ? severityMap[activeTab] : undefined,
+        startDate: startDate || undefined,
+        endDate: endDate || undefined,
       };
 
       const data = await fetchAlerts(opts);
@@ -63,8 +70,9 @@ export default function Alerts() {
   const getSeverityStyles = (severity) => {
     const s = (severity || 'Low').toLowerCase();
     if (s === 'critical') return { bg: 'bg-danger/10', text: 'text-danger', border: 'border-danger/20', icon: ShieldAlert, label: 'Critical' };
-    if (s === 'high' || s === 'warning') return { bg: 'bg-warning/10', text: 'text-warning', border: 'border-warning/20', icon: AlertTriangle, label: 'High Threat' };
-    return { bg: 'bg-accent/10', text: 'text-accent', border: 'border-accent/20', icon: Info, label: 'Standard' };
+    if (s === 'high') return { bg: 'bg-warning/10', text: 'text-warning', border: 'border-warning/20', icon: AlertTriangle, label: 'High' };
+    if (s === 'medium') return { bg: 'bg-amber-500/10', text: 'text-amber-600', border: 'border-amber-500/20', icon: AlertTriangle, label: 'Medium' };
+    return { bg: 'bg-accent/10', text: 'text-accent', border: 'border-accent/20', icon: Info, label: 'Low' };
   };
 
   const filteredAlerts = alerts.filter(a => {
@@ -105,12 +113,14 @@ export default function Alerts() {
     });
   };
 
-  const visibleAlerts = filteredAlerts.filter(a => !resolvedAlertIds.has(a.id));
+  const visibleAlerts = filteredAlerts; // Show all, including resolved items
 
   const stats = {
-    critical: visibleAlerts.filter(a => a.severity === 'Critical').length,
-    high: visibleAlerts.filter(a => a.severity === 'High').length,
-    total: visibleAlerts.length
+    critical: visibleAlerts.filter(a => a.severity === 'Critical' && !a.is_resolved && !resolvedAlertIds.has(a.id)).length,
+    high: visibleAlerts.filter(a => a.severity === 'High' && !a.is_resolved && !resolvedAlertIds.has(a.id)).length,
+    medium: visibleAlerts.filter(a => a.severity === 'Medium' && !a.is_resolved && !resolvedAlertIds.has(a.id)).length,
+    low: visibleAlerts.filter(a => a.severity === 'Low' && !a.is_resolved && !resolvedAlertIds.has(a.id)).length,
+    total: visibleAlerts.filter(a => !a.is_resolved && !resolvedAlertIds.has(a.id)).length
   };
 
   return (
@@ -142,9 +152,9 @@ export default function Alerts() {
       {/* Alert Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
         {[
-          { label: 'Active Critical', value: stats.critical, color: 'text-danger', bg: 'bg-danger/10', icon: ShieldAlert },
-          { label: 'High Severity', value: stats.high, color: 'text-warning', bg: 'bg-warning/10', icon: AlertTriangle },
-          { label: 'Total Events', value: stats.total, color: 'text-accent', bg: 'bg-accent-soft', icon: Info },
+          { label: 'Critical', value: stats.critical, color: 'text-danger', bg: 'bg-danger/10', icon: ShieldAlert },
+          { label: 'High', value: stats.high, color: 'text-warning', bg: 'bg-warning/10', icon: AlertTriangle },
+          { label: 'Medium', value: stats.medium, color: 'text-amber-600', bg: 'bg-amber-500/10', icon: AlertTriangle },
         ].map((s, i) => (
           <div key={i} className="bg-card rounded-lg p-6 border border-border shadow-premium flex items-center gap-5 hover:-translate-y-1 transition-all group">
             <div className={`w-14 h-14 rounded-lg ${s.bg} flex items-center justify-center ${s.color}`}>
@@ -163,7 +173,7 @@ export default function Alerts() {
         <div className="p-8 border-b border-border flex flex-col lg:flex-row lg:items-center justify-between gap-8">
           {/* Custom Tabs */}
           <div className="flex bg-bg p-1.5 rounded-lg border border-border">
-            {['all', 'critical', 'warning', 'info'].map((tab) => (
+            {['all', 'critical', 'high', 'medium', 'low'].map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
@@ -175,23 +185,51 @@ export default function Alerts() {
             ))}
           </div>
 
-          <div className="flex items-center gap-4 flex-1 max-w-xl">
+          <div className="flex items-center gap-4 flex-1">
             <div className="relative flex-1">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-text-gray" />
               <input
                 type="text"
-                placeholder="Search incidents by camera, scenario, or detail..."
+                placeholder="Search incidents..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full pl-12 pr-4 py-3 bg-bg border border-border rounded-lg text-[0.88rem] focus:outline-none focus:border-accent transition-all"
               />
             </div>
+
+            {/* Date Filters */}
+            <div className="flex items-center gap-3 bg-bg p-1.5 rounded-lg border border-border shadow-sm">
+              <div className="flex items-center gap-2 px-3 py-1.5 border-r border-border/50">
+                <Calendar className="w-4 h-4 text-accent" />
+                <input
+                  type="date"
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                  className="bg-transparent text-[0.75rem] font-bold text-text-dark focus:outline-none cursor-pointer"
+                />
+              </div>
+              <div className="flex items-center gap-2 px-3 py-1.5">
+                <span className="text-[0.65rem] font-black text-text-gray uppercase opacity-50">to</span>
+                <input
+                  type="date"
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                  className="bg-transparent text-[0.75rem] font-bold text-text-dark focus:outline-none cursor-pointer"
+                />
+              </div>
+            </div>
+
             <button
-              onClick={() => setSearchTerm('')}
-              title="Clear Search"
-              className="p-3 bg-bg border border-border rounded-lg text-text-gray hover:text-danger hover:border-danger transition-all"
+              onClick={() => {
+                setSearchTerm('');
+                setStartDate('');
+                setEndDate('');
+                setActiveTab('all');
+              }}
+              title="Reset All Filters"
+              className="p-3 bg-bg border border-border rounded-lg text-text-gray hover:text-accent hover:border-accent transition-all group"
             >
-              <Trash2 className="w-5 h-5" />
+              <RotateCcw className="w-5 h-5 group-hover:rotate-[-45deg] transition-all" />
             </button>
           </div>
         </div>
@@ -218,13 +256,14 @@ export default function Alerts() {
               <tbody className="divide-y divide-border/50">
                 {visibleAlerts.map((alert) => {
                   const style = getSeverityStyles(alert.severity);
+                  const isResolved = alert.is_resolved || resolvedAlertIds.has(alert.id);
                   return (
-                    <tr key={alert.id} className="hover:bg-bg/30 transition-colors group">
+                    <tr key={alert.id} className={`transition-colors group ${isResolved ? 'bg-bg/10' : 'hover:bg-bg/30'}`}>
                       <td className="px-8 py-6">
                         <span className="text-[0.75rem] font-black text-text-gray opacity-40">#ALT-{alert.id}</span>
                       </td>
                       <td className="px-8 py-6">
-                        <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-[0.65rem] font-black uppercase tracking-wider border ${style.bg} ${style.text} ${style.border}`}>
+                        <div className={`inline-flex items-center justify-center gap-2 w-[95px] px-2 py-1.5 rounded-full text-[0.6rem] font-black uppercase tracking-wider border ${style.bg} ${style.text} ${style.border}`}>
                           <style.icon className="w-3.5 h-3.5" />
                           {style.label}
                         </div>
@@ -262,19 +301,26 @@ export default function Alerts() {
                           >
                             <Eye className="w-4.5 h-4.5" />
                           </button>
-                          <button
-                            onClick={() => {
-                              setResolvedAlertIds(prev => {
-                                const next = new Set(prev);
-                                next.add(alert.id);
-                                return next;
-                              });
-                            }}
-                            className="p-2.5 bg-success/10 text-success rounded-lg hover:bg-success hover:text-white border border-success/20 transition-all shadow-sm"
-                            title="Resolve Incident"
-                          >
-                            <CheckCircle2 className="w-4.5 h-4.5" />
-                          </button>
+                          {!isResolved ? (
+                            <button
+                              onClick={async () => {
+                                try {
+                                  await resolveAlert(alert.id);
+                                  setResolvedAlertIds(prev => new Set(prev).add(alert.id));
+                                } catch (err) {
+                                  console.error("Failed to resolve alert:", err);
+                                }
+                              }}
+                              className="p-2.5 bg-success/10 text-success rounded-lg hover:bg-success hover:text-white border border-success/20 transition-all shadow-sm"
+                              title="Resolve Incident"
+                            >
+                              <CheckCircle2 className="w-4.5 h-4.5" />
+                            </button>
+                          ) : (
+                            <div className="flex items-center gap-1.5 px-3 py-1.5 bg-success/10 text-success border border-success/20 rounded-lg text-[0.65rem] font-black uppercase tracking-wider">
+                              <CheckCircle2 className="w-3.5 h-3.5" /> Resolved
+                            </div>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -304,12 +350,18 @@ export default function Alerts() {
               Previous 24h
             </button>
             <button
-              onClick={() => {
-                setResolvedAlertIds(prev => {
-                  const next = new Set(prev);
-                  visibleAlerts.forEach(a => next.add(a.id));
-                  return next;
-                });
+              onClick={async () => {
+                try {
+                  const ids = visibleAlerts.map(a => a.id);
+                  await Promise.all(ids.map(id => resolveAlert(id)));
+                  setResolvedAlertIds(prev => {
+                    const next = new Set(prev);
+                    ids.forEach(id => next.add(id));
+                    return next;
+                  });
+                } catch (err) {
+                  console.error("Failed to acknowledge all:", err);
+                }
               }}
               className="px-6 py-2.5 bg-accent text-white rounded-lg text-[0.8rem] font-bold hover:opacity-90 shadow-premium transition-all"
             >
@@ -410,9 +462,14 @@ export default function Alerts() {
 
             <div className="p-4 border-t border-border bg-bg/50 flex justify-end gap-3">
               <button
-                onClick={() => {
-                  setResolvedAlertIds(prev => new Set(prev).add(selectedAlert.id));
-                  setSelectedAlert(null);
+                onClick={async () => {
+                  try {
+                    await resolveAlert(selectedAlert.id);
+                    setResolvedAlertIds(prev => new Set(prev).add(selectedAlert.id));
+                    setSelectedAlert(null);
+                  } catch (err) {
+                    console.error("Failed to resolve alert:", err);
+                  }
                 }}
                 className="px-6 py-2.5 bg-success text-white rounded-lg text-[0.8rem] font-bold shadow-premium hover:opacity-90 transition-all flex items-center gap-2"
               >

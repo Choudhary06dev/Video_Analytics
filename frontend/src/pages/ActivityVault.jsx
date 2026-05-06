@@ -338,6 +338,30 @@ export default function ActivityVault() {
                 </div>
               </div>
             </div>
+
+            {/* Top Right Quick Range Selectors */}
+            <div style={{ display: 'flex', background: isDark ? 'rgba(0,0,0,0.2)' : 'rgba(255,255,255,0.8)', padding: 3, borderRadius: 10, border: `1px solid ${cardBorder}`, backdropFilter: 'blur(8px)' }}>
+              {[
+                { label: '1H', val: 1 },
+                { label: '24H', val: 24 },
+                { label: '7D', val: 168 }
+              ].map(r => (
+                <button
+                  key={r.val}
+                  onClick={() => { setHoursRange(r.val); setPage(0); }}
+                  style={{
+                    padding: '8px 16px', borderRadius: 8, border: 'none',
+                    fontSize: 11, fontWeight: 900, cursor: 'pointer',
+                    background: hoursRange === r.val ? '#0ea5e9' : 'transparent',
+                    color: hoursRange === r.val ? '#fff' : (isDark ? '#94a3b8' : '#64748b'),
+                    transition: 'all 0.2s',
+                    boxShadow: hoursRange === r.val ? '0 4px 12px rgba(14,165,233,0.3)' : 'none'
+                  }}
+                >
+                  {r.label}
+                </button>
+              ))}
+            </div>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 12 }}>
             {[
@@ -416,29 +440,6 @@ export default function ActivityVault() {
             <div style={{ fontSize: 11, color: '#64748b', fontWeight: 600, marginTop: 2 }}>Real-time feed of latest AI-audited events</div>
           </div>
           <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-            {/* Quick Range Selectors */}
-            <div style={{ display: 'flex', background: isDark ? '#0f172a' : '#f8fafc', padding: 2, borderRadius: 8, border: `1px solid ${cardBorder}` }}>
-              {[
-                { label: '1H', val: 1 },
-                { label: '24H', val: 24 },
-                { label: '7D', val: 168 }
-              ].map(r => (
-                <button
-                  key={r.val}
-                  onClick={() => { setHoursRange(r.val); setPage(0); }}
-                  style={{
-                    padding: '6px 12px', borderRadius: 6, border: 'none',
-                    fontSize: 10, fontWeight: 900, cursor: 'pointer',
-                    background: hoursRange === r.val ? '#0ea5e9' : 'transparent',
-                    color: hoursRange === r.val ? '#fff' : '#64748b',
-                    transition: 'all 0.2s'
-                  }}
-                >
-                  {r.label}
-                </button>
-              ))}
-            </div>
-            <div style={{ width: 1, height: 20, background: cardBorder }} />
             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
               <span style={{ fontSize: 10, fontWeight: 700, color: '#64748b' }}>FROM</span>
               <input

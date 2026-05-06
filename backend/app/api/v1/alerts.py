@@ -205,10 +205,12 @@ def fetch_alerts(
     hours: float = 24.0,
     severity: Optional[str] = None,
     limit: int = 100,
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
     session: Session = Depends(get_session),
     auth_data: dict = Depends(lambda cur=Depends(get_current_user), s=Depends(get_session): verify_module_access("alerts", cur, s, access_level="view")),
 ):
-    return get_alerts(session, hours, severity, limit)
+    return get_alerts(session, hours, severity, limit, start_date, end_date)
 
 @router.get("/logs")
 def fetch_logs(
@@ -246,3 +248,21 @@ def fetch_logs_summary(
     allowed_area_ids = get_allowed_area_ids(current_user["id"], session)
     
     return get_logs_summary(session, hours, camera_id, area_id, scenario_key, latest_intelligence_cache, allowed_area_ids=allowed_area_ids)
+    
+@router.put("/alerts/{alert_id}/resolve")
+def resolve_alert(
+    alert_id: int,
+    session: Session = Depends(get_session),
+    auth_data: dict = Depends(lambda cur=Depends(get_current_user), s=Depends(get_session): verify_module_access("alerts", cur, s, access_level="edit")),
+):
+    """
+    Marks an alert as resolved in the database.
+    """
+    event = session.get(DetectionEvent, alert_id)
+    if not event:
+        raise HTTPException(status_code=404, detail="Alert not found")
+        
+    event.is_resolved = True
+    session.add(event)
+    session.commit()
+    return {"status": "success", "message": f"Alert {alert_id} resolved"}

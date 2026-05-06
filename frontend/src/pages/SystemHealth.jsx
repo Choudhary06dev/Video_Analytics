@@ -9,7 +9,8 @@ import {
   Terminal,
   AlertCircle,
   CheckCircle2,
-  RefreshCw
+  RefreshCw,
+  Search
 } from 'lucide-react';
 import {
   AreaChart,
@@ -25,29 +26,13 @@ import { fetchHealthStats } from '../services/healthService';
 export default function SystemHealth() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [logs, setLogs] = useState([
-      "> Initializing CUDA context...",
-      "> Found NVIDIA hardware profile",
-      "> Syncing neural stream nodes...",
-      "> API Gateway: Connected"
-  ]);
-  const logEndRef = useRef(null);
+  const [searchTerm, setSearchTerm] = useState('');
 
   const getHealth = async () => {
     try {
       const res = await fetchHealthStats();
       setData(res);
       setLoading(false);
-      
-      // Simulate real-time logs based on actual status
-      const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-      const newLog = `> [${time}] HEALTH_CHECK: CPU ${res.metrics.cpu_load} | CAM_ONLINE ${res.cameras.ratio} | OK`;
-      
-      setLogs(prev => {
-        const next = [...prev, newLog];
-        if (next.length > 15) next.shift();
-        return next;
-      });
     } catch (err) {
       console.error("Failed to fetch health intel:", err);
     }
@@ -87,12 +72,12 @@ export default function SystemHealth() {
             <ShieldCheck className="w-4 h-4" />
             SECURE DEPLOYMENT
           </div>
-          <button 
+          <button
             onClick={getHealth}
             className="flex items-center gap-2 px-4 py-2 bg-card text-text-dark border border-border rounded-lg text-[0.75rem] font-bold cursor-pointer hover:border-accent hover:text-accent shadow-sm"
           >
             <RefreshCw className="w-4 h-4" />
-            Relaunch Kernels
+            Refresh
           </button>
         </div>
       </div>
@@ -117,9 +102,9 @@ export default function SystemHealth() {
         ))}
       </div>
 
-      {/* Chart and Compliance Row */}
-      <div className="grid lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2 bg-card rounded-lg p-6 md:p-8 border border-border shadow-premium flex flex-col h-[450px]">
+      {/* Chart Row */}
+      <div className="w-full">
+        <div className="bg-card rounded-lg p-6 md:p-8 border border-border shadow-premium flex flex-col h-[450px]">
           <div className="flex justify-between items-center mb-10">
             <h3 className="text-[1.1rem] font-bold text-text-dark m-0">Resource Monitoring Matrix</h3>
             <div className="flex gap-6">
@@ -136,16 +121,16 @@ export default function SystemHealth() {
               <AreaChart data={chart_data} margin={{ top: 10, right: 10, left: -25, bottom: 0 }}>
                 <defs>
                   <linearGradient id="colorCpu" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="var(--color-accent)" stopOpacity={0.3}/>
-                    <stop offset="95%" stopColor="var(--color-accent)" stopOpacity={0}/>
+                    <stop offset="5%" stopColor="var(--color-accent)" stopOpacity={0.3} />
+                    <stop offset="95%" stopColor="var(--color-accent)" stopOpacity={0} />
                   </linearGradient>
                   <linearGradient id="colorMem" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="var(--color-success)" stopOpacity={0.3}/>
-                    <stop offset="95%" stopColor="var(--color-success)" stopOpacity={0}/>
+                    <stop offset="5%" stopColor="var(--color-success)" stopOpacity={0.3} />
+                    <stop offset="95%" stopColor="var(--color-success)" stopOpacity={0} />
                   </linearGradient>
                   <linearGradient id="colorNet" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="var(--color-warning)" stopOpacity={0.3}/>
-                    <stop offset="95%" stopColor="var(--color-warning)" stopOpacity={0}/>
+                    <stop offset="5%" stopColor="var(--color-warning)" stopOpacity={0.3} />
+                    <stop offset="95%" stopColor="var(--color-warning)" stopOpacity={0} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--color-border)" opacity={0.5} />
@@ -184,85 +169,62 @@ export default function SystemHealth() {
                     return null;
                   }}
                 />
-                <Area 
-                    type="monotone" 
-                    dataKey="cpu" 
-                    name="cpu"
-                    stroke="var(--color-accent)" 
-                    strokeWidth={3}
-                    fillOpacity={1} 
-                    fill="url(#colorCpu)" 
-                    tension={0.4}
-                />
-                <Area 
-                    type="monotone" 
-                    dataKey="memory" 
-                    name="memory"
-                    stroke="var(--color-success)" 
-                    strokeWidth={3}
-                    fillOpacity={1} 
-                    fill="url(#colorMem)" 
-                    tension={0.4}
-                />
-                <Area 
-                    type="monotone" 
-                    dataKey="network" 
-                    name="network"
-                    stroke="var(--color-warning)" 
-                    strokeWidth={3}
-                    fillOpacity={1} 
-                    fill="url(#colorNet)" 
-                    tension={0.4}
-                />
+                <Area type="monotone" dataKey="cpu" stroke="var(--color-accent)" strokeWidth={3} fillOpacity={1} fill="url(#colorCpu)" tension={0.4} />
+                <Area type="monotone" dataKey="memory" stroke="var(--color-success)" strokeWidth={3} fillOpacity={1} fill="url(#colorMem)" tension={0.4} />
+                <Area type="monotone" dataKey="network" stroke="var(--color-warning)" strokeWidth={3} fillOpacity={1} fill="url(#colorNet)" tension={0.4} />
               </AreaChart>
             </ResponsiveContainer>
           </div>
         </div>
+      </div>
 
-        <div className="lg:col-span-1 bg-card rounded-lg p-8 border border-border shadow-premium flex flex-col">
-          <h3 className="text-[1.1rem] font-bold text-text-dark mb-8 uppercase tracking-tight">Zone Compliance</h3>
-          <div className="space-y-6 flex-1 overflow-y-auto pr-2 scrollbar-none">
-            {compliance.map((sector, i) => (
-              <div key={i} className="group">
-                <div className="flex justify-between items-center mb-2">
-                  <span className="text-[0.85rem] font-bold text-text-gray">{sector.name}</span>
-                  <span className={`text-[0.95rem] font-black ${sector.score >= 95 ? 'text-success' : 'text-accent'}`}>{sector.score}%</span>
+      {/* Zone Compliance Grid Row */}
+      <div className="bg-card rounded-lg p-8 border border-border shadow-premium flex flex-col">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+          <div>
+            <h3 className="text-[1.1rem] font-bold text-text-dark uppercase tracking-tight m-0">Zone Compliance Matrix</h3>
+            <p className="text-[0.7rem] text-text-gray font-bold uppercase tracking-wider mt-1">Real-time safety integrity per sector</p>
+          </div>
+
+          <div className="relative w-full md:w-80">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-gray" />
+            <input
+              type="text"
+              placeholder="Search specific zone..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full bg-bg border border-border rounded-lg py-2.5 pl-10 pr-4 text-[0.85rem] font-bold text-text-dark focus:outline-none focus:border-accent transition-all shadow-sm"
+            />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {compliance
+            .filter(z => z.name.toLowerCase().includes(searchTerm.toLowerCase()))
+            .map((sector, i) => (
+              <div key={i} className="group p-4 bg-bg/50 rounded-xl border border-border hover:border-accent transition-all duration-300">
+                <div className="flex justify-between items-center mb-3">
+                  <span className="text-[0.8rem] font-black text-text-dark uppercase tracking-tight">{sector.name}</span>
+                  <span className={`text-[0.9rem] font-black ${sector.score >= 95 ? 'text-success' : 'text-accent'}`}>{sector.score}%</span>
                 </div>
-                <div className="h-2 bg-bg rounded-full overflow-hidden border border-border">
+                <div className="h-1.5 bg-border rounded-full overflow-hidden mb-3">
                   <div
                     className={`h-full rounded-full transition-all duration-[1.5s] ease-out ${sector.score >= 95 ? 'bg-success' : 'bg-accent'}`}
                     style={{ width: `${sector.score}%` }}
                   />
                 </div>
-                <div className="flex justify-between mt-1 opacity-70">
-                  <span className="text-[0.65rem] font-bold text-text-gray italic">📈 {sector.trend}</span>
-                  <span className={`text-[0.65rem] font-bold ${sector.score >= 95 ? 'text-success' : 'text-accent'} uppercase`}>{sector.status}</span>
+                <div className="flex justify-between opacity-80">
+                  <span className="text-[0.6rem] font-bold text-text-gray italic">📈 {sector.trend}</span>
+                  <span className={`text-[0.6rem] font-black ${sector.score >= 95 ? 'text-success' : 'text-accent'} uppercase`}>{sector.status}</span>
                 </div>
               </div>
             ))}
-          </div>
-        </div>
-      </div>
 
-      {/* Kernel Log Row */}
-      <div className="bg-black rounded-lg p-8 shadow-2xl overflow-hidden border border-text-dark/50 font-mono">
-        <div className="flex items-center gap-3 mb-6">
-          <Terminal className="w-5 h-5 text-accent" />
-          <span className="text-white text-[0.8rem] font-bold uppercase tracking-widest opacity-80">Vision Core Kernel Log</span>
-          <div className="flex gap-1 ml-auto">
-            <div className="w-3 h-3 rounded-full bg-danger/30" />
-            <div className="w-3 h-3 rounded-full bg-warning/30" />
-            <div className="w-3 h-3 rounded-full bg-success/30" />
-          </div>
-        </div>
-        <div className="h-[250px] overflow-y-auto text-accent/80 text-[0.85rem] leading-7 custom-scrollbar lowercase">
-          {logs.map((log, i) => (
-            <div key={i} className="flex gap-4">
-              <span className="text-white/60 select-none">[{i + 102}]</span>
-              <p className="animate-in fade-in slide-in-from-left-2 duration-300">{log}</p>
+          {compliance.filter(z => z.name.toLowerCase().includes(searchTerm.toLowerCase())).length === 0 && (
+            <div className="col-span-full py-10 text-center">
+              <p className="text-[0.8rem] font-bold text-text-gray uppercase tracking-widest italic">No zones found matching: {searchTerm}</p>
             </div>
-          ))}
-          <div ref={logEndRef} />
+          )}
         </div>
       </div>
     </div>

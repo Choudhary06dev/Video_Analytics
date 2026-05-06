@@ -55,7 +55,10 @@ async def get_health_stats():
             area_cams_statement = select(func.count(Camera.id)).where(Camera.area_id == area.id)
             total_area_cams = session.exec(area_cams_statement).one()
             
-            online_area_cams_statement = select(func.count(Camera.id)).where(Camera.area_id == area.id, Camera.status == "online")
+            online_area_cams_statement = select(func.count(Camera.id)).where(
+                Camera.area_id == area.id, 
+                (Camera.status == "online") | (Camera.is_active == True)
+            )
             online_area_cams = session.exec(online_area_cams_statement).one()
             
             # Check for critical alerts in this area in last 24h
@@ -73,7 +76,7 @@ async def get_health_stats():
             # Base score is based on camera availability
             availability_score = (online_area_cams / total_area_cams * 100) if total_area_cams > 0 else 100
             # Deduct points for critical alerts (max deduction 30 points)
-            security_deduction = min(critical_count * 10, 30)
+            security_deduction = min(critical_count * 1, 30)
             final_score = int(availability_score - security_deduction)
             
             compliance.append({

@@ -15,7 +15,16 @@ import {
   X,
   CheckCircle2,
   AlertTriangle,
-  Zap
+  Zap,
+  Flame,
+  Smartphone,
+  Users,
+  Crosshair,
+  UserPlus,
+  UserX,
+  ArrowLeftRight,
+  Ear,
+  Target
 } from 'lucide-react';
 
 export default function AIScenarioRegistry() {
@@ -100,6 +109,20 @@ export default function AIScenarioRegistry() {
     }
   };
 
+  const getScenarioIcon = (key) => {
+    const k = (key || '').toUpperCase();
+    if (k.includes('WEAPON')) return Crosshair;
+    if (k.includes('FIRE') || k.includes('SMOKE')) return Flame;
+    if (k.includes('MOBILE')) return Smartphone;
+    if (k.includes('CROWD') || k.includes('DENSITY')) return Users;
+    if (k.includes('UNAUTHORIZED') || k.includes('RESTRICTED')) return UserPlus;
+    if (k.includes('AGGRESSIVE')) return Zap;
+    if (k.includes('ABSENCE')) return UserX;
+    if (k.includes('ENTRY') || k.includes('EXIT')) return ArrowLeftRight;
+    if (k.includes('SHOUTING') || k.includes('NOISE')) return Ear;
+    return Target;
+  };
+
   const filteredScenarios = scenarios.filter(s =>
     s.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     s.key.toLowerCase().includes(searchTerm.toLowerCase())
@@ -108,7 +131,7 @@ export default function AIScenarioRegistry() {
   if (loading) {
     return (
       <div className="h-full flex flex-col items-center justify-center gap-4">
-        <Loader2 className="w-10 h-10 text-violet-600 animate-spin" />
+        <Loader2 className="w-10 h-10 text-accent animate-spin" />
         <p className="text-[10px] font-black uppercase tracking-[3px] text-text-gray">Syncing Intelligence Registry...</p>
       </div>
     );
@@ -119,13 +142,13 @@ export default function AIScenarioRegistry() {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div className="flex items-center gap-4">
-          <div className="w-12 h-12 bg-violet-600/10 rounded-lg flex items-center justify-center border border-violet-600/20">
-            <Brain className="w-7 h-7 text-violet-600" />
+          <div className="w-12 h-12 bg-accent/10 rounded-lg flex items-center justify-center border border-accent/20">
+            <Brain className="w-7 h-7 text-accent" />
           </div>
           <div>
             <h1 className="text-2xl font-black italic uppercase tracking-tighter text-text-dark">
-              Intelligence <span className="text-violet-600 underline decoration-violet-600/20 underline-offset-4">Registry</span>
-              <span className="ml-3 px-2 py-0.5 bg-violet-600 text-white rounded text-[10px] font-black not-italic tracking-widest align-middle shadow-md">
+              Intelligence <span className="text-accent underline decoration-accent/20 underline-offset-4">Registry</span>
+              <span className="ml-3 px-2 py-0.5 bg-accent text-white rounded text-[10px] font-black not-italic tracking-widest align-middle shadow-md">
                 {scenarios.length}
               </span>
             </h1>
@@ -139,18 +162,18 @@ export default function AIScenarioRegistry() {
 
         <div className="flex items-center gap-4">
           <div className="relative group">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-text-gray group-focus-within:text-violet-500 transition-colors" />
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-text-gray group-focus-within:text-accent transition-colors" />
             <input
               type="text"
               placeholder="SEARCH MODELS..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-11 pr-6 py-2.5 bg-card border border-border rounded-lg text-[10px] font-black uppercase tracking-widest focus:outline-none focus:border-violet-500 transition-all w-full md:w-[300px]"
+              className="pl-11 pr-6 py-2.5 bg-card border border-border rounded-lg text-[10px] font-black uppercase tracking-widest focus:outline-none focus:border-accent transition-all w-full md:w-[300px]"
             />
           </div>
           <button
             onClick={() => handleOpenModal()}
-            className="flex items-center gap-2 bg-violet-600 text-white px-5 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-violet-700 transition-all shadow-lg shadow-violet-200"
+            className="flex items-center gap-2 bg-accent text-white px-5 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-widest hover:brightness-110 transition-all shadow-lg shadow-accent/20"
           >
             <Plus className="w-4 h-4" />
             Add Scenario
@@ -160,46 +183,56 @@ export default function AIScenarioRegistry() {
 
       {/* Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-        {filteredScenarios.map(scenario => (
-          <div key={scenario.id} className="bg-card border border-border rounded-xl p-4 hover:shadow-xl hover:shadow-violet-500/5 transition-all group border-l-4 border-l-violet-500 flex flex-col h-full">
-            <div className="flex justify-between items-start mb-3">
+        {filteredScenarios.map(scenario => {
+          const sev = scenario.default_severity;
+          const sevStyles = 
+            sev === 'Critical' ? { border: 'border-l-rose-500', bg: 'bg-rose-50/30', glow: 'shadow-rose-500/10' } :
+            sev === 'High' ? { border: 'border-l-orange-500', bg: 'bg-orange-50/30', glow: 'shadow-orange-500/10' } :
+            sev === 'Medium' ? { border: 'border-l-amber-500', bg: 'bg-amber-50/30', glow: 'shadow-amber-500/10' } :
+            { border: 'border-l-emerald-500', bg: 'bg-emerald-50/30', glow: 'shadow-emerald-500/10' };
+          
+          const ScenarioIcon = getScenarioIcon(scenario.key);
 
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-surface rounded-lg flex items-center justify-center border border-border">
-                  <Zap className="w-5 h-5 text-violet-500" />
+          return (
+            <div key={scenario.id} className={`bg-card border border-border rounded-xl p-4 hover:shadow-xl transition-all group border-l-4 ${sevStyles.border} ${sevStyles.bg} hover:${sevStyles.glow} flex flex-col h-full`}>
+              <div className="flex justify-between items-start mb-3">
+                <div className="flex items-start gap-3">
+                  <div className="w-10 h-10 bg-surface rounded-lg flex items-center justify-center border border-border shrink-0 mt-0.5">
+                    <ScenarioIcon className={`w-5 h-5 ${sevStyles.border.replace('border-l-', 'text-')}`} />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-black text-text-dark uppercase tracking-tight">{scenario.name}</h3>
+                    <code className="text-[9px] text-accent font-bold bg-accent/5 px-1.5 py-0.5 rounded border border-accent/10">{scenario.key}</code>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="text-sm font-black text-text-dark uppercase tracking-tight">{scenario.name}</h3>
-                  <code className="text-[9px] text-violet-600 font-bold bg-violet-50 px-1.5 py-0.5 rounded">{scenario.key}</code>
+                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all">
+                  <button onClick={() => handleOpenModal(scenario)} className="p-2 hover:bg-white/80 rounded-lg text-text-gray hover:text-accent transition-all">
+                    <Edit2 className="w-4 h-4" />
+                  </button>
+                  <button onClick={() => handleDelete(scenario.id)} className="p-2 hover:bg-rose-50 rounded-lg text-text-gray hover:text-rose-600 transition-all">
+                    <Trash2 className="w-4 h-4" />
+                  </button>
                 </div>
               </div>
-              <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all">
-                <button onClick={() => handleOpenModal(scenario)} className="p-2 hover:bg-surface rounded-lg text-text-gray hover:text-violet-600 transition-all">
-                  <Edit2 className="w-4 h-4" />
-                </button>
-                <button onClick={() => handleDelete(scenario.id)} className="p-2 hover:bg-rose-50 rounded-lg text-text-gray hover:text-rose-600 transition-all">
-                  <Trash2 className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
-            <p className="text-[11px] text-text-gray font-medium line-clamp-2 h-8 overflow-hidden mb-2">
-              {scenario.description || "No description provided."}
-            </p>
-            <div className="mt-auto pt-3 border-t border-border flex items-center justify-between">
-
-              <span className={`px-2 py-1 rounded text-[9px] font-black uppercase tracking-widest
-                ${scenario.default_severity === 'Critical' ? 'bg-rose-500/10 text-rose-600' :
-                  scenario.default_severity === 'High' ? 'bg-orange-500/10 text-orange-600' :
+              <p className="text-[11px] text-text-gray font-medium line-clamp-2 h-8 overflow-hidden mb-2">
+                {scenario.description || "No description provided."}
+              </p>
+              <div className="mt-auto pt-3 border-t border-border/50 flex items-center justify-between">
+                <span className={`px-2 py-1 rounded text-[9px] font-black uppercase tracking-widest
+                  ${sev === 'Critical' ? 'bg-rose-500/10 text-rose-600' :
+                    sev === 'High' ? 'bg-orange-500/10 text-orange-600' :
+                    sev === 'Medium' ? 'bg-amber-500/10 text-amber-600' :
                     'bg-emerald-500/10 text-emerald-600'}`}>
-                {scenario.default_severity} Severity
-              </span>
-              <div className="flex items-center gap-1.5 text-[9px] font-black text-text-gray uppercase tracking-widest">
-                <CheckCircle2 className="w-3 h-3 text-emerald-500" />
-                Validated
+                  {sev} Severity
+                </span>
+                <div className="flex items-center gap-1.5 text-[9px] font-black text-text-gray uppercase tracking-widest">
+                  <CheckCircle2 className="w-3 h-3 text-emerald-500" />
+                  Validated
+                </div>
               </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {/* Modal */}
@@ -222,7 +255,7 @@ export default function AIScenarioRegistry() {
                   required
                   value={formData.name}
                   onChange={e => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full bg-surface border border-border rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-violet-500"
+                  className="w-full bg-surface border border-border rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-accent"
                   placeholder="e.g. Weapon Detection"
                 />
               </div>
@@ -233,7 +266,7 @@ export default function AIScenarioRegistry() {
                   required
                   value={formData.key}
                   onChange={e => setFormData({ ...formData, key: e.target.value })}
-                  className="w-full bg-surface border border-border rounded-lg px-4 py-2.5 text-sm font-mono focus:outline-none focus:border-violet-500"
+                  className="w-full bg-surface border border-border rounded-lg px-4 py-2.5 text-sm font-mono focus:outline-none focus:border-accent"
                   placeholder="e.g. WEAPON_DETECTION"
                 />
               </div>
@@ -242,7 +275,7 @@ export default function AIScenarioRegistry() {
                 <textarea
                   value={formData.description}
                   onChange={e => setFormData({ ...formData, description: e.target.value })}
-                  className="w-full bg-surface border border-border rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-violet-500 h-24 resize-none"
+                  className="w-full bg-surface border border-border rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-accent h-24 resize-none"
                   placeholder="Describe the detection logic..."
                 />
               </div>
@@ -251,7 +284,7 @@ export default function AIScenarioRegistry() {
                 <select
                   value={formData.default_severity}
                   onChange={e => setFormData({ ...formData, default_severity: e.target.value })}
-                  className="w-full bg-surface border border-border rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-violet-500"
+                  className="w-full bg-surface border border-border rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-accent"
                 >
                   <option value="Low">Low</option>
                   <option value="Medium">Medium</option>
@@ -271,7 +304,7 @@ export default function AIScenarioRegistry() {
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="flex-1 px-6 py-2.5 bg-violet-600 text-white rounded-lg text-[10px] font-black uppercase tracking-widest shadow-lg shadow-violet-200 disabled:opacity-50"
+                  className="flex-1 px-6 py-2.5 bg-accent text-white rounded-lg text-[10px] font-black uppercase tracking-widest shadow-lg shadow-accent/20 disabled:opacity-50"
                 >
                   {submitting ? 'Syncing...' : 'Save Registry'}
                 </button>

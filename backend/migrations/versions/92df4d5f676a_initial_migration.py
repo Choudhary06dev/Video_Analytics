@@ -30,6 +30,7 @@ def upgrade() -> None:
     op.execute(sa.text("ALTER TABLE camera ADD COLUMN IF NOT EXISTS enabled_scenario_ids JSONB DEFAULT '[]'::jsonb"))
     op.execute(sa.text("ALTER TABLE camera ADD COLUMN IF NOT EXISTS scenario_configs JSONB DEFAULT '{}'::jsonb"))
     op.execute(sa.text("ALTER TABLE detectionevent ADD COLUMN IF NOT EXISTS image_base64 TEXT"))
+    op.execute(sa.text("ALTER TABLE detectionevent ADD COLUMN IF NOT EXISTS is_resolved BOOLEAN DEFAULT FALSE"))
     
     # Drop the redundant junction table if it exists
     op.execute(sa.text("DROP TABLE IF EXISTS camerascenarioassignment CASCADE"))
