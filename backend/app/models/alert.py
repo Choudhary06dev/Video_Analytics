@@ -26,6 +26,7 @@ class DetectionEvent(SQLModel, table=True):
     confidence: float
     severity: str = Field(default="Low")
     is_alert: bool = Field(default=False)
+    is_resolved: bool = Field(default=False)
 
     # Store additional data like bounding boxes as JSON
     metadata_json: Optional[Dict] = Field(default=None, sa_type=JSON)

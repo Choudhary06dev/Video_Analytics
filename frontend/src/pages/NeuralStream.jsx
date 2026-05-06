@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { useLocation } from 'react-router-dom';
 import { fetchLiveAreas, fetchLiveCameras, fetchLiveScenarios } from '../services/cameraService';
 import { fetchLogs, fetchLogsSummary } from '../services/alertService';
 import { EVENTS_URL, VIDEO_FEED_URL } from '../api';
@@ -107,10 +108,36 @@ export default function NeuralStream() {
     }
   }, []);
 
+  const location = useLocation();
+
   useEffect(() => {
     loadCameras();
     loadFilterOptions();
   }, [loadCameras, loadFilterOptions]);
+
+  // Auto-select camera from URL query param
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const camId = params.get('camera_id');
+    
+    if (camId) {
+      const parsedId = parseInt(camId);
+      // If cameras are already loaded, select immediately
+      if (cameras.length > 0) {
+        const targetCam = cameras.find(c => c.id === parsedId);
+        if (targetCam) {
+          setActiveCamera(targetCam.id);
+          setIsGlobalView(false);
+          // Scroll to top to show the focus view if needed
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+      }
+    } else {
+      // If no camera_id in URL, maybe we should stay in current mode 
+      // or default to global if the user explicitly cleared it.
+      // For now, let's just let the user toggle manually.
+    }
+  }, [location.search, location.key, cameras]);
 
   const areaNameById = useMemo(() => {
     return new Map(areas.map(area => [area.id, area.name]));

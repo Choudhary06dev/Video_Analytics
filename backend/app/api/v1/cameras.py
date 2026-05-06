@@ -300,10 +300,10 @@ def update_scenario(scenario_id: int, data: ScenarioUpdate, session: Session = D
     if not scenario:
         raise HTTPException(status_code=404, detail="Scenario not found")
         
-    if data.name: scenario.name = data.name
-    if data.key: scenario.key = data.key
-    if data.description: scenario.description = data.description
-    if data.default_severity: scenario.default_severity = data.default_severity
+    if data.name is not None: scenario.name = data.name
+    if data.key is not None: scenario.key = data.key
+    if data.description is not None: scenario.description = data.description
+    if data.default_severity is not None: scenario.default_severity = data.default_severity
     
     session.add(scenario)
     session.commit()

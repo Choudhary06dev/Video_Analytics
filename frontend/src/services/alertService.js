@@ -1,10 +1,12 @@
-import { get, BASE } from './api';
+import { get, put, BASE } from './api';
 
 export const fetchAlerts = (opts = {}) =>
   get("/alerts", {
     hours: opts.hours ?? 24,
     severity: opts.severity ?? undefined,
     limit: opts.limit ?? 100,
+    start_date: opts.start_date ?? opts.startDate ?? undefined,
+    end_date: opts.end_date ?? opts.endDate ?? undefined,
   });
 
 export const fetchLogs = (opts = {}) =>
@@ -31,6 +33,8 @@ export const fetchLogsSummary = (hours = 24, filters = {}) => {
     scenario_key: filterObject.scenario_key ?? filterObject.scenarioKey ?? undefined,
   });
 };
+
+export const resolveAlert = (alertId) => put(`/alerts/${alertId}/resolve`);
 
 export function subscribeToEvents({ onSnapshot, onDetection, onError }) {
     const token = encodeURIComponent(localStorage.getItem('token') || '');

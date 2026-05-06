@@ -10,34 +10,23 @@ import { useTheme } from '../../context/ThemeContext';
 import { useAuth } from '../../context/AuthContext';
 import { LogOut } from 'lucide-react';
 
-const SEARCH_INDEX = [
-  // Pages
+const STATIC_PAGES = [
   { name: 'Command Hub', category: 'Pages', path: '/', icon: LayoutDashboard },
   { name: 'Neural Stream', category: 'Pages', path: '/neural-stream', icon: Radio },
   { name: 'AI Scenarios', category: 'Pages', path: '/scenarios', icon: Brain },
-
   { name: 'Activity Vault', category: 'Pages', path: '/vault', icon: ClipboardList },
   { name: 'System Health', category: 'Pages', path: '/health', icon: Cpu },
   { name: 'AI Training', category: 'Pages', path: '/training', icon: GraduationCap },
   { name: 'Crisis Alerts', category: 'Pages', path: '/alerts', icon: Bell },
   { name: 'Global Settings', category: 'Pages', path: '/settings', icon: Settings },
-
-  // AI Scenarios (Top ones)
-  { name: 'Unauthorized Entry', category: 'AI Models', path: '/scenarios', icon: Brain },
-  { name: 'Weapon Detection', category: 'AI Models', path: '/scenarios', icon: Brain },
-  { name: 'Fire / Smoke Detection', category: 'AI Models', path: '/scenarios', icon: Brain },
-  { name: 'Crowd Density', category: 'AI Models', path: '/scenarios', icon: Brain },
-
-  // Mock Technical Items
-  { name: 'Main Gate Camera', category: 'Cameras', path: '/neural-stream', icon: Radio },
-  { name: 'ICU Monitor 04', category: 'Cameras', path: '/neural-stream', icon: Radio },
-  { name: 'Emergency Exit B', category: 'Cameras', path: '/neural-stream', icon: Radio },
 ];
 
 export default function Header({ isSidebarOpen, setSidebarOpen }) {
   const { isDark, toggleTheme } = useTheme();
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  
+  const [searchIndex, setSearchIndex] = useState(STATIC_PAGES);
   const [searchQuery, setSearchQuery] = useState('');
   const [showResults, setShowResults] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
@@ -46,12 +35,52 @@ export default function Header({ isSidebarOpen, setSidebarOpen }) {
   const searchRef = useRef(null);
   const profileRef = useRef(null);
 
+  // Fetch dynamic data for search index
   useEffect(() => {
-    if (searchQuery.trim().length > 0) {
-      const filtered = SEARCH_INDEX.filter(item =>
-        item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        item.category.toLowerCase().includes(searchQuery.toLowerCase())
-      ).slice(0, 8);
+    const loadDynamicData = async () => {
+      try {
+        const cameraService = await import('../../services/cameraService');
+        const [cameras, scenarios] = await Promise.all([
+          cameraService.fetchLiveCameras().catch(() => []),
+          cameraService.fetchLiveScenarios().catch(() => [])
+        ]);
+
+        const cameraItems = (Array.isArray(cameras) ? cameras : []).map(cam => ({
+          name: cam.name,
+          category: 'Cameras',
+          path: `/neural-stream?camera_id=${cam.id}`,
+          icon: Radio
+        }));
+
+        const scenarioItems = (Array.isArray(scenarios) ? scenarios : []).map(s => ({
+          name: s.name,
+          category: 'AI Scenarios',
+          path: `/scenarios?scenario_id=${s.id}`,
+          icon: Brain
+        }));
+
+        setSearchIndex([...STATIC_PAGES, ...cameraItems, ...scenarioItems]);
+      } catch (err) {
+        console.error("Critical: Failed to build dynamic search index", err);
+      }
+    };
+
+    loadDynamicData();
+  }, []);
+
+  useEffect(() => {
+    const query = searchQuery.trim().toLowerCase();
+    if (query.length > 0) {
+      const filtered = searchIndex.filter(item => {
+        const nameMatch = item.name.toLowerCase().includes(query);
+        const categoryMatch = item.category.toLowerCase().includes(query);
+        // Handle singular/plural common cases like "camera" matching "Cameras"
+        const typeMatch = (query === 'camera' && item.category === 'Cameras') || 
+                         (query === 'scenario' && item.category === 'AI Scenarios');
+        
+        return nameMatch || categoryMatch || typeMatch;
+      }).slice(0, 10);
+      
       setResults(filtered);
       setShowResults(true);
       setActiveIndex(-1);
@@ -59,7 +88,7 @@ export default function Header({ isSidebarOpen, setSidebarOpen }) {
       setResults([]);
       setShowResults(false);
     }
-  }, [searchQuery]);
+  }, [searchQuery, searchIndex]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {

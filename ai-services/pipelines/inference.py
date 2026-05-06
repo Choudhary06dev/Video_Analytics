@@ -29,7 +29,7 @@ SCENARIO_MAPPING = {
 
 CONF_THRESHOLD = 0.55
 IOU_THRESHOLD = 0.45
-MIN_STABLE_FRAMES_TO_LOG = 5
+MIN_STABLE_FRAMES_TO_LOG = 3  # Faster response: requires only 3 consecutive frames
 LOG_COOLDOWN = 10.0 # Prevent spam for the same event
 VISITOR_LIMIT = 2  # Max allowed visitors (e.g., 1 patient + 1 attendant)
 
@@ -160,19 +160,20 @@ class InferenceEngine:
         return self.processed_frame_bytes, self.processed_events
 
     def _perform_inference(self, frame):
-        # Resize to 720p for HD quality while maintaining real-time FPS
-        # (1280x720 is the sweet spot for surveillance streaming)
+        # PERFORMANCE TWEAK: Resize to 480x270 for LIGHTNING FAST inference
+        # This reduces CPU load by ~4x while maintaining enough detail for AI
         h, w = frame.shape[:2]
-        if w > 1280:
-            frame = cv2.resize(frame, (1280, 720))
+        inference_frame = cv2.resize(frame, (480, 270))
 
-        # Direct predict with stream=True for speed if needed, but keeping it simple for now
-        results = model.predict(frame, conf=CONF_THRESHOLD, iou=IOU_THRESHOLD, verbose=False, imgsz=640)
+        # Use imgsz=320 for faster processing on standard hardware
+        results = model.predict(inference_frame, conf=CONF_THRESHOLD, iou=IOU_THRESHOLD, verbose=False, imgsz=320)
         person_count = 0
         detected_scenarios = {}
         events_to_log = []
 
-        annotated_frame = frame
+        # We still want to show a decent quality annotated frame
+        # So we'll plot on the inference_frame but maybe upscale it slightly for the stream
+        annotated_frame = inference_frame
         if results and len(results) > 0:
             annotated_frame = results[0].plot()
             for box in results[0].boxes:

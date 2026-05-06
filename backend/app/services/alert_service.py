@@ -76,14 +76,34 @@ def _apply_event_filters(
 
     return statement
 
-def get_alerts(session: Session, hours: float = 24.0, severity: Optional[str] = None, limit: int = 100):
-    cutoff = datetime.now() - timedelta(hours=hours)
-    statement = select(DetectionEvent).where(
-        DetectionEvent.timestamp >= cutoff,
-        DetectionEvent.is_alert == True
-    )
+def get_alerts(
+    session: Session, 
+    hours: float = 24.0, 
+    severity: Optional[str] = None, 
+    limit: int = 100,
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None
+):
+    if start_date and end_date:
+        try:
+            start_dt = datetime.fromisoformat(start_date.replace('Z', '+00:00').split('.')[0])
+            end_dt = datetime.fromisoformat(end_date.replace('Z', '+00:00').split('.')[0])
+            # Add 1 day to end_date to include the whole day if it's just a date
+            if len(end_date) <= 10:
+                end_dt = end_dt + timedelta(days=1)
+            statement = select(DetectionEvent).where(DetectionEvent.timestamp >= start_dt, DetectionEvent.timestamp <= end_dt)
+        except ValueError:
+            cutoff = datetime.now() - timedelta(hours=hours)
+            statement = select(DetectionEvent).where(DetectionEvent.timestamp >= cutoff)
+    else:
+        cutoff = datetime.now() - timedelta(hours=hours)
+        statement = select(DetectionEvent).where(DetectionEvent.timestamp >= cutoff)
+
+    statement = statement.where(DetectionEvent.is_alert == True)
+    
     if severity:
         statement = statement.where(DetectionEvent.severity == severity)
+    
     statement = statement.order_by(DetectionEvent.timestamp.desc()).limit(limit)
     return session.exec(statement).all()
 
@@ -171,13 +191,15 @@ def get_logs_summary(
         weekday = ev.timestamp.weekday()
         weekly_distribution[weekday][hour] += 1
         
-        # Categorical Hourly based strictly on severity
-        if ev.severity in ['High', 'Critical']:
-            categorical_hourly["High"][hour] += 1
-        elif ev.severity == 'Medium':
-            categorical_hourly["Medium"][hour] += 1
-        else: # Low severity
-            categorical_hourly["Low"][hour] += 1
+        # Categorical Hourly based strictly on severity mapping
+        SEVERITY_TO_CAT = {
+            "Critical": "High",
+            "High": "High",
+            "Medium": "Medium",
+            "Low": "Low"
+        }
+        category = SEVERITY_TO_CAT.get(ev.severity, "Low")
+        categorical_hourly[category][hour] += 1
 
         sev = ev.severity
         if sev in severity_distribution:
@@ -194,27 +216,19 @@ def get_logs_summary(
     live_persons = latest_intelligence.get("person_count", 0)
     live_objects = latest_intelligence.get("objects", [])
     
-    live_weapons = 0
-    live_vehicles = 0
-    for obj in live_objects:
-        obj_lower = obj.lower()
-        if "weapon" in obj_lower or "knife" in obj_lower:
-            live_weapons += 1
-        if any(v in obj_lower for v in ["vehicle", "car", "truck", "bus"]):
-            live_vehicles += 1
+    live_weapons = sum(1 for obj in live_objects if any(x in obj.lower() for x in ["weapon", "knife"]))
+    live_vehicles = sum(1 for obj in live_objects if any(v in obj.lower() for v in ["vehicle", "car", "truck", "bus"]))
 
-    threat_level = "Normal"
-    status_msg = "Security posture stable"
-    
+    # Use Match-Case for Threat Assessment (Python 3.10+)
+    # This evaluates logically from top to bottom
     if live_weapons > 0:
-        threat_level = "Critical"
-        status_msg = f"CRITICAL: WEAPON DETECTED - Threat identified"
+        threat_level, status_msg = "Critical", f"CRITICAL: WEAPON DETECTED - Threat identified"
     elif live_persons > 10:
-        threat_level = "Elevated"
-        status_msg = f"CROWD ALERT: {live_persons} persons in sector"
+        threat_level, status_msg = "Elevated", f"CROWD ALERT: {live_persons} persons in sector"
     elif live_vehicles > 5:
-        threat_level = "Notice"
-        status_msg = f"Increased transit activity: {live_vehicles} units"
+        threat_level, status_msg = "Notice", f"Increased transit activity: {live_vehicles} units"
+    else:
+        threat_level, status_msg = "Normal", "Security posture stable"
 
     avg_conf = sum(ev.confidence for ev in events) / len(events) if events else 0
     

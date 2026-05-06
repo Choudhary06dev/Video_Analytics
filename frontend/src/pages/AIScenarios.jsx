@@ -1,4 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useLocation, Link } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import {
   Lock, AlertTriangle, Crosshair, Users, UserX, UserPlus, UserCheck,
   User, Phone, Flame, Car, Truck, Video, Baby, Ban, Building, Mountain,
@@ -32,6 +34,20 @@ const SCENARIOS = [
 export default function AIScenarios() {
   const [searchTerm, setSearchTerm] = useState('');
   const [viewMode, setViewMode] = useState('grid');
+  const location = useLocation();
+  const { canView } = useAuth();
+
+  // Auto-filter based on scenario_id from URL
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const scenarioId = params.get('scenario_id');
+    if (scenarioId) {
+      const target = SCENARIOS.find(s => s.id === parseInt(scenarioId));
+      if (target) {
+        setSearchTerm(target.name);
+      }
+    }
+  }, [location.search]);
 
   const filtered = SCENARIOS.filter(s =>
     s.name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -64,10 +80,15 @@ export default function AIScenarios() {
               <ListIcon className="w-4 h-4" />
             </button>
           </div>
-          <button className="flex items-center gap-2 px-4 py-2 bg-accent text-white rounded-lg text-[0.75rem] font-bold cursor-pointer hover:opacity-90 shadow-premium">
-            <Play className="w-4 h-4 fill-white" />
-            Deploy New Instance
-          </button>
+          {canView('admin_hub') && (
+            <Link 
+              to="/admin/scenarios"
+              className="flex items-center gap-2 px-4 py-2 bg-accent text-white rounded-lg text-[0.75rem] font-bold cursor-pointer hover:opacity-90 shadow-premium transition-all no-underline"
+            >
+              <Play className="w-4 h-4 fill-white" />
+              Deploy New Instance
+            </Link>
+          )}
         </div>
       </div>
 
@@ -147,13 +168,9 @@ export default function AIScenarios() {
                     <span className="text-[0.7rem] font-black text-text-dark">{scenario.health}%</span>
                   </div>
                 </div>
-                <div className="flex gap-2">
-                  <button className="p-2 bg-bg border border-border rounded-lg text-text-gray hover:text-accent hover:border-accent transition-all">
-                    <Settings className="w-4 h-4" />
-                  </button>
-                  <button className="px-3 py-2 bg-accent/10 text-accent rounded-lg text-[0.7rem] font-bold hover:bg-accent hover:text-white transition-all">
-                    Configure
-                  </button>
+                <div className="flex items-center gap-1.5 text-[0.65rem] font-black text-emerald-600 uppercase tracking-widest bg-emerald-50 px-2 py-1 rounded">
+                  <Activity className="w-3 h-3" />
+                  Live Sync
                 </div>
               </div>
             </div>
