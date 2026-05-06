@@ -29,7 +29,6 @@ export default function Sidebar({ isSidebarOpen }) {
 
   const analyticsMenu = [
     { name: 'System Health', icon: Cpu, path: '/health', moduleKey: 'health' },
-    { name: 'AI Training', icon: GraduationCap, path: '/training', moduleKey: 'training' },
     { name: 'Crisis Alerts', icon: Bell, path: '/alerts', moduleKey: 'alerts' },
   ];
 

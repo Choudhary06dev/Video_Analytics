@@ -8,13 +8,13 @@ import {
 } from 'lucide-react';
 
 const SCENARIOS = [
-  { id: 1, name: 'Unauthorized entry into restricted areas', icon: Lock, color: 'var(--color-danger)', image: 'https://th.bing.com/th/id/OIP.13LBdPE2SkGJfkxDNq6P3gHaCk?w=309&h=121&c=7&r=0&o=5&dpr=1.3&pid=1.7', desc: 'Detects unauthorized personnel across high-security hospital zones.', status: 'critical', health: 99.2 },
-  { id: 2, name: 'Aggressive behaviour detection', icon: AlertTriangle, color: 'var(--color-warning)', image: 'https://th.bing.com/th/id/OIP.yD8MJcOqJb1k6hZ_507GIQHaE8?w=233&h=180&c=7&r=0&o=5&dpr=1.3&pid=1.7', desc: 'Real-time classification of erratic or violent movements.', status: 'good', health: 94.7 },
-  { id: 3, name: 'Weapon detection (gun/knife)', icon: Crosshair, color: 'var(--color-danger)', image: 'https://tse1.mm.bing.net/th/id/OIP.WMcJRg1Sxk2IQSbELI9ShAHaFj?rs=1&pid=ImgDetMain&o=7&rm=3', desc: 'Identifies immediate lethal threats in public domains.', status: 'critical', health: 96.8 },
-  { id: 4, name: 'Multiple persons entry on single access', icon: Users, color: 'var(--color-warning)', image: 'https://tse3.mm.bing.net/th/id/OIP.0aPBJr7dxHXY_norFDrJbwHaE8?rs=1&pid=ImgDetMain&o=7&rm=3', desc: 'Detects tailgating or dual-entry at single-pass gates.', status: 'good', health: 91.2 },
-  { id: 5, name: 'Blacklisted person alert (facial recognition)', icon: UserX, color: 'var(--color-danger)', image: 'https://th.bing.com/th/id/OIP.WQc0XDVZNcBHlfm_r-_S1wHaEJ?w=295&h=180&c=7&r=0&o=5&dpr=1.3&pid=1.7', desc: 'Instant facial recognition against central blacklist database.', status: 'critical', health: 98.4 },
-  { id: 6, name: 'Crowd density / overcrowding detection', icon: Users, color: 'var(--color-warning)', image: 'https://th.bing.com/th/id/OIP.TptiJXGcUcDhe6bctcMKsgHaD0?w=313&h=179&c=7&r=0&o=5&dpr=1.3&pid=1.7', desc: 'Monitors lobby and wait areas for threshold violations.', status: 'good', health: 89.5 },
-  { id: 7, name: 'Visitor Count Limit Exceeded', icon: UserPlus, color: 'var(--color-warning)', image: 'https://th.bing.com/th/id/OIP.2KxpZ7UmY1hIyHwZbJmL3QHaD4?w=299&h=180&c=7&r=0&o=5&dpr=1.3&pid=1.7', desc: 'Real-time counting for compliance.', status: 'good', health: 95.1 },
+  { id: 1, name: 'Unauthorized entry into restricted areas', icon: Lock, color: 'var(--color-danger)', image: '/assets/images/restricted_entry.png', desc: 'Detects unauthorized personnel across high-security hospital zones.', status: 'critical', health: 99.2 },
+  { id: 2, name: 'Aggressive behaviour detection', icon: AlertTriangle, color: 'var(--color-warning)', image: '/assets/images/aggressive_behavior.png', desc: 'Real-time classification of erratic or violent movements.', status: 'good', health: 94.7 },
+  { id: 3, name: 'Weapon detection (gun/knife)', icon: Crosshair, color: 'var(--color-danger)', image: '/assets/images/weapon_detection.png', desc: 'Identifies immediate lethal threats in public domains.', status: 'critical', health: 96.8 },
+  { id: 4, name: 'Multiple persons entry on single access', icon: Users, color: 'var(--color-warning)', image: '/assets/images/tailgating.png', desc: 'Detects tailgating or dual-entry at single-pass gates.', status: 'good', health: 91.2 },
+  { id: 5, name: 'Blacklisted person alert (facial recognition)', icon: UserX, color: 'var(--color-danger)', image: '/assets/images/blacklist_alert.png', desc: 'Instant facial recognition against central blacklist database.', status: 'critical', health: 98.4 },
+  { id: 6, name: 'Crowd density / overcrowding detection', icon: Users, color: 'var(--color-warning)', image: '/assets/images/crowd_density.png', desc: 'Monitors lobby and wait areas for threshold violations.', status: 'good', health: 89.5 },
+  { id: 7, name: 'Visitor Count Limit Exceeded', icon: UserPlus, color: 'var(--color-warning)', image: '/assets/images/visitor_count.png', desc: 'Real-time counting for compliance.', status: 'good', health: 95.1 },
   { id: 8, name: 'Entry/Exit tracking of visitors (face recognition)', icon: UserCheck, color: 'var(--color-accent)', image: 'https://th.bing.com/th/id/OIP.aMhoCenmTiJDuLGfVsVXcgHaE5?w=240&h=180&c=7&r=0&o=5&dpr=1.3&pid=1.7', desc: 'Bidirectional tracking of visitor flow patterns.', status: 'excellent', health: 97.9 },
   { id: 9, name: 'Staff presence/absence at duty post', icon: User, color: 'var(--color-accent)', image: 'https://images.unsplash.com/photo-1559136555-9303baea8ebd?auto=format&fit=crop&q=80&w=800&q=90', desc: 'Verifies staff positioning at critical healthcare nodes.', status: 'good', health: 92.4 },
   { id: 10, name: 'Mobile phone usage in restricted areas', icon: Phone, color: 'var(--color-warning)', image: 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&q=80&w=800&q=90', desc: 'Detects phone usage in high-radiation or sterile zones.', status: 'warning', health: 86.2 },
@@ -81,7 +81,7 @@ export default function AIScenarios() {
             </button>
           </div>
           {canView('admin_hub') && (
-            <Link 
+            <Link
               to="/admin/scenarios"
               className="flex items-center gap-2 px-4 py-2 bg-accent text-white rounded-lg text-[0.75rem] font-bold cursor-pointer hover:opacity-90 shadow-premium transition-all no-underline"
             >

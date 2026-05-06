@@ -23,7 +23,6 @@ const AIScenarios = lazy(() => import('./pages/AIScenarios'));
 
 const ActivityVault = lazy(() => import('./pages/ActivityVault'));
 const SystemHealth = lazy(() => import('./pages/SystemHealth'));
-const AITraining = lazy(() => import('./pages/AITraining'));
 const Alerts = lazy(() => import('./pages/Alerts'));
 const Settings = lazy(() => import('./pages/Settings'));
 
@@ -67,7 +66,6 @@ function App() {
 
                     <Route path="/vault" element={<ActivityVault />} />
                     <Route path="/health" element={<SystemHealth />} />
-                    <Route path="/training" element={<AITraining />} />
                     <Route path="/alerts" element={<Alerts />} />
                     <Route path="/settings" element={<Settings />} />
                   </Route>
