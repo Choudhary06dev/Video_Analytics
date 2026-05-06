@@ -160,20 +160,16 @@ class InferenceEngine:
         return self.processed_frame_bytes, self.processed_events
 
     def _perform_inference(self, frame):
-        # PERFORMANCE TWEAK: Resize to 480x270 for LIGHTNING FAST inference
-        # This reduces CPU load by ~4x while maintaining enough detail for AI
-        h, w = frame.shape[:2]
-        inference_frame = cv2.resize(frame, (480, 270))
-
-        # Use imgsz=320 for faster processing on standard hardware
-        results = model.predict(inference_frame, conf=CONF_THRESHOLD, iou=IOU_THRESHOLD, verbose=False, imgsz=320)
+        # PERFORMANCE TWEAK: Use imgsz=320 for faster processing on standard hardware.
+        # YOLOv8 handles resizing internally and scales boxes back to original frame size.
+        # This keeps the output video stream at its original high resolution!
+        results = model.predict(frame, conf=CONF_THRESHOLD, iou=IOU_THRESHOLD, verbose=False, imgsz=320)
         person_count = 0
         detected_scenarios = {}
         events_to_log = []
 
-        # We still want to show a decent quality annotated frame
-        # So we'll plot on the inference_frame but maybe upscale it slightly for the stream
-        annotated_frame = inference_frame
+        # We now plot directly on the high-resolution original frame
+        annotated_frame = frame.copy()
         if results and len(results) > 0:
             annotated_frame = results[0].plot()
             for box in results[0].boxes:
@@ -262,7 +258,8 @@ class InferenceEngine:
             "stable_objects": sorted(stable_objects), "last_update": current_time
         })
 
-        ret, jpeg = cv2.imencode(".jpg", annotated_frame, [int(cv2.IMWRITE_JPEG_QUALITY), 80])
+        # Encode with higher JPEG quality for a crisp video stream
+        ret, jpeg = cv2.imencode(".jpg", annotated_frame, [int(cv2.IMWRITE_JPEG_QUALITY), 95])
         return (jpeg.tobytes() if ret else self.placeholder_frame), events_to_log
 
     def _build_placeholder_frame(self, message: str) -> bytes:

@@ -5,7 +5,7 @@ from sqlmodel import Session, select
 
 from app.core.database import init_db, engine
 from app.models import Role, ModulePermission, AIScenario
-from app.api.v1 import auth, users, roles, cameras, alerts, activity, training, health
+from app.api.v1 import auth, users, roles, cameras, alerts, activity, health
 
 
 def init_system_data():
@@ -32,7 +32,6 @@ def init_system_data():
 
             ("Activity Vault", "vault"),
             ("System Health", "health"),
-            ("AI Training", "training"),
             ("Crisis Alerts", "alerts"),
             ("Admin Control", "admin_hub"),
             ("Dashboard", "admin_dashboard"),
@@ -189,7 +188,6 @@ app.include_router(users.router)
 app.include_router(roles.router)
 app.include_router(cameras.router)
 app.include_router(alerts.router)
-app.include_router(training.router)
 app.include_router(health.router)
 app.include_router(activity.router)
 
