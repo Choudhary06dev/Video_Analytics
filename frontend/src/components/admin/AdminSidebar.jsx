@@ -12,7 +12,8 @@ import {
   Map,
   Video,
   Zap,
-  Activity
+  Activity,
+  UserX as UserXIcon
 } from 'lucide-react';
 
 import { useAuth } from '../../context/AuthContext';
@@ -56,6 +57,7 @@ export default function AdminSidebar({ isSidebarOpen }) {
       subItems: [
         { name: 'AI Scenarios', icon: Zap, path: '/admin/scenario-registry', moduleKey: 'intelligence_registry' },
         { name: 'Scenario Control', icon: BrainCircuit, path: '/admin/scenarios', moduleKey: 'scenario_orchestration' },
+        { name: 'Blacklist Registry', icon: UserXIcon, path: '/admin/blacklist', moduleKey: 'intelligence_registry' },
       ]
     },
     {

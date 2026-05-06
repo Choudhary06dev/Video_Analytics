@@ -38,6 +38,7 @@ const SurveillanceConfig = lazy(() => import('./pages/admin/SurveillanceConfig')
 const AreaManagement = lazy(() => import('./pages/admin/AreaManagement'));
 const ScenarioOrchestration = lazy(() => import('./pages/admin/ScenarioOrchestration'));
 const AIScenarioRegistry = lazy(() => import('./pages/admin/AIScenarioRegistry'));
+const BlacklistManagement = lazy(() => import('./pages/admin/BlacklistManagement'));
 
 function App() {
   return (
@@ -85,6 +86,7 @@ function App() {
                     <Route path="surveillance" element={<SurveillanceConfig />} />
                     <Route path="scenarios" element={<ScenarioOrchestration />} />
                     <Route path="scenario-registry" element={<AIScenarioRegistry />} />
+                    <Route path="blacklist" element={<BlacklistManagement />} />
                   </Route>
                 </Route>
 
