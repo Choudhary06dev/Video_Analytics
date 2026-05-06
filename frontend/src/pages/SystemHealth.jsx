@@ -92,7 +92,7 @@ export default function SystemHealth() {
             className="flex items-center gap-2 px-4 py-2 bg-card text-text-dark border border-border rounded-lg text-[0.75rem] font-bold cursor-pointer hover:border-accent hover:text-accent shadow-sm"
           >
             <RefreshCw className="w-4 h-4" />
-            Relaunch Kernels
+            AI Sync Core
           </button>
         </div>
       </div>
