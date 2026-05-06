@@ -20,6 +20,7 @@ import {
   AlertTriangle
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import blacklistService from '../../services/blacklistService';
 
 // Action colors for severity
 const severityColors = {
@@ -65,17 +66,10 @@ export default function BlacklistManagement() {
   const fetchData = async () => {
     try {
       setLoading(true);
-      // Mocking data
-      setTimeout(() => {
-        const mockData = [
-          { id: 1, full_name: 'Unknown Subject A', reason: 'Repeated Unauthorized Entry', severity: 'CRITICAL', created_at: '2026-05-01', image_preview: 'https://th.bing.com/th/id/OIP.WQc0XDVZNcBHlfm_r-_S1wHaEJ?w=295&h=180&c=7&r=0&o=5&dpr=1.3&pid=1.7' },
-          { id: 2, full_name: 'John Doe (Alias)', reason: 'Theft Suspect', severity: 'HIGH', created_at: '2026-04-28', image_preview: 'https://ui-avatars.com/api/?name=S2&background=random' },
-          { id: 3, full_name: 'Suspicious Individual', reason: 'Loitering near Pharmacy', severity: 'MEDIUM', created_at: '2026-05-04', image_preview: 'https://ui-avatars.com/api/?name=S3&background=random' },
-        ];
-        setBlacklist(mockData);
-        setTotalItems(mockData.length);
-        setLoading(false);
-      }, 800);
+      const data = await blacklistService.getAll();
+      setBlacklist(data);
+      setTotalItems(data.length);
+      setLoading(false);
     } catch (err) {
       console.error("Failed to fetch blacklist data", err);
       setLoading(false);
@@ -85,48 +79,62 @@ export default function BlacklistManagement() {
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      const preview = URL.createObjectURL(file);
-      setFormData({ ...formData, image_file: file, image_preview: preview });
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setFormData({ 
+          ...formData, 
+          image_file: file, 
+          image_preview: reader.result 
+        });
+      };
+      reader.readAsDataURL(file);
     }
   };
 
-  const handleCreateEntry = (e) => {
+  const handleCreateEntry = async (e) => {
     e.preventDefault();
     setSubmitting(true);
-    setTimeout(() => {
-      const newEntry = {
-        id: blacklist.length + 1,
-        ...formData,
-        created_at: new Date().toISOString().split('T')[0]
-      };
+    try {
+      const newEntry = await blacklistService.create(formData);
       setBlacklist([newEntry, ...blacklist]);
       setTotalItems(totalItems + 1);
       setShowAddModal(false);
-      setFormData({ full_name: '', reason: '', severity: 'HIGH', image_file: null, image_preview: '', notes: '' });
+      setFormData({ full_name: '', reason: '', severity: 'HIGH', image_file: null, image_preview: '', image_fit: 'cover', notes: '' });
+    } catch (err) {
+      alert("Failed to register identity");
+    } finally {
       setSubmitting(false);
-    }, 500);
+    }
   };
 
-  const handleEditEntry = (e) => {
+  const handleEditEntry = async (e) => {
     e.preventDefault();
     setSubmitting(true);
-    setTimeout(() => {
-      setBlacklist(blacklist.map(p => p.id === selectedPerson.id ? { ...p, ...formData } : p));
+    try {
+      const updated = await blacklistService.update(selectedPerson.id, formData);
+      setBlacklist(blacklist.map(p => p.id === selectedPerson.id ? updated : p));
       setShowEditModal(false);
       setSelectedPerson(null);
+    } catch (err) {
+      alert("Failed to update profile");
+    } finally {
       setSubmitting(false);
-    }, 500);
+    }
   };
 
-  const handleDeleteEntry = () => {
+  const handleDeleteEntry = async () => {
     setSubmitting(true);
-    setTimeout(() => {
+    try {
+      await blacklistService.delete(selectedPerson.id);
       setBlacklist(blacklist.filter(p => p.id !== selectedPerson.id));
       setTotalItems(totalItems - 1);
       setShowDeleteModal(false);
       setSelectedPerson(null);
+    } catch (err) {
+      alert("Failed to remove identity");
+    } finally {
       setSubmitting(false);
-    }, 500);
+    }
   };
 
   const openEditModal = (person) => {
