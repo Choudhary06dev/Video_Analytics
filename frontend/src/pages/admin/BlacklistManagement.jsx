@@ -272,7 +272,7 @@ export default function BlacklistManagement() {
                   <td className="p-4">
                     <div className="flex items-center gap-1.5 text-[10px] font-bold text-text-gray">
                         <Calendar className="w-3 h-3" />
-                        {person.created_at}
+                        {person.created_at ? new Date(person.created_at).toLocaleDateString() : 'N/A'}
                     </div>
                   </td>
                   <td className="p-4 pr-6">
