@@ -1,7 +1,8 @@
 import React from 'react';
-import { Siren, X, ExternalLink, ShieldAlert, AlertTriangle, Info, Bell, Check } from 'lucide-react';
+import { Siren, X, ExternalLink, ShieldAlert, AlertTriangle, Info, Bell, Check, Lock } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useNotifications } from '../../context/NotificationContext';
+import { useAuth } from '../../context/AuthContext';
 
 const severityConfig = {
   Critical: {
@@ -57,12 +58,16 @@ const severityConfig = {
 const Toast = ({ notification }) => {
   const { removeNotification } = useNotifications();
   const navigate = useNavigate();
+  const { canView } = useAuth();
   const config = severityConfig[notification.severity] || severityConfig[notification.type] || severityConfig.Medium;
   const Icon = config.icon;
+  const hasVaultAccess = canView('vault');
 
   const handleView = () => {
     removeNotification(notification.id);
-    navigate('/vault');
+    if (hasVaultAccess) {
+      navigate('/vault');
+    }
   };
 
   return (
@@ -109,10 +114,16 @@ const Toast = ({ notification }) => {
               </span>
               <button 
                 onClick={handleView}
-                className="flex items-center gap-1.5 px-2.5 py-1.5 bg-card hover:bg-surface border border-border rounded-lg text-[9px] font-black uppercase tracking-widest text-text-dark transition-all"
+                className={`flex items-center gap-1.5 px-2.5 py-1.5 border rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${
+                  hasVaultAccess 
+                    ? 'bg-card hover:bg-surface border-border text-text-dark cursor-pointer' 
+                    : 'bg-surface/50 border-border/50 text-text-gray/50 cursor-not-allowed'
+                }`}
+                disabled={!hasVaultAccess}
+                title={!hasVaultAccess ? 'You do not have access to Activity Vault' : ''}
               >
-                <ExternalLink size={10} />
-                View Detail
+                {hasVaultAccess ? <ExternalLink size={10} /> : <Lock size={10} />}
+                {hasVaultAccess ? 'View Detail' : 'Restricted'}
               </button>
             </>
           ) : (

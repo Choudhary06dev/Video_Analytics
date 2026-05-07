@@ -8,6 +8,7 @@ Create Date: 2026-04-22 10:28:20.403442
 from typing import Sequence, Union
 from alembic import op
 import sqlalchemy as sa
+import sqlmodel
 
 # revision identifiers, used by Alembic.
 revision: str = '92df4d5f676a'
@@ -35,7 +36,21 @@ def upgrade() -> None:
     # Drop the redundant junction table if it exists
     op.execute(sa.text("DROP TABLE IF EXISTS camerascenarioassignment CASCADE"))
 
+    # 3. Create BlacklistPerson table
+    op.execute(sa.text("""
+        CREATE TABLE IF NOT EXISTS blacklistperson (
+            id SERIAL PRIMARY KEY,
+            full_name VARCHAR NOT NULL,
+            reason VARCHAR NOT NULL,
+            severity VARCHAR NOT NULL DEFAULT 'HIGH',
+            image_preview VARCHAR,
+            notes VARCHAR,
+            created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+            updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+        )
+    """))
+
 
 def downgrade() -> None:
     """Downgrade schema."""
-    pass
+    op.execute(sa.text("DROP TABLE IF EXISTS blacklistperson"))

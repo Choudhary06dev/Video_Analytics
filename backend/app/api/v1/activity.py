@@ -40,7 +40,7 @@ def get_activity_vault_data(
     )
     
     # Get summary (existing service)  
-    summary = get_logs_summary(session, hours, camera_id, area_id, scenario_key, allowed_area_ids=allowed_area_ids)
+    summary = get_logs_summary(session, hours, camera_id, area_id, scenario_key, allowed_area_ids=allowed_area_ids, start_date=start_date, end_date=end_date)
     
     # Join with Camera and Area names
     event_list = []
@@ -99,10 +99,17 @@ def get_activity_vault_data(
         
     total_count = len(session.exec(total_stmt).all()) if total_stmt is not None else 0
     
+    # Count high confidence events (>=0.9) across ALL records, not just current page
+    high_conf_count = 0
+    if total_stmt is not None:
+        high_conf_stmt = total_stmt.where(DetectionEvent.confidence >= 0.9)
+        high_conf_count = len(session.exec(high_conf_stmt).all())
+    
     return {
         "events": event_list,
         "summary": summary,
         "total": total_count,
+        "high_conf_count": high_conf_count,
         "hours": hours,
         "filters": {
             "camera_id": camera_id,
@@ -138,10 +145,12 @@ def _format_time_ago(timestamp):
 def get_activity_summary(
     hours: float = 24.0,
     camera_id: Optional[int] = None,
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
     session: Session = Depends(get_session),
     current_user: dict = Depends(get_current_user),
     auth_data: dict = Depends(lambda cur=Depends(get_current_user), s=Depends(get_session): verify_module_access("vault", cur, s, access_level="view"))
 ):
     """Summary stats for ActivityVault charts."""
     allowed_area_ids = get_allowed_area_ids(current_user["id"], session)
-    return get_logs_summary(session, hours, camera_id, None, None, allowed_area_ids=allowed_area_ids)
+    return get_logs_summary(session, hours, camera_id, None, None, allowed_area_ids=allowed_area_ids, start_date=start_date, end_date=end_date)

@@ -279,7 +279,7 @@ export default function ActivityVault() {
         const high = data.summary.severity_distribution?.High || 0;
 
         const avgConf = data.summary.avg_confidence || 0;
-        const highConfCount = data.events.filter(e => e.confidence >= 0.9).length;
+        const highConfCount = data.high_conf_count || 0;
 
         setStats({
           total: total,
@@ -340,11 +340,16 @@ export default function ActivityVault() {
             </div>
 
             {/* Top Right Quick Range Selectors */}
-            <div style={{ display: 'flex', background: isDark ? 'rgba(0,0,0,0.2)' : 'rgba(255,255,255,0.8)', padding: 3, borderRadius: 10, border: `1px solid ${cardBorder}`, backdropFilter: 'blur(8px)' }}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 2, background: isDark ? 'rgba(0,0,0,0.2)' : 'rgba(255,255,255,0.8)', padding: 3, borderRadius: 10, border: `1px solid ${cardBorder}`, backdropFilter: 'blur(8px)' }}>
               {[
+                { label: '15M', val: 0.25 },
                 { label: '1H', val: 1 },
+                { label: '6H', val: 6 },
                 { label: '24H', val: 24 },
-                { label: '7D', val: 168 }
+                { label: '7D', val: 168 },
+                { label: '1M', val: 720 },
+                { label: '6M', val: 4320 },
+                { label: '1Y', val: 8760 }
               ].map(r => (
                 <button
                   key={r.val}
@@ -415,7 +420,7 @@ export default function ActivityVault() {
               <div style={{ fontSize: 10, color: '#94a3b8', fontWeight: 600, marginTop: 2 }}>Distribution trend over the period</div>
             </div>
             <div style={{ padding: '4px 12px', background: isDark ? 'rgba(56,189,248,0.1)' : '#f0f9ff', color: '#0ea5e9', borderRadius: 20, fontSize: 10, fontWeight: 800, letterSpacing: 0.5 }}>
-              {hoursRange === 1 ? '1 HOUR' : hoursRange === 24 ? '24 HOURS' : hoursRange === 168 ? '7 DAYS' : 'CUSTOM'}
+              {hoursRange === 0.25 ? '15 MINS' : hoursRange === 1 ? '1 HOUR' : hoursRange === 6 ? '6 HOURS' : hoursRange === 24 ? '24 HOURS' : hoursRange === 168 ? '7 DAYS' : hoursRange === 720 ? '1 MONTH' : hoursRange === 4320 ? '6 MONTHS' : hoursRange === 8760 ? '1 YEAR' : 'CUSTOM'}
             </div>
           </div>
           <TimelineChart summary={summary} />

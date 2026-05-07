@@ -5,6 +5,7 @@ export const fetchActivityData = (params = {}) => {
   return get(`/activity?${query}`);
 };
 
-export const fetchActivitySummary = (hours = 24) => {
-  return get(`/activity/summary?hours=${hours}`);
+export const fetchActivitySummary = (params = { hours: 24 }) => {
+  const query = new URLSearchParams(params).toString();
+  return get(`/activity/summary?${query}`);
 };

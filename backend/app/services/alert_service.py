@@ -151,10 +151,25 @@ def get_logs_summary(
     scenario_key: Optional[str] = None,
     latest_intelligence: Optional[Dict] = None,
     allowed_area_ids: Optional[List[int]] = None,
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
 ):
     latest_intelligence = latest_intelligence or {}
-    cutoff = datetime.now() - timedelta(hours=hours)
-    statement = select(DetectionEvent).where(DetectionEvent.timestamp >= cutoff)
+    
+    if start_date and end_date:
+        try:
+            start_dt = datetime.fromisoformat(start_date.replace('Z', '+00:00').split('.')[0])
+            end_dt = datetime.fromisoformat(end_date.replace('Z', '+00:00').split('.')[0])
+            if len(end_date) <= 10:
+                end_dt = end_dt + timedelta(days=1)
+            statement = select(DetectionEvent).where(DetectionEvent.timestamp >= start_dt, DetectionEvent.timestamp <= end_dt)
+        except ValueError:
+            cutoff = datetime.now() - timedelta(hours=hours)
+            statement = select(DetectionEvent).where(DetectionEvent.timestamp >= cutoff)
+    else:
+        cutoff = datetime.now() - timedelta(hours=hours)
+        statement = select(DetectionEvent).where(DetectionEvent.timestamp >= cutoff)
+        
     statement = _apply_event_filters(statement, session, camera_id, area_id, scenario_key, allowed_area_ids=allowed_area_ids)
     
     if statement is None:
