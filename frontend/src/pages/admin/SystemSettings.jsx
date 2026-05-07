@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
+import { useNotifications } from '../../context/NotificationContext';
 import { 
   Settings, 
   Cpu, 
-  Bell, 
   Database, 
   ShieldAlert, 
   Eye, 
@@ -10,181 +10,303 @@ import {
   Globe, 
   Lock, 
   Save, 
-  RefreshCw,
-  Sliders
+  RefreshCw, 
+  Activity, 
+  Server, 
+  Cloud, 
+  HardDrive, 
+  ShieldCheck, 
+  Radio, 
+  Terminal,
+  ChevronRight,
+  User,
+  Power,
+  Layers,
+  Monitor
 } from 'lucide-react';
 
 export default function SystemSettings() {
-  const [activeTab, setActiveTab] = useState('platform');
-  const [saving, setSaving] = useState(false);
+  const { addNotification } = useNotifications();
+  const [refreshing, setRefreshing] = useState(false);
 
-  const handleSave = () => {
-    setSaving(true);
-    setTimeout(() => setSaving(false), 1500); // Simulated save
+  // Consolidated System State
+  const [settings, setSettings] = useState({
+    maintenanceMode: false,
+    debugMode: true,
+    publicEnrollment: false,
+    clusterSync: true,
+    region: 'South Asia (PK-1)',
+    confidenceThreshold: 75,
+    motionSensitivity: 80,
+    neuralOptimizer: true,
+    edgeProcessing: true,
+    retentionLogs: 90,
+    retentionVideo: 30,
+    retentionMetadata: 180,
+    autoPurge: true,
+    mfaRequired: true,
+    ipLockdown: false,
+    sessionTimeout: 60,
+    threatAlerts: true
+  });
+
+  const handleToggle = (key) => {
+    setSettings(prev => ({ ...prev, [key]: !prev[key] }));
   };
 
-  const SectionHeader = ({ icon: Icon, title, desc }) => (
-    <div className="flex items-center gap-3 mb-6">
-        <div className="w-10 h-10 bg-accent/10 rounded-lg flex items-center justify-center border border-accent/20">
-            <Icon className="w-5 h-5 text-accent" />
-        </div>
-        <div>
-            <h3 className="text-[11px] font-black uppercase tracking-widest text-text-dark">{title}</h3>
-            <p className="text-[9px] font-bold text-text-gray uppercase tracking-widest mt-0.5">{desc}</p>
-        </div>
-    </div>
-  );
+  const handleSave = async () => {
+    setRefreshing(true);
+    // Simulate API delay
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    setRefreshing(false);
+    
+    addNotification({
+      type: 'success',
+      title: 'Matrix Synchronized',
+      message: 'System configurations have been globally deployed.'
+    });
+  };
 
-  const Toggle = ({ label, desc, enabled }) => (
-    <div className="flex items-center justify-between p-4 bg-surface border border-border rounded-lg group hover:border-accent/30 transition-all shadow-sm">
-        <div>
-            <p className="text-[10px] font-black uppercase tracking-widest text-text-dark">{label}</p>
-            <p className="text-[8px] font-bold text-text-gray uppercase tracking-widest mt-0.5">{desc}</p>
-        </div>
-        <button className={`w-10 h-5 rounded-full transition-all relative ${enabled ? 'bg-accent' : 'bg-gray-300 dark:bg-gray-700'}`}>
-            <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-all shadow-sm ${enabled ? 'right-0.5' : 'left-0.5'}`}></div>
-        </button>
+  const SectionHeader = ({ icon: Icon, title, subtitle }) => (
+    <div className="flex items-center gap-4 mb-6">
+      <div className="w-10 h-10 bg-accent/10 rounded-lg flex items-center justify-center border border-accent/20">
+        <Icon className="w-5 h-5 text-accent" />
+      </div>
+      <div>
+        <h3 className="text-sm font-black uppercase tracking-widest text-text-dark">{title}</h3>
+        <p className="text-[9px] font-bold text-text-gray uppercase tracking-[0.2em]">{subtitle}</p>
+      </div>
     </div>
   );
 
   return (
-    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-[1200px] mx-auto pb-20">
+    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-20">
       
-      {/* Page Header (Scaled Down) */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 pb-2">
+      {/* Page Header - Matched to SurveillanceConfig style */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-accent/10 rounded-lg flex items-center justify-center border border-accent/20">
-                <Sliders className="w-7 h-7 text-accent font-black" />
-            </div>
-            <div>
-                <h1 className="text-2xl font-black italic uppercase tracking-tighter text-text-dark">
-                    Engine <span className="text-accent underline decoration-accent/20 underline-offset-4">Console</span>
-                </h1>
-                <p className="text-[9px] font-bold text-text-gray uppercase tracking-[0.3em] mt-1.5 flex items-center gap-2">
-                    Global Parameters // Architecture Control
-                </p>
-            </div>
+          <div className="w-12 h-12 bg-accent/10 rounded-lg flex items-center justify-center border border-accent/20">
+            <Settings className="w-7 h-7 text-accent" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-black italic uppercase tracking-tighter text-text-dark font-sans">
+              System <span className="text-accent underline decoration-accent/20 underline-offset-4">Orchestrator</span>
+            </h1>
+            <p className="text-[9px] font-bold text-text-gray uppercase tracking-[0.4em] mt-1.5 flex items-center gap-2">
+              Global Platform Configuration & AI Control
+            </p>
+          </div>
         </div>
 
-        <button 
-            onClick={handleSave}
-            disabled={saving}
-            className="flex items-center gap-2 bg-accent text-white px-8 py-3 rounded-lg font-black uppercase tracking-widest text-[10px] transition-all shadow-md hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-50"
-        >
-            {saving ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
-            {saving ? 'Syncing...' : 'Sync Configuration'}
-        </button>
+        <div className="flex gap-4">
+            <button 
+                onClick={() => { setRefreshing(true); setTimeout(() => setRefreshing(false), 1000); }}
+                disabled={refreshing}
+                className="flex items-center gap-3 bg-surface border border-border text-text-gray px-6 py-3 rounded-lg font-black uppercase tracking-widest text-[11px] transition-all hover:bg-border hover:text-text-dark"
+            >
+                <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
+                Check Health
+            </button>
+            <button 
+                onClick={handleSave}
+                disabled={refreshing}
+                className="flex items-center gap-3 bg-accent text-white px-6 py-3 rounded-lg font-black uppercase tracking-widest text-[11px] transition-all shadow-md shadow-accent/20 hover:-translate-y-1 active:translate-y-0"
+            >
+                {refreshing ? <Zap className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                Deploy Changes
+            </button>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+      {/* Stats Quick Grid - Matched style */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        {[
+            { label: 'System Uptime', value: '99.98%', icon: Activity, color: 'text-accent' },
+            { label: 'Active Clusters', value: '12/12', icon: Server, color: 'text-emerald-500' },
+            { label: 'Neural Load', value: '28%', icon: Cpu, color: 'text-amber-500' },
+            { label: 'Storage Node', value: 'Ready', icon: HardDrive, color: 'text-purple-500' },
+        ].map((stat, i) => (
+            <div key={i} className="bg-card border border-border rounded-lg p-6 flex items-center gap-6 shadow-sm">
+                <div className={`p-4 bg-surface border border-border rounded-lg ${stat.color}`}>
+                    <stat.icon className="w-6 h-6" />
+                </div>
+                <div>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-text-gray mb-1">{stat.label}</p>
+                    <p className={`text-2xl font-black italic ${stat.color}`}>{stat.value}</p>
+                </div>
+            </div>
+        ))}
+      </div>
+
+      {/* Settings Sections Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         
-        {/* Navigation Sidebar (Scaled Down) */}
-        <div className="lg:col-span-3 space-y-1.5">
+        {/* Platform Core */}
+        <div className="bg-card border border-border rounded-lg p-8 shadow-sm">
+          <SectionHeader icon={Globe} title="Platform Core" subtitle="Global Environment Controls" />
+          
+          <div className="space-y-4">
             {[
-                { id: 'platform', name: 'Platform Core', icon: Globe },
-                { id: 'vision', name: 'Vision Engine', icon: Eye },
-                { id: 'storage', name: 'Temporal Grid', icon: Database },
-                { id: 'security', name: 'Security Protocol', icon: Lock },
-            ].map(tab => (
-                <button
-                    key={tab.id}
-                    onClick={() => setActiveTab(tab.id)}
-                    className={`w-full flex items-center gap-3 p-4 rounded-lg border transition-all text-left group
-                        ${activeTab === tab.id 
-                            ? 'bg-accent/10 border-accent/20 text-accent font-bold' 
-                            : 'bg-card border-border text-text-gray hover:bg-surface hover:text-text-dark'}`}
-                >
-                    <tab.icon className={`w-4.5 h-4.5 transition-transform group-hover:scale-110`} />
-                    <span className="text-[10px] font-black uppercase tracking-widest leading-none">{tab.name}</span>
+              { id: 'maintenanceMode', title: 'Maintenance Mode', desc: 'Disable public access for system updates', icon: Power },
+              { id: 'debugMode', title: 'Diagnostic Overlays', desc: 'Show neural debug info on camera feeds', icon: Terminal },
+              { id: 'publicEnrollment', title: 'Public Enrollment', desc: 'Allow new users to register without invite', icon: User },
+              { id: 'clusterSync', title: 'Real-time Cluster Sync', desc: 'Keep all edge nodes in state harmony', icon: RefreshCw },
+            ].map(item => (
+              <div key={item.id} className="flex items-center justify-between p-4 bg-surface/30 rounded-xl border border-border group hover:border-accent/30 transition-all">
+                <div className="flex items-center gap-4">
+                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${settings[item.id] ? 'bg-accent/10 text-accent' : 'bg-card text-text-gray'}`}>
+                    <item.icon className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <p className="text-[11px] font-black uppercase text-text-dark">{item.title}</p>
+                    <p className="text-[9px] font-bold text-text-gray uppercase tracking-wider">{item.desc}</p>
+                  </div>
+                </div>
+                <button 
+                  onClick={() => handleToggle(item.id)}
+                  className={`w-10 h-5 rounded-full relative transition-all duration-300 ${settings[item.id] ? 'bg-accent' : 'bg-border'}`}>
+                  <div className={`absolute top-0.5 w-4 h-4 bg-white rounded-full transition-all duration-300 ${settings[item.id] ? 'left-5.5' : 'left-0.5'}`} />
                 </button>
+              </div>
             ))}
+          </div>
         </div>
 
-        {/* Content Area (Scaled Down) */}
-        <div className="lg:col-span-9 bg-card border border-border rounded-lg p-8 shadow-sm">
-            {activeTab === 'platform' && (
-                <div className="space-y-8 animate-in fade-in duration-500">
-                    <SectionHeader icon={Globe} title="Regional Distribution" desc="Manage global edge nodes and deployment regions" />
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        <Toggle label="Maintenance Mode" desc="Enable global redirect" enabled={false} />
-                        <Toggle label="Debug Overlays" desc="Show internal metrics" enabled={true} />
-                        <Toggle label="Public Enrollment" desc="Allow self-service identity" enabled={false} />
-                        <Toggle label="Cluster Sync" desc="Automated DB replication" enabled={true} />
-                    </div>
-                    
-                    <div className="space-y-3 pt-6 border-t border-border">
-                        <label className="text-[9px] font-black uppercase tracking-widest text-text-gray">Primary Engine Region</label>
-                        <select className="w-full bg-surface border border-border rounded-lg px-5 py-3 text-[11px] font-bold text-text-dark outline-none focus:border-accent transition-all appearance-none tracking-widest">
-                            <option>NORTH AMERICAN NEXUS // 01</option>
-                            <option>EUROPEAN GRID // 02</option>
-                            <option>ASIAN PERIMETER // 03</option>
-                        </select>
-                    </div>
-                </div>
-            )}
+        {/* Vision Intelligence */}
+        <div className="bg-card border border-border rounded-lg p-8 shadow-sm">
+          <SectionHeader icon={Eye} title="Vision Intelligence" subtitle="AI & Neural Configuration" />
+          
+          <div className="space-y-8">
+            <div className="space-y-4">
+              <div className="flex justify-between items-center">
+                <label className="text-[10px] font-black uppercase tracking-widest text-text-gray">Confidence Threshold</label>
+                <span className="text-xs font-black text-accent italic">{settings.confidenceThreshold}%</span>
+              </div>
+              <input 
+                type="range" min="0" max="100" 
+                value={settings.confidenceThreshold}
+                onChange={(e) => setSettings({...settings, confidenceThreshold: parseInt(e.target.value)})}
+                className="w-full accent-accent bg-surface h-1.5 rounded-full appearance-none cursor-pointer" 
+              />
+            </div>
 
-            {activeTab === 'vision' && (
-                <div className="space-y-8 animate-in fade-in duration-500">
-                    <SectionHeader icon={Eye} title="Neural Perception" desc="Fine-tune AI inference thresholds" />
-                    <div className="space-y-6">
-                        <div className="space-y-3">
-                            <div className="flex justify-between items-center text-[9px] font-black tracking-widest text-text-gray uppercase">
-                                <span>Global Confidence Threshold</span>
-                                <span className="text-accent">65%</span>
-                            </div>
-                            <div className="h-1.5 bg-surface rounded-full">
-                                <div className="h-full w-[65%] bg-accent rounded-full transition-all duration-1000"></div>
-                            </div>
-                        </div>
+            <div className="space-y-4">
+              <div className="flex justify-between items-center">
+                <label className="text-[10px] font-black uppercase tracking-widest text-text-gray">Motion Sensitivity</label>
+                <span className="text-xs font-black text-emerald-500 italic">{settings.motionSensitivity}%</span>
+              </div>
+              <input 
+                type="range" min="0" max="100" 
+                value={settings.motionSensitivity}
+                onChange={(e) => setSettings({...settings, motionSensitivity: parseInt(e.target.value)})}
+                className="w-full accent-emerald-500 bg-surface h-1.5 rounded-full appearance-none cursor-pointer" 
+              />
+            </div>
 
-                        <div className="space-y-3">
-                            <div className="flex justify-between items-center text-[9px] font-black tracking-widest text-text-gray uppercase">
-                                <span>Motion Sensitivity Alpha</span>
-                                <span className="text-accent">82%</span>
-                            </div>
-                            <div className="h-1.5 bg-surface rounded-full">
-                                <div className="h-full w-[82%] bg-accent rounded-full transition-all duration-1000 shadow-[0_0_8px_rgba(14,165,233,0.3)]"></div>
-                            </div>
-                        </div>
-                    </div>
+            <div className="pt-2 space-y-4">
+              {[
+                { id: 'neuralOptimizer', title: 'Neural Optimizer', icon: Zap },
+                { id: 'edgeProcessing', title: 'Local Edge Processing', icon: Cpu },
+              ].map(item => (
+                <div key={item.id} className="flex items-center justify-between p-4 bg-surface/30 rounded-xl border border-border">
+                  <div className="flex items-center gap-4">
+                    <item.icon className="w-5 h-5 text-text-gray" />
+                    <span className="text-[10px] font-black uppercase text-text-dark">{item.title}</span>
+                  </div>
+                  <button 
+                    onClick={() => handleToggle(item.id)}
+                    className={`w-10 h-5 rounded-full relative transition-all duration-300 ${settings[item.id] ? 'bg-accent' : 'bg-border'}`}>
+                    <div className={`absolute top-0.5 w-4 h-4 bg-white rounded-full transition-all duration-300 ${settings[item.id] ? 'left-5.5' : 'left-0.5'}`} />
+                  </button>
                 </div>
-            )}
-
-            {activeTab === 'storage' && (
-                <div className="space-y-8 animate-in fade-in duration-500">
-                    <SectionHeader icon={Database} title="Storage Lifecycle" desc="Archive management" />
-                    <div className="p-6 bg-surface border border-border rounded-lg">
-                        <div className="flex items-center gap-3 mb-6">
-                            <div className="w-1.5 h-1.5 bg-accent rounded-full animate-pulse"></div>
-                            <p className="text-[10px] font-black uppercase tracking-widest text-text-dark">Cleanup: Daily @ 03:00</p>
-                        </div>
-                        <div className="grid grid-cols-3 gap-4">
-                            {[
-                                { label: 'Audit Logs', val: '90D' },
-                                { label: 'Video Clips', val: '14D' },
-                                { label: 'Metadata', val: '30D' },
-                            ].map((s, i) => (
-                                <div key={i} className="text-center p-3 border border-border/50 rounded-lg bg-card">
-                                    <p className="text-[8px] font-bold text-text-gray uppercase tracking-widest mb-1">{s.label}</p>
-                                    <p className="text-xs font-black italic text-text-dark">{s.val}</p>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {activeTab === 'security' && (
-                <div className="space-y-8 animate-in fade-in duration-500">
-                    <SectionHeader icon={Lock} title="Priority Protocols" desc="Auth rules" />
-                    <div className="grid grid-cols-1 gap-3">
-                        <Toggle label="Force Multi-Factor" desc="Required for all admins" enabled={true} />
-                        <Toggle label="IP Restriction Table" desc="Authorized range only" enabled={false} />
-                        <Toggle label="Session Hardening" desc="Auto-terminate after 15m" enabled={true} />
-                    </div>
-                </div>
-            )}
+              ))}
+            </div>
+          </div>
         </div>
+
+        {/* Data Retention */}
+        <div className="bg-card border border-border rounded-lg p-8 shadow-sm">
+          <SectionHeader icon={Database} title="Data Retention" subtitle="Temporal Storage Management" />
+          
+          <div className="grid grid-cols-2 gap-4 mb-6">
+            {[
+              { id: 'retentionLogs', label: 'Audit Logs (Days)', val: settings.retentionLogs },
+              { id: 'retentionVideo', label: 'Video Clips (Days)', val: settings.retentionVideo },
+            ].map(item => (
+              <div key={item.id} className="p-4 bg-surface/50 border border-border rounded-xl">
+                <p className="text-[9px] font-black text-text-gray uppercase tracking-widest mb-1">{item.label}</p>
+                <input 
+                  type="number" 
+                  value={item.val}
+                  onChange={(e) => setSettings({...settings, [item.id]: parseInt(e.target.value)})}
+                  className="bg-transparent text-xl font-black italic text-accent outline-none w-full"
+                />
+              </div>
+            ))}
+          </div>
+
+          <div className="p-6 bg-accent/5 rounded-xl border border-accent/10 space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <RefreshCw className="w-5 h-5 text-accent" />
+                <p className="text-[11px] font-black uppercase text-text-dark">Auto-Purge Engine</p>
+              </div>
+              <button 
+                onClick={() => handleToggle('autoPurge')}
+                className={`w-12 h-6 rounded-full relative transition-all duration-300 ${settings.autoPurge ? 'bg-accent' : 'bg-border'}`}>
+                <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all duration-300 ${settings.autoPurge ? 'left-7' : 'left-1'}`} />
+              </button>
+            </div>
+            <p className="text-[9px] font-bold text-text-gray uppercase leading-relaxed tracking-wider">
+              Automatically decommission data when storage exceeds critical thresholds (90%+).
+            </p>
+          </div>
+        </div>
+
+        {/* Security Matrix */}
+        <div className="bg-card border border-border rounded-lg p-8 shadow-sm">
+          <SectionHeader icon={ShieldAlert} title="Security Matrix" subtitle="Auth & Access Protocols" />
+          
+          <div className="space-y-4">
+            {[
+              { id: 'mfaRequired', title: 'MFA Enforcement', icon: ShieldCheck },
+              { id: 'ipLockdown', title: 'Global IP Lockdown', icon: Lock },
+              { id: 'threatAlerts', title: 'Threat Notifications', icon: Radio },
+            ].map(item => (
+              <div key={item.id} className="flex items-center justify-between p-4 bg-surface/30 rounded-xl border border-border hover:border-danger/20 transition-all">
+                <div className="flex items-center gap-4">
+                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${settings[item.id] ? 'bg-danger/10 text-danger' : 'bg-card text-text-gray'}`}>
+                    <item.icon className="w-5 h-5" />
+                  </div>
+                  <span className="text-[10px] font-black uppercase text-text-dark">{item.title}</span>
+                </div>
+                <button 
+                  onClick={() => handleToggle(item.id)}
+                  className={`w-10 h-5 rounded-full relative transition-all duration-300 ${settings[item.id] ? 'bg-danger' : 'bg-border'}`}>
+                  <div className={`absolute top-0.5 w-4 h-4 bg-white rounded-full transition-all duration-300 ${settings[item.id] ? 'left-5.5' : 'left-0.5'}`} />
+                </button>
+              </div>
+            ))}
+
+            <div className="pt-4 flex items-center gap-4">
+              <div className="flex-1 space-y-1.5">
+                <label className="text-[10px] font-black uppercase tracking-widest text-text-gray ml-1">Session Expiry (Min)</label>
+                <input 
+                  type="number" 
+                  value={settings.sessionTimeout}
+                  onChange={(e) => setSettings({...settings, sessionTimeout: parseInt(e.target.value)})}
+                  className="w-full bg-surface border border-border rounded-lg px-4 py-2.5 text-xs font-bold text-text-dark outline-none focus:border-accent transition-all" 
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      {/* Footer Branding */}
+      <div className="text-center text-[9px] font-black text-text-gray/40 uppercase tracking-[0.5em] pt-10">
+        AI Hospital Orchestrator • Global Engine Configuration v4.2
       </div>
     </div>
   );
