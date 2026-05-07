@@ -104,9 +104,9 @@ export default function ActionAudit() {
                     </button>
                 ))}
             </div>
-            <button className="p-2.5 bg-card border border-border rounded-lg text-text-gray hover:text-accent transition-all shadow-sm">
+            {/* <button className="p-2.5 bg-card border border-border rounded-lg text-text-gray hover:text-accent transition-all shadow-sm">
                 <Download className="w-4 h-4" />
-            </button>
+            </button> */}
         </div>
       </div>
 
