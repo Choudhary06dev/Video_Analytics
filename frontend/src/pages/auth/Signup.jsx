@@ -5,10 +5,12 @@ import {
   ShieldCheck, Globe, Activity, Cpu, Zap, Database
 } from 'lucide-react';
 import { register as apiRegister } from '../../services/authService';
+import { useSystem } from '../../context/SystemContext';
 import authBg from '../../assets/auth-bg.png';
 import Logo from '../../components/ui/Logo';
 
 export default function RegisterPage() {
+  const { publicEnrollment, loading: checkingSettings } = useSystem();
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
@@ -20,6 +22,9 @@ export default function RegisterPage() {
   const [success, setSuccess] = useState(false);
 
   const navigate = useNavigate();
+
+  const enrollmentDisabled = !publicEnrollment;
+  const checkingEnrollment = checkingSettings;
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -144,7 +149,31 @@ export default function RegisterPage() {
             )}
           </div>
 
-          {success ? (
+          {checkingEnrollment ? (
+            <div className="py-20 flex flex-col items-center justify-center gap-4">
+              <Loader2 className="w-10 h-10 text-accent animate-spin" />
+              <p className="text-[10px] font-black uppercase tracking-[0.4em] text-text-gray animate-pulse">Verifying Network Protocols...</p>
+            </div>
+          ) : enrollmentDisabled ? (
+            <div className="py-12 px-8 bg-danger/5 border border-danger/20 rounded-2xl text-center space-y-6 animate-in zoom-in-95 duration-500">
+              <div className="w-20 h-20 bg-danger/10 rounded-full flex items-center justify-center mx-auto">
+                <Lock className="w-10 h-10 text-danger" />
+              </div>
+              <div className="space-y-2">
+                <h3 className="text-2xl font-black text-white uppercase italic">Access <span className="text-danger">Restricted</span></h3>
+                <p className="text-[10px] font-bold text-text-gray uppercase tracking-widest leading-relaxed">
+                  Public personnel enrollment is currently disabled by the Orchestrator. 
+                  Please contact the System Administrator for manual node activation.
+                </p>
+              </div>
+              <Link
+                to="/login"
+                className="inline-flex items-center gap-3 text-white font-black uppercase text-[10px] tracking-[0.4em] bg-white/5 border border-white/10 px-8 py-4 rounded-lg hover:bg-white/10 transition-all"
+              >
+                Return to Station
+              </Link>
+            </div>
+          ) : success ? (
             <div className="py-12 flex flex-col items-center justify-center text-center space-y-8 animate-in zoom-in-95 duration-500">
               <div className="w-32 h-32 bg-accent/10 rounded-full flex items-center justify-center relative shadow-[0_0_50px_rgba(6,182,212,0.2)]">
                 <div className="absolute inset-0 border-2 border-accent/20 rounded-full animate-ping"></div>

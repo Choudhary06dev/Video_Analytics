@@ -3,10 +3,12 @@ import { useNavigate, Link } from 'react-router-dom';
 import { Shield, Mail, Lock, Eye, EyeOff, Loader2, Cpu, Zap, Activity } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { login as apiLogin } from '../../services/authService';
+import { useSystem } from '../../context/SystemContext';
 import authBg from '../../assets/auth-bg.png';
 import Logo from '../../components/ui/Logo';
 
 export default function LoginPage() {
+  const { maintenanceMode } = useSystem();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -97,6 +99,16 @@ export default function LoginPage() {
               Initialize Nexer Enterprise Session
             </div>
           </div>
+
+
+          {maintenanceMode && (
+            <div className="mb-6 p-4 bg-amber-500/10 border border-amber-500/20 rounded-lg flex items-center gap-3 animate-pulse">
+              <div className="w-1.5 h-1.5 rounded-full bg-amber-500"></div>
+              <p className="text-amber-500 text-[9px] font-black uppercase tracking-widest leading-relaxed">
+                System Maintenance Active. Authorized Admin Access Only.
+              </p>
+            </div>
+          )}
 
           {error && (
             <div className="mb-8 p-5 bg-danger/10 border-l-4 border-danger rounded-r-lg flex items-center gap-4 animate-in slide-in-from-top-2">
