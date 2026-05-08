@@ -39,7 +39,8 @@ function StatusDonut({ stats, summary, size = 140 }) {
     { key: 'In Progress', value: dist.Medium || 0, color: '#6366f1' },
     { key: 'Completed', value: dist.Low || 0, color: '#22c55e' },
   ];
-  const total = data.reduce((s, d) => s + d.value, 0) || 1;
+  const total = data.reduce((s, d) => s + d.value, 0);
+  const safeTotal = total || 1;
   const r = (size - 20) / 2, cx = size / 2, cy = size / 2, circ = 2 * Math.PI * r;
   let offset = 0;
   return (
@@ -47,7 +48,7 @@ function StatusDonut({ stats, summary, size = 140 }) {
       <svg width={size} height={size} style={{ transform: 'rotate(-90deg)' }}>
         <circle cx={cx} cy={cy} r={r} fill="none" stroke="rgba(0,0,0,.03)" strokeWidth={14} />
         {data.map(d => {
-          const dash = (d.value / total) * circ;
+          const dash = (d.value / safeTotal) * circ;
           const el = <circle key={d.key} cx={cx} cy={cy} r={r} fill="none"
             stroke={d.color} strokeWidth={14} strokeLinecap="round"
             strokeDasharray={`${Math.max(0, dash - 4)} ${circ}`}

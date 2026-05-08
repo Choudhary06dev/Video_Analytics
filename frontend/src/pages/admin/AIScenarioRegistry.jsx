@@ -186,26 +186,30 @@ export default function AIScenarioRegistry() {
         {filteredScenarios.map(scenario => {
           const sev = scenario.default_severity;
           const sevStyles = 
-            sev === 'Critical' ? { border: 'border-l-rose-500', bg: 'bg-rose-50/30', glow: 'shadow-rose-500/10' } :
-            sev === 'High' ? { border: 'border-l-orange-500', bg: 'bg-orange-50/30', glow: 'shadow-orange-500/10' } :
-            sev === 'Medium' ? { border: 'border-l-amber-500', bg: 'bg-amber-50/30', glow: 'shadow-amber-500/10' } :
-            { border: 'border-l-emerald-500', bg: 'bg-emerald-50/30', glow: 'shadow-emerald-500/10' };
+            sev === 'Critical' ? { border: 'border-l-rose-500', bg: 'bg-rose-500/[0.02]', glow: 'shadow-rose-500/10' } :
+            sev === 'High' ? { border: 'border-l-orange-500', bg: 'bg-orange-500/[0.02]', glow: 'shadow-orange-500/10' } :
+            sev === 'Medium' ? { border: 'border-l-blue-500', bg: 'bg-blue-500/[0.02]', glow: 'shadow-blue-500/10' } :
+            { border: 'border-l-emerald-500', bg: 'bg-emerald-500/[0.02]', glow: 'shadow-emerald-500/10' };
           
           const ScenarioIcon = getScenarioIcon(scenario.key);
 
           return (
             <div key={scenario.id} className={`bg-card border border-border rounded-xl p-4 hover:shadow-xl transition-all group border-l-4 ${sevStyles.border} ${sevStyles.bg} hover:${sevStyles.glow} flex flex-col h-full`}>
               <div className="flex justify-between items-start mb-3">
-                <div className="flex items-start gap-3">
+                <div className="flex items-start gap-3 min-w-0 flex-1">
                   <div className="w-10 h-10 bg-surface rounded-lg flex items-center justify-center border border-border shrink-0 mt-0.5">
                     <ScenarioIcon className={`w-5 h-5 ${sevStyles.border.replace('border-l-', 'text-')}`} />
                   </div>
-                  <div>
-                    <h3 className="text-sm font-black text-text-dark uppercase tracking-tight">{scenario.name}</h3>
-                    <code className="text-[9px] text-accent font-bold bg-accent/5 px-1.5 py-0.5 rounded border border-accent/10">{scenario.key}</code>
+                  <div className="min-w-0 flex-1">
+                    <h3 className="text-sm font-black text-text-dark uppercase tracking-tight leading-tight mb-1">{scenario.name}</h3>
+                    <div className="flex">
+                      <code className="text-[8px] text-accent font-bold bg-accent/5 px-1.5 py-0.5 rounded border border-accent/10 truncate max-w-full" title={scenario.key}>
+                        {scenario.key}
+                      </code>
+                    </div>
                   </div>
                 </div>
-                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all">
+                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all shrink-0 ml-2">
                   <button onClick={() => handleOpenModal(scenario)} className="p-2 hover:bg-white/80 rounded-lg text-text-gray hover:text-accent transition-all">
                     <Edit2 className="w-4 h-4" />
                   </button>
@@ -221,7 +225,7 @@ export default function AIScenarioRegistry() {
                 <span className={`px-2 py-1 rounded text-[9px] font-black uppercase tracking-widest
                   ${sev === 'Critical' ? 'bg-rose-500/10 text-rose-600' :
                     sev === 'High' ? 'bg-orange-500/10 text-orange-600' :
-                    sev === 'Medium' ? 'bg-amber-500/10 text-amber-600' :
+                    sev === 'Medium' ? 'bg-blue-500/10 text-blue-600' :
                     'bg-emerald-500/10 text-emerald-600'}`}>
                   {sev} Severity
                 </span>

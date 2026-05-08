@@ -82,13 +82,13 @@ def get_alerts(
     severity: Optional[str] = None, 
     limit: int = 100,
     start_date: Optional[str] = None,
-    end_date: Optional[str] = None
+    end_date: Optional[str] = None,
+    allowed_area_ids: Optional[List[int]] = None,
 ):
     if start_date and end_date:
         try:
             start_dt = datetime.fromisoformat(start_date.replace('Z', '+00:00').split('.')[0])
             end_dt = datetime.fromisoformat(end_date.replace('Z', '+00:00').split('.')[0])
-            # Add 1 day to end_date to include the whole day if it's just a date
             if len(end_date) <= 10:
                 end_dt = end_dt + timedelta(days=1)
             statement = select(DetectionEvent).where(DetectionEvent.timestamp >= start_dt, DetectionEvent.timestamp <= end_dt)
@@ -101,9 +101,12 @@ def get_alerts(
 
     statement = statement.where(DetectionEvent.is_alert == True)
     
-    if severity:
-        statement = statement.where(DetectionEvent.severity == severity)
+    # Apply security and severity filters
+    statement = _apply_event_filters(statement, session, severity=severity, allowed_area_ids=allowed_area_ids)
     
+    if statement is None:
+        return []
+        
     statement = statement.order_by(DetectionEvent.timestamp.desc()).limit(limit)
     return session.exec(statement).all()
 

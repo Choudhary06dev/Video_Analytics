@@ -11,20 +11,20 @@ from config import BACKEND_URL
 # Optimize OpenCV/FFmpeg for RTSP stability (IMOU/Dahua specialized)
 os.environ["OPENCV_FFMPEG_CAPTURE_OPTIONS"] = "rtsp_transport;tcp|rtsp_flags;prefer_tcp|stimeout;10000000" # 10s timeout, TCP
 
-# AI Scenarios Mapping
+# AI Scenarios Mapping: YOLO label -> Internal Key (matches AIScenario.key in DB)
 SCENARIO_MAPPING = {
-    "person": "Unauthorized entry into restricted areas",
-    "knife": "Weapon detection (gun/knife)",
-    "scissors": "Weapon detection (gun/knife)",
-    "cell phone": "Mobile phone usage in restricted areas",
-    "car": "Vehicle detection & tracking",
-    "truck": "Vehicle detection & tracking",
-    "bus": "Vehicle detection & tracking",
-    "motorcycle": "Vehicle detection & tracking",
-    "fire hydrant": "Fire / smoke detection",
-    "oven": "Fire / smoke detection",
-    "toaster": "Fire / smoke detection",
-    "parking meter": "Unauthorized parking / ambulance blockage",
+    "person": "UNAUTHORIZED_ENTRY_INTO_RESTRICTED_AREAS",
+    "knife": "WEAPON_DETECTION",
+    "scissors": "WEAPON_DETECTION",
+    "cell phone": "MOBILE_PHONE_USAGE_IN_RESTRICTED_AREAS",
+    "car": "VEHICLE_DETECTION_TRACKING",
+    "truck": "VEHICLE_DETECTION_TRACKING",
+    "bus": "VEHICLE_DETECTION_TRACKING",
+    "motorcycle": "VEHICLE_DETECTION_TRACKING",
+    "fire hydrant": "FIRE_SMOKE_DETECTION",
+    "oven": "FIRE_SMOKE_DETECTION",
+    "toaster": "FIRE_SMOKE_DETECTION",
+    "parking meter": "UNAUTHORIZED_PARKING_AMBULANCE_BLOCKAGE",
 }
 
 CONF_THRESHOLD = 0.55
@@ -193,13 +193,13 @@ class InferenceEngine:
                             detected_scenarios[scenario_name]["labels"].add(label)
 
         # Check for visitor limit
-        visitor_scenario_name = "Visitor Count Limit Exceeded"
+        visitor_scenario_key = "VISITOR_COUNT_LIMIT_EXCEEDED"
         
         # Get dynamic limit from configs, default to global VISITOR_LIMIT
-        dynamic_limit = int(self.scenario_configs.get(visitor_scenario_name, {}).get("limit", VISITOR_LIMIT))
+        dynamic_limit = int(self.scenario_configs.get(visitor_scenario_key, {}).get("limit", VISITOR_LIMIT))
         
-        if person_count > dynamic_limit and visitor_scenario_name in self.enabled_scenarios:
-            detected_scenarios[visitor_scenario_name] = {
+        if person_count > dynamic_limit and visitor_scenario_key in self.enabled_scenarios:
+            detected_scenarios[visitor_scenario_key] = {
                 "max_conf": 0.9, # High confidence assumed for limit breach
                 "count": person_count, 
                 "labels": {"person"}

@@ -58,6 +58,12 @@ def create_area(area_data: AreaCreate, session: Session = Depends(get_session), 
         parent = session.get(Area, area_data.parent_id)
         if not parent:
             raise HTTPException(status_code=400, detail="Parent area not found")
+
+    # Ensure unique name (case-insensitive)
+    from sqlalchemy import func
+    existing_name = session.exec(select(Area).where(func.lower(Area.name) == func.lower(area_data.name))).first()
+    if existing_name:
+        raise HTTPException(status_code=400, detail=f"Zone with name '{area_data.name}' already exists.")
             
     new_area = Area(
         name=area_data.name,
@@ -67,6 +73,22 @@ def create_area(area_data: AreaCreate, session: Session = Depends(get_session), 
     session.add(new_area)
     session.commit()
     session.refresh(new_area)
+
+    # Auto-grant permission to the creator's role so it appears in their list immediately
+    db_user = session.get(User, admin_data.get("id"))
+    if db_user:
+        # Check if permission already exists (unlikely for new area but safe)
+        from app.models import RoleAreaPermission
+        stmt = select(RoleAreaPermission).where(
+            RoleAreaPermission.role_id == db_user.role_id,
+            RoleAreaPermission.area_id == new_area.id
+        )
+        existing = session.exec(stmt).first()
+        if not existing:
+            perm = RoleAreaPermission(role_id=db_user.role_id, area_id=new_area.id, can_view=True)
+            session.add(perm)
+            session.commit()
+
     return new_area
 
 @router.put("/admin/areas/{area_id}")
@@ -75,6 +97,11 @@ def update_area(area_id: int, area_data: AreaUpdate, session: Session = Depends(
     if not area:
         raise HTTPException(status_code=404, detail="Area not found")
     if area_data.name:
+        if area.name.lower() != area_data.name.lower():
+            from sqlalchemy import func
+            existing_name = session.exec(select(Area).where(func.lower(Area.name) == func.lower(area_data.name))).first()
+            if existing_name:
+                raise HTTPException(status_code=400, detail=f"Zone with name '{area_data.name}' already exists.")
         area.name = area_data.name
     if area_data.description:
         area.description = area_data.description
@@ -187,7 +214,7 @@ def get_camera_scenarios(camera_id: int, session: Session = Depends(get_session)
             "key": s.key,
             "severity": s.default_severity,
             "is_enabled": s.id in enabled_ids,
-            "config": configs.get(s.name, {})
+            "config": configs.get(s.key, configs.get(s.name, {}))
         })
     
     return result
@@ -203,16 +230,16 @@ def get_enabled_camera_scenarios(camera_id: int, session: Session = Depends(get_
     if not camera:
         raise HTTPException(status_code=404, detail="Camera not found")
 
-    enabled_names = []
+    enabled_keys = []
     enabled_ids = camera.enabled_scenario_ids or []
     for sid in enabled_ids:
         scenario = session.get(AIScenario, sid)
         if scenario:
-            enabled_names.append(scenario.name)
+            enabled_keys.append(scenario.key)
 
     return {
         "camera_id": camera_id, 
-        "enabled_scenarios": enabled_names,
+        "enabled_scenarios": enabled_keys,
         "scenario_configs": camera.scenario_configs or {}
     }
 
@@ -229,20 +256,20 @@ async def sync_camera_scenarios(camera_id: int, data: ScenarioBulkUpdate, backgr
     camera.enabled_scenario_ids = data.enabled_scenario_ids
     camera.scenario_configs = data.scenario_configs
     
-    # Get names for AI service notification
-    enabled_names = []
+    # Get keys for AI service notification
+    enabled_keys = []
     for sid in data.enabled_scenario_ids:
         scenario = session.get(AIScenario, sid)
         if scenario:
-            enabled_names.append(scenario.name)
+            enabled_keys.append(scenario.key)
     
     session.add(camera)
     session.commit()
 
     # 2. Notify AI Service in Background
-    background_tasks.add_task(notify_ai_service_reload, camera_id, enabled_names, data.scenario_configs)
+    background_tasks.add_task(notify_ai_service_reload, camera_id, enabled_keys, data.scenario_configs)
 
-    return {"status": "success", "message": f"Synced {len(enabled_names)} scenarios for camera {camera_id}"}
+    return {"status": "success", "message": f"Synced {len(enabled_keys)} scenarios for camera {camera_id}"}
 
 
 async def notify_ai_service_reload(camera_id: int, enabled_names: list, scenario_configs: dict):

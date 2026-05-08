@@ -92,10 +92,10 @@ export default function LoginPage() {
             <h3 className="text-3xl font-black text-white mb-2 uppercase tracking-tighter italic">
               System <span className="text-accent">Login</span>
             </h3>
-            <p className="text-white font-black text-[9px] uppercase tracking-[0.3em] flex items-center gap-2">
+            <div className="text-white font-black text-[9px] uppercase tracking-[0.3em] flex items-center gap-2">
               <div className="w-1 h-1 rounded-full bg-accent shadow-[0_0_8px_rgba(6,182,212,0.8)]"></div>
               Initialize Nexer Enterprise Session
-            </p>
+            </div>
           </div>
 
           {error && (

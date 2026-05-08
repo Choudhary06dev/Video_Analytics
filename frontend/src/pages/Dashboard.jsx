@@ -292,12 +292,36 @@ export default function Dashboard() {
   const trendData = useMemo(() => buildTrend(logs), [logs]);
 
   const activeUseCases = useMemo(() => {
-    const detected = new Set(logs.map((log) => (log.scenario_key || '').toLowerCase()));
-    return AI_USE_CASES.map((label) => ({
-      label,
-      active: Array.from(detected).some((item) => item.includes(label.split(' ')[0].toLowerCase()))
-    }));
-  }, [logs]);
+    // Get all scenario keys that are currently enabled on at least one active camera
+    const enabledScenarioIds = new Set();
+    cameras.forEach(cam => {
+      if (cam.is_active !== false && cam.enabled_scenario_ids) {
+        cam.enabled_scenario_ids.forEach(id => enabledScenarioIds.add(id));
+      }
+    });
+
+    const activeKeys = scenarios
+      .filter(s => enabledScenarioIds.has(s.id))
+      .map(s => s.key.toLowerCase());
+
+    return AI_USE_CASES.map((label) => {
+      const lowLabel = label.toLowerCase();
+      const firstWord = label.split(' ')[0].toLowerCase();
+      
+      // Better matching: check if any active key contains the first word or main keywords
+      const isActive = activeKeys.some(key => 
+        key.includes(firstWord) || 
+        (lowLabel.includes('entry') && key.includes('entry')) ||
+        (lowLabel.includes('fire') && key.includes('fire')) ||
+        (lowLabel.includes('person') && key.includes('person'))
+      );
+
+      return {
+        label,
+        active: isActive
+      };
+    });
+  }, [cameras, scenarios]);
 
   const postureTone = stats.posture === 'Critical' ? 'danger' : stats.posture === 'Elevated' ? 'warning' : 'success';
 
@@ -401,7 +425,18 @@ export default function Dashboard() {
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
                 <XAxis dataKey="time" tick={{ fill: '#94a3b8', fontSize: 11, fontWeight: 700 }} axisLine={false} tickLine={false} />
                 <YAxis tick={{ fill: '#94a3b8', fontSize: 11, fontWeight: 700 }} axisLine={false} tickLine={false} />
-                <Tooltip />
+                <Tooltip 
+                  contentStyle={{ 
+                    backgroundColor: '#1e293b', 
+                    border: '1px solid rgba(255,255,255,0.1)', 
+                    borderRadius: '8px',
+                    color: '#f8fafc',
+                    fontSize: '11px',
+                    fontWeight: '800',
+                    boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.3)'
+                  }}
+                  itemStyle={{ color: '#0ea5e9' }}
+                />
                 <Area type="monotone" dataKey="detections" name="Detections" stroke="#0ea5e9" strokeWidth={2.5} fill="url(#detGrad)" />
                 <Area type="monotone" dataKey="alerts" name="Alerts" stroke="#ef4444" strokeWidth={2.5} fill="url(#alertGrad)" />
               </AreaChart>
@@ -456,7 +491,15 @@ export default function Dashboard() {
                     ))}
                   </Pie>
                   <Tooltip 
-                    contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
+                    contentStyle={{ 
+                      backgroundColor: '#1e293b', 
+                      border: '1px solid rgba(255,255,255,0.1)', 
+                      borderRadius: '8px',
+                      color: '#f8fafc',
+                      fontSize: '11px',
+                      fontWeight: '800',
+                      boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.3)'
+                    }}
                   />
                 </PieChart>
               </ResponsiveContainer>
@@ -481,7 +524,18 @@ export default function Dashboard() {
                   <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#e2e8f0" />
                   <XAxis type="number" tick={{ fill: '#94a3b8', fontSize: 10 }} axisLine={false} tickLine={false} />
                   <YAxis type="category" dataKey="name" width={120} tick={{ fill: '#64748b', fontSize: 10, fontWeight: 700 }} axisLine={false} tickLine={false} />
-                  <Tooltip />
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: '#1e293b', 
+                      border: '1px solid rgba(255,255,255,0.1)', 
+                      borderRadius: '8px',
+                      color: '#f8fafc',
+                      fontSize: '11px',
+                      fontWeight: '800',
+                      boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.3)'
+                    }}
+                    cursor={{ fill: 'rgba(255,255,255,0.05)' }}
+                  />
                   <Bar dataKey="value" fill="#0ea5e9" radius={[0, 6, 6, 0]} />
                 </BarChart>
               </ResponsiveContainer>

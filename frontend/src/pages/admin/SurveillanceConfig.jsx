@@ -314,7 +314,7 @@ export default function SurveillanceConfig() {
                                 </td>
                                 <td className="py-6 px-8 text-right">
                                     <div className="flex items-center justify-end gap-2">
-                                        <button onClick={() => openScenarioModal(cam)} className="p-2 border border-border text-violet-500 rounded-lg hover:bg-violet-500 hover:text-white transition-all bg-card" title="AI Model Configuration">
+                                        <button onClick={() => openScenarioModal(cam)} className="p-2 border border-border text-accent rounded-lg hover:bg-accent hover:text-white transition-all bg-card" title="AI Model Configuration">
                                             <BrainCircuit className="w-4 h-4" />
                                         </button>
                                         <button onClick={() => openEditModal(cam)} className="p-2 border border-border text-text-gray rounded-lg hover:text-accent hover:border-accent transition-all bg-card" title="Configure Stream">
@@ -484,14 +484,14 @@ export default function SurveillanceConfig() {
       {showScenarioModal && selectedCamera && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-card w-full max-w-2xl rounded-lg border border-border overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200">
-            <div className="p-5 border-b border-border flex items-center justify-between bg-violet-500/5">
+            <div className="p-5 border-b border-border flex items-center justify-between bg-accent/5">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-violet-500/10 rounded-lg flex items-center justify-center border border-violet-500/20">
-                  <BrainCircuit className="w-6 h-6 text-violet-500" />
+                <div className="w-10 h-10 bg-accent/10 rounded-lg flex items-center justify-center border border-accent/20">
+                  <BrainCircuit className="w-6 h-6 text-accent" />
                 </div>
                 <div>
                   <h2 className="text-sm font-black uppercase tracking-widest text-text-dark">AI Intelligence Config</h2>
-                  <p className="text-[9px] font-bold text-text-gray uppercase tracking-widest">Managing models for: <span className="text-violet-500">{selectedCamera.name}</span></p>
+                  <p className="text-[9px] font-bold text-text-gray uppercase tracking-widest">Managing models for: <span className="text-accent">{selectedCamera.name}</span></p>
                 </div>
               </div>
               <button type="button" onClick={() => setShowScenarioModal(false)} className="text-text-gray hover:text-text-dark p-1">
@@ -502,7 +502,7 @@ export default function SurveillanceConfig() {
             <div className="p-6">
               {loadingScenarios ? (
                 <div className="py-20 flex flex-col items-center gap-3">
-                  <Loader2 className="w-8 h-8 text-violet-500 animate-spin" />
+                  <Loader2 className="w-8 h-8 text-accent animate-spin" />
                   <p className="text-[10px] font-black uppercase tracking-widest text-text-gray">Mapping Neural Paths...</p>
                 </div>
               ) : (
@@ -512,7 +512,7 @@ export default function SurveillanceConfig() {
                     <div className="flex gap-2">
                         <button 
                             onClick={() => toggleAllScenarios(true)}
-                            className="text-[9px] font-black uppercase tracking-widest text-violet-500 hover:text-violet-600 px-2 py-1 rounded hover:bg-violet-500/5 transition-all"
+                            className="text-[9px] font-black uppercase tracking-widest text-accent hover:text-accent/80 px-2 py-1 rounded hover:bg-accent/5 transition-all"
                         >
                             Select All
                         </button>
@@ -531,22 +531,22 @@ export default function SurveillanceConfig() {
                         key={scenario.id} 
                         onClick={() => toggleScenarioInState(scenario.id)}
                         className={`flex items-center justify-between p-4 rounded-lg border transition-all cursor-pointer group
-                          ${scenario.is_enabled ? 'bg-violet-500/5 border-violet-500/30 shadow-sm' : 'bg-surface border-border hover:border-violet-500/30'}`}
+                          ${scenario.is_enabled ? 'bg-accent/5 border-accent/30 shadow-sm' : 'bg-surface border-border hover:border-accent/30'}`}
                       >
                         <div className="flex items-center gap-3">
-                          <div className={`w-2 h-2 rounded-full ${scenario.is_enabled ? 'bg-violet-500 animate-pulse' : 'bg-border'}`} />
-                          <span className={`text-[11px] font-black uppercase tracking-tight transition-colors ${scenario.is_enabled ? 'text-violet-600' : 'text-text-gray group-hover:text-text-dark'}`}>
+                          <div className={`w-2 h-2 rounded-full ${scenario.is_enabled ? 'bg-accent animate-pulse' : 'bg-border'}`} />
+                          <span className={`text-[11px] font-black uppercase tracking-tight transition-colors ${scenario.is_enabled ? 'text-accent' : 'text-text-gray group-hover:text-text-dark'}`}>
                             {scenario.name}
                           </span>
                         </div>
-                        {scenario.is_enabled && <CheckCircle2 className="w-4 h-4 text-violet-500" />}
+                        {scenario.is_enabled && <CheckCircle2 className="w-4 h-4 text-accent" />}
                       </div>
                     ))}
                   </div>
                   
                   <div className="mt-8 pt-6 border-t border-border flex items-center justify-between">
                     <div className="text-[10px] font-black uppercase tracking-widest text-text-gray">
-                      <span className="text-violet-500">{scenarioData.filter(s => s.is_enabled).length}</span> Models Selected
+                      <span className="text-accent">{scenarioData.filter(s => s.is_enabled).length}</span> Models Selected
                     </div>
                     <div className="flex gap-3">
                       <button onClick={() => setShowScenarioModal(false)}
@@ -554,7 +554,7 @@ export default function SurveillanceConfig() {
                         Discard
                       </button>
                       <button onClick={handleSaveScenarios} disabled={submitting}
-                        className="px-8 py-2.5 bg-violet-600 text-white rounded-lg text-[10px] font-black uppercase tracking-widest shadow-md hover:-translate-y-0.5 transition-all disabled:opacity-50">
+                        className="px-8 py-2.5 bg-accent text-white rounded-lg text-[10px] font-black uppercase tracking-widest shadow-md hover:-translate-y-0.5 transition-all disabled:opacity-50">
                         {submitting ? 'Syncing...' : 'Deploy Models'}
                       </button>
                     </div>

@@ -69,8 +69,8 @@ def verify_admin_access(current_user: dict = Depends(get_current_user), session:
     """Dynamic admin check: Requires VIEW access to admin_hub"""
     return verify_module_access("admin_hub", current_user, session, access_level="view")
 
-def verify_super_admin(current_user: dict = Depends(get_current_user), session: Session = Depends(get_session)):
-    """Dynamic super admin check: Requires EDIT access to admin_hub"""
+def verify_god_mode(current_user: dict = Depends(get_current_user), session: Session = Depends(get_session)):
+    """Dynamic administrative check: Requires EDIT access to admin_hub"""
     return verify_module_access("admin_hub", current_user, session, access_level="edit")
 
 def verify_admin_hub_access(current_user: dict = Depends(get_current_user), session: Session = Depends(get_session)):
@@ -165,12 +165,22 @@ def update_user_by_admin(user_id: int, user_data: AdminUserUpdate, session: Sess
         user.hashed_password = get_password_hash(user_data.password)
         
     if user_data.role_name:
-        if user.id == admin_data.get("id") and user_data.role_name != "super_admin":
-             raise HTTPException(status_code=400, detail="Safety Lock: You cannot revoke your own Super Admin access level.")
-
         role = session.exec(select(Role).where(Role.name == user_data.role_name)).first()
         if not role:
             raise HTTPException(status_code=400, detail="Invalid role specified")
+
+        # Dynamic Safety Lock: Prevent revoking your own administrative access
+        if user.id == admin_data.get("id"):
+            ah = session.exec(select(ModulePermission).where(ModulePermission.key == "admin_hub")).first()
+            if ah:
+                perm = session.exec(select(RoleModulePermission).where(
+                    RoleModulePermission.role_id == role.id, 
+                    RoleModulePermission.module_permission_id == ah.id, 
+                    RoleModulePermission.can_edit == True
+                )).first()
+                if not perm:
+                    raise HTTPException(status_code=400, detail="Safety Lock: You cannot revoke your own administrative access level.")
+
         user.role_id = role.id
 
     if user_data.is_active is not None:

@@ -208,9 +208,12 @@ def fetch_alerts(
     start_date: Optional[str] = None,
     end_date: Optional[str] = None,
     session: Session = Depends(get_session),
+    current_user: dict = Depends(get_current_user),
     auth_data: dict = Depends(lambda cur=Depends(get_current_user), s=Depends(get_session): verify_module_access("alerts", cur, s, access_level="view")),
 ):
-    return get_alerts(session, hours, severity, limit, start_date, end_date)
+    # Filter by allowed areas
+    allowed_area_ids = get_allowed_area_ids(current_user["id"], session)
+    return get_alerts(session, hours, severity, limit, start_date, end_date, allowed_area_ids=allowed_area_ids)
 
 @router.get("/logs")
 def fetch_logs(
