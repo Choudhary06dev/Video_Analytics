@@ -115,31 +115,31 @@ export default function ScenarioOrchestration() {
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700 font-sans pb-20">
 
       {/* Header Section - Aligned with other pages */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
         <div className="flex items-center gap-4">
-          <div className="w-12 h-12 bg-accent/10 rounded-lg flex items-center justify-center border border-accent/20">
-            <BrainCircuit className="w-7 h-7 text-accent" />
+          <div className="w-10 h-10 sm:w-12 sm:h-12 bg-accent/10 rounded-lg flex items-center justify-center border border-accent/20 shrink-0">
+            <BrainCircuit className="w-6 h-6 sm:w-7 sm:h-7 text-accent" />
           </div>
-          <div>
-            <h1 className="text-2xl font-black italic uppercase tracking-tighter text-text-dark">
+          <div className="min-w-0">
+            <h1 className="text-xl sm:text-2xl font-black italic uppercase tracking-tighter text-text-dark truncate">
               Scenario <span className="text-accent underline decoration-accent/20 underline-offset-4">Orchestration</span>
             </h1>
-            <p className="text-[9px] font-bold text-text-gray uppercase tracking-[0.4em] mt-1.5 flex items-center gap-2">
-              <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></div>
+            <p className="text-[8px] sm:text-[9px] font-bold text-text-gray uppercase tracking-[0.2em] sm:tracking-[0.4em] mt-1 sm:mt-1.5 flex items-center gap-2 truncate">
+              <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse shrink-0"></div>
               Neural Path Mapping & Model Deployment
             </p>
           </div>
         </div>
 
         <div className="flex items-center gap-4">
-          <div className="relative group">
+          <div className="relative group w-full lg:w-[300px]">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-text-gray group-focus-within:text-accent transition-colors" />
             <input
               type="text"
               placeholder="FILTER NODES..."
               value={filter}
               onChange={(e) => setFilter(e.target.value)}
-              className="pl-11 pr-6 py-2.5 bg-card border border-border rounded-lg text-[10px] font-black uppercase tracking-widest focus:outline-none focus:border-accent transition-all w-full md:w-[300px] shadow-sm"
+              className="pl-11 pr-6 py-2.5 bg-card border border-border rounded-lg text-[10px] font-black uppercase tracking-widest focus:outline-none focus:border-accent transition-all w-full shadow-sm"
             />
           </div>
         </div>
@@ -201,23 +201,23 @@ export default function ScenarioOrchestration() {
           <div className="bg-card w-full max-w-[1100px] rounded-xl border border-border shadow-2xl overflow-hidden flex flex-col h-auto max-h-[85vh] animate-in zoom-in-95 duration-200">
 
             {/* Modal Header */}
-            <div className="px-8 py-6 border-b border-border flex items-center justify-between bg-surface">
+            <div className="px-4 sm:px-8 py-4 sm:py-6 border-b border-border flex items-center justify-between bg-surface">
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-accent/5 rounded-xl flex items-center justify-center border border-accent/10 shadow-sm">
-                  <Brain className="w-7 h-7 text-accent" />
+                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-accent/5 rounded-xl flex items-center justify-center border border-accent/10 shadow-sm shrink-0">
+                  <Brain className="w-6 h-6 sm:w-7 sm:h-7 text-accent" />
                 </div>
-                <div>
-                  <h2 className="text-lg font-black uppercase tracking-tight text-text-dark leading-none">
+                <div className="min-w-0">
+                  <h2 className="text-sm sm:text-lg font-black uppercase tracking-tight text-text-dark leading-none truncate">
                     Intelligence <span className="text-accent">Configuration</span>
                   </h2>
-                  <p className="text-[9px] font-black text-text-gray uppercase tracking-[3px] mt-2">
+                  <p className="text-[8px] sm:text-[9px] font-black text-text-gray uppercase tracking-[2px] sm:tracking-[3px] mt-1.5 sm:mt-2 truncate">
                     NODE: <span className="text-accent">{selectedCamera.name}</span>
                   </p>
                 </div>
               </div>
               <button
                 onClick={() => setShowConfigModal(false)}
-                className="w-10 h-10 rounded-lg bg-surface hover:bg-rose-500/10 hover:text-rose-600 flex items-center justify-center text-text-gray transition-all border border-border"
+                className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-surface hover:bg-rose-500/10 hover:text-rose-600 flex items-center justify-center text-text-gray transition-all border border-border shrink-0"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -231,22 +231,22 @@ export default function ScenarioOrchestration() {
                 </div>
               ) : (
                 <>
-                  <div className="flex items-center justify-between mb-6 bg-surface/50 p-3 rounded-lg border border-border">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 bg-surface/50 p-3 rounded-lg border border-border gap-3">
                     <div className="flex items-center gap-3 text-text-gray">
                         <LayoutGrid className="w-4 h-4" />
-                        <h3 className="text-[9px] font-black uppercase tracking-[3px]">Scenario Selection Matrix</h3>
+                        <h3 className="text-[9px] font-black uppercase tracking-[2px] sm:tracking-[3px]">Scenario Selection Matrix</h3>
                     </div>
                     <div className="flex gap-4">
                         <button 
                             onClick={() => toggleAllScenarios(true)}
-                            className="text-[9px] font-black uppercase tracking-[3px] text-accent hover:brightness-95 font-bold transition-all"
+                            className="text-[9px] font-black uppercase tracking-[2px] sm:tracking-[3px] text-accent hover:brightness-95 font-bold transition-all"
                         >
                             Select All
                         </button>
                         <div className="w-px h-3 bg-border my-auto"></div>
                         <button 
                             onClick={() => toggleAllScenarios(false)}
-                            className="text-[9px] font-black uppercase tracking-[3px] text-text-gray hover:text-text-dark font-bold transition-all"
+                            className="text-[9px] font-black uppercase tracking-[2px] sm:tracking-[3px] text-text-gray hover:text-text-dark font-bold transition-all"
                         >
                             Clear All
                         </button>
@@ -295,34 +295,34 @@ export default function ScenarioOrchestration() {
                   </div>
 
                   {/* Modal Footer */}
-                  <div className="mt-8 pt-8 border-t border-border flex items-center justify-between">
-                    <div className="flex items-center gap-8">
+                  <div className="mt-8 pt-8 border-t border-border flex flex-col md:flex-row items-center justify-between gap-6">
+                    <div className="flex items-center gap-8 w-full md:w-auto justify-between md:justify-start">
                       <div className="flex flex-col">
                         <span className="text-[9px] font-black uppercase tracking-[3px] text-text-gray mb-1">Engine Load</span>
                         <div className="flex items-center gap-2">
                           <div className="w-2.5 h-2.5 bg-emerald-500 rounded-full animate-pulse"></div>
-                          <span className="text-[11px] font-black text-text-dark uppercase">Core Stable</span>
+                          <span className="text-[10px] sm:text-[11px] font-black text-text-dark uppercase">Core Stable</span>
                         </div>
                       </div>
                       <div className="flex flex-col">
                         <span className="text-[9px] font-black uppercase tracking-[3px] text-text-gray mb-1">Selected</span>
-                        <span className="text-lg font-black text-accent tracking-tighter leading-none">
+                        <span className="text-base sm:text-lg font-black text-accent tracking-tighter leading-none">
                           {scenarioData.filter(s => s.is_enabled).length} <span className="text-[9px] font-black text-text-gray ml-1">MODELS</span>
                         </span>
                       </div>
                     </div>
 
-                    <div className="flex gap-3">
+                    <div className="flex gap-3 w-full md:w-auto">
                       <button
                         onClick={() => setShowConfigModal(false)}
-                        className="px-8 py-2.5 bg-surface hover:bg-slate-200 text-text-dark rounded-lg text-[10px] font-black uppercase tracking-widest transition-all border border-border"
+                        className="flex-1 md:flex-none px-6 sm:px-8 py-2.5 bg-surface hover:bg-slate-200 text-text-dark rounded-lg text-[10px] font-black uppercase tracking-widest transition-all border border-border"
                       >
                         Cancel
                       </button>
                       <button
                         onClick={handleSaveScenarios}
                         disabled={submitting}
-                        className="px-12 py-2.5 bg-accent text-white rounded-lg text-[10px] font-black uppercase tracking-[2px] shadow-lg shadow-accent/20 hover:brightness-110 hover:-translate-y-0.5 transition-all disabled:opacity-50"
+                        className="flex-1 md:flex-none px-8 sm:px-12 py-2.5 bg-accent text-white rounded-lg text-[10px] font-black uppercase tracking-[2px] shadow-lg shadow-accent/20 hover:brightness-110 hover:-translate-y-0.5 transition-all disabled:opacity-50"
                       >
                         {submitting ? 'DEPLOYING...' : 'SAVE CONFIG'}
                       </button>

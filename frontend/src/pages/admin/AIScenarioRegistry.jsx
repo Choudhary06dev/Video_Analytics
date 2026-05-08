@@ -140,40 +140,40 @@ export default function AIScenarioRegistry() {
   return (
     <div className="space-y-6 animate-in fade-in duration-500 font-sans pb-20">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
         <div className="flex items-center gap-4">
-          <div className="w-12 h-12 bg-accent/10 rounded-lg flex items-center justify-center border border-accent/20">
-            <Brain className="w-7 h-7 text-accent" />
+          <div className="w-10 h-10 sm:w-12 sm:h-12 bg-accent/10 rounded-lg flex items-center justify-center border border-accent/20 shrink-0">
+            <Brain className="w-6 h-6 sm:w-7 sm:h-7 text-accent" />
           </div>
-          <div>
-            <h1 className="text-2xl font-black italic uppercase tracking-tighter text-text-dark">
+          <div className="min-w-0">
+            <h1 className="text-xl sm:text-2xl font-black italic uppercase tracking-tighter text-text-dark truncate">
               Intelligence <span className="text-accent underline decoration-accent/20 underline-offset-4">Registry</span>
-              <span className="ml-3 px-2 py-0.5 bg-accent text-white rounded text-[10px] font-black not-italic tracking-widest align-middle shadow-md">
+              <span className="ml-2 sm:ml-3 px-2 py-0.5 bg-accent text-white rounded text-[9px] sm:text-[10px] font-black not-italic tracking-widest align-middle shadow-md">
                 {scenarios.length}
               </span>
             </h1>
 
-            <p className="text-[9px] font-bold text-text-gray uppercase tracking-[0.4em] mt-1.5 flex items-center gap-2">
-              <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></div>
+            <p className="text-[8px] sm:text-[9px] font-bold text-text-gray uppercase tracking-[0.2em] sm:tracking-[0.4em] mt-1 sm:mt-1.5 flex items-center gap-2 truncate">
+              <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse shrink-0"></div>
               Dynamic AI Model Management Module
             </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-4">
-          <div className="relative group">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
+          <div className="relative group flex-1 sm:flex-none">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-text-gray group-focus-within:text-accent transition-colors" />
             <input
               type="text"
               placeholder="SEARCH MODELS..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-11 pr-6 py-2.5 bg-card border border-border rounded-lg text-[10px] font-black uppercase tracking-widest focus:outline-none focus:border-accent transition-all w-full md:w-[300px]"
+              className="pl-11 pr-6 py-2.5 bg-card border border-border rounded-lg text-[10px] font-black uppercase tracking-widest focus:outline-none focus:border-accent transition-all w-full sm:w-[300px]"
             />
           </div>
           <button
             onClick={() => handleOpenModal()}
-            className="flex items-center gap-2 bg-accent text-white px-5 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-widest hover:brightness-110 transition-all shadow-lg shadow-accent/20"
+            className="flex items-center justify-center gap-2 bg-accent text-white px-5 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-widest hover:brightness-110 transition-all shadow-lg shadow-accent/20"
           >
             <Plus className="w-4 h-4" />
             Add Scenario

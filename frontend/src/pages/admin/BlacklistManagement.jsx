@@ -168,35 +168,35 @@ export default function BlacklistManagement() {
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 w-full pb-10">
       
       {/* Header Section */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-2">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 pb-2">
         <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-red-500/10 rounded-lg flex items-center justify-center border border-red-500/20">
-                <UserX className="w-7 h-7 text-red-500" />
+            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-red-500/10 rounded-lg flex items-center justify-center border border-red-500/20 shrink-0">
+                <UserX className="w-6 h-6 sm:w-7 sm:h-7 text-red-500" />
             </div>
-            <div>
-                <h1 className="text-2xl font-black italic uppercase tracking-tighter text-text-dark">
+            <div className="min-w-0">
+                <h1 className="text-xl sm:text-2xl font-black italic uppercase tracking-tighter text-text-dark truncate">
                     Blacklist <span className="text-red-500 underline decoration-red-500/20 underline-offset-4">Intelligence</span>
                 </h1>
-                <p className="text-[9px] font-bold text-text-gray uppercase tracking-[0.3em] mt-1.5 flex items-center gap-2">
+                <p className="text-[8px] sm:text-[9px] font-bold text-text-gray uppercase tracking-[0.2em] sm:tracking-[0.3em] mt-1 sm:mt-1.5 flex items-center gap-2 truncate">
                     Biometric Threat Registry // Neural Alert Protocol
                 </p>
             </div>
         </div>
 
-        <div className="flex items-center gap-3">
-            <div className="relative group">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+            <div className="relative group flex-1 sm:flex-none">
                 <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-text-gray group-focus-within:text-red-500 transition-colors" />
                 <input
                     type="text"
-                    placeholder="Search by name or reason..."
-                    className="bg-card border border-border rounded-lg pl-10 pr-4 py-2.5 text-xs font-bold text-text-dark outline-none focus:border-red-500 focus:ring-4 focus:ring-red-500/5 transition-all w-64"
+                    placeholder="Search identity..."
+                    className="w-full sm:w-64 bg-card border border-border rounded-lg pl-10 pr-4 py-2 sm:py-2.5 text-xs font-bold text-text-dark outline-none focus:border-red-500 focus:ring-4 focus:ring-red-500/5 transition-all"
                     value={filter}
                     onChange={(e) => setFilter(e.target.value)}
                 />
             </div>
             <button
                 onClick={() => { setFormData({ full_name: '', reason: '', severity: 'HIGH', image_file: null, image_preview: '', notes: '' }); setShowAddModal(true); }}
-                className="flex items-center gap-2 bg-red-600 text-white px-5 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-widest shadow-md hover:-translate-y-0.5 transition-all active:translate-y-0"
+                className="flex items-center justify-center gap-2 bg-red-600 text-white px-5 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-widest shadow-md hover:-translate-y-0.5 transition-all active:translate-y-0"
             >
                 <Plus className="w-4 h-4" />
                 Add To Blacklist
@@ -205,20 +205,20 @@ export default function BlacklistManagement() {
       </div>
 
       {/* Stats Summary */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         {[
             { label: 'Total Tracked', val: totalItems, icon: UserX, color: 'text-red-500' },
             { label: 'Critical Threats', val: blacklist.filter(p => p.severity === 'CRITICAL').length, icon: ShieldAlert, color: 'text-red-600' },
             { label: 'High Priority', val: blacklist.filter(p => p.severity === 'HIGH').length, icon: AlertTriangle, color: 'text-amber-500' },
             { label: 'Recently Spotted', val: 0, icon: Camera, color: 'text-blue-500' },
         ].map((s, i) => (
-            <div key={i} className="bg-card border border-border p-4 rounded-lg flex items-center justify-between shadow-sm">
-                <div>
-                    <p className="text-[8px] font-black text-text-gray uppercase tracking-widest mb-1">{s.label}</p>
-                    <p className={`text-xl font-black italic ${s.color}`}>{s.val}</p>
+            <div key={i} className="bg-card border border-border p-3 sm:p-4 rounded-lg flex items-center justify-between shadow-sm min-w-0">
+                <div className="min-w-0">
+                    <p className="text-[7px] sm:text-[8px] font-black text-text-gray uppercase tracking-widest mb-1 truncate">{s.label}</p>
+                    <p className={`text-lg sm:text-xl font-black italic ${s.color} truncate`}>{s.val}</p>
                 </div>
-                <div className="p-2.5 rounded-lg bg-surface border border-border">
-                    <s.icon className={`w-4 h-4 ${s.color}`} />
+                <div className="p-2 sm:p-2.5 rounded-lg bg-surface border border-border shrink-0">
+                    <s.icon className={`w-3.5 sm:w-4 h-3.5 sm:h-4 ${s.color}`} />
                 </div>
             </div>
         ))}
@@ -226,8 +226,8 @@ export default function BlacklistManagement() {
 
       {/* Blacklist Data Table */}
       <div className="bg-card border border-border rounded-lg overflow-hidden shadow-sm">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
+        <div className="overflow-x-auto no-scrollbar">
+          <table className="w-full text-left border-collapse min-w-[900px]">
             <thead>
               <tr className="bg-surface/50 border-b border-border text-[9px] font-black uppercase tracking-widest text-text-gray">
                 <th className="p-4 pl-6 text-center">Neural ID</th>
@@ -299,8 +299,8 @@ export default function BlacklistManagement() {
         </div>
 
         {/* Pagination Bar */}
-        <div className="px-6 py-4 bg-surface/30 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="text-[10px] font-black uppercase tracking-widest text-text-gray">
+        <div className="px-4 sm:px-6 py-4 bg-surface/30 border-t border-border flex flex-col md:flex-row items-center justify-between gap-4">
+          <div className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-text-gray text-center md:text-left">
             Showing <span className="text-text-dark">{Math.min(totalItems, (currentPage - 1) * pageSize + 1)}</span> to <span className="text-text-dark">{Math.min(totalItems, currentPage * pageSize)}</span> of <span className="text-text-dark">{totalItems}</span> identities
           </div>
           
@@ -310,14 +310,14 @@ export default function BlacklistManagement() {
               onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
               className="p-2 rounded-lg border border-border bg-card text-text-gray hover:text-red-500 hover:border-red-500 disabled:opacity-30 transition-all"
             >
-              <ChevronLeft className="w-4 h-4" />
+              <ChevronLeft className="w-3.5 h-3.5" />
             </button>
             <button 
               disabled={currentPage >= Math.ceil(totalItems / pageSize) || totalItems === 0}
               onClick={() => setCurrentPage(prev => prev + 1)}
               className="p-2 rounded-lg border border-border bg-card text-text-gray hover:text-red-500 hover:border-red-500 disabled:opacity-30 transition-all"
             >
-              <ChevronRight className="w-4 h-4" />
+              <ChevronRight className="w-3.5 h-3.5" />
             </button>
           </div>
         </div>

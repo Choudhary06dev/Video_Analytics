@@ -126,22 +126,22 @@ export default function Alerts() {
   return (
     <div className="flex flex-col gap-8 pb-10 max-w-[1600px] mx-auto">
       {/* Page Header */}
-      <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 px-2">
-        <div>
-          <h2 className="text-[1.8rem] font-black text-text-dark mb-1 tracking-tight uppercase flex items-center gap-3">
-            <BellRing className={`w-8 h-8 text-danger ${stats.critical > 0 ? 'animate-bounce' : ''}`} />
-            Crisis Response Center
+      <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4 px-2">
+        <div className="min-w-0">
+          <h2 className="text-xl sm:text-[1.8rem] font-black text-text-dark mb-1 tracking-tight uppercase flex items-center gap-3">
+            <BellRing className={`w-6 h-6 sm:w-8 sm:h-8 text-danger shrink-0 ${stats.critical > 0 ? 'animate-bounce' : ''}`} />
+            <span className="truncate">Crisis Response Center</span>
           </h2>
-          <div className="text-[0.9rem] text-text-gray font-semibold flex items-center gap-2">
-            Intelligent Incident Management Matrix
-            <span className="w-1 h-1 bg-text-gray rounded-full opacity-30" />
-            {stats.total} Active Alerts Observed
+          <div className="text-[0.75rem] sm:text-[0.9rem] text-text-gray font-semibold flex items-center gap-2 flex-wrap">
+            Intelligent Incident Management
+            <span className="hidden sm:block w-1 h-1 bg-text-gray rounded-full opacity-30" />
+            <span className="text-accent">{stats.total} Active Alerts Observed</span>
           </div>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3">
           <button
             onClick={handleExportCSV}
-            className="flex items-center gap-2 px-4 py-2 bg-card text-text-dark border border-border rounded-lg text-[0.75rem] font-bold cursor-pointer hover:border-accent hover:text-accent shadow-sm"
+            className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2.5 sm:py-2 bg-card text-text-dark border border-border rounded-lg text-[0.7rem] sm:text-[0.75rem] font-bold cursor-pointer hover:border-accent hover:text-accent shadow-sm transition-all"
           >
             <Download className="w-4 h-4" />
             Full Audit Log
@@ -150,19 +150,19 @@ export default function Alerts() {
       </div>
 
       {/* Alert Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
         {[
           { label: 'Critical', value: stats.critical, color: 'text-danger', bg: 'bg-danger/10', icon: ShieldAlert },
           { label: 'High', value: stats.high, color: 'text-warning', bg: 'bg-warning/10', icon: AlertTriangle },
           { label: 'Medium', value: stats.medium, color: 'text-amber-600', bg: 'bg-amber-500/10', icon: AlertTriangle },
         ].map((s, i) => (
-          <div key={i} className="bg-card rounded-lg p-6 border border-border shadow-premium flex items-center gap-5 hover:-translate-y-1 transition-all group">
-            <div className={`w-14 h-14 rounded-lg ${s.bg} flex items-center justify-center ${s.color}`}>
-              <s.icon className={`w-7 h-7 ${i === 0 && s.value > 0 && 'animate-pulse'}`} />
+          <div key={i} className="bg-card rounded-lg p-4 sm:p-6 border border-border shadow-premium flex items-center gap-4 sm:gap-5 hover:-translate-y-1 transition-all group">
+            <div className={`w-12 h-12 sm:w-14 sm:h-14 rounded-lg ${s.bg} flex items-center justify-center ${s.color} shrink-0`}>
+              <s.icon className={`w-6 h-6 sm:w-7 sm:h-7 ${i === 0 && s.value > 0 && 'animate-pulse'}`} />
             </div>
-            <div>
-              <p className="text-[2rem] font-black text-text-dark mb-0.5">{s.value}</p>
-              <p className="text-[0.75rem] font-bold text-text-gray uppercase tracking-widest">{s.label}</p>
+            <div className="min-w-0">
+              <p className="text-2xl sm:text-[2rem] font-black text-text-dark mb-0.5 leading-none">{s.value}</p>
+              <p className="text-[0.65rem] sm:text-[0.75rem] font-bold text-text-gray uppercase tracking-widest truncate">{s.label}</p>
             </div>
           </div>
         ))}
@@ -170,14 +170,14 @@ export default function Alerts() {
 
       {/* Controls & Search */}
       <div className="bg-card rounded-lg border border-border shadow-premium overflow-hidden flex flex-col min-h-[600px]">
-        <div className="p-8 border-b border-border flex flex-col lg:flex-row lg:items-center justify-between gap-8">
+        <div className="p-4 sm:p-8 border-b border-border flex flex-col gap-6">
           {/* Custom Tabs */}
-          <div className="flex bg-bg p-1.5 rounded-lg border border-border">
+          <div className="flex bg-bg p-1 rounded-lg border border-border overflow-x-auto no-scrollbar shrink-0">
             {['all', 'critical', 'high', 'medium', 'low'].map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
-                className={`px-6 py-2.5 rounded-lg text-[0.8rem] font-bold capitalize transition-all
+                className={`flex-1 min-w-[80px] px-4 py-2 rounded-lg text-[0.75rem] sm:text-[0.8rem] font-bold capitalize transition-all whitespace-nowrap
                   ${activeTab === tab ? 'bg-card text-accent shadow-premium border border-border' : 'text-text-gray hover:text-text-dark'}`}
               >
                 {tab}
@@ -185,52 +185,54 @@ export default function Alerts() {
             ))}
           </div>
 
-          <div className="flex items-center gap-4 flex-1">
-            <div className="relative flex-1">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-text-gray" />
+          <div className="flex flex-col md:flex-row items-stretch md:items-center gap-4">
+            <div className="relative flex-1 min-w-0">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-text-gray" />
               <input
                 type="text"
                 placeholder="Search incidents..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-12 pr-4 py-3 bg-bg border border-border rounded-lg text-[0.88rem] focus:outline-none focus:border-accent transition-all"
+                className="w-full pl-11 pr-4 py-2.5 sm:py-3 bg-bg border border-border rounded-lg text-[0.8rem] sm:text-[0.88rem] focus:outline-none focus:border-accent transition-all"
               />
             </div>
 
-            {/* Date Filters */}
-            <div className="flex items-center gap-3 bg-bg p-1.5 rounded-lg border border-border shadow-sm">
-              <div className="flex items-center gap-2 px-3 py-1.5 border-r border-border/50">
-                <Calendar className="w-4 h-4 text-accent" />
-                <input
-                  type="date"
-                  value={startDate}
-                  onChange={(e) => setStartDate(e.target.value)}
-                  className="bg-transparent text-[0.75rem] font-bold text-text-dark focus:outline-none cursor-pointer"
-                />
+            {/* Date Filters & Reset */}
+            <div className="flex items-center gap-3 flex-wrap sm:flex-nowrap">
+              <div className="flex-1 sm:flex-none flex items-center gap-2 sm:gap-3 bg-bg p-1 rounded-lg border border-border shadow-sm min-w-0">
+                <div className="flex-1 sm:flex-none flex items-center gap-2 px-2 sm:px-3 py-1.5 border-r border-border/50">
+                  <Calendar className="w-3.5 h-3.5 text-accent shrink-0" />
+                  <input
+                    type="date"
+                    value={startDate}
+                    onChange={(e) => setStartDate(e.target.value)}
+                    className="bg-transparent text-[0.7rem] sm:text-[0.75rem] font-bold text-text-dark focus:outline-none cursor-pointer w-full"
+                  />
+                </div>
+                <div className="flex-1 sm:flex-none flex items-center gap-2 px-2 sm:px-3 py-1.5">
+                  <span className="hidden sm:inline text-[0.6rem] font-black text-text-gray uppercase opacity-50">to</span>
+                  <input
+                    type="date"
+                    value={endDate}
+                    onChange={(e) => setEndDate(e.target.value)}
+                    className="bg-transparent text-[0.7rem] sm:text-[0.75rem] font-bold text-text-dark focus:outline-none cursor-pointer w-full"
+                  />
+                </div>
               </div>
-              <div className="flex items-center gap-2 px-3 py-1.5">
-                <span className="text-[0.65rem] font-black text-text-gray uppercase opacity-50">to</span>
-                <input
-                  type="date"
-                  value={endDate}
-                  onChange={(e) => setEndDate(e.target.value)}
-                  className="bg-transparent text-[0.75rem] font-bold text-text-dark focus:outline-none cursor-pointer"
-                />
-              </div>
-            </div>
 
-            <button
-              onClick={() => {
-                setSearchTerm('');
-                setStartDate('');
-                setEndDate('');
-                setActiveTab('all');
-              }}
-              title="Reset All Filters"
-              className="p-3 bg-bg border border-border rounded-lg text-text-gray hover:text-accent hover:border-accent transition-all group"
-            >
-              <RotateCcw className="w-5 h-5 group-hover:rotate-[-45deg] transition-all" />
-            </button>
+              <button
+                onClick={() => {
+                  setSearchTerm('');
+                  setStartDate('');
+                  setEndDate('');
+                  setActiveTab('all');
+                }}
+                title="Reset All Filters"
+                className="p-2.5 sm:p-3 bg-bg border border-border rounded-lg text-text-gray hover:text-accent hover:border-accent transition-all group shrink-0"
+              >
+                <RotateCcw className="w-4 h-4 sm:w-5 sm:h-5 group-hover:rotate-[-45deg] transition-all" />
+              </button>
+            </div>
           </div>
         </div>
 
@@ -242,15 +244,15 @@ export default function Alerts() {
               <p className="text-[0.65rem] font-black text-text-gray uppercase tracking-[0.2em]">Synchronizing Crisis Matrix</p>
             </div>
           ) : (
-            <table className="w-full text-left">
+            <table className="w-full text-left border-collapse min-w-[900px]">
               <thead>
                 <tr className="bg-bg/50 border-b border-border">
-                  <th className="px-8 py-5 text-[0.65rem] font-black text-text-gray uppercase tracking-[1.5px]">Reference</th>
-                  <th className="px-8 py-5 text-[0.65rem] font-black text-text-gray uppercase tracking-[1.5px]">Severity</th>
-                  <th className="px-8 py-5 text-[0.65rem] font-black text-text-gray uppercase tracking-[1.5px]">Incident Details</th>
-                  <th className="px-8 py-5 text-[0.65rem] font-black text-text-gray uppercase tracking-[1.5px]">Camera Source</th>
-                  <th className="px-8 py-5 text-[0.65rem] font-black text-text-gray uppercase tracking-[1.5px]">Time Log</th>
-                  <th className="px-8 py-5 text-right text-[0.65rem] font-black text-text-gray uppercase tracking-[1.5px]">Response</th>
+                  <th className="px-4 sm:px-8 py-4 sm:py-5 text-[0.6rem] sm:text-[0.65rem] font-black text-text-gray uppercase tracking-[1.5px]">Reference</th>
+                  <th className="px-4 sm:px-8 py-4 sm:py-5 text-[0.6rem] sm:text-[0.65rem] font-black text-text-gray uppercase tracking-[1.5px]">Severity</th>
+                  <th className="px-4 sm:px-8 py-4 sm:py-5 text-[0.6rem] sm:text-[0.65rem] font-black text-text-gray uppercase tracking-[1.5px]">Incident Details</th>
+                  <th className="px-4 sm:px-8 py-4 sm:py-5 text-[0.6rem] sm:text-[0.65rem] font-black text-text-gray uppercase tracking-[1.5px]">Camera Source</th>
+                  <th className="px-4 sm:px-8 py-4 sm:py-5 text-[0.6rem] sm:text-[0.65rem] font-black text-text-gray uppercase tracking-[1.5px]">Time Log</th>
+                  <th className="px-4 sm:px-8 py-4 sm:py-5 text-right text-[0.6rem] sm:text-[0.65rem] font-black text-text-gray uppercase tracking-[1.5px]">Response</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border/50">
@@ -259,47 +261,47 @@ export default function Alerts() {
                   const isResolved = alert.is_resolved || resolvedAlertIds.has(alert.id);
                   return (
                     <tr key={alert.id} className={`transition-colors group ${isResolved ? 'bg-bg/10' : 'hover:bg-bg/30'}`}>
-                      <td className="px-8 py-6">
-                        <span className="text-[0.75rem] font-black text-text-gray opacity-40">#ALT-{alert.id}</span>
+                      <td className="px-4 sm:px-8 py-4 sm:py-6">
+                        <span className="text-[0.7rem] sm:text-[0.75rem] font-black text-text-gray opacity-40">#ALT-{alert.id}</span>
                       </td>
-                      <td className="px-8 py-6">
-                        <div className={`inline-flex items-center justify-center gap-2 w-[95px] px-2 py-1.5 rounded-full text-[0.6rem] font-black uppercase tracking-wider border ${style.bg} ${style.text} ${style.border}`}>
-                          <style.icon className="w-3.5 h-3.5" />
+                      <td className="px-4 sm:px-8 py-4 sm:py-6">
+                        <div className={`inline-flex items-center justify-center gap-2 w-[85px] sm:w-[95px] px-2 py-1 sm:py-1.5 rounded-full text-[0.55rem] sm:text-[0.6rem] font-black uppercase tracking-wider border ${style.bg} ${style.text} ${style.border}`}>
+                          <style.icon className="w-3 sm:w-3.5 h-3 sm:h-3.5" />
                           {style.label}
                         </div>
                       </td>
-                      <td className="px-8 py-6">
-                        <div className="flex flex-col gap-0.5">
-                          <span className={`text-[0.95rem] font-black tracking-tight text-text-dark`}>
+                      <td className="px-4 sm:px-8 py-4 sm:py-6">
+                        <div className="flex flex-col gap-0.5 min-w-[200px]">
+                          <span className="text-sm sm:text-[0.95rem] font-black tracking-tight text-text-dark line-clamp-1">
                             {alert.metadata_json?.detail || alert.scenario_key}
                           </span>
                           <div className="flex items-center gap-2">
-                            <span className="text-[0.6rem] font-black text-accent uppercase tracking-tighter opacity-60">Confidence: {(alert.confidence * 100).toFixed(1)}%</span>
+                            <span className="text-[0.55rem] sm:text-[0.6rem] font-black text-accent uppercase tracking-tighter opacity-60">Conf: {(alert.confidence * 100).toFixed(1)}%</span>
                             <div className="w-1 h-1 bg-accent rounded-full opacity-30" />
-                            <span className="text-[0.6rem] font-black text-text-gray uppercase tracking-tighter">AI Node: {alert.scenario_key}</span>
+                            <span className="text-[0.55rem] sm:text-[0.6rem] font-black text-text-gray uppercase tracking-tighter truncate max-w-[100px]">AI: {alert.scenario_key}</span>
                           </div>
                         </div>
                       </td>
-                      <td className="px-8 py-6">
-                        <div className="flex items-center gap-2.5 text-text-gray font-bold text-[0.8rem]">
-                          <MapPin className="w-4 h-4 text-accent" />
-                          Stream-{String(alert.camera_id).padStart(2, '0')}
+                      <td className="px-4 sm:px-8 py-4 sm:py-6">
+                        <div className="flex items-center gap-2 sm:gap-2.5 text-text-gray font-bold text-[0.75rem] sm:text-[0.8rem] whitespace-nowrap">
+                          <MapPin className="w-3.5 sm:w-4 h-3.5 sm:h-4 text-accent" />
+                          Str-{String(alert.camera_id).padStart(2, '0')}
                         </div>
                       </td>
-                      <td className="px-8 py-6">
-                        <div className="flex items-center gap-2 text-text-gray font-bold text-[0.8rem]">
-                          <Clock className="w-4 h-4 opacity-40" />
+                      <td className="px-4 sm:px-8 py-4 sm:py-6">
+                        <div className="flex items-center gap-1.5 sm:gap-2 text-text-gray font-bold text-[0.75rem] sm:text-[0.8rem] whitespace-nowrap">
+                          <Clock className="w-3.5 sm:w-4 h-3.5 sm:h-4 opacity-40" />
                           {formatDistanceToNow(new Date(alert.timestamp), { addSuffix: true })}
                         </div>
                       </td>
-                      <td className="px-8 py-6 text-right">
-                        <div className="flex justify-end gap-2 transition-all">
+                      <td className="px-4 sm:px-8 py-4 sm:py-6 text-right">
+                        <div className="flex justify-end gap-2">
                           <button
                             onClick={() => setSelectedAlert(alert)}
-                            className="p-2.5 bg-accent/10 text-accent rounded-lg hover:bg-accent hover:text-white border border-accent/20 transition-all shadow-sm"
+                            className="p-2 sm:p-2.5 bg-accent/10 text-accent rounded-lg hover:bg-accent hover:text-white border border-accent/20 transition-all shadow-sm"
                             title="View Snapshot"
                           >
-                            <Eye className="w-4.5 h-4.5" />
+                            <Eye className="w-4 sm:w-4.5 h-4 sm:h-4.5" />
                           </button>
                           {!isResolved ? (
                             <button
@@ -311,14 +313,14 @@ export default function Alerts() {
                                   console.error("Failed to resolve alert:", err);
                                 }
                               }}
-                              className="p-2.5 bg-success/10 text-success rounded-lg hover:bg-success hover:text-white border border-success/20 transition-all shadow-sm"
+                              className="p-2 sm:p-2.5 bg-success/10 text-success rounded-lg hover:bg-success hover:text-white border border-success/20 transition-all shadow-sm"
                               title="Resolve Incident"
                             >
-                              <CheckCircle2 className="w-4.5 h-4.5" />
+                              <CheckCircle2 className="w-4 sm:w-4.5 h-4 sm:h-4.5" />
                             </button>
                           ) : (
-                            <div className="flex items-center gap-1.5 px-3 py-1.5 bg-success/10 text-success border border-success/20 rounded-lg text-[0.65rem] font-black uppercase tracking-wider">
-                              <CheckCircle2 className="w-3.5 h-3.5" /> Resolved
+                            <div className="flex items-center gap-1.5 px-2.5 py-1 sm:py-1.5 bg-success/10 text-success border border-success/20 rounded-lg text-[0.55rem] sm:text-[0.65rem] font-black uppercase tracking-wider whitespace-nowrap">
+                              <CheckCircle2 className="w-3 sm:w-3.5 h-3 sm:h-3.5" /> Resolved
                             </div>
                           )}
                         </div>
@@ -341,12 +343,12 @@ export default function Alerts() {
         </div>
 
         {/* Action Footer */}
-        <div className="p-8 border-t border-border bg-bg/20 flex justify-between items-center">
-          <div className="text-[0.8rem] text-text-gray font-bold">
+        <div className="p-4 sm:p-8 border-t border-border bg-bg/20 flex flex-col sm:flex-row justify-between items-center gap-4">
+          <div className="text-[0.75rem] sm:text-[0.8rem] text-text-gray font-bold">
             System Health: <span className="text-success uppercase">Neural Scan Active</span>
           </div>
-          <div className="flex gap-4">
-            <button className="px-6 py-2.5 bg-card border border-border rounded-lg text-[0.8rem] font-bold text-text-gray hover:text-text-dark transition-all">
+          <div className="flex gap-3 sm:gap-4 w-full sm:w-auto">
+            <button className="flex-1 sm:flex-none px-4 sm:px-6 py-2 sm:py-2.5 bg-card border border-border rounded-lg text-[0.75rem] sm:text-[0.8rem] font-bold text-text-gray hover:text-text-dark transition-all">
               Previous 24h
             </button>
             <button
@@ -363,7 +365,7 @@ export default function Alerts() {
                   console.error("Failed to acknowledge all:", err);
                 }
               }}
-              className="px-6 py-2.5 bg-accent text-white rounded-lg text-[0.8rem] font-bold hover:opacity-90 shadow-premium transition-all"
+              className="flex-1 sm:flex-none px-4 sm:px-6 py-2 sm:py-2.5 bg-accent text-white rounded-lg text-[0.75rem] sm:text-[0.8rem] font-bold hover:opacity-90 shadow-premium transition-all"
             >
               Acknowledge All
             </button>
@@ -397,26 +399,26 @@ export default function Alerts() {
             </div>
 
             {/* Content */}
-            <div className="p-6 overflow-y-auto max-h-[70vh] custom-scrollbar">
-              <div className="grid grid-cols-2 gap-4 mb-6">
-                <div className="bg-surface p-4 rounded-lg border border-border">
-                  <span className="text-[0.65rem] font-bold text-text-gray uppercase tracking-widest block mb-1">Scenario Node</span>
-                  <span className="text-sm font-bold text-text-dark">{selectedAlert.scenario_key}</span>
+            <div className="p-4 sm:p-6 overflow-y-auto max-h-[70vh] custom-scrollbar">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mb-6">
+                <div className="bg-surface p-3 sm:p-4 rounded-lg border border-border">
+                  <span className="text-[0.6rem] sm:text-[0.65rem] font-bold text-text-gray uppercase tracking-widest block mb-1">Scenario Node</span>
+                  <span className="text-xs sm:text-sm font-bold text-text-dark">{selectedAlert.scenario_key}</span>
                 </div>
-                <div className="bg-surface p-4 rounded-lg border border-border">
-                  <span className="text-[0.65rem] font-bold text-text-gray uppercase tracking-widest block mb-1">Detection Time</span>
-                  <span className="text-sm font-bold text-text-dark">
+                <div className="bg-surface p-3 sm:p-4 rounded-lg border border-border">
+                  <span className="text-[0.6rem] sm:text-[0.65rem] font-bold text-text-gray uppercase tracking-widest block mb-1">Detection Time</span>
+                  <span className="text-xs sm:text-sm font-bold text-text-dark">
                     {new Date(selectedAlert.timestamp).toLocaleString()}
                   </span>
                 </div>
-                <div className="bg-surface p-4 rounded-lg border border-border col-span-2 flex items-center justify-between">
+                <div className="bg-surface p-3 sm:p-4 rounded-lg border border-border sm:col-span-2 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <div>
-                    <span className="text-[0.65rem] font-bold text-text-gray uppercase tracking-widest block mb-1">AI Confidence Score</span>
-                    <span className="text-xl font-black text-accent">{(selectedAlert.confidence * 100).toFixed(1)}%</span>
+                    <span className="text-[0.6rem] sm:text-[0.65rem] font-bold text-text-gray uppercase tracking-widest block mb-1">AI Confidence Score</span>
+                    <span className="text-lg sm:text-xl font-black text-accent">{(selectedAlert.confidence * 100).toFixed(1)}%</span>
                   </div>
-                  <div className="text-right">
-                    <span className="text-[0.65rem] font-bold text-text-gray uppercase tracking-widest block mb-1">Severity Matrix</span>
-                    <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[0.65rem] font-black uppercase tracking-wider border
+                  <div className="sm:text-right">
+                    <span className="text-[0.6rem] sm:text-[0.65rem] font-bold text-text-gray uppercase tracking-widest block mb-1">Severity Matrix</span>
+                    <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[0.6rem] sm:text-[0.65rem] font-black uppercase tracking-wider border
                       ${selectedAlert.severity === 'Critical' ? 'bg-danger/10 text-danger border-danger/20' :
                         selectedAlert.severity === 'High' ? 'bg-warning/10 text-warning border-warning/20' :
                           'bg-accent/10 text-accent border-accent/20'}`}>

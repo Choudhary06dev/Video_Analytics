@@ -37,7 +37,7 @@ import {
 } from 'recharts';
 import CameraGrid from '../components/camera/CameraGrid';
 import { fetchIntelligence, fetchHealth } from '../api';
-import { fetchAdminAreas, fetchAdminCameras } from '../services/cameraService';
+import { fetchAdminAreas, fetchAdminCameras, fetchScenarios } from '../services/cameraService';
 import { fetchAlerts, fetchLogs, fetchLogsSummary } from '../services/alertService';
 
 const AI_USE_CASES = [
@@ -123,32 +123,31 @@ function MetricCard({ label, value, sublabel, icon: Icon, tone = 'accent' }) {
   }[tone];
 
   return (
-    <div className="bg-card border border-border rounded-lg p-4 shadow-sm min-h-[126px] flex flex-col justify-between">
+    <div className="bg-card border border-border rounded-lg p-3 sm:p-4 shadow-sm min-h-[110px] sm:min-h-[126px] flex flex-col justify-between">
       <div className="flex items-start justify-between gap-3">
-        <div className={`w-10 h-10 rounded-lg border flex items-center justify-center ${toneClass}`}>
-          <Icon className="w-5 h-5" />
+        <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-lg border flex items-center justify-center ${toneClass}`}>
+          <Icon className="w-4 h-4 sm:w-5 sm:h-5" />
         </div>
         <div className="text-[9px] font-black uppercase tracking-widest text-text-gray text-right">Live</div>
       </div>
-      <div>
-        <div className="text-2xl font-black text-text-dark tracking-tight">{value}</div>
-        <div className="text-[10px] font-black uppercase tracking-widest text-text-gray mt-1">{label}</div>
-        <div className="text-[11px] font-semibold text-text-gray mt-2">{sublabel}</div>
+      <div className="mt-2 sm:mt-0">
+        <div className="text-xl sm:text-2xl font-black text-text-dark tracking-tight">{value}</div>
+        <div className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-text-gray mt-1">{label}</div>
+        <div className="text-[10px] sm:text-[11px] font-semibold text-text-gray mt-1.5 sm:mt-2 truncate">{sublabel}</div>
       </div>
     </div>
   );
 }
-
-function SectionHeader({ icon: Icon, title, subtitle, action }) {
+function SectionHeader({ title, subtitle, icon: Icon, action }) {
   return (
-    <div className="flex items-center justify-between gap-4 mb-4">
+    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 mb-4">
       <div className="flex items-center gap-3">
-        <div className="w-9 h-9 bg-accent/10 border border-accent/20 rounded-lg flex items-center justify-center text-accent">
-          <Icon className="w-4.5 h-4.5" />
+        <div className="w-8 h-8 sm:w-9 sm:h-9 bg-accent/10 border border-accent/20 rounded-lg flex items-center justify-center text-accent shrink-0">
+          <Icon className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
         </div>
-        <div>
-          <h3 className="text-sm font-black uppercase tracking-widest text-text-dark">{title}</h3>
-          <p className="text-[11px] font-semibold text-text-gray mt-0.5">{subtitle}</p>
+        <div className="min-w-0">
+          <h3 className="text-xs sm:text-sm font-black uppercase tracking-widest text-text-dark truncate">{title}</h3>
+          <p className="text-[10px] sm:text-[11px] font-semibold text-text-gray mt-0.5 truncate">{subtitle}</p>
         </div>
       </div>
       {action}
@@ -176,6 +175,7 @@ export default function Dashboard() {
   const [logs, setLogs] = useState([]);
   const [summary, setSummary] = useState({});
   const [intel, setIntel] = useState({ person_count: 0, objects: [], stable_objects: [] });
+  const [scenarios, setScenarios] = useState([]);
   const [health, setHealth] = useState({ status: 'unknown' });
 
   const loadDashboard = async (showSpinner = false) => {
@@ -191,14 +191,15 @@ export default function Dashboard() {
       }
     };
 
-    const [cameraData, areaData, alertData, logData, summaryData, intelData, healthData] = await Promise.all([
+    const [cameraData, areaData, alertData, logData, summaryData, intelData, healthData, scenariosData] = await Promise.all([
       load('cameras', fetchAdminCameras, []),
       load('areas', fetchAdminAreas, []),
       load('alerts', () => fetchAlerts({ hours: 24, limit: 20 }), []),
       load('logs', () => fetchLogs({ hours: 24, limit: 300, skip: 0 }), []),
       load('summary', () => fetchLogsSummary(24), {}),
       load('intelligence', fetchIntelligence, { person_count: 0, objects: [], stable_objects: [] }),
-      load('health', fetchHealth, { status: 'unknown' })
+      load('health', fetchHealth, { status: 'unknown' }),
+      load('scenarios', fetchScenarios, [])
     ]);
 
     setCameras(safeArray(cameraData.cameras || cameraData));
@@ -207,6 +208,7 @@ export default function Dashboard() {
     setLogs(safeArray(logData));
     setSummary(summaryData || {});
     setIntel(intelData || { person_count: 0, objects: [], stable_objects: [] });
+    setScenarios(safeArray(scenariosData.scenarios || scenariosData));
     setHealth(healthData || { status: 'unknown' });
     setErrors(nextErrors);
     setLastUpdated(new Date());
@@ -226,8 +228,16 @@ export default function Dashboard() {
     const critical = alerts.filter((alert) => alert.severity === 'Critical').length;
     const high = alerts.filter((alert) => alert.severity === 'High').length;
     const activePersons = intel.person_count || 0;
+    const uniqueActiveScenarios = new Set();
+    cameras.forEach(cam => {
+      if (cam.enabled_scenario_ids) {
+        cam.enabled_scenario_ids.forEach(id => uniqueActiveScenarios.add(id));
+      }
+    });
+
+    // Match Admin logic: filter unique IDs against actual scenario registry
+    const activeModels = scenarios.filter(s => uniqueActiveScenarios.has(s.id)).length;
     const totalDetections = summary.total_logs || summary.count || logs.length || 0;
-    const activeModels = cameras.reduce((total, camera) => total + (camera.scenario_count || 0), 0);
     const posture = critical > 0 ? 'Critical' : high > 0 ? 'Elevated' : summary.threat_level || 'Normal';
 
     return { activeCameras, offlineCameras, critical, high, activePersons, totalDetections, activeModels, posture };
@@ -295,14 +305,14 @@ export default function Dashboard() {
     <div className="max-w-[1600px] mx-auto pb-20 space-y-6">
       <div className="bg-card border border-border rounded-lg p-5 md:p-6 shadow-sm">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-5">
-          <div className="flex items-start gap-4">
-            <div className="w-12 h-12 bg-accent/10 border border-accent/20 rounded-lg flex items-center justify-center text-accent">
-              <ShieldCheck className="w-6 h-6" />
+          <div className="flex items-center gap-3 sm:gap-4">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-accent/10 border border-accent/20 rounded-lg flex items-center justify-center text-accent shrink-0">
+              <ShieldCheck className="w-5 h-5 sm:w-6 sm:h-6" />
             </div>
-            <div>
-              <h1 className="text-2xl md:text-3xl font-black uppercase tracking-tight text-text-dark">Command Hub</h1>
-              <p className="text-sm font-semibold text-text-gray mt-1 max-w-3xl">
-                Centralized hospital surveillance, real time AI alerts, camera health, area coverage, and model activity.
+            <div className="min-w-0">
+              <h1 className="text-xl sm:text-2xl md:text-3xl font-black uppercase tracking-tight text-text-dark truncate">Command Hub</h1>
+              <p className="text-[10px] sm:text-[11px] md:text-sm font-semibold text-text-gray mt-1 max-w-3xl line-clamp-1 sm:line-clamp-none">
+                Centralized hospital surveillance, real time AI alerts, camera health, and model activity.
               </p>
             </div>
           </div>
@@ -375,7 +385,7 @@ export default function Dashboard() {
             subtitle="Detections and alert events grouped from recent logs"
             action={<span className="text-[10px] font-black uppercase tracking-widest text-success flex items-center gap-1.5"><Radio className="w-3 h-3" /> Live polling</span>}
           />
-          <div className="h-[280px]">
+          <div className="h-[200px] sm:h-[280px]">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={trendData} margin={{ top: 8, right: 10, left: -22, bottom: 0 }}>
                 <defs>
@@ -405,7 +415,7 @@ export default function Dashboard() {
             title="Alert Queue"
             subtitle="Latest high-priority events"
           />
-          <div className="space-y-3 max-h-[280px] overflow-y-auto pr-1">
+          <div className="space-y-3 max-h-[300px] sm:max-h-[280px] overflow-y-auto pr-1">
             {alerts.length ? alerts.slice(0, 6).map((alert) => (
               <div key={alert.id} className="border border-border rounded-lg p-3 bg-surface/30">
                 <div className="flex items-center justify-between gap-3">
@@ -428,7 +438,7 @@ export default function Dashboard() {
       <div className="grid xl:grid-cols-3 gap-6">
         <div className="bg-card border border-border rounded-lg p-5 shadow-sm">
           <SectionHeader icon={MapPin} title="Area Distribution" subtitle="Camera density across hospital zones" />
-          <div className="h-[290px] flex items-center justify-center">
+          <div className="h-[220px] sm:h-[290px] flex items-center justify-center">
             {areaDistributionData.length ? (
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
@@ -464,7 +474,7 @@ export default function Dashboard() {
 
         <div className="bg-card border border-border rounded-lg p-5 shadow-sm">
           <SectionHeader icon={Zap} title="Model-wise Detections" subtitle="Top AI scenarios from event logs" />
-          <div className="h-[290px]">
+          <div className="h-[220px] sm:h-[290px]">
             {modelRows.length ? (
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={modelRows} layout="vertical" margin={{ top: 0, right: 12, left: 0, bottom: 0 }}>

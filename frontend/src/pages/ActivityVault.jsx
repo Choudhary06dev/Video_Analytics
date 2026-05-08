@@ -311,7 +311,7 @@ export default function ActivityVault() {
   const statVal = isDark ? '#f8fafc' : '#0f172a';
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 28, maxWidth: 1600, margin: '0 auto', paddingBottom: 40 }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 28, maxWidth: 1600, margin: '0 auto', paddingBottom: 40, width: '100%' }}>
 
       {/* ═══════════════ HERO HEADER WITH STATS ═══════════════ */}
       <div style={{
@@ -321,26 +321,26 @@ export default function ActivityVault() {
         boxShadow: isDark ? 'none' : '0 4px 20px -2px rgba(0,0,0,0.05)',
         backgroundSize: '200% 200%',
         animation: isDark ? 'vpGradient 10s ease infinite' : 'none',
-        padding: '32px 36px 28px',
+        padding: 'clamp(16px, 4vw, 36px)',
       }}>
         <div style={{ position: 'absolute', top: -50, right: -20, width: 180, height: 180, borderRadius: '50%', background: 'radial-gradient(circle,rgba(14,165,233,.12),transparent 70%)', animation: 'vpFloat 5s ease-in-out infinite' }} />
         <div style={{ position: 'relative', zIndex: 1 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16, marginBottom: 28 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-              <div style={{ width: 52, height: 52, borderRadius: 8, background: 'linear-gradient(135deg,#0ea5e9,#8b5cf6)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 8px 28px rgba(14,165,233,.4)', animation: 'vpGlow 3s ease-in-out infinite', position: 'relative' }}>
-                <Archive size={24} color="#fff" />
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16, marginBottom: 28, flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
+              <div style={{ width: 44, height: 44, borderRadius: 8, background: 'linear-gradient(135deg,#0ea5e9,#8b5cf6)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 8px 28px rgba(14,165,233,.4)', animation: 'vpGlow 3s ease-in-out infinite', position: 'relative', flexShrink: 0 }}>
+                <Archive size={20} color="#fff" />
               </div>
-              <div>
-                <h1 style={{ fontSize: 26, fontWeight: 900, color: heroTitle, margin: 0, letterSpacing: -.5 }}>Activity Vault</h1>
-                <div style={{ fontSize: 13, color: heroSub, fontWeight: 600, marginTop: 4 }}>
+              <div style={{ minWidth: 0 }}>
+                <h1 style={{ fontSize: 'clamp(18px, 4vw, 26px)', fontWeight: 900, color: heroTitle, margin: 0, letterSpacing: -.5 }}>Activity Vault</h1>
+                <div style={{ fontSize: 'clamp(10px, 2vw, 13px)', color: heroSub, fontWeight: 600, marginTop: 4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   <Radio size={12} style={{ color: '#38bdf8', marginRight: 8 }} />
-                  AI-Audited Historical Record Matrix • v4.2.1 • {stats.total.toLocaleString()} Records
+                  AI-Audited Records • {stats.total.toLocaleString()} Total
                 </div>
               </div>
             </div>
 
             {/* Top Right Quick Range Selectors */}
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 2, background: isDark ? 'rgba(0,0,0,0.2)' : 'rgba(255,255,255,0.8)', padding: 3, borderRadius: 10, border: `1px solid ${cardBorder}`, backdropFilter: 'blur(8px)' }}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 2, background: isDark ? 'rgba(0,0,0,0.2)' : 'rgba(255,255,255,0.8)', padding: 3, borderRadius: 10, border: `1px solid ${cardBorder}`, backdropFilter: 'blur(8px)', overflowX: 'auto' }}>
               {[
                 { label: '15M', val: 0.25 },
                 { label: '1H', val: 1 },
@@ -355,12 +355,13 @@ export default function ActivityVault() {
                   key={r.val}
                   onClick={() => { setHoursRange(r.val); setPage(0); }}
                   style={{
-                    padding: '8px 16px', borderRadius: 8, border: 'none',
+                    padding: '6px 12px', borderRadius: 8, border: 'none',
                     fontSize: 11, fontWeight: 900, cursor: 'pointer',
                     background: hoursRange === r.val ? '#0ea5e9' : 'transparent',
                     color: hoursRange === r.val ? '#fff' : (isDark ? '#94a3b8' : '#64748b'),
                     transition: 'all 0.2s',
-                    boxShadow: hoursRange === r.val ? '0 4px 12px rgba(14,165,233,0.3)' : 'none'
+                    boxShadow: hoursRange === r.val ? '0 4px 12px rgba(14,165,233,0.3)' : 'none',
+                    whiteSpace: 'nowrap', flexShrink: 0
                   }}
                 >
                   {r.label}
@@ -368,7 +369,7 @@ export default function ActivityVault() {
               ))}
             </div>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 12 }}>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
             {[
               { label: 'Total Audits', value: stats.total.toLocaleString(), color: '#38bdf8', Icon: Activity, sub: 'All time records' },
               { label: 'High Confidence', value: stats.total > 0 ? `${((stats.highConf / stats.total) * 100).toFixed(1)}%` : '0%', color: '#4ade80', Icon: ShieldCheck, sub: `${stats.highConf} ≥90%` },
@@ -396,7 +397,7 @@ export default function ActivityVault() {
       </div>
 
       {/* ═══════════════ INSIGHTS ROW ═══════════════ */}
-      <div style={{ display: 'grid', gridTemplateColumns: '260px 1fr 1fr', gap: 16 }}>
+      <div className="grid grid-cols-1 lg:grid-cols-[220px_1fr] xl:grid-cols-[260px_1fr_1fr] gap-4">
         <div style={{ background: cardBg, borderRadius: 8, border: `1px solid ${cardBorder}`, padding: '24px 20px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 16px rgba(0,0,0,.04)' }}>
           <StatusDonut summary={summary} size={180} />
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px 16px', marginTop: 24, justifyContent: 'center' }}>
@@ -439,12 +440,12 @@ export default function ActivityVault() {
 
       {/* ═══════════════ DATA TABLE ═══════════════ */}
       <div style={{ background: cardBg, borderRadius: 8, border: `1px solid ${cardBorder}`, overflow: 'hidden', boxShadow: '0 2px 16px rgba(0,0,0,.04)' }}>
-        <div style={{ padding: '20px 24px', borderBottom: `1px solid ${cardBorder}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div style={{ padding: '20px 24px', borderBottom: `1px solid ${cardBorder}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
           <div>
             <div style={{ fontSize: 15, fontWeight: 900, color: isDark ? '#f1f5f9' : '#1e293b' }}>Audit Log Records</div>
             <div style={{ fontSize: 11, color: '#64748b', fontWeight: 600, marginTop: 2 }}>Real-time feed of latest AI-audited events</div>
           </div>
-          <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+          <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
               <span style={{ fontSize: 10, fontWeight: 700, color: '#64748b' }}>FROM</span>
               <input
@@ -535,7 +536,7 @@ export default function ActivityVault() {
         </div>
 
         {/* Pagination Controls */}
-        <div style={{ padding: '16px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: `1px solid ${cardBorder}` }}>
+        <div style={{ padding: '16px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: `1px solid ${cardBorder}`, flexWrap: 'wrap', gap: 12 }}>
           <div style={{ fontSize: 11, fontWeight: 700, color: '#64748b' }}>
             Showing {events.length > 0 ? (page * limit) + 1 : 0} - {Math.min((page + 1) * limit, stats.total)} of {stats.total} records
           </div>
@@ -572,11 +573,11 @@ export default function ActivityVault() {
       {selectedEvent && (
         <div
           onClick={() => setSelectedEvent(null)}
-          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(6px)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}
+          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(6px)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 'clamp(12px, 3vw, 24px)' }}
         >
           <div
             onClick={e => e.stopPropagation()}
-            style={{ background: isDark ? '#0f172a' : '#fff', border: `1px solid ${cardBorder}`, borderRadius: 12, padding: 32, width: '100%', maxWidth: 660, maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 24px 80px rgba(0,0,0,0.4)', position: 'relative' }}
+            style={{ background: isDark ? '#0f172a' : '#fff', border: `1px solid ${cardBorder}`, borderRadius: 12, padding: 'clamp(16px, 4vw, 32px)', width: '100%', maxWidth: 660, maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 24px 80px rgba(0,0,0,0.4)', position: 'relative' }}
           >
             {/* Modal Header */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 }}>
@@ -618,7 +619,7 @@ export default function ActivityVault() {
             </div>
 
             {/* Detail Grid */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12 }}>
               {[
                 { label: 'Scenario', value: selectedEvent.scenario_key },
                 { label: 'Object Class', value: selectedEvent.object_class },

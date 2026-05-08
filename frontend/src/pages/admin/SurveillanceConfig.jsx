@@ -196,25 +196,25 @@ export default function SurveillanceConfig() {
     <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-20">
       
       {/* Page Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
         <div className="flex items-center gap-4">
-          <div className="w-12 h-12 bg-accent/10 rounded-lg flex items-center justify-center border border-accent/20">
-            <Video className="w-7 h-7 text-accent" />
+          <div className="w-10 h-10 sm:w-12 sm:h-12 bg-accent/10 rounded-lg flex items-center justify-center border border-accent/20 shrink-0">
+            <Video className="w-6 h-6 sm:w-7 sm:h-7 text-accent" />
           </div>
-          <div>
-            <h1 className="text-2xl font-black italic uppercase tracking-tighter text-text-dark font-sans">
+          <div className="min-w-0">
+            <h1 className="text-xl sm:text-2xl font-black italic uppercase tracking-tighter text-text-dark font-sans truncate">
               Surveillance <span className="text-accent underline decoration-accent/20 underline-offset-4">Registry</span>
             </h1>
-            <p className="text-[9px] font-bold text-text-gray uppercase tracking-[0.4em] mt-1.5 flex items-center gap-2">
+            <p className="text-[8px] sm:text-[9px] font-bold text-text-gray uppercase tracking-[0.2em] sm:tracking-[0.4em] mt-1 sm:mt-1.5 flex items-center gap-2 truncate">
               Hardware Abstraction & Zone Mapping
             </p>
           </div>
         </div>
 
-        <div className="flex gap-4">
+        <div className="flex flex-col sm:flex-row gap-3">
             <button 
                 onClick={() => navigate('/admin/areas')}
-                className="flex items-center gap-3 bg-surface border border-border text-text-gray px-6 py-3 rounded-lg font-black uppercase tracking-widest text-[11px] transition-all hover:bg-border hover:text-text-dark"
+                className="flex-1 sm:flex-none flex items-center justify-center gap-3 bg-surface border border-border text-text-gray px-6 py-3 rounded-lg font-black uppercase tracking-widest text-[10px] sm:text-[11px] transition-all hover:bg-border hover:text-text-dark"
             >
                 <Map className="w-4 h-4" />
                 Edit Mapping
@@ -224,7 +224,7 @@ export default function SurveillanceConfig() {
                   setFormData({ name: '', source_url: '', area_id: areas.length > 0 ? areas[0].id : '', is_active: true });
                   setShowAddModal(true);
                 }}
-                className="flex items-center gap-3 bg-accent text-white px-6 py-3 rounded-lg font-black uppercase tracking-widest text-[11px] transition-all shadow-md shadow-accent/20 hover:-translate-y-1 active:translate-y-0"
+                className="flex-1 sm:flex-none flex items-center justify-center gap-3 bg-accent text-white px-6 py-3 rounded-lg font-black uppercase tracking-widest text-[10px] sm:text-[11px] transition-all shadow-md shadow-accent/20 hover:-translate-y-1 active:translate-y-0"
             >
                 <Plus className="w-4 h-4" />
                 Initialize Feed
@@ -233,19 +233,19 @@ export default function SurveillanceConfig() {
       </div>
 
       {/* Stats Quick Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
         {[
             { label: 'Active Streams', value: `${cameras.filter(c => c.is_active !== false).length}/${cameras.length}`, icon: Video, color: 'text-accent' },
             { label: 'Deployed Zones', value: areas.length, icon: Layers, color: 'text-emerald-500' },
             { label: 'AI Inference Load', value: '42%', icon: Cpu, color: 'text-amber-500' },
         ].map((stat, i) => (
-            <div key={i} className="bg-card border border-border rounded-lg p-6 flex items-center gap-6 shadow-sm">
-                <div className={`p-4 bg-surface border border-border rounded-lg ${stat.color}`}>
-                    <stat.icon className="w-6 h-6" />
+            <div key={i} className="bg-card border border-border rounded-lg p-4 sm:p-6 flex items-center gap-4 sm:gap-6 shadow-sm min-w-0">
+                <div className={`p-3 sm:p-4 bg-surface border border-border rounded-lg ${stat.color} shrink-0`}>
+                    <stat.icon className="w-5 h-5 sm:w-6 sm:h-6" />
                 </div>
-                <div>
-                    <p className="text-[10px] font-black uppercase tracking-widest text-text-gray mb-1">{stat.label}</p>
-                    <p className={`text-2xl font-black italic ${stat.color}`}>{stat.value}</p>
+                <div className="min-w-0">
+                    <p className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-text-gray mb-1 truncate">{stat.label}</p>
+                    <p className={`text-xl sm:text-2xl font-black italic ${stat.color} truncate`}>{stat.value}</p>
                 </div>
             </div>
         ))}
@@ -253,33 +253,33 @@ export default function SurveillanceConfig() {
 
       {/* Main Content Area */}
       <div className="bg-card border border-border rounded-lg overflow-hidden shadow-sm">
-         <div className="px-8 py-7 border-b border-border bg-surface/50 flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <h2 className="text-xs font-black uppercase tracking-[0.2em] flex items-center gap-3 text-text-dark">
-               <Cctv className="w-5 h-5 text-accent" />
+         <div className="px-4 sm:px-8 py-5 sm:py-7 border-b border-border bg-surface/50 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+            <h2 className="text-[10px] sm:text-xs font-black uppercase tracking-[0.2em] flex items-center gap-3 text-text-dark">
+               <Cctv className="w-4 h-4 sm:w-5 sm:h-5 text-accent" />
                Hardware Registry Ledger
             </h2>
-            <div className="relative">
+            <div className="relative w-full lg:w-64">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-text-gray" />
                 <input 
                     type="text" 
                     value={filter}
                     onChange={(e) => setFilter(e.target.value)}
                     placeholder="Filter nodes..." 
-                    className="bg-surface border border-border rounded-lg py-2 pl-9 pr-4 text-[10px] font-black uppercase tracking-widest text-text-dark outline-none focus:border-accent focus:ring-2 focus:ring-accent/10 transition-all w-full md:w-64"
+                    className="bg-surface border border-border rounded-lg py-2 pl-9 pr-4 text-[10px] font-black uppercase tracking-widest text-text-dark outline-none focus:border-accent focus:ring-2 focus:ring-accent/10 transition-all w-full"
                 />
             </div>
          </div>
 
-         <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse min-w-[900px]">
+         <div className="overflow-x-auto no-scrollbar">
+            <table className="w-full text-left border-collapse min-w-[1000px]">
                 <thead>
                     <tr className="border-b border-border bg-surface/30">
-                        <th className="py-5 px-8 text-[11px] font-black uppercase tracking-[0.1em] text-text-gray">Node ID</th>
-                        <th className="py-5 px-8 text-[11px] font-black uppercase tracking-[0.1em] text-text-gray">Feed Designation</th>
-                        <th className="py-5 px-8 text-[11px] font-black uppercase tracking-[0.1em] text-text-gray">Assigned Zone</th>
-                        <th className="py-5 px-8 text-[11px] font-black uppercase tracking-[0.1em] text-text-gray">Stream Source</th>
-                        <th className="py-5 px-8 text-[11px] font-black uppercase tracking-[0.1em] text-text-gray">Status</th>
-                        <th className="py-5 px-8 text-[11px] font-black uppercase tracking-[0.1em] text-text-gray text-right">Actions</th>
+                        <th className="py-5 px-6 sm:px-8 text-[10px] sm:text-[11px] font-black uppercase tracking-[0.1em] text-text-gray">Node ID</th>
+                        <th className="py-5 px-6 sm:px-8 text-[10px] sm:text-[11px] font-black uppercase tracking-[0.1em] text-text-gray">Feed Designation</th>
+                        <th className="py-5 px-6 sm:px-8 text-[10px] sm:text-[11px] font-black uppercase tracking-[0.1em] text-text-gray">Assigned Zone</th>
+                        <th className="py-5 px-6 sm:px-8 text-[10px] sm:text-[11px] font-black uppercase tracking-[0.1em] text-text-gray">Stream Source</th>
+                        <th className="py-5 px-6 sm:px-8 text-[10px] sm:text-[11px] font-black uppercase tracking-[0.1em] text-text-gray">Status</th>
+                        <th className="py-5 px-6 sm:px-8 text-[10px] sm:text-[11px] font-black uppercase tracking-[0.1em] text-text-gray text-right">Actions</th>
                     </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
@@ -341,8 +341,8 @@ export default function SurveillanceConfig() {
           </div>
 
           {/* Pagination Bar */}
-          <div className="px-8 py-4 bg-surface/30 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div className="text-[10px] font-black uppercase tracking-widest text-text-gray">
+          <div className="px-4 sm:px-8 py-4 bg-surface/30 border-t border-border flex flex-col md:flex-row items-center justify-between gap-4">
+            <div className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-text-gray text-center md:text-left">
               Showing <span className="text-text-dark">{Math.min(totalItems, (currentPage - 1) * pageSize + 1)}</span> to <span className="text-text-dark">{Math.min(totalItems, currentPage * pageSize)}</span> of <span className="text-text-dark">{totalItems}</span> hardware nodes
             </div>
             
@@ -352,7 +352,7 @@ export default function SurveillanceConfig() {
                 onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
                 className="p-2 rounded-lg border border-border bg-card text-text-gray hover:text-accent hover:border-accent disabled:opacity-30 disabled:hover:text-text-gray disabled:hover:border-border transition-all"
               >
-                <ChevronLeft className="w-4 h-4" />
+                <ChevronLeft className="w-3.5 h-3.5" />
               </button>
               
               <div className="flex items-center gap-1">
@@ -360,10 +360,10 @@ export default function SurveillanceConfig() {
                   .filter(p => p === 1 || p === Math.ceil(totalItems / pageSize) || Math.abs(p - currentPage) <= 1)
                   .map((p, i, arr) => (
                     <React.Fragment key={p}>
-                      {i > 0 && p - arr[i-1] > 1 && <span className="text-text-gray px-1">...</span>}
+                      {i > 0 && p - arr[i-1] > 1 && <span className="text-text-gray px-1 text-xs">...</span>}
                       <button
                         onClick={() => setCurrentPage(p)}
-                        className={`min-w-[32px] h-8 rounded-lg text-[10px] font-black transition-all border ${currentPage === p 
+                        className={`min-w-[28px] sm:min-w-[32px] h-7 sm:h-8 rounded-lg text-[9px] sm:text-[10px] font-black transition-all border ${currentPage === p 
                           ? 'bg-accent text-white border-accent shadow-lg shadow-accent/20' 
                           : 'bg-card text-text-gray border-border hover:border-accent/50 hover:text-accent'}`}
                       >
@@ -378,7 +378,7 @@ export default function SurveillanceConfig() {
                 onClick={() => setCurrentPage(prev => prev + 1)}
                 className="p-2 rounded-lg border border-border bg-card text-text-gray hover:text-accent hover:border-accent disabled:opacity-30 disabled:hover:text-text-gray disabled:hover:border-border transition-all"
               >
-                <ChevronRight className="w-4 h-4" />
+                <ChevronRight className="w-3.5 h-3.5" />
               </button>
             </div>
           </div>

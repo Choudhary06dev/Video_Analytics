@@ -7,7 +7,7 @@ import {
   MapPin,
   AlertTriangle,
   Settings,
-  Activity, 
+  Activity,
   FileText,
   RefreshCw,
   Eye,
@@ -132,7 +132,7 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     fetchStats();
-    
+
     // Refresh stats every 30 seconds for live monitoring
     const interval = setInterval(fetchStats, 30000);
     return () => clearInterval(interval);
@@ -140,46 +140,45 @@ export default function AdminDashboard() {
 
   return (
     <div className="p-1 space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700 max-w-[1600px] mx-auto pb-10">
-      
       {/* ── Top Intelligence Bar ── */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 bg-gradient-to-r from-card/80 to-surface/80 backdrop-blur-md border border-border/50 rounded-2xl p-6 shadow-sm relative overflow-hidden">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 bg-gradient-to-r from-card/80 to-surface/80 backdrop-blur-md border border-border/50 rounded-2xl p-4 sm:p-6 shadow-sm relative overflow-hidden">
         <div className="absolute top-0 right-0 w-64 h-64 bg-accent/5 blur-[80px] -mr-32 -mt-32" />
-        
-        <div className="flex items-center gap-6">
-          <div className="hidden sm:flex w-14 h-14 bg-gradient-to-br from-blue-600 to-cyan-500 border border-white/20 rounded-2xl items-center justify-center relative overflow-hidden group shadow-lg shadow-blue-500/20">
+
+        <div className="flex items-center gap-4 sm:gap-6">
+          <div className="hidden xs:flex w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-blue-600 to-cyan-500 border border-white/20 rounded-xl sm:rounded-2xl items-center justify-center relative overflow-hidden group shadow-lg shadow-blue-500/20 shrink-0">
             <div className="absolute inset-0 bg-white/10 group-hover:bg-transparent transition-colors" />
-            <Activity className="w-7 h-7 text-white relative z-10 group-hover:scale-110 transition-transform" />
+            <Activity className="w-6 h-6 sm:w-7 sm:h-7 text-white relative z-10 group-hover:scale-110 transition-transform" />
           </div>
-          <div>
-            <div className="flex items-center gap-3">
-              <h1 className="text-2xl font-black italic uppercase tracking-tighter text-text-dark">
+          <div className="min-w-0">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
+              <h1 className="text-lg sm:text-2xl font-black italic uppercase tracking-tighter text-text-dark truncate">
                 AI Hospital <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-cyan-500 underline decoration-blue-600/30 underline-offset-4">Command Center</span>
               </h1>
-              <div className="px-2 py-0.5 bg-success/10 border border-success/20 rounded text-[9px] font-black text-success tracking-widest uppercase flex items-center gap-1.5">
+              <div className="w-fit px-2 py-0.5 bg-success/10 border border-success/20 rounded text-[8px] sm:text-[9px] font-black text-success tracking-widest uppercase flex items-center gap-1.5 shrink-0">
                 <div className={`w-1.5 h-1.5 rounded-full bg-success ${loading ? 'animate-ping' : 'animate-pulse'}`} />
-                {loading ? 'Recalibrating...' : 'Network Online'}
+                {loading ? 'Recalibrating...' : 'Online'}
               </div>
             </div>
-            <div className="flex items-center gap-4 mt-1">
-              <p className="text-[10px] font-bold text-text-gray uppercase tracking-widest flex items-center gap-2">
-                <Globe className="w-3 h-3 text-accent" /> Facility: Medical Block A
+            <div className="flex items-center gap-3 sm:gap-4 mt-1.5 sm:mt-1">
+              <p className="text-[9px] sm:text-[10px] font-bold text-text-gray uppercase tracking-widest flex items-center gap-1.5 truncate">
+                {/* <Globe className="w-3 h-3 text-accent shrink-0" /> Block A */}
               </p>
-              <div className="w-1 h-1 rounded-full bg-border" />
-              <p className="text-[10px] font-mono font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-cyan-500">
+              <div className="w-1 h-1 rounded-full bg-border shrink-0" />
+              <p className="text-[9px] sm:text-[10px] font-mono font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-cyan-500">
                 {currentTime.toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' })}
               </p>
             </div>
           </div>
         </div>
 
-        <div className="flex items-center gap-3 self-end lg:self-center relative z-10">
-          <button 
+        <div className="flex items-center gap-3 w-full lg:w-auto relative z-10">
+          <button
             onClick={fetchStats}
             disabled={loading}
-            className={`flex items-center gap-2.5 px-6 py-3 bg-black text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-xl hover:-translate-y-0.5 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed`}
+            className={`flex-1 lg:flex-none flex items-center justify-center gap-2.5 px-6 py-3 bg-black text-white rounded-xl text-[9px] sm:text-[10px] font-black uppercase tracking-widest shadow-xl hover:-translate-y-0.5 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap`}
           >
-            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-            {loading ? 'Recalibrating...' : 'Recalibrate System'}
+            <RefreshCw className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${loading ? 'animate-spin' : ''}`} />
+            {loading ? 'Processing...' : 'Refresh'}
           </button>
         </div>
       </div>
@@ -196,7 +195,7 @@ export default function AdminDashboard() {
 
       {/* ── Deep Analytics Section ── */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        
+
         {/* CAMERA OVERVIEW MODULE */}
         <div className="bg-card border border-border/60 rounded-2xl p-6 shadow-sm relative overflow-hidden group h-[340px] flex flex-col">
           <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 blur-[40px] -mr-16 -mt-16 group-hover:bg-emerald-500/10 transition-all" />
@@ -241,7 +240,7 @@ export default function AdminDashboard() {
             {rawStats?.scenarios?.length > 0 ? rawStats.scenarios.map((scenario, i) => {
               const alertCount = rawStats.summary?.object_breakdown?.[scenario.name] || 0;
               const isCritical = scenario.default_severity === 'Critical' || scenario.default_severity === 'High';
-              
+
               return (
                 <div key={i} className="flex justify-between items-center p-2.5 hover:bg-surface transition-colors rounded-lg group/scen">
                   <div className="flex flex-col">
@@ -249,7 +248,7 @@ export default function AdminDashboard() {
                     <span className="text-[8px] font-medium text-text-gray/50 uppercase tracking-tighter">{scenario.default_severity} Priority</span>
                   </div>
                   <span className={`text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded border transition-all
-                    ${alertCount > 0 
+                    ${alertCount > 0
                       ? (isCritical ? 'bg-red-500/10 text-red-500 border-red-500/20' : 'bg-amber-500/10 text-amber-500 border-amber-500/20')
                       : 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20'}`}>
                     {alertCount > 0 ? `${alertCount} Alerts` : 'Stable'}
@@ -273,7 +272,7 @@ export default function AdminDashboard() {
             {rawStats?.audits?.length > 0 ? rawStats.audits.slice(0, 6).map((log, i) => (
               <div key={i} className="flex gap-3 items-start p-3 rounded-xl hover:bg-surface/80 transition-all border border-transparent hover:border-border/40 group/item">
                 <div className="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center shrink-0 group-hover/item:scale-110 transition-transform">
-                   <User size={14} className="text-blue-500" />
+                  <User size={14} className="text-blue-500" />
                 </div>
                 <div className="min-w-0 flex-1 relative group/detail">
                   <div className="flex items-center justify-between mb-1">
@@ -344,21 +343,21 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        <div className="bg-card border border-border/60 rounded-2xl p-6 shadow-sm flex items-center justify-between overflow-hidden relative">
-           <div className="absolute inset-0 bg-accent/[0.02] pointer-events-none" />
-           <div className="flex items-center gap-5">
-              <div className="w-16 h-16 rounded-2xl bg-surface border border-border/50 flex items-center justify-center shadow-inner group">
-                <Activity className="w-8 h-8 text-accent animate-pulse" />
-              </div>
-              <div>
-                <h4 className="text-sm font-black italic uppercase tracking-tighter text-text-dark">System Status: Nominal</h4>
-                <p className="text-[10px] font-bold text-text-gray uppercase tracking-widest mt-1">Uptime: 99.998% // Nodes Synced</p>
-              </div>
-           </div>
-           <div className="text-right">
-              <p className="text-[10px] font-black text-text-gray uppercase tracking-widest">Real-time Dashboard</p>
-              <p className="text-[14px] font-black text-accent italic tracking-tighter mt-1">V1.0 HOSPITAL OPS</p>
-           </div>
+        <div className="bg-card border border-border/60 rounded-2xl p-6 shadow-sm flex flex-col sm:flex-row items-center justify-between overflow-hidden relative gap-4">
+          <div className="absolute inset-0 bg-accent/[0.02] pointer-events-none" />
+          <div className="flex items-center gap-5 w-full sm:w-auto">
+            <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-surface border border-border/50 flex items-center justify-center shadow-inner group shrink-0">
+              <Activity className="w-7 h-7 sm:w-8 sm:h-8 text-accent animate-pulse" />
+            </div>
+            <div>
+              <h4 className="text-sm font-black italic uppercase tracking-tighter text-text-dark">System Status: Nominal</h4>
+              <p className="text-[10px] font-bold text-text-gray uppercase tracking-widest mt-1">Uptime: 99.998% // Nodes Synced</p>
+            </div>
+          </div>
+          <div className="text-center sm:text-right w-full sm:w-auto">
+            <p className="text-[10px] font-black text-text-gray uppercase tracking-widest">Real-time Dashboard</p>
+            <p className="text-[14px] font-black text-accent italic tracking-tighter mt-1">V1.0 HOSPITAL OPS</p>
+          </div>
         </div>
       </div>
 

@@ -56,17 +56,17 @@ export default function AIScenarios() {
   return (
     <div className="flex flex-col gap-8 pb-10 max-w-[1600px] mx-auto">
       {/* Page Header */}
-      <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 px-2">
-        <div>
-          <h2 className="text-[1.8rem] font-black text-text-dark mb-1 tracking-tight uppercase">Vision Algorithms</h2>
-          <div className="text-[0.9rem] text-text-gray font-semibold flex items-center gap-2">
+      <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-6 px-2">
+        <div className="min-w-0">
+          <h2 className="text-2xl sm:text-[1.8rem] font-black text-text-dark mb-1 tracking-tight uppercase truncate">Vision Algorithms</h2>
+          <div className="text-[0.8rem] sm:text-[0.9rem] text-text-gray font-semibold flex items-center gap-2 truncate">
             Intelligence Matrix Configuration
-            <span className="w-1 h-1 bg-text-gray rounded-full opacity-30" />
+            <span className="w-1 h-1 bg-text-gray rounded-full opacity-30 shrink-0" />
             21 Models Deployed
           </div>
         </div>
         <div className="flex items-center gap-3">
-          <div className="flex bg-card border border-border rounded-lg p-1 shadow-sm">
+          <div className="flex bg-card border border-border rounded-lg p-1 shadow-sm shrink-0">
             <button
               onClick={() => setViewMode('grid')}
               className={`p-2 rounded-lg transition-all ${viewMode === 'grid' ? 'bg-accent text-white shadow-md' : 'text-text-gray hover:text-text-dark'}`}
@@ -83,35 +83,35 @@ export default function AIScenarios() {
           {canView('admin_hub') && (
             <Link
               to="/admin/scenarios"
-              className="flex items-center gap-2 px-4 py-2 bg-accent text-white rounded-lg text-[0.75rem] font-bold cursor-pointer hover:opacity-90 shadow-premium transition-all no-underline"
+              className="flex-1 lg:flex-none flex items-center justify-center gap-2 px-4 py-2.5 bg-accent text-white rounded-lg text-[0.75rem] font-bold cursor-pointer hover:opacity-90 shadow-premium transition-all no-underline"
             >
-              <Play className="w-4 h-4 fill-white" />
-              Deploy New Instance
+              <Play className="w-3.5 h-3.5 fill-white" />
+              <span className="whitespace-nowrap">Deploy Instance</span>
             </Link>
           )}
         </div>
       </div>
 
       {/* Control Bar */}
-      <div className="bg-card rounded-lg p-6 border border-border shadow-premium flex flex-col md:flex-row gap-4 items-center">
+      <div className="bg-card rounded-lg p-4 sm:p-6 border border-border shadow-premium flex flex-col lg:flex-row gap-4 items-center">
         <div className="relative flex-1 w-full">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-text-gray" />
           <input
             type="text"
-            placeholder="Search vision models by name or category..."
-            className="w-full pl-12 pr-4 py-3 bg-bg border border-border rounded-lg text-[0.88rem] focus:outline-none focus:border-accent transition-all"
+            placeholder="Search vision models by name..."
+            className="w-full pl-11 pr-4 py-2.5 sm:py-3 bg-bg border border-border rounded-lg text-[0.85rem] sm:text-[0.88rem] focus:outline-none focus:border-accent transition-all"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
-        <div className="flex items-center gap-4 w-full md:w-auto">
-          <button className="flex items-center gap-2 px-5 py-3 bg-bg border border-border rounded-lg text-[0.85rem] font-bold text-text-gray hover:border-accent hover:text-accent transition-all whitespace-nowrap">
-            <Filter className="w-4 h-4" />
-            Severity Filter
+        <div className="flex items-center gap-3 w-full lg:w-auto">
+          <button className="flex-1 lg:flex-none flex items-center justify-center gap-2 px-4 py-2.5 sm:py-3 bg-bg border border-border rounded-lg text-[0.8rem] sm:text-[0.85rem] font-bold text-text-gray hover:border-accent hover:text-accent transition-all whitespace-nowrap">
+            <Filter className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+            Filters
           </button>
-          <div className="h-10 w-px bg-border hidden md:block" />
-          <div className="text-[0.85rem] text-text-gray font-bold whitespace-nowrap">
-            Showing <span className="text-text-dark">{filtered.length}</span> models
+          <div className="h-10 w-px bg-border hidden lg:block" />
+          <div className="text-[0.8rem] sm:text-[0.85rem] text-text-gray font-bold whitespace-nowrap shrink-0">
+            <span className="text-text-dark">{filtered.length}</span> models
           </div>
         </div>
       </div>
@@ -139,38 +139,38 @@ export default function AIScenarios() {
             </div>
 
             {/* Content */}
-            <div className={`flex flex-col flex-1 ${viewMode === 'grid' ? 'p-6 -mt-4 relative z-30' : 'px-6 py-2'}`}>
+            <div className={`flex flex-col flex-1 ${viewMode === 'grid' ? 'p-4 sm:p-6 -mt-4 relative z-30' : 'px-4 sm:px-6 py-2'}`}>
               <div className="flex justify-between items-start mb-2">
-                <h3 className="text-[0.95rem] font-black text-text-dark leading-tight group-hover:text-accent transition-colors truncate pr-4">
+                <h3 className="text-sm sm:text-[0.95rem] font-black text-text-dark leading-tight group-hover:text-accent transition-colors truncate pr-4">
                   {scenario.name}
                 </h3>
                 {viewMode === 'list' && (
                   <div
-                    className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 shadow-sm border border-status`}
+                    className={`w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center shrink-0 shadow-sm border border-status`}
                     style={{ borderColor: scenario.status === 'critical' ? 'var(--color-danger)' : scenario.status === 'warning' ? 'var(--color-warning)' : 'var(--color-success)' }}
                   >
-                    <scenario.icon className="w-4 h-4" style={{ color: scenario.color }} />
+                    <scenario.icon className="w-3.5 h-3.5 sm:w-4 sm:h-4" style={{ color: scenario.color }} />
                   </div>
                 )}
               </div>
 
-              <p className={`text-[0.78rem] text-text-gray font-semibold mb-6 leading-relaxed ${viewMode === 'grid' ? 'line-clamp-2' : 'max-w-2xl'}`}>
+              <p className={`text-[0.72rem] sm:text-[0.78rem] text-text-gray font-semibold mb-4 sm:mb-6 leading-relaxed ${viewMode === 'grid' ? 'line-clamp-2' : 'max-w-2xl'}`}>
                 {scenario.desc}
               </p>
 
               <div className="mt-auto flex items-center justify-between border-t border-border pt-4">
-                <div className="flex flex-col gap-1">
-                  <div className="text-[0.6rem] text-text-gray font-black uppercase tracking-wider">Model Health</div>
+                <div className="flex flex-col gap-1 min-w-0">
+                  <div className="text-[0.55rem] sm:text-[0.6rem] text-text-gray font-black uppercase tracking-wider">Health</div>
                   <div className="flex items-center gap-2">
-                    <div className="w-16 h-1.5 bg-bg rounded-full overflow-hidden border border-border">
+                    <div className="w-12 sm:w-16 h-1 bg-bg rounded-full overflow-hidden border border-border">
                       <div className={`h-full rounded-full ${scenario.health > 90 ? 'bg-success' : 'bg-warning'}`} style={{ width: `${scenario.health}%` }} />
                     </div>
-                    <span className="text-[0.7rem] font-black text-text-dark">{scenario.health}%</span>
+                    <span className="text-[0.65rem] sm:text-[0.7rem] font-black text-text-dark">{scenario.health}%</span>
                   </div>
                 </div>
-                <div className="flex items-center gap-1.5 text-[0.65rem] font-black text-emerald-600 uppercase tracking-widest bg-emerald-50 px-2 py-1 rounded">
-                  <Activity className="w-3 h-3" />
-                  Live Sync
+                <div className="flex items-center gap-1.5 text-[0.6rem] sm:text-[0.65rem] font-black text-emerald-600 uppercase tracking-widest bg-emerald-50 px-2 py-1 rounded shrink-0">
+                  <Activity className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
+                  Live
                 </div>
               </div>
             </div>

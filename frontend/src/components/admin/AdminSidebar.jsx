@@ -13,13 +13,14 @@ import {
   Video,
   Zap,
   Activity,
-  UserX as UserXIcon
+  UserX as UserXIcon,
+  X
 } from 'lucide-react';
 
 import { useAuth } from '../../context/AuthContext';
 import Logo from '../ui/Logo';
 
-export default function AdminSidebar({ isSidebarOpen }) {
+export default function AdminSidebar({ isSidebarOpen, setSidebarOpen }) {
   const { user, canView } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -29,6 +30,12 @@ export default function AdminSidebar({ isSidebarOpen }) {
     setOpenMenu(prev => prev === menuId ? null : menuId);
   };
 
+  const handleNavClick = () => {
+    // Auto-close sidebar on mobile after navigation
+    if (window.innerWidth < 768 && setSidebarOpen) {
+      setSidebarOpen(false);
+    }
+  };
 
   const adminMenu = [
     { name: 'Dashboard', icon: LayoutDashboard, path: '/admin/dashboard', moduleKey: 'admin_dashboard' },
@@ -111,7 +118,8 @@ export default function AdminSidebar({ isSidebarOpen }) {
                     <li key={sIdx}>
                       <NavLink
                         to={sub.path}
-                        className={({ isActive }) => `flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200 group
+                        onClick={handleNavClick}
+                        className={({ isActive }) => `flex items-center gap-3 px-3 py-2.5 md:py-2 rounded-lg transition-all duration-200 group
                                             ${isActive
                             ? 'text-accent font-bold'
                             : 'text-text-dark font-semibold hover:text-accent'
@@ -136,6 +144,7 @@ export default function AdminSidebar({ isSidebarOpen }) {
           <li key={index}>
             <NavLink
               to={item.path}
+              onClick={handleNavClick}
               className={({ isActive }) => `flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer transition-all duration-300 group backdrop-blur-sm
                   ${isActive
                   ? 'bg-accent-soft/70 text-accent font-bold shadow-[0_1px_3px_rgba(0,0,0,0.02)] border border-accent/20'
@@ -158,9 +167,20 @@ export default function AdminSidebar({ isSidebarOpen }) {
 
   return (
     <aside
-      className={`${isSidebarOpen ? 'w-[260px] translate-x-0' : 'w-20 -translate-x-full md:translate-x-0'} 
-      transition-all duration-300 ease-in-out fixed md:relative z-50 h-full bg-card border-r border-border flex flex-col pt-4 px-4 pb-9 overflow-hidden shadow-premium`}
+      className={`${isSidebarOpen ? 'w-[260px] translate-x-0' : '-translate-x-full md:translate-x-0 md:w-20'} 
+      transition-all duration-300 ease-in-out fixed md:relative z-50 h-full bg-card border-r border-border flex flex-col pt-4 px-4 pb-9 overflow-hidden shadow-premium
+      ${isSidebarOpen ? 'shadow-2xl md:shadow-premium' : ''}`}
     >
+      {/* Mobile close button */}
+      {isSidebarOpen && setSidebarOpen && (
+        <button 
+          onClick={() => setSidebarOpen(false)}
+          className="md:hidden absolute top-4 right-4 p-1.5 rounded-lg text-text-gray hover:text-text-dark hover:bg-surface transition-colors z-10"
+        >
+          <X className="w-5 h-5" />
+        </button>
+      )}
+
       {/* Admin Branding */}
       <div className="mb-2 shrink-0 h-12 px-2">
         <Logo isSidebarOpen={isSidebarOpen} className="h-12 w-12" />
@@ -172,10 +192,6 @@ export default function AdminSidebar({ isSidebarOpen }) {
       {/* Navigation */}
       <nav className="flex-1 overflow-y-auto w-full scrollbar-none flex flex-col gap-6">
         <div>
-          {/* <div className={`text-[0.65rem] text-text-gray/50 font-black uppercase tracking-[2px] mb-4 px-3 flex items-center gap-2 ${!isSidebarOpen && 'md:hidden'}`}>
-            <Database className="w-3 h-3" />
-            Control Matrix
-          </div> */}
           {renderNavLinks(adminMenu)}
         </div>
       </nav>
@@ -210,4 +226,3 @@ export default function AdminSidebar({ isSidebarOpen }) {
     </aside>
   );
 }
-

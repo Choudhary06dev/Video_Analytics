@@ -170,35 +170,35 @@ export default function UserManagement() {
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 w-full pb-10">
       
       {/* Header Section */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-2">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 pb-2 px-1">
         <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-accent/10 rounded-lg flex items-center justify-center border border-accent/20">
+            <div className="w-12 h-12 bg-accent/10 rounded-lg flex items-center justify-center border border-accent/20 shrink-0">
                 <Users className="w-7 h-7 text-accent" />
             </div>
-            <div>
-                <h1 className="text-2xl font-black italic uppercase tracking-tighter text-text-dark">
+            <div className="min-w-0">
+                <h1 className="text-xl sm:text-2xl font-black italic uppercase tracking-tighter text-text-dark truncate">
                     Personnel <span className="text-accent underline decoration-accent/20 underline-offset-4">Matrix</span>
                 </h1>
-                <p className="text-[9px] font-bold text-text-gray uppercase tracking-[0.3em] mt-1.5 flex items-center gap-2">
+                <p className="text-[9px] font-bold text-text-gray uppercase tracking-[0.3em] mt-1.5 flex items-center gap-2 truncate">
                     Identity Registry // Node Control Protocol
                 </p>
             </div>
         </div>
 
-        <div className="flex items-center gap-3">
-            <div className="relative group">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+            <div className="relative group flex-1">
                 <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-text-gray group-focus-within:text-accent transition-colors" />
                 <input
                     type="text"
                     placeholder="Search identity..."
-                    className="bg-card border border-border rounded-lg pl-10 pr-4 py-2.5 text-xs font-bold text-text-dark outline-none focus:border-accent focus:ring-4 focus:ring-accent/5 transition-all w-64"
+                    className="w-full sm:w-64 bg-card border border-border rounded-lg pl-10 pr-4 py-2.5 text-xs font-bold text-text-dark outline-none focus:border-accent focus:ring-4 focus:ring-accent/5 transition-all"
                     value={filter}
                     onChange={(e) => setFilter(e.target.value)}
                 />
             </div>
             <button
                 onClick={() => { setFormData({ full_name: '', email: '', password: '', role_name: 'operator', is_active: true }); setShowAddModal(true); }}
-                className="flex items-center gap-2 bg-accent text-white px-5 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-widest shadow-md hover:-translate-y-0.5 transition-all active:translate-y-0"
+                className="flex items-center justify-center gap-2 bg-accent text-white px-5 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-widest shadow-md hover:-translate-y-0.5 transition-all active:translate-y-0 whitespace-nowrap"
             >
                 <Plus className="w-4 h-4" />
                 New Identity
@@ -207,29 +207,29 @@ export default function UserManagement() {
       </div>
 
       {/* Stats Summary */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 px-1">
         {[
             { label: 'Total Nodes', val: totalItems, icon: Users, color: 'text-accent' },
             { label: 'Active Sessions', val: users.filter(u => u.is_active !== false).length, icon: Power, color: 'text-success' },
             { label: 'Network Admins', val: users.filter(u => u.role === 'admin' || u.role === 'super_admin').length, icon: Shield, color: 'text-purple-500' },
-            { label: 'Security Threats', val: 0, icon: ShieldAlert, color: 'text-danger' },
+            { label: 'Threats', val: 0, icon: ShieldAlert, color: 'text-danger' },
         ].map((s, i) => (
-            <div key={i} className="bg-card border border-border p-4 rounded-lg flex items-center justify-between shadow-sm">
-                <div>
-                    <p className="text-[8px] font-black text-text-gray uppercase tracking-widest mb-1">{s.label}</p>
-                    <p className={`text-xl font-black italic ${s.color}`}>{s.val}</p>
+            <div key={i} className="bg-card border border-border p-3 sm:p-4 rounded-lg flex items-center justify-between shadow-sm min-w-0 hover:border-accent/30 transition-colors">
+                <div className="min-w-0">
+                    <p className="text-[7px] sm:text-[8px] font-black text-text-gray uppercase tracking-widest mb-1 truncate">{s.label}</p>
+                    <p className={`text-base sm:text-xl font-black italic ${s.color} truncate`}>{s.val}</p>
                 </div>
-                <div className="p-2.5 rounded-lg bg-surface border border-border">
-                    <s.icon className={`w-4 h-4 ${s.color}`} />
+                <div className="p-1.5 sm:p-2.5 rounded-lg bg-surface border border-border shrink-0 ml-2">
+                    <s.icon className={`w-3.5 sm:w-4 h-3.5 sm:h-4 ${s.color}`} />
                 </div>
             </div>
         ))}
       </div>
 
       {/* Users Data Table */}
-      <div className="bg-card border border-border rounded-lg overflow-hidden shadow-sm">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
+      <div className="bg-card border border-border rounded-lg overflow-hidden shadow-sm mx-1">
+        <div className="overflow-x-auto custom-scrollbar">
+          <table className="w-full text-left border-collapse min-w-[800px]">
             <thead>
               <tr className="bg-surface/50 border-b border-border text-[9px] font-black uppercase tracking-widest text-text-gray">
                 <th className="p-4 pl-6">System ID</th>
@@ -244,23 +244,23 @@ export default function UserManagement() {
               {filteredUsers.map((user) => (
                 <tr key={user.id} className="hover:bg-surface/30 transition-colors group">
                   <td className="p-4 pl-6">
-                    <div className="flex items-center gap-1.5 text-[10px] font-bold text-text-gray bg-surface px-2 py-1 rounded-lg border border-border w-fit">
+                    <div className="flex items-center gap-1.5 text-[10px] font-bold text-text-gray bg-surface px-2 py-1 rounded-lg border border-border w-fit font-mono">
                         <Activity className="w-3 h-3" />
                         #{user.id}
                     </div>
                   </td>
                   <td className="p-4">
                     <div className="flex items-center gap-3">
-                      <div className={`relative w-10 h-10 rounded-lg flex items-center justify-center border-2
+                      <div className={`relative w-10 h-10 rounded-lg flex items-center justify-center border-2 shrink-0
                         ${user.is_active !== false ? 'border-accent/10 bg-accent/5' : 'border-danger/10 bg-danger/5'}`}>
                         <img src={`https://ui-avatars.com/api/?name=${user.full_name}&background=random&color=fff&bold=true`} className="w-8 h-8 rounded-lg" alt="" />
                         <div className={`absolute -bottom-1 -right-1 w-3 h-3 rounded-full border-2 border-card ${user.is_active !== false ? 'bg-success' : 'bg-danger'}`}></div>
                       </div>
-                      <div>
-                        <p className="text-xs font-black text-text-dark uppercase tracking-wide">{user.full_name}</p>
-                        <div className="flex items-center gap-1.5 text-[10px] text-text-gray font-bold mt-0.5">
-                            <Mail className="w-3 h-3" />
-                            <span>{user.email}</span>
+                      <div className="min-w-0">
+                        <p className="text-xs font-black text-text-dark uppercase tracking-wide truncate">{user.full_name}</p>
+                        <div className="flex items-center gap-1.5 text-[10px] text-text-gray font-bold mt-0.5 truncate">
+                            <Mail className="w-3 h-3 shrink-0" />
+                            <span className="truncate">{user.email}</span>
                         </div>
                       </div>
                     </div>
@@ -300,7 +300,7 @@ export default function UserManagement() {
               ))}
               {filteredUsers.length === 0 && (
                 <tr>
-                    <td colSpan={6} className="p-8 text-center text-[10px] font-black uppercase tracking-widest text-text-gray">
+                    <td colSpan={6} className="p-8 text-center text-[10px] font-black uppercase tracking-widest text-text-gray italic">
                         No identities found matching the criteria
                     </td>
                 </tr>
@@ -310,8 +310,8 @@ export default function UserManagement() {
         </div>
 
         {/* Pagination Bar */}
-        <div className="px-6 py-4 bg-surface/30 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="text-[10px] font-black uppercase tracking-widest text-text-gray">
+        <div className="px-4 sm:px-6 py-4 bg-surface/30 border-t border-border flex flex-col md:flex-row items-center justify-between gap-4">
+          <div className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-text-gray text-center md:text-left">
             Showing <span className="text-text-dark">{Math.min(totalItems, (currentPage - 1) * pageSize + 1)}</span> to <span className="text-text-dark">{Math.min(totalItems, currentPage * pageSize)}</span> of <span className="text-text-dark">{totalItems}</span> personnel records
           </div>
           
@@ -321,7 +321,7 @@ export default function UserManagement() {
               onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
               className="p-2 rounded-lg border border-border bg-card text-text-gray hover:text-accent hover:border-accent disabled:opacity-30 disabled:hover:text-text-gray disabled:hover:border-border transition-all"
             >
-              <ChevronLeft className="w-4 h-4" />
+              <ChevronLeft className="w-3.5 h-3.5" />
             </button>
             
             <div className="flex items-center gap-1">
@@ -329,10 +329,10 @@ export default function UserManagement() {
                 .filter(p => p === 1 || p === Math.ceil(totalItems / pageSize) || Math.abs(p - currentPage) <= 1)
                 .map((p, i, arr) => (
                   <React.Fragment key={p}>
-                    {i > 0 && p - arr[i-1] > 1 && <span className="text-text-gray px-1">...</span>}
+                    {i > 0 && p - arr[i-1] > 1 && <span className="text-text-gray px-1 text-xs">...</span>}
                     <button
                       onClick={() => setCurrentPage(p)}
-                      className={`min-w-[32px] h-8 rounded-lg text-[10px] font-black transition-all border ${currentPage === p 
+                      className={`min-w-[28px] sm:min-w-[32px] h-7 sm:h-8 rounded-lg text-[9px] sm:text-[10px] font-black transition-all border ${currentPage === p 
                         ? 'bg-accent text-white border-accent shadow-lg shadow-accent/20' 
                         : 'bg-card text-text-gray border-border hover:border-accent/50 hover:text-accent'}`}
                     >
@@ -347,7 +347,7 @@ export default function UserManagement() {
               onClick={() => setCurrentPage(prev => prev + 1)}
               className="p-2 rounded-lg border border-border bg-card text-text-gray hover:text-accent hover:border-accent disabled:opacity-30 disabled:hover:text-text-gray disabled:hover:border-border transition-all"
             >
-              <ChevronRight className="w-4 h-4" />
+              <ChevronRight className="w-3.5 h-3.5" />
             </button>
           </div>
         </div>

@@ -79,34 +79,31 @@ export default function ActionAudit() {
       {/* Page Header (Scaled Down) */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 pb-2">
         <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-accent/10 rounded-lg flex items-center justify-center border border-accent/20">
-                <History className="w-7 h-7 text-accent" />
+            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-accent/10 rounded-lg flex items-center justify-center border border-accent/20 shrink-0">
+                <History className="w-6 h-6 sm:w-7 sm:h-7 text-accent" />
             </div>
-            <div>
-                <h1 className="text-2xl font-black italic uppercase tracking-tighter text-text-dark">
+            <div className="min-w-0">
+                <h1 className="text-xl sm:text-2xl font-black italic uppercase tracking-tighter text-text-dark truncate">
                     Timeline <span className="text-accent underline decoration-accent/20 underline-offset-4">Audit</span>
                 </h1>
-                <p className="text-[9px] font-bold text-text-gray uppercase tracking-[0.3em] mt-1.5 flex items-center gap-2">
+                <p className="text-[8px] sm:text-[9px] font-bold text-text-gray uppercase tracking-[0.2em] sm:tracking-[0.3em] mt-1 sm:mt-1.5 flex items-center gap-2 truncate">
                     System Registry // Immutable Protocol Logs
                 </p>
             </div>
         </div>
 
-        <div className="flex items-center gap-3">
-            <div className="bg-card border border-border rounded-lg p-1 flex gap-0.5">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+            <div className="bg-card border border-border rounded-lg p-1 flex gap-0.5 overflow-x-auto no-scrollbar">
                 {['ALL', 'CREATE', 'UPDATE', 'DELETE'].map(act => (
                     <button 
                         key={act}
                         onClick={() => setFilterAction(act)}
-                        className={`px-3 py-1.5 rounded-lg text-[8px] font-black tracking-widest transition-all ${filterAction === act ? 'bg-accent text-white shadow-sm' : 'text-text-gray hover:text-text-dark'}`}
+                        className={`flex-1 sm:flex-none px-3 py-1.5 rounded-lg text-[8px] font-black tracking-widest transition-all ${filterAction === act ? 'bg-accent text-white shadow-sm' : 'text-text-gray hover:text-text-dark'}`}
                     >
                         {act}
                     </button>
                 ))}
             </div>
-            {/* <button className="p-2.5 bg-card border border-border rounded-lg text-text-gray hover:text-accent transition-all shadow-sm">
-                <Download className="w-4 h-4" />
-            </button> */}
         </div>
       </div>
 
@@ -125,41 +122,41 @@ export default function ActionAudit() {
                         <div className="absolute left-6 top-0 bottom-0 w-[1px] bg-gradient-to-b from-accent/50 via-border to-transparent"></div>
                         
                         {filteredLogs.map((log) => (
-                            <div key={log.id} className="relative pl-14 group">
-                                <div className="absolute left-5 top-5 w-2.5 h-2.5 rounded-full bg-card border-2 border-accent shadow-[0_0_8px_rgba(14,165,233,0.5)] group-hover:scale-125 transition-all z-10"></div>
+                            <div key={log.id} className="relative pl-10 sm:pl-14 group">
+                                <div className="absolute left-3 sm:left-5 top-5 w-2 sm:w-2.5 h-2 sm:h-2.5 rounded-full bg-card border-2 border-accent shadow-[0_0_8px_rgba(14,165,233,0.5)] group-hover:scale-125 transition-all z-10"></div>
                                 
-                                <div className="bg-card border border-border rounded-lg p-5 hover:border-accent/30 transition-all duration-300 shadow-sm">
-                                    <div className="flex items-start justify-between mb-4">
+                                <div className="bg-card border border-border rounded-lg p-4 sm:p-5 hover:border-accent/30 transition-all duration-300 shadow-sm">
+                                    <div className="flex flex-col sm:flex-row sm:items-start justify-between mb-4 gap-3">
                                         <div className="flex items-center gap-3">
-                                            <div className={`px-2.5 py-1 rounded-md text-[8px] font-black tracking-widest border ${actionColors[log.action] || 'bg-white/5 border-border text-text-gray'}`}>
+                                            <div className={`px-2 py-1 rounded-md text-[7px] sm:text-[8px] font-black tracking-widest border ${actionColors[log.action] || 'bg-white/5 border-border text-text-gray'}`}>
                                                 {log.action}
                                             </div>
-                                            <div className="flex items-center gap-1.5 text-text-gray">
-                                                <Database className="w-3 h-3 px-0.5" />
-                                                <span className="text-[9px] font-black uppercase tracking-widest">{log.resource}</span>
+                                            <div className="flex items-center gap-1.5 text-text-gray min-w-0">
+                                                <Database className="w-3 h-3 px-0.5 shrink-0" />
+                                                <span className="text-[8px] sm:text-[9px] font-black uppercase tracking-widest truncate">{log.resource}</span>
                                             </div>
                                         </div>
-                                        <div className="flex items-center gap-1.5 text-[9px] font-black text-text-gray bg-surface px-2 py-0.5 rounded-md">
+                                        <div className="flex items-center gap-1.5 text-[8px] sm:text-[9px] font-black text-text-gray bg-surface px-2 py-0.5 rounded-md self-start sm:self-auto">
                                             <Clock className="w-3 h-3" />
                                             {new Date(log.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                         </div>
                                     </div>
                                     
-                                    <p className="text-xs font-bold text-text-dark mb-4 leading-relaxed">
+                                    <p className="text-[11px] sm:text-xs font-bold text-text-dark mb-4 leading-relaxed">
                                         {log.details}
                                     </p>
 
                                     <div className="flex items-center justify-between pt-3 border-t border-border/50">
-                                        <div className="flex items-center gap-2">
-                                            <div className="w-7 h-7 rounded-lg bg-surface flex items-center justify-center border border-border">
-                                                <User className="w-3.5 h-3.5 text-text-gray" />
+                                        <div className="flex items-center gap-2 min-w-0">
+                                            <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-surface flex items-center justify-center border border-border shrink-0">
+                                                <User className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-text-gray" />
                                             </div>
-                                            <div>
-                                                <p className="text-[10px] font-black text-text-dark uppercase tracking-tight leading-none">{log.user_name}</p>
-                                                <p className="text-[8px] font-bold text-text-gray uppercase tracking-widest leading-none mt-1">{log.user_email}</p>
+                                            <div className="min-w-0">
+                                                <p className="text-[9px] sm:text-[10px] font-black text-text-dark uppercase tracking-tight leading-none truncate">{log.user_name}</p>
+                                                <p className="text-[7px] sm:text-[8px] font-bold text-text-gray uppercase tracking-widest leading-none mt-1 truncate">{log.user_email}</p>
                                             </div>
                                         </div>
-                                        <button className="p-1.5 text-text-gray hover:text-accent transition-all">
+                                        <button className="p-1.5 text-text-gray hover:text-accent transition-all shrink-0">
                                             <ArrowUpRight className="w-3.5 h-3.5" />
                                         </button>
                                     </div>
@@ -176,8 +173,8 @@ export default function ActionAudit() {
 
                 {/* Pagination Bar */}
                 {totalItems > pageSize && (
-                  <div className="bg-card border border-border rounded-lg px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-4">
-                    <div className="text-[10px] font-black uppercase tracking-widest text-text-gray">
+                  <div className="bg-card border border-border rounded-lg px-4 sm:px-6 py-4 flex flex-col md:flex-row items-center justify-between gap-4">
+                    <div className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-text-gray text-center md:text-left">
                       Showing <span className="text-text-dark">{Math.min(totalItems, (currentPage - 1) * pageSize + 1)}</span> to <span className="text-text-dark">{Math.min(totalItems, currentPage * pageSize)}</span> of <span className="text-text-dark">{totalItems}</span> logs
                     </div>
                     
@@ -187,7 +184,7 @@ export default function ActionAudit() {
                         onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
                         className="p-2 rounded-lg border border-border bg-card text-text-gray hover:text-accent hover:border-accent disabled:opacity-30 disabled:hover:text-text-gray disabled:hover:border-border transition-all"
                       >
-                        <ChevronLeft className="w-4 h-4" />
+                        <ChevronLeft className="w-3.5 h-3.5" />
                       </button>
                       
                       <div className="flex items-center gap-1">
@@ -195,10 +192,10 @@ export default function ActionAudit() {
                           .filter(p => p === 1 || p === Math.ceil(totalItems / pageSize) || Math.abs(p - currentPage) <= 1)
                           .map((p, i, arr) => (
                             <React.Fragment key={p}>
-                              {i > 0 && p - arr[i-1] > 1 && <span className="text-text-gray px-1">...</span>}
+                              {i > 0 && p - arr[i-1] > 1 && <span className="text-text-gray px-1 text-xs">...</span>}
                               <button
                                 onClick={() => setCurrentPage(p)}
-                                className={`min-w-[32px] h-8 rounded-lg text-[10px] font-black transition-all border ${currentPage === p 
+                                className={`min-w-[28px] sm:min-w-[32px] h-7 sm:h-8 rounded-lg text-[9px] sm:text-[10px] font-black transition-all border ${currentPage === p 
                                   ? 'bg-accent text-white border-accent shadow-lg shadow-accent/20' 
                                   : 'bg-card text-text-gray border-border hover:border-accent/50 hover:text-accent'}`}
                               >
@@ -213,7 +210,7 @@ export default function ActionAudit() {
                         onClick={() => setCurrentPage(prev => prev + 1)}
                         className="p-2 rounded-lg border border-border bg-card text-text-gray hover:text-accent hover:border-accent disabled:opacity-30 disabled:hover:text-text-gray disabled:hover:border-border transition-all"
                       >
-                        <ChevronRight className="w-4 h-4" />
+                        <ChevronRight className="w-3.5 h-3.5" />
                       </button>
                     </div>
                   </div>

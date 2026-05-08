@@ -316,29 +316,29 @@ export default function NeuralStream() {
   }, [activeFilters, fetchLogsData, filterHours]);
 
   return (
-    <div className="max-w-[1600px] mx-auto flex flex-col gap-4 bg-bg font-sans transition-colors duration-300">
+    <div className="max-w-[1600px] mx-auto flex flex-col gap-3 sm:gap-4 bg-bg font-sans transition-colors duration-300">
       {/* COMPACT & ROBUST COMMAND HUB HEADER */}
-      <div className="flex flex-col lg:flex-row justify-between lg:items-center bg-card px-5 py-2 rounded-lg border border-border shadow-premium gap-3 shrink-0">
+      <div className="flex flex-col lg:flex-row justify-between lg:items-center bg-card px-3 sm:px-5 py-3 lg:py-2 rounded-lg border border-border shadow-premium gap-4 lg:gap-3 shrink-0">
         
         {/* Left Section: Compact Branding */}
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 bg-accent rounded-lg flex items-center justify-center text-white shadow-lg shadow-accent/20 shrink-0">
             <Radio className="w-5 h-5 animate-pulse" />
           </div>
-          <div className="flex flex-col">
+          <div className="flex flex-col min-w-0">
             <div className="flex items-center gap-2.5">
-              <h1 className="text-lg font-black text-text-dark tracking-tight uppercase italic leading-none">Command Hub</h1>
-              <div className="px-2 py-0.5 bg-success/10 text-success border border-success/20 rounded text-[0.55rem] font-black tracking-widest flex items-center gap-1.5 uppercase">
+              <h1 className="text-base sm:text-lg font-black text-text-dark tracking-tight uppercase italic leading-none truncate">Command Hub</h1>
+              <div className="px-2 py-0.5 bg-success/10 text-success border border-success/20 rounded text-[0.55rem] font-black tracking-widest flex items-center gap-1.5 uppercase shrink-0">
                 <div className="w-1.5 h-1.5 bg-success rounded-full animate-pulse" />
                 Live
               </div>
             </div>
-            <div className="flex items-center gap-2.5 text-[0.6rem] text-text-gray font-bold mt-0.5">
+            <div className="flex items-center gap-2.5 text-[0.6rem] text-text-gray font-bold mt-1 sm:mt-0.5">
               <span className="flex items-center gap-1"><Cpu className="w-3 h-3" /> v4.8</span>
               <div className="w-1 h-1 bg-border rounded-full" />
-              <span className="text-accent">Sync: 99.9%</span>
+              <span className="text-accent">99.9% Sync</span>
               <div className="w-1 h-1 bg-border rounded-full" />
-              <div className={`flex items-center gap-1 ${streamConnected ? 'text-emerald-500' : 'text-rose-500'}`}>
+              <div className={`flex items-center gap-1 truncate ${streamConnected ? 'text-emerald-500' : 'text-rose-500'}`}>
                 {streamConnected ? 'Events Online' : 'Reconnecting'}
               </div>
             </div>
@@ -346,32 +346,55 @@ export default function NeuralStream() {
         </div>
 
         {/* Right Section: Compact Controls & Stats */}
-        <div className="flex items-center gap-3 flex-nowrap overflow-x-auto lg:overflow-visible no-scrollbar">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4 lg:gap-3 w-full lg:w-auto">
           
-          {/* Grid Layout (Only visible in Global View) */}
-          {isGlobalView && (
-            <div className="flex bg-surface p-1 rounded-lg border border-border shrink-0">
-              {[2, 3, 4].map(num => (
-                <button
-                  key={num}
-                  onClick={() => setGridSize(num)}
-                  className={`px-2.5 py-1 rounded-md font-bold text-[0.6rem] transition-all uppercase tracking-widest
-                     ${gridSize === num ? 'bg-card text-accent shadow-sm border border-border' : 'text-text-gray hover:text-text-dark'}`}
-                >
-                  {num}x{num}
-                </button>
-              ))}
+          <div className="flex items-center gap-2 sm:gap-3 justify-between sm:justify-start">
+            {/* Grid Layout (Only visible in Global View) */}
+            {isGlobalView && (
+              <div className="flex bg-surface p-0.5 rounded-lg border border-border shrink-0 h-[32px] items-center">
+                {[2, 3, 4].map(num => (
+                  <button
+                    key={num}
+                    onClick={() => setGridSize(num)}
+                    className={`h-full px-2.5 rounded-md font-black text-[0.6rem] transition-all uppercase tracking-widest
+                       ${gridSize === num ? 'bg-card text-accent shadow-sm border border-border' : 'text-text-gray hover:text-text-dark'}`}
+                  >
+                    {num}x{num}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {/* Intelligence Stats (Compact) */}
+            <div className="flex items-center gap-2 shrink-0 border-l border-border pl-3">
+               {/* Threat Level */}
+               <div className={`flex items-center gap-2 px-2.5 rounded-lg border transition-all duration-500 h-[32px]
+                  ${summary.threat_level === 'Critical' ? 'bg-rose-500/10 border-rose-500/30' : 'bg-surface border-border'}`}>
+                <div className={`w-1.5 h-1.5 rounded-full ${summary.threat_level === 'Critical' ? 'bg-rose-500 animate-pulse' : 'bg-emerald-500'}`} />
+                <span className={`text-[0.6rem] font-black uppercase tracking-widest ${summary.threat_level === 'Critical' ? 'text-rose-600' : 'text-text-gray'}`}>
+                  {summary.threat_level || 'Safe'}
+                </span>
+                <Shield className={`w-3 h-3 ${summary.threat_level === 'Critical' ? 'text-rose-600' : 'text-text-gray'}`} />
+              </div>
+
+              {/* Quick Counters */}
+              <div className="flex items-center gap-1.5">
+                <div className={`h-[32px] px-2.5 rounded-lg border flex items-center gap-2 ${summary.total_weapons > 0 ? 'bg-rose-500 border-rose-600' : 'bg-surface border-border'}`}>
+                  <Crosshair className={`w-3.5 h-3.5 ${summary.total_weapons > 0 ? 'text-white' : 'text-rose-500'}`} />
+                  <span className={`text-[0.8rem] font-black ${summary.total_weapons > 0 ? 'text-white' : 'text-text-dark'}`}>{summary.total_weapons || 0}</span>
+                </div>
+              </div>
             </div>
-          )}
+          </div>
 
           {/* Compact Filters */}
-          <div className="flex items-center gap-2 shrink-0">
-            <div className="flex items-center gap-1.5 bg-surface border border-border rounded-lg px-2 py-1.5 h-[34px]">
+          <div className="flex items-center gap-2 flex-1 sm:flex-none">
+            <div className="flex-1 sm:flex-none flex items-center gap-1.5 bg-surface border border-border rounded-lg px-2 h-[32px]">
               <Filter className="w-3 h-3 text-accent shrink-0" />
               <select
                 value={selectedAreaId}
                 onChange={(e) => { setSelectedAreaId(e.target.value); setIsGlobalView(true); setActiveCamera(null); setLogsOffset(0); setLogs([]); }}
-                className="bg-transparent text-[0.65rem] font-black uppercase tracking-wider text-text-dark outline-none max-w-[120px] cursor-pointer"
+                className="w-full sm:max-w-[120px] bg-transparent text-[0.65rem] font-black uppercase tracking-wider text-text-dark outline-none cursor-pointer"
               >
                 <option value="all">Areas</option>
                 {areas.map(a => (
@@ -382,12 +405,12 @@ export default function NeuralStream() {
               </select>
             </div>
 
-            <div className="flex items-center gap-1.5 bg-surface border border-border rounded-lg px-2 py-1.5 h-[34px]">
+            <div className="flex-1 sm:flex-none flex items-center gap-1.5 bg-surface border border-border rounded-lg px-2 h-[32px]">
               <Target className="w-3 h-3 text-accent shrink-0" />
               <select
                 value={selectedScenarioKey}
                 onChange={(e) => { setSelectedScenarioKey(e.target.value); setIsGlobalView(true); setActiveCamera(null); setLogsOffset(0); setLogs([]); }}
-                className="bg-transparent text-[0.65rem] font-black uppercase tracking-wider text-text-dark outline-none max-w-[150px] cursor-pointer"
+                className="w-full sm:max-w-[150px] bg-transparent text-[0.65rem] font-black uppercase tracking-wider text-text-dark outline-none cursor-pointer"
               >
                 <option value="all">Scenarios</option>
                 {scenarios.map(s => (
@@ -398,46 +421,20 @@ export default function NeuralStream() {
             
             <button
                 onClick={() => { setSelectedAreaId('all'); setSelectedScenarioKey('all'); setIsGlobalView(true); setActiveCamera(null); setLogsOffset(0); setLogs([]); }}
-                className="p-1.5 border rounded-lg transition-colors bg-surface text-text-gray hover:text-rose-500 border-border cursor-pointer"
+                className="p-2 sm:p-1.5 border rounded-lg transition-colors bg-surface text-text-gray hover:text-rose-500 border-border cursor-pointer h-[32px] flex items-center justify-center"
                 title="Clear Filters"
             >
-                <RotateCcw className="w-3 h-3" />
+                <RotateCcw className="w-3.5 h-3.5 sm:w-3 sm:h-3" />
             </button>
           </div>
-
-          {/* Intelligence Stats (Compact) */}
-          <div className="flex items-center gap-2 shrink-0 ml-1 border-l border-border pl-3">
-             {/* Threat Level */}
-             <div className={`flex items-center gap-2 px-2.5 py-1.5 rounded-lg border transition-all duration-500
-                ${summary.threat_level === 'Critical' ? 'bg-rose-500/10 border-rose-500/30' : 'bg-surface border-border'}`}>
-              <div className={`w-1.5 h-1.5 rounded-full ${summary.threat_level === 'Critical' ? 'bg-rose-500 animate-pulse' : 'bg-emerald-500'}`} />
-              <span className={`text-[0.6rem] font-black uppercase tracking-widest ${summary.threat_level === 'Critical' ? 'text-rose-600' : 'text-text-gray'}`}>
-                {summary.threat_level || 'Safe'}
-              </span>
-              <Shield className={`w-3 h-3 ${summary.threat_level === 'Critical' ? 'text-rose-600' : 'text-text-gray'}`} />
-            </div>
-
-            {/* Quick Counters */}
-            <div className="flex items-center gap-1.5">
-              <div className={`h-8 px-2.5 rounded-lg border flex items-center gap-2 ${summary.total_weapons > 0 ? 'bg-rose-500 border-rose-600' : 'bg-surface border-border'}`}>
-                <Crosshair className={`w-3.5 h-3.5 ${summary.total_weapons > 0 ? 'text-white' : 'text-rose-500'}`} />
-                <span className={`text-[0.8rem] font-black ${summary.total_weapons > 0 ? 'text-white' : 'text-text-dark'}`}>{summary.total_weapons || 0}</span>
-              </div>
-              <div className="h-8 px-2.5 bg-surface rounded-lg border border-border flex items-center gap-2">
-                <AlertCircle className="w-3.5 h-3.5 text-accent" />
-                <span className="text-[0.8rem] font-black text-text-dark">{summary.count || 0}</span>
-              </div>
-            </div>
-          </div>
-
         </div>
       </div>
 
       {/* STREAMING MATRIX (Dynamic Focus vs Global) */}
-      <div className="w-full shrink-0 overflow-hidden bg-card rounded-lg border border-border shadow-premium p-4 flex gap-4">
+      <div className="w-full shrink-0 overflow-hidden bg-card rounded-lg border border-border shadow-premium p-2 sm:p-4 flex flex-col sm:flex-row gap-2 sm:gap-4">
 
-        {/* CAMERA SELECTION SIDEBAR (Small Strip) */}
-        <div className="w-20 md:w-40 flex flex-col gap-2 overflow-y-auto custom-scrollbar pr-2 shrink-0 border-r border-border/50">
+        {/* CAMERA SELECTION SIDEBAR — horizontal scroll on mobile, vertical sidebar on desktop */}
+        <div className="flex sm:flex-col gap-2 overflow-x-auto sm:overflow-y-auto sm:overflow-x-hidden custom-scrollbar sm:pr-2 shrink-0 sm:border-r border-border/50 sm:w-20 md:w-40 pb-2 sm:pb-0">
           <div
             onClick={() => { setIsGlobalView(true); setActiveCamera(null); setLogsOffset(0); setLogs([]); }}
             className={`aspect-video rounded-lg border-2 flex flex-col items-center justify-center cursor-pointer transition-all ${isGlobalView ? 'border-accent bg-accent/10 shadow-[0_0_15px_rgba(14,165,233,0.3)]' : 'border-border/50 bg-surface hover:border-accent/40'}`}
@@ -478,13 +475,18 @@ export default function NeuralStream() {
         </div>
 
         {/* MAIN STREAMING AREA */}
-        <div className="flex-1 overflow-y-auto custom-scrollbar bg-black rounded-lg relative border border-border overflow-hidden">
+        <div className="flex-1 overflow-y-auto custom-scrollbar bg-black rounded-lg relative border border-border overflow-hidden min-h-[350px]">
           {isGlobalView ? (
             /* Dynamic Grid Reflow */
             <div
               className="grid content-start p-2 gap-2"
-              style={{ gridTemplateColumns: `repeat(${gridSize}, minmax(0, 1fr))` }}
+              style={{ gridTemplateColumns: `repeat(var(--grid-cols, ${gridSize}), minmax(0, 1fr))` }}
             >
+              <style dangerouslySetInnerHTML={{ __html: `
+                @media (max-width: 640px) {
+                  .grid { --grid-cols: 1 !important; }
+                }
+              `}} />
               {filteredCameras.length === 0 ? (
                 <div className="col-span-full min-h-[320px] flex flex-col items-center justify-center text-center bg-slate-950 rounded-lg border border-white/10">
                   <Filter className="w-8 h-8 text-white/25 mb-3" />
@@ -549,11 +551,11 @@ export default function NeuralStream() {
 
 
       {/* FULL-WIDTH INTELLIGENCE & BREAKDOWN SECTION */}
-      <div className="flex-1 flex gap-4 overflow-hidden">
+      <div className="flex-1 flex flex-col xl:flex-row gap-4 overflow-hidden">
         {/* LOGS TABLE OVERVIEW */}
         <div className="flex-1 bg-card rounded-lg border border-border shadow-premium flex flex-col overflow-hidden min-w-0">
           {/* LOGS HEADER + FILTERS (SINGLE LINE COMPACT) */}
-          <div className="px-5 py-2 border-b border-border flex items-center justify-between gap-4 bg-surface/10">
+          <div className="px-3 sm:px-5 py-2 border-b border-border flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-4 bg-surface/10">
             <div className="flex items-center gap-3 shrink-0">
               <div className="p-1.5 bg-accent/10 text-accent rounded-md border border-accent/20">
                 <Activity className="w-4 h-4" />
@@ -573,17 +575,17 @@ export default function NeuralStream() {
             <div className="flex items-center gap-3 flex-1 justify-end">
               {/* Compact Inline Status Message */}
               {summary.status_message && (
-                <div className={`hidden lg:flex items-center gap-2 px-2.5 py-1 rounded-md border text-[0.6rem] font-black uppercase tracking-tight
+                <div className={`hidden sm:flex items-center gap-2 px-2.5 py-1 rounded-md border text-[0.6rem] font-black uppercase tracking-tight
                   ${summary.threat_level === 'Critical' ? 'bg-rose-500/10 border-rose-500/20 text-rose-600' :
                     summary.threat_level === 'Elevated' ? 'bg-amber-500/10 border-amber-500/20 text-amber-600' :
                       'bg-emerald-500/5 border-emerald-500/20 text-emerald-600'}`}>
                   <div className={`w-1.5 h-1.5 rounded-full ${summary.threat_level === 'Critical' ? 'bg-rose-500 animate-pulse' : 'bg-emerald-500'}`} />
-                  {summary.status_message}
+                  <span className="truncate max-w-[100px] lg:max-w-none">{summary.status_message}</span>
                 </div>
               )}
 
               {/* Time Filters (Restored All) */}
-              <div className="flex bg-surface p-0.5 rounded-lg border border-border shrink-0 overflow-hidden">
+              <div className="flex bg-surface p-0.5 rounded-lg border border-border shrink-0 overflow-x-auto no-scrollbar">
                 {[
                   { label: '15M', val: 0.25 },
                   { label: '1H', val: 1 },
@@ -617,7 +619,8 @@ export default function NeuralStream() {
           </div>
 
           {/* TABLE HEADER */}
-          <div className="grid grid-cols-12 gap-2 px-5 py-2 bg-surface/50 border-b border-border text-[0.6rem] font-black text-text-gray uppercase tracking-widest">
+          {/* TABLE HEADER — hidden on mobile, card view instead */}
+          <div className="hidden lg:grid grid-cols-12 gap-2 px-5 py-2 bg-surface/50 border-b border-border text-[0.6rem] font-black text-text-gray uppercase tracking-widest">
             <div className="col-span-1">Status</div>
             <div className="col-span-2">Event</div>
             <div className="col-span-2">Event ID</div>
@@ -639,13 +642,19 @@ export default function NeuralStream() {
             ) : logs.length > 0 ? logs.map((log) => (
               <div
                 key={log.id}
-                className={`grid grid-cols-12 gap-2 px-5 py-2.5 items-center transition-all duration-200 border-b hover:bg-card-hover cursor-default
+                className={`
+                  /* Desktop: table row */
+                  lg:grid lg:grid-cols-12 lg:gap-2 lg:px-5 lg:py-2.5 lg:items-center
+                  /* Mobile: card layout */
+                  flex flex-col gap-2 p-3 sm:p-4 lg:p-0 lg:flex-row
+                  transition-all duration-200 border-b hover:bg-card-hover cursor-default
               ${log.isAlert ? 'bg-rose-500/5 border-rose-500/20 hover:bg-rose-500/10' : 'border-border/30'}`}
               >
                 {/* Icon or Thumbnail */}
-                <div className="col-span-1">
+                {/* Status Icon/Thumbnail */}
+                <div className="lg:col-span-1 flex items-center gap-3 lg:gap-0">
                   {log.rawLog?.image_base64 ? (
-                    <div className="w-8 h-8 rounded-lg overflow-hidden border border-border/50 shadow-sm relative group cursor-pointer" onClick={() => setSelectedLog(log)}>
+                    <div className="w-10 h-10 lg:w-8 lg:h-8 rounded-lg overflow-hidden border border-border/50 shadow-sm relative group cursor-pointer shrink-0" onClick={() => setSelectedLog(log)}>
                       <img
                         src={`data:image/jpeg;base64,${log.rawLog.image_base64}`}
                         alt="Event"
@@ -654,15 +663,27 @@ export default function NeuralStream() {
                       {log.isAlert && <div className="absolute inset-0 border border-rose-500 rounded-lg pointer-events-none"></div>}
                     </div>
                   ) : (
-                    <div className={`w-8 h-8 rounded-lg ${log.bg} flex items-center justify-center border border-border/10`}>
+                    <div className={`w-10 h-10 lg:w-8 lg:h-8 rounded-lg ${log.bg} flex items-center justify-center border border-border/10 shrink-0`}>
                       <log.icon className={`w-4 h-4 ${log.iconColor}`} />
                     </div>
                   )}
+                  {/* Mobile: show event name next to icon */}
+                  <div className="lg:hidden flex-1 min-w-0">
+                    <span className={`text-[0.75rem] font-extrabold tracking-wide uppercase ${log.iconColor} truncate block`}>{log.type}</span>
+                    <div className="flex items-center gap-2 mt-0.5">
+                      <span className="text-[0.6rem] font-mono text-text-gray">{log.camera}</span>
+                      <span className={`text-[0.5rem] px-1.5 py-0.5 rounded font-black tracking-widest uppercase border ${log.severity === 'CRITICAL' ? 'bg-rose-500/20 text-rose-500 border-rose-500/30' : log.severity === 'HIGH' ? 'bg-amber-500/20 text-amber-500 border-amber-500/30' : 'bg-blue-500/20 text-blue-500 border-blue-500/30'}`}>{log.severity}</span>
+                    </div>
+                  </div>
+                  {/* Mobile: action button */}
+                  <button className="lg:hidden p-2 text-text-gray hover:text-accent hover:bg-accent/10 rounded-lg transition-colors ml-auto shrink-0" onClick={() => setSelectedLog(log)}>
+                    <Eye className="w-4 h-4" />
+                  </button>
                 </div>
 
-                {/* Event Detail */}
+                {/* Desktop-only table columns */}
                 <div
-                  className="col-span-2 flex items-center gap-2 min-w-0 cursor-pointer group/event"
+                  className="hidden lg:flex col-span-2 items-center gap-2 min-w-0 cursor-pointer group/event"
                   onClick={(e) => {
                     e.stopPropagation();
                     setSelectedScenarioKey(log.rawLog.scenario_key);
@@ -681,26 +702,22 @@ export default function NeuralStream() {
                   )}
                 </div>
 
-                {/* Event ID */}
-                <div className="col-span-2">
+                <div className="hidden lg:block col-span-2">
                   <span className="text-[0.6rem] font-mono text-text-gray">{log.eventId}</span>
                 </div>
 
-                {/* Camera */}
-                <div className="col-span-1">
+                <div className="hidden lg:block col-span-1">
                   <span className="flex items-center gap-1.5 text-[0.65rem] font-bold text-text-dark">
                     <span className="w-1.5 h-1.5 bg-accent rounded-full"></span>
                     {log.camera}
                   </span>
                 </div>
 
-                {/* Confidence */}
-                <div className="col-span-1">
+                <div className="hidden lg:block col-span-1">
                   <span className="text-[0.65rem] font-bold text-text-dark">{log.confidence}</span>
                 </div>
 
-                {/* Severity */}
-                <div className="col-span-1">
+                <div className="hidden lg:block col-span-1">
                   <span className={`inline-block w-[60px] mr-4 text-center text-[0.5rem] px-1.5 py-0.5 rounded font-black tracking-widest uppercase border ${log.severity === 'CRITICAL' ? 'bg-rose-500/20 text-rose-500 border-rose-500/30' :
                     log.severity === 'HIGH' ? 'bg-amber-500/20 text-amber-500 border-amber-500/30' :
                       log.severity === 'MEDIUM' ? 'bg-blue-500/20 text-blue-500 border-blue-500/30' :
@@ -710,18 +727,15 @@ export default function NeuralStream() {
                   </span>
                 </div>
 
-                {/* Timestamp */}
-                <div className="col-span-2">
+                <div className="hidden lg:block col-span-2">
                   <span className="text-[0.65rem] font-mono text-text-dark font-bold">{log.timestamp}</span>
                 </div>
 
-                {/* Elapsed */}
-                <div className="col-span-1">
+                <div className="hidden lg:block col-span-1">
                   <span className="text-[0.6rem] text-text-gray font-medium font-mono">{log.timeAgo}</span>
                 </div>
 
-                {/* Action */}
-                <div className="col-span-1 flex justify-center">
+                <div className="hidden lg:flex col-span-1 justify-center">
                   <button
                     onClick={() => setSelectedLog(log)}
                     className="p-1.5 text-text-gray hover:text-accent hover:bg-accent/10 rounded-lg transition-colors"
@@ -729,6 +743,13 @@ export default function NeuralStream() {
                   >
                     <Eye className="w-4 h-4" />
                   </button>
+                </div>
+
+                {/* Mobile: extra details row */}
+                <div className="lg:hidden flex items-center justify-between gap-2 text-[0.6rem] text-text-gray font-mono">
+                  <span>{log.confidence}</span>
+                  <span>{log.timestamp}</span>
+                  <span>{log.timeAgo}</span>
                 </div>
               </div>
             )) : (
@@ -743,7 +764,7 @@ export default function NeuralStream() {
           </div>
 
           {/* FOOTER BAR */}
-          <div className="px-5 py-2 border-t border-border flex items-center justify-between bg-surface/30 shrink-0">
+          <div className="px-3 sm:px-5 py-2 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-2 bg-surface/30 shrink-0">
             <span className="text-[0.6rem] text-text-gray uppercase tracking-widest font-bold">
               Showing {summary.count ? logsOffset + 1 : 0}-{Math.min(logsOffset + logs.length, summary.count || 0)} of {summary.count || 0} events
             </span>
@@ -767,7 +788,7 @@ export default function NeuralStream() {
         </div>
 
         {/* DETAILED ACTIVITY BREAKDOWN PANEL */}
-        <div className="w-[300px] xl:w-[320px] bg-card rounded-lg border border-border shadow-premium flex flex-col overflow-hidden shrink-0">
+        <div className="w-full xl:w-[320px] bg-card rounded-lg border border-border shadow-premium flex flex-col overflow-hidden shrink-0">
           <div className="px-5 py-3 border-b border-border bg-gradient-to-br from-surface to-bg relative overflow-hidden">
             <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none">
               <Target className="w-16 h-16" />
