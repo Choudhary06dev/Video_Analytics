@@ -1,70 +1,96 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNotifications } from '../../context/NotificationContext';
+import { useSystem } from '../../context/SystemContext';
+import { fetchSystemSettings, updateSystemSettings } from '../../services/settingsService';
 import { 
   Settings, 
-  Cpu, 
-  Database, 
-  ShieldAlert, 
-  Eye, 
-  Zap, 
   Globe, 
-  Lock, 
-  Save, 
+  Terminal, 
+  User, 
   RefreshCw, 
-  Activity, 
-  Server, 
-  Cloud, 
-  HardDrive, 
-  ShieldCheck, 
-  Radio, 
-  Terminal,
-  ChevronRight,
-  User,
+  ShieldAlert, 
+  Activity,
+  Save,
+  Zap,
+  RefreshCcw,
   Power,
-  Layers,
-  Monitor
+  Database
 } from 'lucide-react';
 
 export default function SystemSettings() {
   const { addNotification } = useNotifications();
+  const { refreshSettings } = useSystem();
   const [refreshing, setRefreshing] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   // Consolidated System State
   const [settings, setSettings] = useState({
     maintenanceMode: false,
-    debugMode: true,
-    publicEnrollment: false,
+    debugMode: false,
+    publicEnrollment: true,
     clusterSync: true,
-    region: 'South Asia (PK-1)',
-    confidenceThreshold: 75,
-    motionSensitivity: 80,
-    neuralOptimizer: true,
-    edgeProcessing: true,
-    retentionLogs: 90,
-    retentionVideo: 30,
-    retentionMetadata: 180,
-    autoPurge: true,
-    mfaRequired: true,
-    ipLockdown: false,
     sessionTimeout: 60,
-    threatAlerts: true
+    retentionLogs: 30,
+    retentionVideo: 7,
+    autoPurge: true
   });
+
+  const fetchData = async () => {
+    setRefreshing(true);
+    try {
+      const settingsData = await fetchSystemSettings();
+      if (settingsData) {
+        setSettings({
+          maintenanceMode: settingsData.maintenance_mode ?? settingsData.maintenanceMode ?? false,
+          debugMode: settingsData.debug_mode ?? settingsData.debugMode ?? false,
+          publicEnrollment: settingsData.public_enrollment ?? settingsData.publicEnrollment ?? true,
+          clusterSync: settingsData.cluster_sync ?? settingsData.clusterSync ?? true,
+          sessionTimeout: settingsData.session_timeout ?? settingsData.sessionTimeout ?? 60,
+          retentionLogs: settingsData.retention_logs ?? settingsData.retentionLogs ?? 30,
+          retentionVideo: settingsData.retention_video ?? settingsData.retentionVideo ?? 7,
+          autoPurge: settingsData.auto_purge ?? settingsData.autoPurge ?? true
+        });
+      }
+    } catch (err) {
+      console.error("Settings fetch failed:", err);
+      addNotification({
+        type: 'error',
+        title: 'Sync Failed',
+        message: 'Could not load system configurations.'
+      });
+    }
+    setRefreshing(false);
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
 
   const handleToggle = (key) => {
     setSettings(prev => ({ ...prev, [key]: !prev[key] }));
   };
 
   const handleSave = async () => {
-    setRefreshing(true);
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    setRefreshing(false);
-    
-    addNotification({
-      type: 'success',
-      title: 'Matrix Synchronized',
-      message: 'System configurations have been globally deployed.'
-    });
+    try {
+        setRefreshing(true);
+        await updateSystemSettings(settings);
+        await refreshSettings();
+        
+        addNotification({
+          type: 'success',
+          title: 'Matrix Synchronized',
+          message: 'System configurations have been globally deployed.'
+        });
+    } catch (err) {
+        addNotification({
+          type: 'error',
+          title: 'Deployment Failed',
+          message: 'Failed to broadcast settings to cluster nodes.'
+        });
+    } finally {
+        setRefreshing(false);
+    }
   };
 
   const SectionHeader = ({ icon: Icon, title, subtitle }) => (
@@ -79,10 +105,19 @@ export default function SystemSettings() {
     </div>
   );
 
+  if (loading) {
+    return (
+      <div className="h-[60vh] flex flex-col items-center justify-center gap-4">
+        <div className="w-12 h-12 border-4 border-accent border-t-transparent rounded-full animate-spin"></div>
+        <p className="text-[10px] font-black uppercase tracking-[0.4em] text-text-gray animate-pulse">Syncing Matrix...</p>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-20">
       
-      {/* Page Header - Matched to SurveillanceConfig style */}
+      {/* Page Header */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
         <div className="flex items-center gap-4">
           <div className="w-10 h-10 sm:w-12 sm:h-12 bg-accent/10 rounded-lg flex items-center justify-center border border-accent/20 shrink-0">
@@ -100,11 +135,11 @@ export default function SystemSettings() {
 
         <div className="flex items-center gap-3 sm:gap-4">
             <button 
-                onClick={() => { setRefreshing(true); setTimeout(() => setRefreshing(false), 1000); }}
+                onClick={fetchData}
                 disabled={refreshing}
                 className="flex-1 sm:flex-none flex items-center justify-center gap-2 sm:gap-3 bg-surface border border-border text-text-gray px-4 sm:px-6 py-2.5 sm:py-3 rounded-lg font-black uppercase tracking-widest text-[9px] sm:text-[11px] transition-all hover:bg-border hover:text-text-dark"
             >
-                <RefreshCw className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${refreshing ? 'animate-spin' : ''}`} />
+                <RefreshCcw className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${refreshing ? 'animate-spin' : ''}`} />
                 Check Health
             </button>
             <button 
@@ -116,26 +151,6 @@ export default function SystemSettings() {
                 Deploy
             </button>
         </div>
-      </div>
-
-      {/* Stats Quick Grid - Matched style */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-        {[
-            { label: 'System Uptime', value: '99.98%', icon: Activity, color: 'text-accent' },
-            { label: 'Active Clusters', value: '12/12', icon: Server, color: 'text-emerald-500' },
-            { label: 'Neural Load', value: '28%', icon: Cpu, color: 'text-amber-500' },
-            { label: 'Storage Node', value: 'Ready', icon: HardDrive, color: 'text-purple-500' },
-        ].map((stat, i) => (
-            <div key={i} className="bg-card border border-border rounded-lg p-3 sm:p-6 flex flex-col sm:flex-row items-center sm:items-center gap-3 sm:gap-6 shadow-sm text-center sm:text-left min-w-0">
-                <div className={`p-3 sm:p-4 bg-surface border border-border rounded-lg ${stat.color} shrink-0`}>
-                    <stat.icon className="w-5 h-5 sm:w-6 sm:h-6" />
-                </div>
-                <div className="min-w-0">
-                    <p className="text-[8px] sm:text-[10px] font-black uppercase tracking-widest text-text-gray mb-1 truncate">{stat.label}</p>
-                    <p className={`text-lg sm:text-2xl font-black italic ${stat.color} truncate`}>{stat.value}</p>
-                </div>
-            </div>
-        ))}
       </div>
 
       {/* Settings Sections Grid */}
@@ -169,58 +184,6 @@ export default function SystemSettings() {
                 </button>
               </div>
             ))}
-          </div>
-        </div>
-
-        {/* Vision Intelligence */}
-        <div className="bg-card border border-border rounded-lg p-4 sm:p-8 shadow-sm">
-          <SectionHeader icon={Eye} title="Vision Intelligence" subtitle="AI & Neural Configuration" />
-          
-          <div className="space-y-8">
-            <div className="space-y-4">
-              <div className="flex justify-between items-center">
-                <label className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-text-gray">Confidence Threshold</label>
-                <span className="text-[11px] sm:text-xs font-black text-accent italic">{settings.confidenceThreshold}%</span>
-              </div>
-              <input 
-                type="range" min="0" max="100" 
-                value={settings.confidenceThreshold}
-                onChange={(e) => setSettings({...settings, confidenceThreshold: parseInt(e.target.value)})}
-                className="w-full accent-accent bg-surface h-1.5 sm:h-2 rounded-full appearance-none cursor-pointer" 
-              />
-            </div>
-
-            <div className="space-y-4">
-              <div className="flex justify-between items-center">
-                <label className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-text-gray">Motion Sensitivity</label>
-                <span className="text-[11px] sm:text-xs font-black text-emerald-500 italic">{settings.motionSensitivity}%</span>
-              </div>
-              <input 
-                type="range" min="0" max="100" 
-                value={settings.motionSensitivity}
-                onChange={(e) => setSettings({...settings, motionSensitivity: parseInt(e.target.value)})}
-                className="w-full accent-emerald-500 bg-surface h-1.5 sm:h-2 rounded-full appearance-none cursor-pointer" 
-              />
-            </div>
-
-            <div className="pt-2 space-y-4">
-              {[
-                { id: 'neuralOptimizer', title: 'Neural Optimizer', icon: Zap },
-                { id: 'edgeProcessing', title: 'Edge Processing', icon: Cpu },
-              ].map(item => (
-                <div key={item.id} className="flex items-center justify-between p-3 sm:p-4 bg-surface/30 rounded-xl border border-border">
-                  <div className="flex items-center gap-3 sm:gap-4 min-w-0">
-                    <item.icon className="w-4 h-4 sm:w-5 sm:h-5 text-text-gray shrink-0" />
-                    <span className="text-[10px] sm:text-[11px] font-black uppercase text-text-dark truncate">{item.title}</span>
-                  </div>
-                  <button 
-                    onClick={() => handleToggle(item.id)}
-                    className={`w-10 h-5 sm:w-12 sm:h-6 rounded-full relative transition-all duration-300 shrink-0 ${settings[item.id] ? 'bg-accent' : 'bg-border'}`}>
-                    <div className={`absolute top-0.5 sm:top-1 w-4 h-4 bg-white rounded-full transition-all duration-300 ${settings[item.id] ? 'left-5.5 sm:left-7' : 'left-0.5 sm:left-1'}`} />
-                  </button>
-                </div>
-              ))}
-            </div>
           </div>
         </div>
 
@@ -263,40 +226,35 @@ export default function SystemSettings() {
           </div>
         </div>
 
-        {/* Security Matrix */}
+        {/* Security & Access */}
         <div className="bg-card border border-border rounded-lg p-8 shadow-sm">
-          <SectionHeader icon={ShieldAlert} title="Security Matrix" subtitle="Auth & Access Protocols" />
+          <SectionHeader icon={ShieldAlert} title="Security & Access" subtitle="Active Session Policies" />
           
-          <div className="space-y-4">
-            {[
-              { id: 'mfaRequired', title: 'MFA Enforcement', icon: ShieldCheck },
-              { id: 'ipLockdown', title: 'Global IP Lockdown', icon: Lock },
-              { id: 'threatAlerts', title: 'Threat Notifications', icon: Radio },
-            ].map(item => (
-              <div key={item.id} className="flex items-center justify-between p-4 bg-surface/30 rounded-xl border border-border hover:border-danger/20 transition-all">
-                <div className="flex items-center gap-4">
-                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${settings[item.id] ? 'bg-danger/10 text-danger' : 'bg-card text-text-gray'}`}>
-                    <item.icon className="w-5 h-5" />
+          <div className="space-y-6">
+            <div className="p-5 sm:p-6 bg-surface/50 border border-border rounded-xl group hover:border-accent/20 transition-all">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center border border-accent/20">
+                    <Activity className="w-4 h-4 text-accent" />
                   </div>
-                  <span className="text-[10px] font-black uppercase text-text-dark">{item.title}</span>
+                  <p className="text-[10px] sm:text-[11px] font-black uppercase tracking-widest text-text-dark">Neural Session Expiry</p>
                 </div>
-                <button 
-                  onClick={() => handleToggle(item.id)}
-                  className={`w-10 h-5 rounded-full relative transition-all duration-300 ${settings[item.id] ? 'bg-danger' : 'bg-border'}`}>
-                  <div className={`absolute top-0.5 w-4 h-4 bg-white rounded-full transition-all duration-300 ${settings[item.id] ? 'left-5.5' : 'left-0.5'}`} />
-                </button>
+                
+                <div className="flex items-center gap-3">
+                  <input 
+                    type="number" 
+                    value={settings.sessionTimeout}
+                    onChange={(e) => setSettings({...settings, sessionTimeout: parseInt(e.target.value)})}
+                    className="w-24 bg-card border-2 border-border focus:border-accent rounded-lg px-4 py-2 text-sm font-black text-center text-accent outline-none transition-all shadow-sm"
+                  />
+                  <span className="text-[10px] font-black text-text-gray uppercase tracking-widest">Minutes</span>
+                </div>
               </div>
-            ))}
-
-            <div className="pt-4 flex items-center gap-4">
-              <div className="flex-1 space-y-1.5">
-                <label className="text-[10px] font-black uppercase tracking-widest text-text-gray ml-1">Session Expiry (Min)</label>
-                <input 
-                  type="number" 
-                  value={settings.sessionTimeout}
-                  onChange={(e) => setSettings({...settings, sessionTimeout: parseInt(e.target.value)})}
-                  className="w-full bg-surface border border-border rounded-lg px-4 py-2.5 text-xs font-bold text-text-dark outline-none focus:border-accent transition-all" 
-                />
+              <div className="flex items-start gap-2 pl-1">
+                <div className="w-1 h-1 rounded-full bg-accent mt-1.5 shrink-0 animate-pulse"></div>
+                <p className="text-[9px] font-bold text-text-gray uppercase tracking-widest leading-relaxed opacity-60">
+                  Automatically terminate neural link and clear local cache after inactivity period.
+                </p>
               </div>
             </div>
           </div>

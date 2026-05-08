@@ -1,13 +1,16 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { fetchPermissions as apiFetchPermissions } from '../services/authService';
+import { useSystem } from './SystemContext';
 
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
+  const { sessionTimeout } = useSystem();
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(localStorage.getItem('token'));
   const [loading, setLoading] = useState(true);
   const [permissions, setPermissions] = useState({});
+  const timeoutRef = useRef(null);
 
   const fetchPermissions = async (activeToken) => {
     if (!activeToken) {
@@ -21,6 +24,55 @@ export const AuthProvider = ({ children }) => {
       setPermissions({});
     }
   };
+
+  const logout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    setToken(null);
+    setUser(null);
+    setPermissions({});
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+  };
+
+  const resetTimer = () => {
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    
+    if (token) {
+        const expiryMin = sessionTimeout || 60;
+        timeoutRef.current = setTimeout(() => {
+            console.log("Session expired due to inactivity.");
+            logout();
+        }, expiryMin * 60 * 1000);
+    }
+  };
+
+  useEffect(() => {
+    resetTimer();
+  }, [sessionTimeout]);
+
+  useEffect(() => {
+    const initializeSession = async () => {
+      const savedUser = localStorage.getItem('user');
+      if (savedUser && token) {
+        setUser(JSON.parse(savedUser));
+        await fetchPermissions(token);
+        resetTimer();
+      } else {
+        setPermissions({});
+      }
+      setLoading(false);
+    };
+    initializeSession();
+
+    // Activity listeners for session timeout
+    const events = ['mousedown', 'keydown', 'scroll', 'touchstart'];
+    events.forEach(event => window.addEventListener(event, resetTimer));
+
+    return () => {
+        events.forEach(event => window.removeEventListener(event, resetTimer));
+        if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    };
+  }, [token, sessionTimeout]); // Added sessionTimeout to sync listeners
 
   const canView = (moduleKey) => {
     if (!moduleKey) return true;
@@ -38,34 +90,12 @@ export const AuthProvider = ({ children }) => {
     return !!permissions[moduleKey]?.can_delete;
   };
 
-  useEffect(() => {
-    const initializeSession = async () => {
-      const savedUser = localStorage.getItem('user');
-      if (savedUser && token) {
-        setUser(JSON.parse(savedUser));
-        await fetchPermissions(token);
-      } else {
-        setPermissions({});
-      }
-      setLoading(false);
-    };
-    initializeSession();
-  }, [token]);
-
   const login = (userData, userToken) => {
     localStorage.setItem('token', userToken);
     localStorage.setItem('user', JSON.stringify(userData));
     setToken(userToken);
     setUser(userData);
     fetchPermissions(userToken);
-  };
-
-  const logout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    setToken(null);
-    setUser(null);
-    setPermissions({});
   };
 
   const updateProfile = (updatedFields) => {

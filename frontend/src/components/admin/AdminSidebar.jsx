@@ -18,10 +18,12 @@ import {
 } from 'lucide-react';
 
 import { useAuth } from '../../context/AuthContext';
+import { useSystem } from '../../context/SystemContext';
 import Logo from '../ui/Logo';
 
 export default function AdminSidebar({ isSidebarOpen, setSidebarOpen }) {
   const { user, canView } = useAuth();
+  const { clusterSync } = useSystem();
   const navigate = useNavigate();
   const location = useLocation();
   const [openMenu, setOpenMenu] = useState('management');
@@ -208,18 +210,28 @@ export default function AdminSidebar({ isSidebarOpen, setSidebarOpen }) {
           </span>
         </button>
 
-        <div className={`p-3 bg-surface rounded-xl border border-border flex items-center gap-3 ${!isSidebarOpen && 'md:px-2 flex-col'}`}>
-          <div className="relative">
-            <img
-              src={`https://ui-avatars.com/api/?name=${user?.name || 'User'}&background=06b6d4&color=fff&bold=true`}
-              alt="User"
-              className="w-9 h-9 rounded-xl shadow-sm ring-2 ring-white/5"
-            />
-            <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-success rounded-full border-2 border-surface"></div>
+        <div className={`p-3 bg-surface rounded-xl border border-border flex flex-col gap-3 ${!isSidebarOpen && 'md:px-2'}`}>
+          <div className="flex items-center gap-3">
+            <div className="relative">
+              <img
+                src={`https://ui-avatars.com/api/?name=${user?.name || 'User'}&background=06b6d4&color=fff&bold=true`}
+                alt="User"
+                className="w-9 h-9 rounded-xl shadow-sm ring-2 ring-white/5"
+              />
+              <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-success rounded-full border-2 border-surface"></div>
+            </div>
+            <div className={`overflow-hidden transition-all duration-300 ${!isSidebarOpen && 'h-0 opacity-0'}`}>
+              <p className="text-[11px] font-black text-text-dark truncate leading-tight">{user?.name || 'Administrator'}</p>
+              <p className="text-[9px] font-bold text-accent uppercase tracking-widest leading-none mt-1.5">{user?.role?.replace('_', ' ') || 'ROOT'}</p>
+            </div>
           </div>
-          <div className={`overflow-hidden transition-all duration-300 ${!isSidebarOpen && 'h-0 opacity-0'}`}>
-            <p className="text-[11px] font-black text-text-dark truncate leading-tight">{user?.name || 'Administrator'}</p>
-            <p className="text-[9px] font-bold text-accent uppercase tracking-widest leading-none mt-1.5">{user?.role?.replace('_', ' ') || 'ROOT'}</p>
+          
+          {/* Cluster Status Badge */}
+          <div className={`pt-2 border-t border-border/50 flex items-center gap-2 ${!isSidebarOpen && 'hidden'}`}>
+            <div className={`w-1.5 h-1.5 rounded-full ${clusterSync ? 'bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.5)]' : 'bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.5)]'}`}></div>
+            <span className="text-[8px] font-black text-text-gray uppercase tracking-[0.2em]">
+              {clusterSync ? 'Cluster Synced' : 'Local Node Mode'}
+            </span>
           </div>
         </div>
       </div>
