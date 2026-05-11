@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  Menu, Search, Bell, ChevronDown, Sun, Moon,
+  Menu, Search, Bell, ChevronDown, Sun, Moon, Shield,
   LayoutDashboard, Radio, Brain, Users, ClipboardList,
   Cpu, GraduationCap, Settings, X, ArrowRight
 } from 'lucide-react';
@@ -33,9 +33,13 @@ export default function Header({ isSidebarOpen, setSidebarOpen }) {
   const [showMobileSearch, setShowMobileSearch] = useState(false);
   const [results, setResults] = useState([]);
   const [activeIndex, setActiveIndex] = useState(-1);
+  const [notifications, setNotifications] = useState([]);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
   const searchRef = useRef(null);
   const profileRef = useRef(null);
   const mobileSearchRef = useRef(null);
+  const notificationRef = useRef(null);
 
   // Fetch dynamic data for search index
   useEffect(() => {
@@ -70,6 +74,26 @@ export default function Header({ isSidebarOpen, setSidebarOpen }) {
     loadDynamicData();
   }, []);
 
+  // Fetch recent notifications
+  useEffect(() => {
+    const loadNotifications = async () => {
+      try {
+        const alertService = await import('../../services/alertService');
+        const alerts = await alertService.fetchAlerts({ hours: 24, limit: 5 });
+        if (Array.isArray(alerts)) {
+          setNotifications(alerts.slice(0, 5));
+          setUnreadCount(alerts.filter(a => !a.is_read).length);
+        }
+      } catch (err) {
+        console.error("Failed to load notifications", err);
+      }
+    };
+
+    loadNotifications();
+    const interval = setInterval(loadNotifications, 30000); // Refresh every 30s
+    return () => clearInterval(interval);
+  }, []);
+
   useEffect(() => {
     const query = searchQuery.trim().toLowerCase();
     if (query.length > 0) {
@@ -102,6 +126,9 @@ export default function Header({ isSidebarOpen, setSidebarOpen }) {
       }
       if (mobileSearchRef.current && !mobileSearchRef.current.contains(event.target)) {
         setShowMobileSearch(false);
+      }
+      if (notificationRef.current && !notificationRef.current.contains(event.target)) {
+        setShowNotifications(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -253,10 +280,73 @@ export default function Header({ isSidebarOpen, setSidebarOpen }) {
             </div>
           </button>
 
-          <button className="relative p-2 rounded-full text-text-gray hover:bg-surface transition-colors">
-            <Bell className="w-5 h-5" />
-            <span className="absolute top-1.5 right-2 w-2 h-2 bg-danger rounded-full border-2 border-card shadow-sm"></span>
-          </button>
+          <div className="relative" ref={notificationRef}>
+            <button 
+              onClick={() => {
+                setShowNotifications(!showNotifications);
+                setUnreadCount(0); // Clear badge on open
+              }}
+              className={`relative p-2 rounded-full text-text-gray hover:bg-surface transition-colors ${showNotifications ? 'bg-accent-soft text-accent' : ''}`}
+            >
+              <Bell className="w-5 h-5" />
+              {unreadCount > 0 && (
+                <span className="absolute top-1.5 right-1.5 w-4 h-4 bg-danger text-white text-[8px] font-black flex items-center justify-center rounded-full border-2 border-card shadow-sm animate-bounce">
+                  {unreadCount}
+                </span>
+              )}
+            </button>
+
+            {showNotifications && (
+              <div className="absolute top-full right-0 mt-2 w-80 bg-card border border-border rounded-xl shadow-premium overflow-hidden z-[60] animate-in fade-in slide-in-from-top-2 duration-200">
+                <div className="p-4 border-b border-border bg-surface/30 flex justify-between items-center">
+                  <div className="text-xs font-black text-text-dark uppercase tracking-[0.1em]">Recent Intelligence</div>
+                  <span className="text-[9px] font-bold text-accent bg-accent/10 px-2 py-0.5 rounded-full uppercase">Live</span>
+                </div>
+                <div className="max-h-[350px] overflow-y-auto">
+                  {notifications.length > 0 ? (
+                    notifications.map((alert, idx) => (
+                      <button 
+                        key={idx}
+                        onClick={() => {
+                          navigate(`/alerts?alert_id=${alert.id}`);
+                          setShowNotifications(false);
+                        }}
+                        className="w-full p-4 border-b border-border/50 hover:bg-surface transition-all text-left flex gap-3 group"
+                      >
+                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border border-border/50 shadow-inner group-hover:scale-110 transition-transform ${alert.severity === 'Critical' ? 'bg-danger/10 text-danger' : 'bg-accent/10 text-accent'}`}>
+                          <Brain className="w-5 h-5" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex justify-between items-start mb-0.5">
+                            <span className={`text-[10px] font-black uppercase tracking-wider ${alert.severity === 'Critical' ? 'text-danger' : 'text-accent'}`}>{alert.severity}</span>
+                            <span className="text-[8px] font-bold text-text-gray">{new Date(alert.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                          </div>
+                          <p className="text-[11px] font-bold text-text-dark leading-tight line-clamp-2">{alert.message || alert.scenario_key}</p>
+                          <p className="text-[9px] font-medium text-text-gray/60 mt-1 uppercase">Camera {alert.camera_id} • {alert.area_name || 'Global'}</p>
+                        </div>
+                      </button>
+                    ))
+                  ) : (
+                    <div className="p-12 text-center">
+                      <div className="w-12 h-12 bg-surface rounded-full flex items-center justify-center mx-auto mb-3">
+                        <Shield className="w-6 h-6 text-text-gray/30" />
+                      </div>
+                      <p className="text-xs font-bold text-text-gray italic">No active threats detected</p>
+                    </div>
+                  )}
+                </div>
+                <button 
+                  onClick={() => {
+                    navigate('/alerts');
+                    setShowNotifications(false);
+                  }}
+                  className="w-full p-3 text-[10px] font-black text-accent uppercase tracking-widest hover:bg-accent hover:text-white transition-all bg-accent/5 flex items-center justify-center gap-2"
+                >
+                  View Activity Vault <ArrowRight className="w-3 h-3" />
+                </button>
+              </div>
+            )}
+          </div>
 
           <div className="relative" ref={profileRef}>
             <button

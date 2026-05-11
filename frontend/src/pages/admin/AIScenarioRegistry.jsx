@@ -4,7 +4,8 @@ import {
   createScenario,
   updateScenario,
   deleteScenario,
-  fetchAdminCameras
+  fetchAdminCameras,
+  fetchSystemHealth
 } from '../../services/cameraService';
 import {
   Brain,

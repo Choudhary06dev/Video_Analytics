@@ -358,7 +358,7 @@ export default function Dashboard() {
         <MetricCard
           label="AI Model Assignments"
           value={stats.activeModels}
-          sublabel={`${AI_USE_CASES.length}+ supported detection scenarios`}
+          sublabel={`${scenarios.length}+ supported detection scenarios`}
           icon={Cpu}
           tone="accent"
         />
