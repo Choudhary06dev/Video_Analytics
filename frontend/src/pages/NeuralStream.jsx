@@ -66,6 +66,8 @@ export default function NeuralStream() {
   const [selectedAreaId, setSelectedAreaId] = useState('all');
   const [selectedScenarioKey, setSelectedScenarioKey] = useState('all');
   const [logsOffset, setLogsOffset] = useState(0);
+  const [cameraLimit, setCameraLimit] = useState(6);
+  const INITIAL_CAMERA_LIMIT = 6;
   const PAGE_SIZE = 50;
   const [summary, setSummary] = useState({
     total_persons: 0,
@@ -79,6 +81,8 @@ export default function NeuralStream() {
   const [loadingLogs, setLoadingLogs] = useState(false);
   const [streamConnected, setStreamConnected] = useState(false);
   const [selectedLog, setSelectedLog] = useState(null);
+  const [severityFilter, setSeverityFilter] = useState('ALL');
+  const [showFilterMenu, setShowFilterMenu] = useState(false);
 
   const loadCameras = useCallback(async () => {
     try {
@@ -119,7 +123,7 @@ export default function NeuralStream() {
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const camId = params.get('camera_id');
-    
+
     if (camId) {
       const parsedId = parseInt(camId);
       // If cameras are already loaded, select immediately
@@ -245,6 +249,11 @@ export default function NeuralStream() {
     }
   }, [activeFilters, filterHours, logsOffset]);
 
+  const filteredLogs = useMemo(() => {
+    if (severityFilter === 'ALL') return logs;
+    return logs.filter(log => log.severity === severityFilter);
+  }, [logs, severityFilter]);
+
   useEffect(() => {
     let source;
     let retryTimer;
@@ -319,7 +328,7 @@ export default function NeuralStream() {
     <div className="max-w-[1600px] mx-auto flex flex-col gap-3 sm:gap-4 bg-bg font-sans transition-colors duration-300">
       {/* COMPACT & ROBUST COMMAND HUB HEADER */}
       <div className="flex flex-col lg:flex-row justify-between lg:items-center bg-card px-3 sm:px-5 py-3 lg:py-2 rounded-lg border border-border shadow-premium gap-4 lg:gap-3 shrink-0">
-        
+
         {/* Left Section: Compact Branding */}
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 bg-accent rounded-lg flex items-center justify-center text-white shadow-lg shadow-accent/20 shrink-0">
@@ -347,7 +356,7 @@ export default function NeuralStream() {
 
         {/* Right Section: Compact Controls & Stats */}
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4 lg:gap-3 w-full lg:w-auto">
-          
+
           <div className="flex items-center gap-2 sm:gap-3 justify-between sm:justify-start">
             {/* Grid Layout (Only visible in Global View) */}
             {isGlobalView && (
@@ -367,8 +376,8 @@ export default function NeuralStream() {
 
             {/* Intelligence Stats (Compact) */}
             <div className="flex items-center gap-2 shrink-0 border-l border-border pl-3">
-               {/* Threat Level */}
-               <div className={`flex items-center gap-2 px-2.5 rounded-lg border transition-all duration-500 h-[32px]
+              {/* Threat Level */}
+              <div className={`flex items-center gap-2 px-2.5 rounded-lg border transition-all duration-500 h-[32px]
                   ${summary.threat_level === 'Critical' ? 'bg-rose-500/10 border-rose-500/30' : 'bg-surface border-border'}`}>
                 <div className={`w-1.5 h-1.5 rounded-full ${summary.threat_level === 'Critical' ? 'bg-rose-500 animate-pulse' : 'bg-emerald-500'}`} />
                 <span className={`text-[0.6rem] font-black uppercase tracking-widest ${summary.threat_level === 'Critical' ? 'text-rose-600' : 'text-text-gray'}`}>
@@ -418,13 +427,28 @@ export default function NeuralStream() {
                 ))}
               </select>
             </div>
-            
+
+            <div className="flex-1 sm:flex-none flex items-center gap-1.5 bg-surface border border-border rounded-lg px-2 h-[32px]">
+              <Eye className="w-3 h-3 text-accent shrink-0" />
+              <select
+                value={cameraLimit}
+                onChange={(e) => setCameraLimit(Number(e.target.value))}
+                className="w-full sm:max-w-[100px] bg-transparent text-[0.65rem] font-black uppercase tracking-wider text-text-dark outline-none cursor-pointer"
+              >
+                <option value={6}>6 Nodes</option>
+                <option value={12}>12 Nodes</option>
+                <option value={24}>24 Nodes</option>
+                <option value={48}>48 Nodes</option>
+                <option value={200}>Show All</option>
+              </select>
+            </div>
+
             <button
-                onClick={() => { setSelectedAreaId('all'); setSelectedScenarioKey('all'); setIsGlobalView(true); setActiveCamera(null); setLogsOffset(0); setLogs([]); }}
-                className="p-2 sm:p-1.5 border rounded-lg transition-colors bg-surface text-text-gray hover:text-rose-500 border-border cursor-pointer h-[32px] flex items-center justify-center"
-                title="Clear Filters"
+              onClick={() => { setSelectedAreaId('all'); setSelectedScenarioKey('all'); setIsGlobalView(true); setActiveCamera(null); setLogsOffset(0); setLogs([]); setCameraLimit(INITIAL_CAMERA_LIMIT); }}
+              className="p-2 sm:p-1.5 border rounded-lg transition-colors bg-surface text-text-gray hover:text-rose-500 border-border cursor-pointer h-[32px] flex items-center justify-center"
+              title="Clear Filters"
             >
-                <RotateCcw className="w-3.5 h-3.5 sm:w-3 sm:h-3" />
+              <RotateCcw className="w-3.5 h-3.5 sm:w-3 sm:h-3" />
             </button>
           </div>
         </div>
@@ -443,7 +467,7 @@ export default function NeuralStream() {
             <span className={`text-[0.55rem] font-black uppercase tracking-widest ${isGlobalView ? 'text-accent' : 'text-text-gray'} hidden md:block`}>Matrix</span>
           </div>
 
-          {filteredCameras.map(cam => {
+          {filteredCameras.slice(0, cameraLimit).map(cam => {
             const isDisabled = cam.is_active === false;
             const isActive = activeCamera === cam.id && !isGlobalView && !isDisabled;
             return (
@@ -472,6 +496,16 @@ export default function NeuralStream() {
               </div>
             )
           })}
+
+          {filteredCameras.length > cameraLimit && (
+            <div
+              onClick={() => setCameraLimit(prev => prev + 6)}
+              className="aspect-video rounded-lg border-2 border-dashed border-border/50 bg-surface/50 hover:border-accent/40 flex flex-col items-center justify-center cursor-pointer transition-all shrink-0 group"
+            >
+              <ChevronRight className="w-5 h-5 text-text-gray group-hover:text-accent group-hover:translate-x-0.5 transition-all" />
+              <span className="text-[0.5rem] font-black text-text-gray uppercase tracking-tighter mt-1 group-hover:text-accent">+{filteredCameras.length - cameraLimit} More</span>
+            </div>
+          )}
         </div>
 
         {/* MAIN STREAMING AREA */}
@@ -482,7 +516,8 @@ export default function NeuralStream() {
               className="grid content-start p-2 gap-2"
               style={{ gridTemplateColumns: `repeat(var(--grid-cols, ${gridSize}), minmax(0, 1fr))` }}
             >
-              <style dangerouslySetInnerHTML={{ __html: `
+              <style dangerouslySetInnerHTML={{
+                __html: `
                 @media (max-width: 640px) {
                   .grid { --grid-cols: 1 !important; }
                 }
@@ -493,7 +528,7 @@ export default function NeuralStream() {
                   <span className="text-xs font-black text-white/70 uppercase tracking-widest">No streams match filters</span>
                   <span className="text-[0.65rem] font-bold text-white/35 uppercase tracking-wider mt-1">{activeAreaLabel} / {activeScenarioLabel}</span>
                 </div>
-              ) : filteredCameras.slice(0, gridSize * gridSize).map(cam => {
+              ) : filteredCameras.slice(0, cameraLimit).map(cam => {
                 const isDisabled = cam.is_active === false;
                 return (
                   <div
@@ -521,6 +556,18 @@ export default function NeuralStream() {
                   </div>
                 )
               })}
+
+              {isGlobalView && filteredCameras.length > cameraLimit && (
+                <div
+                  onClick={() => setCameraLimit(prev => prev + 6)}
+                  className="relative aspect-video bg-slate-900/50 rounded-lg border-2 border-dashed border-white/10 flex flex-col items-center justify-center cursor-pointer hover:bg-slate-900 hover:border-accent/40 transition-all group min-h-[150px]"
+                >
+                  <div className="w-12 h-12 rounded-full bg-accent/10 flex items-center justify-center text-accent group-hover:scale-110 transition-transform">
+                    <ChevronRight className="w-6 h-6" />
+                  </div>
+                  <span className="text-xs font-black text-white/50 uppercase tracking-widest mt-3 group-hover:text-accent">View {filteredCameras.length - cameraLimit} More Channels</span>
+                </div>
+              )}
             </div>
           ) : (
             /* Focus Mode */
@@ -607,14 +654,33 @@ export default function NeuralStream() {
                 ))}
               </div>
 
-              <button
-                onClick={() => { setIsGlobalView(!isGlobalView); setLogsOffset(0); }}
-                className={`p-1.5 rounded-md text-xs transition-all border shrink-0
-                ${isGlobalView ? 'bg-accent text-white border-accent' : 'bg-surface text-text-gray border-border hover:border-accent/40'}`}
-                title="Toggle View Mode"
-              >
-                <Filter className="w-3.5 h-3.5" />
-              </button>
+              <div className="relative">
+                <button
+                  onClick={() => setShowFilterMenu(!showFilterMenu)}
+                  className={`p-1.5 rounded-md text-xs transition-all border shrink-0
+                  ${showFilterMenu || severityFilter !== 'ALL' ? 'bg-accent text-white border-accent' : 'bg-surface text-text-gray border-border hover:border-accent/40'}`}
+                  title="Filter by Severity"
+                >
+                  <Filter className="w-3.5 h-3.5" />
+                </button>
+
+                {showFilterMenu && (
+                  <div className="absolute right-0 mt-2 w-48 bg-card border border-border rounded-xl shadow-premium z-[100] p-2 animate-in fade-in slide-in-from-top-2">
+                    <div className="text-[0.6rem] font-black text-text-gray uppercase tracking-widest px-3 py-2 border-b border-border mb-1">Filter Severity</div>
+                    {['ALL', 'CRITICAL', 'HIGH', 'MEDIUM', 'LOW'].map(sev => (
+                      <button
+                        key={sev}
+                        onClick={() => { setSeverityFilter(sev); setShowFilterMenu(false); }}
+                        className={`w-full text-left px-3 py-2 rounded-lg text-[0.65rem] font-black transition-all flex items-center justify-between
+                          ${severityFilter === sev ? 'bg-accent/10 text-accent' : 'text-text-gray hover:bg-surface hover:text-text-dark'}`}
+                      >
+                        {sev}
+                        {severityFilter === sev && <div className="w-1.5 h-1.5 rounded-full bg-accent" />}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
@@ -635,11 +701,22 @@ export default function NeuralStream() {
           {/* LOG ROWS */}
           <div className="flex-1 overflow-y-auto custom-scrollbar">
             {loadingLogs ? (
-              <div className="py-16 text-center flex flex-col items-center">
-                <div className="w-6 h-6 border-2 border-accent/20 border-t-accent rounded-full animate-spin mb-3"></div>
-                <div className="text-xs text-text-gray uppercase tracking-widest font-bold">Fetching Logs...</div>
+              <div className="flex flex-col">
+                {[...Array(8)].map((_, i) => (
+                  <div key={i} className="grid grid-cols-12 gap-2 px-5 py-4 border-b border-border/30 animate-pulse">
+                    <div className="col-span-1 h-8 w-8 bg-surface rounded-lg" />
+                    <div className="col-span-2 h-4 bg-surface rounded w-3/4" />
+                    <div className="col-span-2 h-4 bg-surface rounded w-1/2" />
+                    <div className="col-span-1 h-4 bg-surface rounded w-full" />
+                    <div className="col-span-1 h-4 bg-surface rounded w-1/2" />
+                    <div className="col-span-1 h-4 bg-surface rounded w-3/4" />
+                    <div className="col-span-2 h-4 bg-surface rounded w-2/3" />
+                    <div className="col-span-1 h-4 bg-surface rounded w-1/2" />
+                    <div className="col-span-1 h-6 bg-surface rounded w-6 mx-auto" />
+                  </div>
+                ))}
               </div>
-            ) : logs.length > 0 ? logs.map((log) => (
+            ) : filteredLogs.length > 0 ? filteredLogs.map((log) => (
               <div
                 key={log.id}
                 className={`

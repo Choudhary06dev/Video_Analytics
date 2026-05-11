@@ -40,29 +40,7 @@ import { fetchIntelligence, fetchHealth } from '../api';
 import { fetchAdminAreas, fetchAdminCameras, fetchScenarios } from '../services/cameraService';
 import { fetchAlerts, fetchLogs, fetchLogsSummary } from '../services/alertService';
 
-const AI_USE_CASES = [
-  'Unauthorized entry into restricted areas',
-  'Aggressive behaviour detection',
-  'Weapon detection',
-  'Multiple persons entry on single access',
-  'Blacklisted person alert',
-  'Crowd density / overcrowding detection',
-  'Visitor count limit',
-  'Entry/Exit tracking of visitors',
-  'Staff presence/absence at duty post',
-  'Mobile phone usage in restricted areas',
-  'Fire / smoke detection',
-  'Vehicle detection & tracking',
-  'Unauthorized parking / ambulance blockage',
-  'Camera offline and recording failure alert',
-  'Baby moved outside designated routes',
-  'Unauthorized person handling or carrying baby',
-  'Baby left unattended',
-  'Patient approaching exit without discharge clearance',
-  'More than allowed attendants during night',
-  'Movement in closed departments/areas',
-  'Boundary wall climbing or jumping'
-];
+// AI use cases are now dynamically loaded from the Intelligence Registry
 
 const severityStyle = {
   Critical: 'bg-danger/10 text-danger border-danger/20',
@@ -292,7 +270,7 @@ export default function Dashboard() {
   const trendData = useMemo(() => buildTrend(logs), [logs]);
 
   const activeUseCases = useMemo(() => {
-    // Get all scenario keys that are currently enabled on at least one active camera
+    // Get all scenario IDs that are currently enabled on at least one active camera
     const enabledScenarioIds = new Set();
     cameras.forEach(cam => {
       if (cam.is_active !== false && cam.enabled_scenario_ids) {
@@ -300,25 +278,10 @@ export default function Dashboard() {
       }
     });
 
-    const activeKeys = scenarios
-      .filter(s => enabledScenarioIds.has(s.id))
-      .map(s => s.key.toLowerCase());
-
-    return AI_USE_CASES.map((label) => {
-      const lowLabel = label.toLowerCase();
-      const firstWord = label.split(' ')[0].toLowerCase();
-      
-      // Better matching: check if any active key contains the first word or main keywords
-      const isActive = activeKeys.some(key => 
-        key.includes(firstWord) || 
-        (lowLabel.includes('entry') && key.includes('entry')) ||
-        (lowLabel.includes('fire') && key.includes('fire')) ||
-        (lowLabel.includes('person') && key.includes('person'))
-      );
-
+    return scenarios.map((scenario) => {
       return {
-        label,
-        active: isActive
+        label: scenario.name,
+        active: enabledScenarioIds.has(scenario.id)
       };
     });
   }, [cameras, scenarios]);

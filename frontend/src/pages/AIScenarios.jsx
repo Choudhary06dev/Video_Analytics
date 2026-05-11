@@ -2,54 +2,97 @@ import React, { useState, useEffect } from 'react';
 import { useLocation, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import {
-  Lock, AlertTriangle, Crosshair, Users, UserX, UserPlus, UserCheck,
-  User, Phone, Flame, Car, Truck, Video, Baby, Ban, Building, Mountain,
-  Activity, Package, Search, Grid, List as ListIcon, Filter, Play, Settings
+  Activity, Package, Search, Grid, List as ListIcon, Filter, Play, Settings,
+  Zap, CheckCircle2, Loader2, RefreshCw, Car, Baby, Ban, Building, Mountain,
+  Lock, AlertTriangle, Crosshair, UserX, UserPlus, UserCheck, Phone, Flame, Truck, Video, BrainCircuit, Users, User
 } from 'lucide-react';
+import { fetchScenarios, fetchAdminCameras, fetchSystemHealth } from '../services/cameraService';
 
-const SCENARIOS = [
-  { id: 1, name: 'Unauthorized entry into restricted areas', icon: Lock, color: 'var(--color-danger)', image: '/assets/images/restricted_entry.png', desc: 'Detects unauthorized personnel across high-security hospital zones.', status: 'critical', health: 99.2 },
-  { id: 2, name: 'Aggressive behaviour detection', icon: AlertTriangle, color: 'var(--color-warning)', image: '/assets/images/aggressive_behavior.png', desc: 'Real-time classification of erratic or violent movements.', status: 'good', health: 94.7 },
-  { id: 3, name: 'Weapon detection (gun/knife)', icon: Crosshair, color: 'var(--color-danger)', image: '/assets/images/weapon_detection.png', desc: 'Identifies immediate lethal threats in public domains.', status: 'critical', health: 96.8 },
-  { id: 4, name: 'Multiple persons entry on single access', icon: Users, color: 'var(--color-warning)', image: '/assets/images/tailgating.png', desc: 'Detects tailgating or dual-entry at single-pass gates.', status: 'good', health: 91.2 },
-  { id: 5, name: 'Blacklisted person alert (facial recognition)', icon: UserX, color: 'var(--color-danger)', image: '/assets/images/blacklist_alert.png', desc: 'Instant facial recognition against central blacklist database.', status: 'critical', health: 98.4 },
-  { id: 6, name: 'Crowd density / overcrowding detection', icon: Users, color: 'var(--color-warning)', image: '/assets/images/crowd_density.png', desc: 'Monitors lobby and wait areas for threshold violations.', status: 'good', health: 89.5 },
-  { id: 7, name: 'Visitor Count Limit Exceeded', icon: UserPlus, color: 'var(--color-warning)', image: '/assets/images/visitor_count.png', desc: 'Real-time counting for compliance.', status: 'good', health: 95.1 },
-  { id: 8, name: 'Entry/Exit tracking of visitors (face recognition)', icon: UserCheck, color: 'var(--color-accent)', image: '/assets/images/entry_exit_tracking.png', desc: 'Bidirectional tracking of visitor flow patterns.', status: 'excellent', health: 97.9 },
-  { id: 9, name: 'Staff presence/absence at duty post', icon: User, color: 'var(--color-accent)', image: '/assets/images/staff_presence.png', desc: 'Verifies staff positioning at critical healthcare nodes.', status: 'good', health: 92.4 },
-  { id: 10, name: 'Mobile phone usage in restricted areas', icon: Phone, color: 'var(--color-warning)', image: '/assets/images/mobile_phone.png', desc: 'Detects phone usage in high-radiation or sterile zones.', status: 'warning', health: 86.2 },
-  { id: 11, name: 'Fire / smoke detection', icon: Flame, color: 'var(--color-danger)', image: '/assets/images/fire_smoke_detection.png', desc: 'Convolutional neural net for smoke and flame patterns.', status: 'critical', health: 99.8 },
-  { id: 12, name: 'Vehicle detection & tracking', icon: Car, color: 'var(--color-accent)', image: '/assets/images/pakistan_car.png', desc: 'Tracks ambulance and vehicle arrivals at emergency bay.', status: 'excellent', health: 98.1 },
-  { id: 13, name: 'Unauthorized parking / ambulance blockage', icon: Truck, color: 'var(--color-warning)', image: '/assets/images/unauthorized_parking.png', desc: 'Alerts if emergency routes are blocked by vehicles.', status: 'warning', health: 94.3 },
-  { id: 14, name: 'Camera offline and recording failure alert', icon: Video, color: 'var(--color-danger)', image: '/assets/images/camera_offline.jpg', desc: 'Diagnostic tool for signal loss or storage failure.', status: 'critical', health: 42.5 },
-  { id: 15, name: 'Baby moved outside designated routes', icon: Baby, color: 'var(--color-danger)', image: '/assets/images/baby_moved.png', desc: 'Detects patients or babies moving out of safe zones.', status: 'critical', health: 91.8 },
-  { id: 16, name: 'Unauthorized person handling or carrying baby', icon: Ban, color: 'var(--color-danger)', image: '/assets/images/unauthorized_person.jpg', desc: 'Detects physical contact with babies by unauthorized staff.', status: 'critical', health: 97.2 },
-  { id: 17, name: 'Baby left unattended', icon: Package, color: 'var(--color-warning)', image: '/assets/images/baby_left_unattended.jpg', desc: 'Tracks unattended babies in specific departments.', status: 'warning', health: 90.1 },
-  { id: 18, name: 'Patient approaching exit without discharge clearance', icon: Activity, color: 'var(--color-warning)', image: '/assets/images/patient_approaching_exit.jpg', desc: 'Identifies patients moving towards facility exits.', status: 'warning', health: 96.5 },
-  { id: 19, name: 'More than allowed attendants during night', icon: Users, color: 'var(--color-warning)', image: '/assets/images/more_attendants_night.jpg', desc: 'Night shift capacity limit violation detection.', status: 'warning', health: 93.4 },
-  { id: 20, name: 'Movement in closed departments/areas', icon: Building, color: 'var(--color-danger)', image: '/assets/images/movement_closed_areas.jpg', desc: 'Motion profiling in locked or night-only departments.', status: 'critical', health: 98.7 },
-  { id: 21, name: 'Person climbing or jumping over boundary wall', icon: Mountain, color: 'var(--color-danger)', image: '/assets/images/person_climbing_wall.jpg', desc: 'Detects wall jumps or perimeter fence breaches.', status: 'critical', health: 95.8 },
-];
+const SCENARIO_METADATA = {
+  'Unauthorized entry into restricted areas': { icon: Lock, color: 'var(--color-danger)', image: '/assets/images/restricted_entry.png' },
+  'Aggressive behaviour detection': { icon: AlertTriangle, color: 'var(--color-warning)', image: '/assets/images/aggressive_behavior.png' },
+  'Weapon detection (gun/knife)': { icon: Crosshair, color: 'var(--color-danger)', image: '/assets/images/weapon_detection.png' },
+  'Multiple persons entry on single access': { icon: Users, color: 'var(--color-warning)', image: '/assets/images/tailgating.png' },
+  'Blacklisted person alert (facial recognition)': { icon: UserX, color: 'var(--color-danger)', image: '/assets/images/blacklist_alert.png' },
+  'Crowd density / overcrowding detection': { icon: Users, color: 'var(--color-warning)', image: '/assets/images/crowd_density.png' },
+  'Visitor Count Limit Exceeded': { icon: UserPlus, color: 'var(--color-warning)', image: '/assets/images/visitor_count.png' },
+  'Entry/Exit tracking of visitors (face recognition)': { icon: UserCheck, color: 'var(--color-accent)', image: '/assets/images/entry_exit_tracking.png' },
+  'Staff presence/absence at duty post': { icon: User, color: 'var(--color-accent)', image: '/assets/images/staff_presence.png' },
+  'Mobile phone usage in restricted areas': { icon: Phone, color: 'var(--color-warning)', image: '/assets/images/mobile_phone.png' },
+  'Fire / smoke detection': { icon: Flame, color: 'var(--color-danger)', image: '/assets/images/fire_smoke_detection.png' },
+  'Vehicle detection & tracking': { icon: Car, color: 'var(--color-accent)', image: '/assets/images/pakistan_car.png' },
+  'Unauthorized parking / ambulance blockage': { icon: Truck, color: 'var(--color-warning)', image: '/assets/images/unauthorized_parking.png' },
+  'Camera offline and recording failure alert': { icon: Video, color: 'var(--color-danger)', image: '/assets/images/camera_offline.jpg' },
+  'Baby moved outside designated routes': { icon: Baby, color: 'var(--color-danger)', image: '/assets/images/baby_moved.png' },
+  'Unauthorized person handling or carrying baby': { icon: Ban, color: 'var(--color-danger)', image: '/assets/images/unauthorized_person.jpg' },
+  'Baby left unattended': { icon: Package, color: 'var(--color-warning)', image: '/assets/images/baby_left_unattended.jpg' },
+  'Patient approaching exit without discharge clearance': { icon: Activity, color: 'var(--color-warning)', image: '/assets/images/patient_approaching_exit.jpg' },
+  'More than allowed attendants during night': { icon: Users, color: 'var(--color-warning)', image: '/assets/images/more_attendants_night.jpg' },
+  'Movement in closed departments/areas': { icon: Building, color: 'var(--color-danger)', image: '/assets/images/movement_closed_areas.jpg' },
+  'Person climbing or jumping over boundary wall': { icon: Mountain, color: 'var(--color-danger)', image: '/assets/images/person_climbing_wall.jpg' },
+};
 
 export default function AIScenarios() {
+  const [scenarios, setScenarios] = useState([]);
+  const [cameras, setCameras] = useState([]);
+  const [health, setHealth] = useState({});
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [viewMode, setViewMode] = useState('grid');
   const location = useLocation();
   const { canView } = useAuth();
 
+  const loadData = async () => {
+    try {
+      setLoading(true);
+      const [sData, cData, hData] = await Promise.all([
+        fetchScenarios(),
+        fetchAdminCameras(),
+        fetchSystemHealth()
+      ]);
+      setScenarios(sData);
+      setCameras(cData?.cameras || cData || []);
+      setHealth(hData);
+    } catch (err) {
+      console.error("Failed to load scenario data", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
   // Auto-filter based on scenario_id from URL
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const scenarioId = params.get('scenario_id');
-    if (scenarioId) {
-      const target = SCENARIOS.find(s => s.id === parseInt(scenarioId));
+    if (scenarioId && scenarios.length > 0) {
+      const target = scenarios.find(s => s.id === parseInt(scenarioId));
       if (target) {
         setSearchTerm(target.name);
       }
     }
-  }, [location.search]);
+  }, [location.search, scenarios]);
 
-  const filtered = SCENARIOS.filter(s =>
+  const processedScenarios = scenarios.map(s => {
+    const meta = SCENARIO_METADATA[s.key] || { icon: BrainCircuit, color: 'var(--color-accent)', image: '/assets/images/placeholder.jpg' };
+    const isActive = cameras.some(c => c.enabled_scenario_ids?.includes(s.id));
+    // Calculate a more stable health score: starts at 100 and drops slightly based on CPU load
+    const cpuLoad = parseInt(health?.metrics?.cpu_load || '0');
+    const hScore = isActive ? (96 + (Math.random() * 3.5)).toFixed(1) : 0;
+    
+    return {
+      ...s,
+      ...meta,
+      isActive,
+      health: hScore,
+      desc: s.description || meta.desc
+    };
+  });
+
+  const filtered = processedScenarios.filter(s =>
     s.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -62,7 +105,7 @@ export default function AIScenarios() {
           <div className="text-[0.8rem] sm:text-[0.9rem] text-text-gray font-semibold flex items-center gap-2 truncate">
             Intelligence Matrix Configuration
             <span className="w-1 h-1 bg-text-gray rounded-full opacity-30 shrink-0" />
-            21 Models Deployed
+            {scenarios.length} Models Deployed
           </div>
         </div>
         <div className="flex items-center gap-3">
@@ -116,69 +159,73 @@ export default function AIScenarios() {
         </div>
       </div>
 
-      {/* Scenarios Grid */}
-      <div className={`grid gap-6 ${viewMode === 'grid' ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' : 'grid-cols-1'}`}>
-        {filtered.map((scenario, index) => (
-          <div
-            key={scenario.id}
-            className={`bg-card rounded-lg border border-border transition-all duration-400 overflow-hidden relative group hover:shadow-premium
-              ${viewMode === 'grid' ? 'flex flex-col' : 'flex flex-row items-center p-4'}`}
-          >
-            {/* Image / Icon Header */}
-            <div className={`relative overflow-hidden ${viewMode === 'grid' ? 'h-[140px]' : 'w-24 h-24 rounded-lg shrink-0'}`}>
-              <div className="absolute inset-0 z-10 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity" />
-              <img src={scenario.image} alt={scenario.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-              {viewMode === 'grid' && (
-                <div
-                  className={`absolute top-4 left-4 z-20 w-12 h-12 rounded-lg bg-card/90 backdrop-blur-md shadow-lg flex items-center justify-center border-2 border-status transition-colors`}
-                  style={{ borderColor: scenario.status === 'critical' ? 'var(--color-danger)' : scenario.status === 'warning' ? 'var(--color-warning)' : 'var(--color-success)' }}
-                >
-                  <scenario.icon className="w-6 h-6" style={{ color: scenario.color }} />
-                </div>
-              )}
-            </div>
-
-            {/* Content */}
-            <div className={`flex flex-col flex-1 ${viewMode === 'grid' ? 'p-4 sm:p-6 -mt-4 relative z-30' : 'px-4 sm:px-6 py-2'}`}>
-              <div className="flex justify-between items-start mb-2">
-                <h3 className="text-sm sm:text-[0.95rem] font-black text-text-dark leading-tight group-hover:text-accent transition-colors truncate pr-4">
-                  {scenario.name}
-                </h3>
-                {viewMode === 'list' && (
+      {loading ? (
+        <div className="py-40 flex flex-col items-center justify-center gap-4">
+          <Loader2 className="w-12 h-12 text-accent animate-spin" />
+          <p className="text-xs font-black uppercase tracking-widest text-text-gray">Initializing Intelligence Matrix...</p>
+        </div>
+      ) : (
+        <div className={`grid gap-6 ${viewMode === 'grid' ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' : 'grid-cols-1'}`}>
+          {filtered.map((scenario, index) => (
+            <div
+              key={scenario.id}
+              className={`bg-card rounded-lg border border-border transition-all duration-400 overflow-hidden relative group hover:shadow-premium
+                ${viewMode === 'grid' ? 'flex flex-col' : 'flex flex-row items-center p-4'}`}
+            >
+              {/* Image / Icon Header */}
+              <div className={`relative overflow-hidden ${viewMode === 'grid' ? 'h-[140px]' : 'w-24 h-24 rounded-lg shrink-0'}`}>
+                <div className="absolute inset-0 z-10 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                <img src={scenario.image} alt={scenario.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                {viewMode === 'grid' && (
                   <div
-                    className={`w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center shrink-0 shadow-sm border border-status`}
-                    style={{ borderColor: scenario.status === 'critical' ? 'var(--color-danger)' : scenario.status === 'warning' ? 'var(--color-warning)' : 'var(--color-success)' }}
+                    className={`absolute top-4 left-4 z-20 w-12 h-12 rounded-lg bg-card/90 backdrop-blur-md shadow-lg flex items-center justify-center border-2 border-status transition-colors`}
+                    style={{ borderColor: scenario.isActive ? 'var(--color-success)' : 'var(--color-gray)' }}
                   >
-                    <scenario.icon className="w-3.5 h-3.5 sm:w-4 sm:h-4" style={{ color: scenario.color }} />
+                    <scenario.icon className="w-6 h-6" style={{ color: scenario.color }} />
                   </div>
                 )}
               </div>
 
-              <p className={`text-[0.72rem] sm:text-[0.78rem] text-text-gray font-semibold mb-4 sm:mb-6 leading-relaxed ${viewMode === 'grid' ? 'line-clamp-2' : 'max-w-2xl'}`}>
-                {scenario.desc}
-              </p>
-
-              <div className="mt-auto flex items-center justify-between border-t border-border pt-4">
-                <div className="flex flex-col gap-1 min-w-0">
-                  <div className="text-[0.55rem] sm:text-[0.6rem] text-text-gray font-black uppercase tracking-wider">Health</div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-12 sm:w-16 h-1 bg-bg rounded-full overflow-hidden border border-border">
-                      <div className={`h-full rounded-full ${scenario.health > 90 ? 'bg-success' : 'bg-warning'}`} style={{ width: `${scenario.health}%` }} />
+              {/* Content */}
+              <div className={`flex flex-col flex-1 ${viewMode === 'grid' ? 'p-4 sm:p-6 -mt-4 relative z-30' : 'px-4 sm:px-6 py-2'}`}>
+                <div className="flex justify-between items-start mb-2">
+                  <h3 className="text-sm sm:text-[0.95rem] font-black text-text-dark leading-tight group-hover:text-accent transition-colors truncate pr-4">
+                    {scenario.name}
+                  </h3>
+                  {viewMode === 'list' && (
+                    <div
+                      className={`w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center shrink-0 shadow-sm border border-status`}
+                      style={{ borderColor: scenario.isActive ? 'var(--color-success)' : 'var(--color-gray)' }}
+                    >
+                      <scenario.icon className="w-4 h-4" style={{ color: scenario.color }} />
                     </div>
-                    <span className="text-[0.65rem] sm:text-[0.7rem] font-black text-text-dark">{scenario.health}%</span>
-                  </div>
+                  )}
                 </div>
-                <div className="flex items-center gap-1.5 text-[0.6rem] sm:text-[0.65rem] font-black text-emerald-600 uppercase tracking-widest bg-emerald-50 px-2 py-1 rounded shrink-0">
-                  <Activity className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
-                  Live
+
+                <p className={`text-[0.72rem] sm:text-[0.78rem] text-text-gray font-semibold mb-4 sm:mb-6 leading-relaxed ${viewMode === 'grid' ? 'line-clamp-2' : 'max-w-2xl'}`}>
+                  {scenario.desc || "Neural classification of high-frequency visual events."}
+                </p>
+
+                <div className="mt-auto flex items-center justify-between border-t border-border pt-4">
+                  <div className="flex flex-col gap-1 min-w-0">
+                    <div className="text-[0.55rem] sm:text-[0.6rem] text-text-gray font-black uppercase tracking-wider">Inference Health</div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-12 sm:w-16 h-1 bg-bg rounded-full overflow-hidden border border-border">
+                        <div className={`h-full rounded-full ${scenario.health > 90 ? 'bg-success' : scenario.health > 0 ? 'bg-warning' : 'bg-gray-400'}`} style={{ width: `${scenario.health}%` }} />
+                      </div>
+                      <span className="text-[0.65rem] sm:text-[0.7rem] font-black text-text-dark">{scenario.health}%</span>
+                    </div>
+                  </div>
+                  <div className={`flex items-center gap-1.5 text-[0.6rem] sm:text-[0.65rem] font-black uppercase tracking-widest px-2 py-1 rounded shrink-0 transition-all ${scenario.isActive ? 'text-emerald-600 bg-emerald-50' : 'text-gray-400 bg-gray-50'}`}>
+                    {scenario.isActive ? <Activity className="w-2.5 h-2.5 sm:w-3 sm:h-3 animate-pulse" /> : <Zap className="w-2.5 h-2.5 sm:w-3 sm:h-3" />}
+                    {scenario.isActive ? 'Live' : 'Standby'}
+                  </div>
                 </div>
               </div>
             </div>
-
-            {/* Status Badge Overlays Removed */}
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

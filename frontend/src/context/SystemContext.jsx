@@ -43,7 +43,6 @@ export const SystemProvider = ({ children }) => {
 
   // Apply debug mode to body globally
   useEffect(() => {
-    console.log("SystemContext: Diagnostic Mode =", settings.debugMode);
     if (settings.debugMode) {
       document.body.classList.add('debug-mode-active');
     } else {

@@ -18,16 +18,21 @@ def get_system_metrics():
         disk = psutil.disk_usage('/')
         net = psutil.net_io_counters()
         
+        # Calculate system uptime
+        import time
+        uptime_seconds = time.time() - psutil.boot_time()
+        uptime_hours = round(uptime_seconds / 3600, 1)
+        
         return {
             "cpu_load": f"{int(cpu)}%",
             "ram_usage": f"{round(ram.used / (1024**3), 1)}GB / {round(ram.total / (1024**3), 1)}GB",
             "disk_usage": f"{disk.percent}%",
             "io_rate": f"{round((net.bytes_sent + net.bytes_recv) / (1024**2), 1)} MB",
-            "uptime": "99.9%" # Simulated or can be calculated from psutil.boot_time()
+            "uptime": f"{uptime_hours} Hours"
         }
     except:
         return {
-            "cpu_load": "0%", "ram_usage": "0GB", "disk_usage": "0%", "io_rate": "0MB", "uptime": "100%"
+            "cpu_load": "0%", "ram_usage": "0GB", "disk_usage": "0%", "io_rate": "0MB", "uptime": "0 Hours"
         }
 
 @router.get("/stats")

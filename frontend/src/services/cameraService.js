@@ -33,3 +33,5 @@ export const getStreamUrl = (cameraId) => {
     // Note: In production we'd use a stable config for BASE
     return `http://localhost:8000/video_feed/${cameraId}`;
 };
+
+export const fetchSystemHealth = () => get("/health/stats");

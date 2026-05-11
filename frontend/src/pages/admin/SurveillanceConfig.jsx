@@ -6,7 +6,8 @@ import {
   updateCamera, 
   deleteCamera,
   fetchCameraScenarios,
-  syncCameraScenarios
+  syncCameraScenarios,
+  fetchSystemHealth
 } from '../../services/cameraService';
 
 import { 
@@ -36,6 +37,7 @@ export default function SurveillanceConfig() {
   const [areas, setAreas] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('');
+  const [health, setHealth] = useState({});
 
   // Pagination State
   const [currentPage, setCurrentPage] = useState(1);
@@ -66,13 +68,15 @@ export default function SurveillanceConfig() {
     try {
       setLoading(true);
       const skip = (currentPage - 1) * pageSize;
-      const [camResponse, areaData] = await Promise.all([
+      const [camResponse, areaData, healthData] = await Promise.all([
         fetchAdminCameras(skip, pageSize),
-        fetchAdminAreas()
+        fetchAdminAreas(),
+        fetchSystemHealth()
       ]);
       setCameras(camResponse.cameras || []);
       setTotalItems(camResponse.total || 0);
       setAreas(areaData.areas || areaData || []);
+      setHealth(healthData);
     } catch (err) {
       console.error("Failed to load surveillance data", err);
     } finally {
@@ -237,7 +241,7 @@ export default function SurveillanceConfig() {
         {[
             { label: 'Active Streams', value: `${cameras.filter(c => c.is_active !== false).length}/${cameras.length}`, icon: Video, color: 'text-accent' },
             { label: 'Deployed Zones', value: areas.length, icon: Layers, color: 'text-emerald-500' },
-            { label: 'AI Inference Load', value: '42%', icon: Cpu, color: 'text-amber-500' },
+            { label: 'AI Inference Load', value: health?.metrics?.cpu_load || '0%', icon: Cpu, color: 'text-amber-500' },
         ].map((stat, i) => (
             <div key={i} className="bg-card border border-border rounded-lg p-4 sm:p-6 flex items-center gap-4 sm:gap-6 shadow-sm min-w-0">
                 <div className={`p-3 sm:p-4 bg-surface border border-border rounded-lg ${stat.color} shrink-0`}>
