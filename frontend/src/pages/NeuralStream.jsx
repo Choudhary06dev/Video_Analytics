@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { fetchLiveAreas, fetchLiveCameras, fetchLiveScenarios } from '../services/cameraService';
 import { fetchLogs, fetchLogsSummary } from '../services/alertService';
-import { EVENTS_URL, VIDEO_FEED_URL } from '../api';
+import { EVENTS_URL, VIDEO_FEED_URL, fetchIntelligence } from '../api';
 import {
  Radio,
  Shield,
@@ -26,7 +26,11 @@ import {
  LayoutGrid,
  RotateCcw,
  Eye,
- X
+ X,
+ Star,
+ Maximize,
+ Minimize,
+ List
 } from 'lucide-react';
 
 const SCENARIO_UI = {
@@ -84,6 +88,32 @@ export default function NeuralStream() {
  const [selectedLog, setSelectedLog] = useState(null);
  const [severityFilter, setSeverityFilter] = useState('ALL');
  const [showFilterMenu, setShowFilterMenu] = useState(false);
+ const [isFullscreen, setIsFullscreen] = useState(false);
+ const [currentTime, setCurrentTime] = useState(new Date());
+ const [cameraCounts, setCameraCounts] = useState({});
+
+ useEffect(() => {
+  const timer = setInterval(() => setCurrentTime(new Date()), 1000);
+  return () => clearInterval(timer);
+ }, []);
+
+ useEffect(() => {
+  const handleFullscreenChange = () => {
+   setIsFullscreen(!!document.fullscreenElement);
+  };
+  document.addEventListener('fullscreenchange', handleFullscreenChange);
+  return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+ }, []);
+
+ const toggleFullscreen = () => {
+  if (!document.fullscreenElement) {
+   document.documentElement.requestFullscreen().catch(err => {
+    console.error(`Error attempting to enable fullscreen: ${err.message}`);
+   });
+  } else {
+   document.exitFullscreen();
+  }
+ };
 
  const loadCameras = useCallback(async () => {
   try {
@@ -297,10 +327,14 @@ export default function NeuralStream() {
   const pollIntel = async () => {
    if (!isActive) return;
    try {
-    const summaryRes = await fetchLogsSummary(filterHours, activeFilters);
+    const [summaryRes, intelRes] = await Promise.all([
+     fetchLogsSummary(filterHours, activeFilters),
+     fetchIntelligence()
+    ]);
     if (summaryRes && !summaryRes.detail) setSummary(summaryRes);
+    if (intelRes && !intelRes.detail) setCameraCounts(intelRes.camera_counts || {});
    } catch (err) {
-    console.error('Failed to poll stream summary:', err);
+    console.error('Failed to poll stream summary or intelligence:', err);
    }
    intelTimeout = setTimeout(pollIntel, 1000);
   };
@@ -375,26 +409,6 @@ export default function NeuralStream() {
        </div>
       )}
 
-      {/* Intelligence Stats (Compact) */}
-      <div className="flex items-center gap-2 shrink-0 border-l border-border pl-3">
-       {/* Threat Level */}
-       <div className={`flex items-center gap-2 px-2.5 rounded-lg border transition-all duration-500 h-[32px]
-         ${summary.threat_level === 'Critical' ? 'bg-rose-500/10 border-rose-500/30' : 'bg-surface border-border'}`}>
-        <div className={`w-1.5 h-1.5 rounded-full ${summary.threat_level === 'Critical' ? 'bg-rose-500 animate-pulse' : 'bg-emerald-500'}`} />
-        <span className={`text-[0.6rem] font-black uppercase tracking-widest ${summary.threat_level === 'Critical' ? 'text-rose-600' : 'text-text-gray'}`}>
-         {summary.threat_level || 'Safe'}
-        </span>
-        <Shield className={`w-3 h-3 ${summary.threat_level === 'Critical' ? 'text-rose-600' : 'text-text-gray'}`} />
-       </div>
-
-       {/* Quick Counters */}
-       <div className="flex items-center gap-1.5">
-        <div className={`h-[32px] px-2.5 rounded-lg border flex items-center gap-2 ${summary.total_weapons > 0 ? 'bg-rose-500 border-rose-600' : 'bg-surface border-border'}`}>
-         <Crosshair className={`w-3.5 h-3.5 ${summary.total_weapons > 0 ? 'text-white' : 'text-rose-500'}`} />
-         <span className={`text-[0.8rem] font-black ${summary.total_weapons > 0 ? 'text-white' : 'text-text-dark'}`}>{summary.total_weapons || 0}</span>
-        </div>
-       </div>
-      </div>
      </div>
 
      {/* Compact Filters */}
@@ -464,6 +478,15 @@ export default function NeuralStream() {
       >
        <RotateCcw className="w-3.5 h-3.5 sm:w-3 sm:h-3"/>
       </button>
+
+      <button
+       onClick={toggleFullscreen}
+       className="p-2 sm:p-1.5 border rounded-lg transition-colors bg-surface text-text-gray hover:text-white border-border cursor-pointer h-[32px] flex items-center justify-center gap-2 ml-1"
+       title="Toggle Full Screen"
+      >
+       {isFullscreen ? <Minimize className="w-3.5 h-3.5 sm:w-3 sm:h-3" /> : <Maximize className="w-3.5 h-3.5 sm:w-3 sm:h-3" />}
+       <span className="hidden sm:block text-[10px] font-bold uppercase tracking-widest">Full Screen</span>
+      </button>
      </div>
     </div>
    </div>
@@ -500,7 +523,7 @@ export default function NeuralStream() {
           <div
            key={cam.id}
            onClick={() => { if (!isDisabled) { setActiveCamera(cam.id); setIsGlobalView(false); setLogsOffset(0); setLogs([]); } }}
-           className={`relative bg-slate-900 rounded-lg overflow-hidden border border-white/10 group transition-all aspect-video ${isDisabled ? 'opacity-80 cursor-not-allowed' : 'cursor-pointer hover:border-accent/40'}`}
+           className={`relative bg-slate-900 rounded-lg overflow-hidden border border-white/5 group transition-all aspect-video ${isDisabled ? 'opacity-80 cursor-not-allowed' : 'cursor-pointer hover:border-white/20 hover:shadow-[0_0_20px_rgba(255,255,255,0.05)]'}`}
           >
            {isDisabled ? (
             <div className="w-full h-full flex flex-col items-center justify-center bg-slate-900 border border-white/5 relative">
@@ -511,13 +534,26 @@ export default function NeuralStream() {
            ) : (
             <CameraFeed streamUrl={`${VIDEO_FEED_URL}/${cam.id}`} hideOverlay={true} />
            )}
-           <div className="absolute top-0 left-0 right-0 p-2 bg-gradient-to-b from-black/80 to-transparent z-10">
-            <span className="text-[0.55rem] font-black text-white/80 uppercase tracking-widest block mb-0.5">Stream-{cam.id}</span>
-            <span className="text-[0.7rem] font-bold text-white tracking-tight leading-none">{cam.name}</span>
+           <div className="absolute top-2 left-2 right-2 p-2 bg-black/60 backdrop-blur-sm rounded border border-white/5 z-10 flex items-center justify-between opacity-90 group-hover:opacity-100 transition-opacity">
+            <div className="flex items-center gap-2">
+             <div className={`w-2 h-2 rounded-full ${isDisabled ? 'bg-rose-500' : 'bg-emerald-500 animate-pulse'}`} />
+             <span className="text-[0.65rem] font-bold text-white uppercase tracking-wider truncate max-w-[120px] sm:max-w-[160px]">{cam.name} - CAM {cam.id.toString().padStart(2, '0')}</span>
+            </div>
+            {!isDisabled && (
+             <div className="flex items-center gap-1.5 px-2 py-0.5 bg-white/10 rounded border border-white/5">
+              <Users className="w-3 h-3 text-white/80" />
+              <span className="text-[0.6rem] font-bold text-white">{cameraCounts[cam.id] || 0}</span>
+             </div>
+            )}
            </div>
-           <div className={`absolute bottom-2 right-2 px-2 py-0.5 bg-black/80 backdrop-blur border ${isDisabled ? 'border-rose-500/50 text-rose-500' : 'border-white/10 text-accent'} rounded font-black text-[0.55rem] flex items-center gap-1 uppercase z-10`}>
-            {!isDisabled && <span className="w-1.5 h-1.5 bg-accent rounded-full animate-pulse"/>}
-            {isDisabled ? 'OFFLINE' : 'Live'}
+           
+           <div className="absolute bottom-2 left-2 right-2 p-2 bg-black/60 backdrop-blur-sm rounded border border-white/5 z-10 flex items-center justify-between opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+            <span className="text-[0.65rem] font-bold text-white/90 font-mono">
+             {currentTime.toLocaleTimeString([], { hour12: true, hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+            </span>
+            <button className="text-white/40 hover:text-yellow-400 transition-colors" onClick={(e) => { e.stopPropagation(); /* Add Favorite Logic Here */ }}>
+             <Star className="w-3.5 h-3.5" />
+            </button>
            </div>
           </div>
          )
@@ -564,24 +600,39 @@ export default function NeuralStream() {
 
      {/* CAMERA GRID PAGINATION FOOTER (Attached directly to the black container) */}
      {isGlobalView && filteredCameras.length > cameraLimit && (
-      <div className="p-3 bg-surface/5 border-t border-white/10 flex items-center justify-between">
-       <span className="text-[0.6rem] text-white font-black uppercase tracking-widest">
-        Showing {cameraOffset + 1}-{Math.min(cameraOffset + cameraLimit, filteredCameras.length)} of {filteredCameras.length} Nodes
+      <div className="p-3 bg-surface/5 border-t border-white/5 flex items-center justify-between">
+       <span className="text-[0.65rem] text-text-gray font-medium">
+        Showing {cameraOffset + 1} to {Math.min(cameraOffset + cameraLimit, filteredCameras.length)} of {filteredCameras.length} cameras
        </span>
-       <div className="flex gap-2">
+       <div className="flex gap-1">
         <button
          onClick={() => setCameraOffset(prev => Math.max(0, prev - cameraLimit))}
          disabled={cameraOffset === 0}
-         className="px-3 py-1 bg-white/5 border border-white/10 rounded text-[0.6rem] font-black uppercase tracking-widest text-white hover:bg-white/10 disabled:opacity-30 transition-all"
+         className="w-7 h-7 flex items-center justify-center bg-transparent border border-white/10 rounded hover:bg-white/5 disabled:opacity-30 transition-all text-white/70"
         >
-         Prev
+         {'<'}
         </button>
+        
+        {Array.from({ length: Math.ceil(filteredCameras.length / cameraLimit) }).map((_, idx) => {
+          const pageOffset = idx * cameraLimit;
+          const isActive = cameraOffset === pageOffset;
+          return (
+            <button
+              key={idx}
+              onClick={() => setCameraOffset(pageOffset)}
+              className={`w-7 h-7 flex items-center justify-center border rounded text-[0.7rem] font-bold transition-all ${isActive ? 'bg-blue-600 text-white border-blue-500 shadow-[0_0_10px_rgba(37,99,235,0.3)]' : 'bg-transparent text-white/70 border-white/10 hover:bg-white/5'}`}
+            >
+              {idx + 1}
+            </button>
+          );
+        })}
+
         <button
          onClick={() => setCameraOffset(prev => prev + cameraLimit)}
          disabled={cameraOffset + cameraLimit >= filteredCameras.length}
-         className="px-3 py-1 bg-white/5 border border-white/10 rounded text-[0.6rem] font-black uppercase tracking-widest text-white hover:bg-white/10 disabled:opacity-30 transition-all"
+         className="w-7 h-7 flex items-center justify-center bg-transparent border border-white/10 rounded hover:bg-white/5 disabled:opacity-30 transition-all text-white/70"
         >
-         Next
+         {'>'}
         </button>
        </div>
       </div>

@@ -8,6 +8,7 @@ export async function get(path, params = {}) {
     if (v !== undefined && v !== null) url.searchParams.set(k, v);
   });
   const res = await fetch(url.toString(), {
+      cache: 'no-store',
       headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
       }

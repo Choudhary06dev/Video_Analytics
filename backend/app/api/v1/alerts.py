@@ -134,6 +134,7 @@ async def get_intelligence(
         "objects": [],
         "stable_objects": [],
         "last_update": latest_intelligence_cache.get("last_update", 0.0),
+        "camera_counts": {}
     }
 
     if not allowed_cameras:
@@ -148,11 +149,14 @@ async def get_intelligence(
     except Exception:
         responses = []
 
-    for res in responses:
+    for i, res in enumerate(responses):
         if isinstance(res, Exception) or res.status_code != 200:
             continue
         data = res.json()
-        aggregate["person_count"] += data.get("person_count", 0) or 0
+        cam_id = allowed_cameras[i].id
+        c_person_count = data.get("person_count", 0) or 0
+        aggregate["camera_counts"][cam_id] = c_person_count
+        aggregate["person_count"] += c_person_count
         aggregate["objects"].extend(data.get("objects", []) or [])
         aggregate["stable_objects"].extend(data.get("stable_objects", []) or [])
         aggregate["last_update"] = max(aggregate["last_update"], data.get("last_update", 0.0) or 0.0)
