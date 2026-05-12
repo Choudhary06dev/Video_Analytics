@@ -47,6 +47,9 @@ export const fetchAlerts = (opts = {}) =>
 
 export const fetchHealth = () => get("/health");
 
+export const fetchScenarioMatrix = (hours = 24, areaId = undefined) =>
+  get("/logs/matrix", { hours, area_id: areaId });
+
 export function subscribeToEvents({ onSnapshot, onDetection, onError }) {
   const token = encodeURIComponent(localStorage.getItem('token') || '');
   const es = new EventSource(`${EVENTS_URL}?token=${token}`);

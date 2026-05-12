@@ -11,7 +11,7 @@ from app.core.security import decode_access_token
 from app.api.v1.auth import get_current_user
 from app.api.v1.users import verify_module_access, get_allowed_area_ids
 from app.models import DetectionEvent, Camera
-from app.services.alert_service import get_alerts, get_logs, get_logs_summary
+from app.services.alert_service import get_alerts, get_logs, get_logs_summary, get_scenario_camera_matrix
 
 router = APIRouter(prefix="", tags=["Intelligence & Alerts"])
 
@@ -273,3 +273,14 @@ def resolve_alert(
     session.add(event)
     session.commit()
     return {"status": "success", "message": f"Alert {alert_id} resolved"}
+
+@router.get("/logs/matrix")
+def fetch_scenario_camera_matrix(
+    hours: float = 24.0,
+    area_id: Optional[int] = None,
+    session: Session = Depends(get_session),
+    current_user: dict = Depends(get_current_user),
+    auth_data: dict = Depends(lambda cur=Depends(get_current_user), s=Depends(get_session): verify_module_access("alerts", cur, s, access_level="view")),
+):
+    allowed_area_ids = get_allowed_area_ids(current_user["id"], session)
+    return get_scenario_camera_matrix(session, hours, area_id, allowed_area_ids=allowed_area_ids)

@@ -271,3 +271,49 @@ def get_logs_summary(
         "avg_confidence": float(avg_conf),
         "timestamp": datetime.now().isoformat()
     }
+
+def get_scenario_camera_matrix(
+    session: Session,
+    hours: float = 24.0,
+    area_id: Optional[int] = None,
+    allowed_area_ids: Optional[List[int]] = None,
+):
+    """
+    Returns a cross-tabulation of scenarios (rows) vs cameras (columns) with alert counts.
+    """
+    cutoff = datetime.now() - timedelta(hours=hours)
+    statement = select(DetectionEvent).where(DetectionEvent.timestamp >= cutoff)
+
+    statement = _apply_event_filters(statement, session, area_id=area_id, allowed_area_ids=allowed_area_ids)
+    if statement is None:
+        return {"scenarios": [], "cameras": [], "matrix": {}, "total_alerts": 0}
+
+    events = session.exec(statement).all()
+
+    # Build matrix: { scenario_key: { camera_id: count } }
+    matrix = {}
+    camera_ids = set()
+    for ev in events:
+        sk = ev.scenario_key or ev.object_class or "unknown"
+        cid = ev.camera_id
+        camera_ids.add(cid)
+        if sk not in matrix:
+            matrix[sk] = {}
+        matrix[sk][cid] = matrix[sk].get(cid, 0) + 1
+
+    # Get camera names
+    camera_list = []
+    if camera_ids:
+        cams = session.exec(select(Camera).where(Camera.id.in_(camera_ids))).all()
+        camera_list = [{"id": c.id, "name": c.name} for c in sorted(cams, key=lambda x: x.id)]
+    
+    # Sort scenarios by total alerts descending
+    scenario_totals = {sk: sum(cams.values()) for sk, cams in matrix.items()}
+    sorted_scenarios = sorted(matrix.keys(), key=lambda sk: scenario_totals.get(sk, 0), reverse=True)
+
+    return {
+        "scenarios": sorted_scenarios,
+        "cameras": camera_list,
+        "matrix": matrix,
+        "total_alerts": len(events)
+    }
