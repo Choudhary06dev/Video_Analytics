@@ -12,7 +12,7 @@ import {
 } from 'lucide-react';
 
 const MODULE_LABELS = {
-  dashboard: 'Command Hub',
+  dashboard: 'Dashboard',
   live_monitoring: 'Neural Stream',
   scenarios: 'AI Scenarios',
 

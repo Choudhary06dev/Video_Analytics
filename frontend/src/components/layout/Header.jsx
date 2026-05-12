@@ -11,7 +11,7 @@ import { useAuth } from '../../context/AuthContext';
 import { LogOut } from 'lucide-react';
 
 const STATIC_PAGES = [
-  { name: 'Command Hub', category: 'Pages', path: '/', icon: LayoutDashboard },
+  { name: 'Dashboard', category: 'Pages', path: '/', icon: LayoutDashboard },
   { name: 'Neural Stream', category: 'Pages', path: '/neural-stream', icon: Radio },
   { name: 'AI Scenarios', category: 'Pages', path: '/scenarios', icon: Brain },
   { name: 'Activity Vault', category: 'Pages', path: '/vault', icon: ClipboardList },
@@ -25,7 +25,7 @@ export default function Header({ isSidebarOpen, setSidebarOpen }) {
   const { isDark, toggleTheme } = useTheme();
   const { user, logout } = useAuth();
   const navigate = useNavigate();
-  
+
   const [searchIndex, setSearchIndex] = useState(STATIC_PAGES);
   const [searchQuery, setSearchQuery] = useState('');
   const [showResults, setShowResults] = useState(false);
@@ -101,12 +101,12 @@ export default function Header({ isSidebarOpen, setSidebarOpen }) {
         const nameMatch = item.name.toLowerCase().includes(query);
         const categoryMatch = item.category.toLowerCase().includes(query);
         // Handle singular/plural common cases like "camera" matching "Cameras"
-        const typeMatch = (query === 'camera' && item.category === 'Cameras') || 
-                         (query === 'scenario' && item.category === 'AI Scenarios');
-        
+        const typeMatch = (query === 'camera' && item.category === 'Cameras') ||
+          (query === 'scenario' && item.category === 'AI Scenarios');
+
         return nameMatch || categoryMatch || typeMatch;
       }).slice(0, 10);
-      
+
       setResults(filtered);
       setShowResults(true);
       setActiveIndex(-1);
@@ -281,7 +281,7 @@ export default function Header({ isSidebarOpen, setSidebarOpen }) {
           </button>
 
           <div className="relative" ref={notificationRef}>
-            <button 
+            <button
               onClick={() => {
                 setShowNotifications(!showNotifications);
                 setUnreadCount(0); // Clear badge on open
@@ -305,7 +305,7 @@ export default function Header({ isSidebarOpen, setSidebarOpen }) {
                 <div className="max-h-[350px] overflow-y-auto">
                   {notifications.length > 0 ? (
                     notifications.map((alert, idx) => (
-                      <button 
+                      <button
                         key={idx}
                         onClick={() => {
                           navigate(`/alerts?alert_id=${alert.id}`);
@@ -335,7 +335,7 @@ export default function Header({ isSidebarOpen, setSidebarOpen }) {
                     </div>
                   )}
                 </div>
-                <button 
+                <button
                   onClick={() => {
                     navigate('/alerts');
                     setShowNotifications(false);
@@ -370,7 +370,7 @@ export default function Header({ isSidebarOpen, setSidebarOpen }) {
                   <div className="text-[10px] text-text-gray font-medium truncate">{user?.email}</div>
                 </div>
                 <div className="p-2">
-                  <button 
+                  <button
                     onClick={() => {
                       navigate('/settings');
                       setShowProfileMenu(false);

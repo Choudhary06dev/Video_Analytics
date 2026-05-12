@@ -64,7 +64,7 @@ export default function CameraFeed({
   }, []);
 
   return (
-    <div className="relative w-full aspect-video bg-black rounded-lg overflow-hidden border border-border group">
+    <div className="relative w-full h-full bg-black rounded-lg overflow-hidden border border-border group">
       {status === 'streaming' ? (
         <img 
           ref={imgRef}

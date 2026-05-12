@@ -21,7 +21,7 @@ export default function Sidebar({ isSidebarOpen, setSidebarOpen }) {
   const { canView } = useAuth();
 
   const mainMenu = [
-    { name: 'Command Hub', icon: LayoutDashboard, path: '/', moduleKey: 'dashboard' },
+    { name: 'Dashboard', icon: LayoutDashboard, path: '/', moduleKey: 'dashboard' },
     { name: 'Neural Stream', icon: Radio, path: '/neural-stream', moduleKey: 'live_monitoring' },
     { name: 'AI Scenarios', icon: Brain, path: '/scenarios', moduleKey: 'scenarios' },
 
@@ -83,7 +83,7 @@ export default function Sidebar({ isSidebarOpen, setSidebarOpen }) {
     >
       {/* Mobile close button */}
       {isSidebarOpen && setSidebarOpen && (
-        <button 
+        <button
           onClick={() => setSidebarOpen(false)}
           className="md:hidden absolute top-4 right-4 p-1.5 rounded-lg text-text-gray hover:text-text-dark hover:bg-surface transition-colors z-10"
         >
