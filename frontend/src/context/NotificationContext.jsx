@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { fetchLogs } from '../services/alertService';
+import { fetchScenarios } from '../services/cameraService';
 
 const NotificationContext = createContext();
 
@@ -7,6 +8,19 @@ export const NotificationProvider = ({ children }) => {
   const [notifications, setNotifications] = useState([]);
   const lastProcessedId = useRef(null);
   const isFirstLoad = useRef(true);
+  const scenarioMapRef = useRef({});
+
+  // Load scenario name map once on mount
+  useEffect(() => {
+    fetchScenarios()
+      .then((data) => {
+        const list = Array.isArray(data) ? data : data?.scenarios || [];
+        const map = {};
+        list.forEach((s) => { if (s.key) map[s.key] = s.name; });
+        scenarioMapRef.current = map;
+      })
+      .catch(() => {});
+  }, []);
 
   const addNotification = useCallback((notification) => {
     const id = Date.now() + Math.random();
@@ -49,11 +63,13 @@ export const NotificationProvider = ({ children }) => {
       }
 
       if (newAlerts.length > 0) {
+        const nameMap = scenarioMapRef.current;
         newAlerts.reverse().forEach(alert => {
+          const friendlyName = nameMap[alert.scenario_key] || alert.scenario_key.replace(/_/g, ' ');
           addNotification({
             type: 'alert',
             severity: alert.severity,
-            title: alert.scenario_key.replace(/_/g, ' ').toUpperCase(),
+            title: friendlyName,
             message: alert.metadata_json?.detail || `Critical event detected on Camera #${alert.camera_id}`,
             cameraId: alert.camera_id,
             timestamp: alert.timestamp,

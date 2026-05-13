@@ -126,14 +126,17 @@ def init_system_data():
 
         # Add or update scenarios
         for name in scenarios_to_sync:
-            key = name # AI sends name as key
+            # Generate stable snake_case key
+            key = name.upper().replace(" ", "_").replace("(", "").replace(")", "").replace("/", "_").replace("-", "_").replace("&", "_")
+            # Remove double underscores if any
+            while "__" in key: key = key.replace("__", "_")
+            
             stmt = select(AIScenario).where(AIScenario.name == name)
             existing = session.exec(stmt).first()
             if not existing:
-                session.add(AIScenario(name=name, key=key, default_severity=severities[name]))
+                session.add(AIScenario(name=name, key=key, default_severity=severities.get(name, "Medium")))
             else:
                 existing.key = key
-                # Do NOT overwrite default_severity here, let the user manage it via Admin Panel
                 session.add(existing)
 
         # Remove extra scenarios

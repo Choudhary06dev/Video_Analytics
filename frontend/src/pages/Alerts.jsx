@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import {
   ShieldAlert,
   AlertTriangle,
@@ -21,6 +22,7 @@ import {
   RotateCcw
 } from 'lucide-react';
 import { fetchAlerts, resolveAlert } from '../services/alertService';
+import { fetchLiveScenarios } from '../services/cameraService';
 import { BASE } from '../api';
 import { formatDistanceToNow } from 'date-fns';
 import { useNotifications } from '../context/NotificationContext';
@@ -34,7 +36,39 @@ export default function Alerts() {
   const [resolvedAlertIds, setResolvedAlertIds] = useState(new Set());
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
+  const [scenarios, setScenarios] = useState([]);
   const { addNotification } = useNotifications();
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const alertId = params.get('alert_id');
+    if (alertId && alerts.length > 0) {
+      const targetAlert = alerts.find(a => String(a.id) === alertId);
+      if (targetAlert) {
+        setSelectedAlert(targetAlert);
+        // Clean URL after selecting
+        navigate('/alerts', { replace: true });
+      }
+    }
+  }, [location.search, alerts, navigate]);
+
+  useEffect(() => {
+    const loadScenarios = async () => {
+      try {
+        const data = await fetchLiveScenarios();
+        setScenarios(data || []);
+      } catch (err) {
+        console.error("Failed to fetch scenarios:", err);
+      }
+    };
+    loadScenarios();
+  }, []);
+
+  const scenarioNameByKey = React.useMemo(() => {
+    return new Map(scenarios.map(s => [s.key, s.name]));
+  }, [scenarios]);
 
   useEffect(() => {
     loadAlerts();
@@ -52,10 +86,10 @@ export default function Alerts() {
       };
 
       const opts = {
-        hours: 24,
+        hours: (startDate || endDate) ? undefined : 24,
         severity: activeTab !== 'all' ? severityMap[activeTab] : undefined,
-        startDate: startDate || undefined,
-        endDate: endDate || undefined,
+        start_date: startDate || undefined,
+        end_date: endDate || undefined,
       };
 
       const data = await fetchAlerts(opts);
@@ -200,22 +234,24 @@ export default function Alerts() {
             {/* Date Filters & Reset */}
             <div className="flex items-center gap-3 flex-wrap sm:flex-nowrap">
               <div className="flex-1 sm:flex-none flex items-center gap-2 sm:gap-3 bg-bg p-1 rounded-lg border border-border shadow-sm min-w-0">
-                <div className="flex-1 sm:flex-none flex items-center gap-2 px-2 sm:px-3 py-1.5 border-r border-border/50">
-                  <Calendar className="w-3.5 h-3.5 text-accent shrink-0" />
+                <div className="flex-1 sm:flex-none flex items-center gap-2 px-2 sm:px-3 py-1.5 border-r border-border/50 relative">
+                  <Calendar className="w-3.5 h-3.5 text-accent shrink-0 pointer-events-none" />
                   <input
                     type="date"
                     value={startDate}
                     onChange={(e) => setStartDate(e.target.value)}
                     className="bg-transparent text-[0.7rem] sm:text-[0.75rem] font-bold text-text-dark focus:outline-none cursor-pointer w-full"
+                    placeholder="Start Date"
                   />
                 </div>
-                <div className="flex-1 sm:flex-none flex items-center gap-2 px-2 sm:px-3 py-1.5">
-                  <span className="hidden sm:inline text-[0.6rem] font-black text-text-gray uppercase opacity-50">to</span>
+                <div className="flex-1 sm:flex-none flex items-center gap-2 px-2 sm:px-3 py-1.5 relative">
+                  <span className="hidden sm:inline text-[0.6rem] font-black text-text-gray uppercase opacity-50 pointer-events-none">to</span>
                   <input
                     type="date"
                     value={endDate}
                     onChange={(e) => setEndDate(e.target.value)}
                     className="bg-transparent text-[0.7rem] sm:text-[0.75rem] font-bold text-text-dark focus:outline-none cursor-pointer w-full"
+                    placeholder="End Date"
                   />
                 </div>
               </div>
@@ -244,15 +280,15 @@ export default function Alerts() {
               <p className="text-[0.65rem] font-black text-text-gray uppercase tracking-[0.2em]">Synchronizing Crisis Matrix</p>
             </div>
           ) : (
-            <table className="w-full text-left border-collapse min-w-[900px]">
+            <table className="w-full text-left border-collapse min-w-[750px]">
               <thead>
                 <tr className="bg-bg/50 border-b border-border">
-                  <th className="px-4 sm:px-8 py-4 sm:py-5 text-[0.6rem] sm:text-[0.65rem] font-black text-text-gray uppercase tracking-[1.5px]">Reference</th>
-                  <th className="px-4 sm:px-8 py-4 sm:py-5 text-[0.6rem] sm:text-[0.65rem] font-black text-text-gray uppercase tracking-[1.5px]">Severity</th>
-                  <th className="px-4 sm:px-8 py-4 sm:py-5 text-[0.6rem] sm:text-[0.65rem] font-black text-text-gray uppercase tracking-[1.5px]">Incident Details</th>
-                  <th className="px-4 sm:px-8 py-4 sm:py-5 text-[0.6rem] sm:text-[0.65rem] font-black text-text-gray uppercase tracking-[1.5px]">Camera Source</th>
-                  <th className="px-4 sm:px-8 py-4 sm:py-5 text-[0.6rem] sm:text-[0.65rem] font-black text-text-gray uppercase tracking-[1.5px]">Time Log</th>
-                  <th className="px-4 sm:px-8 py-4 sm:py-5 text-right text-[0.6rem] sm:text-[0.65rem] font-black text-text-gray uppercase tracking-[1.5px]">Response</th>
+                  <th className="px-3 sm:px-4 py-3 sm:py-4 text-[0.55rem] sm:text-[0.6rem] font-black text-text-gray uppercase tracking-widest">Ref</th>
+                  <th className="px-3 sm:px-4 py-3 sm:py-4 text-[0.55rem] sm:text-[0.6rem] font-black text-text-gray uppercase tracking-widest">Level</th>
+                  <th className="px-3 sm:px-4 py-3 sm:py-4 text-[0.55rem] sm:text-[0.6rem] font-black text-text-gray uppercase tracking-widest">Incident Details</th>
+                  <th className="px-3 sm:px-4 py-3 sm:py-4 text-[0.55rem] sm:text-[0.6rem] font-black text-text-gray uppercase tracking-widest">Source</th>
+                  <th className="px-3 sm:px-4 py-3 sm:py-4 text-[0.55rem] sm:text-[0.6rem] font-black text-text-gray uppercase tracking-widest">Time</th>
+                  <th className="px-3 sm:px-4 py-3 sm:py-4 text-right text-[0.55rem] sm:text-[0.6rem] font-black text-text-gray uppercase tracking-widest">Response</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border/50">
@@ -261,47 +297,45 @@ export default function Alerts() {
                   const isResolved = alert.is_resolved || resolvedAlertIds.has(alert.id);
                   return (
                     <tr key={alert.id} className={`transition-colors group ${isResolved ? 'bg-bg/10' : 'hover:bg-bg/30'}`}>
-                      <td className="px-4 sm:px-8 py-4 sm:py-6">
-                        <span className="text-[0.7rem] sm:text-[0.75rem] font-black text-text-gray opacity-40">#ALT-{alert.id}</span>
+                      <td className="px-3 sm:px-4 py-3 sm:py-4">
+                        <span className="text-[0.6rem] sm:text-[0.65rem] font-black text-text-gray opacity-40">#ALT-{alert.id}</span>
                       </td>
-                      <td className="px-4 sm:px-8 py-4 sm:py-6">
-                        <div className={`inline-flex items-center justify-center gap-2 w-[85px] sm:w-[95px] px-2 py-1 sm:py-1.5 rounded-full text-[0.55rem] sm:text-[0.6rem] font-black uppercase tracking-wider border ${style.bg} ${style.text} ${style.border}`}>
-                          <style.icon className="w-3 sm:w-3.5 h-3 sm:h-3.5" />
+                      <td className="px-3 sm:px-4 py-3 sm:py-4">
+                        <div className={`inline-flex items-center justify-center gap-1.5 w-[75px] sm:w-[85px] px-1.5 py-1 rounded-full text-[0.5rem] sm:text-[0.55rem] font-black uppercase tracking-wider border ${style.bg} ${style.text} ${style.border}`}>
+                          <style.icon className="w-2.5 sm:w-3 h-2.5 sm:h-3" />
                           {style.label}
                         </div>
                       </td>
-                      <td className="px-4 sm:px-8 py-4 sm:py-6">
-                        <div className="flex flex-col gap-0.5 min-w-[200px]">
-                          <span className="text-sm sm:text-[0.95rem] font-black tracking-tight text-text-dark line-clamp-1">
-                            {alert.metadata_json?.detail || alert.scenario_key}
+                      <td className="px-3 sm:px-4 py-3 sm:py-4">
+                        <div className="flex flex-col gap-0.5 min-w-[150px]">
+                          <span className="text-[0.75rem] sm:text-[0.8rem] font-black tracking-tight text-text-dark line-clamp-1">
+                            {scenarioNameByKey.get(alert.scenario_key) || alert.metadata_json?.detail || alert.scenario_key}
                           </span>
                           <div className="flex items-center gap-2">
-                            <span className="text-[0.55rem] sm:text-[0.6rem] font-black text-accent uppercase tracking-tighter opacity-60">Conf: {(alert.confidence * 100).toFixed(1)}%</span>
-                            <div className="w-1 h-1 bg-accent rounded-full opacity-30" />
-                            <span className="text-[0.55rem] sm:text-[0.6rem] font-black text-text-gray uppercase tracking-tighter truncate max-w-[100px]">AI: {alert.scenario_key}</span>
+                            <span className="text-[0.5rem] sm:text-[0.55rem] font-black text-accent uppercase tracking-tighter opacity-60">Conf: {(alert.confidence * 100).toFixed(1)}%</span>
                           </div>
                         </div>
                       </td>
-                      <td className="px-4 sm:px-8 py-4 sm:py-6">
-                        <div className="flex items-center gap-2 sm:gap-2.5 text-text-gray font-bold text-[0.75rem] sm:text-[0.8rem] whitespace-nowrap">
-                          <MapPin className="w-3.5 sm:w-4 h-3.5 sm:h-4 text-accent" />
+                      <td className="px-3 sm:px-4 py-3 sm:py-4">
+                        <div className="flex items-center gap-1.5 text-text-gray font-bold text-[0.65rem] sm:text-[0.7rem] whitespace-nowrap">
+                          <MapPin className="w-3 sm:w-3.5 h-3 sm:w-3.5 text-accent" />
                           Str-{String(alert.camera_id).padStart(2, '0')}
                         </div>
                       </td>
-                      <td className="px-4 sm:px-8 py-4 sm:py-6">
-                        <div className="flex items-center gap-1.5 sm:gap-2 text-text-gray font-bold text-[0.75rem] sm:text-[0.8rem] whitespace-nowrap">
-                          <Clock className="w-3.5 sm:w-4 h-3.5 sm:h-4 opacity-40" />
+                      <td className="px-3 sm:px-4 py-3 sm:py-4">
+                        <div className="flex items-center gap-1.5 text-text-gray font-bold text-[0.65rem] sm:text-[0.7rem] whitespace-nowrap">
+                          <Clock className="w-3 sm:w-3.5 h-3 sm:h-4 opacity-40" />
                           {formatDistanceToNow(new Date(alert.timestamp), { addSuffix: true })}
                         </div>
                       </td>
-                      <td className="px-4 sm:px-8 py-4 sm:py-6 text-right">
-                        <div className="flex justify-end gap-2">
+                      <td className="px-3 sm:px-4 py-3 sm:py-4 text-right">
+                        <div className="flex justify-end gap-1.5">
                           <button
                             onClick={() => setSelectedAlert(alert)}
-                            className="p-2 sm:p-2.5 bg-accent/10 text-accent rounded-lg hover:bg-accent hover:text-white border border-accent/20 transition-all shadow-sm"
+                            className="p-1.5 sm:p-2 bg-accent/10 text-accent rounded-lg hover:bg-accent hover:text-white border border-accent/20 transition-all shadow-sm"
                             title="View Snapshot"
                           >
-                            <Eye className="w-4 sm:w-4.5 h-4 sm:h-4.5" />
+                            <Eye className="w-3.5 h-3.5" />
                           </button>
                           {!isResolved ? (
                             <button
@@ -313,14 +347,14 @@ export default function Alerts() {
                                   console.error("Failed to resolve alert:", err);
                                 }
                               }}
-                              className="p-2 sm:p-2.5 bg-success/10 text-success rounded-lg hover:bg-success hover:text-white border border-success/20 transition-all shadow-sm"
+                              className="p-1.5 sm:p-2 bg-success/10 text-success rounded-lg hover:bg-success hover:text-white border border-success/20 transition-all shadow-sm"
                               title="Resolve Incident"
                             >
-                              <CheckCircle2 className="w-4 sm:w-4.5 h-4 sm:h-4.5" />
+                              <CheckCircle2 className="w-3.5 h-3.5" />
                             </button>
                           ) : (
-                            <div className="flex items-center gap-1.5 px-2.5 py-1 sm:py-1.5 bg-success/10 text-success border border-success/20 rounded-lg text-[0.55rem] sm:text-[0.65rem] font-black uppercase tracking-wider whitespace-nowrap">
-                              <CheckCircle2 className="w-3 sm:w-3.5 h-3 sm:h-3.5" /> Resolved
+                            <div className="flex items-center gap-1 px-2 py-1 bg-success/10 text-success border border-success/20 rounded-lg text-[0.5rem] sm:text-[0.55rem] font-black uppercase tracking-wider whitespace-nowrap">
+                              <CheckCircle2 className="w-3 h-3" /> Resolved
                             </div>
                           )}
                         </div>
@@ -403,7 +437,9 @@ export default function Alerts() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mb-6">
                 <div className="bg-surface p-3 sm:p-4 rounded-lg border border-border">
                   <span className="text-[0.6rem] sm:text-[0.65rem] font-bold text-text-gray uppercase tracking-widest block mb-1">Scenario Node</span>
-                  <span className="text-xs sm:text-sm font-bold text-text-dark">{selectedAlert.scenario_key}</span>
+                  <span className="text-xs sm:text-sm font-bold text-text-dark">
+                    {scenarioNameByKey.get(selectedAlert.scenario_key) || selectedAlert.scenario_key}
+                  </span>
                 </div>
                 <div className="bg-surface p-3 sm:p-4 rounded-lg border border-border">
                   <span className="text-[0.6rem] sm:text-[0.65rem] font-bold text-text-gray uppercase tracking-widest block mb-1">Detection Time</span>

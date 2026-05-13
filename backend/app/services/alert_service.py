@@ -85,13 +85,22 @@ def get_alerts(
     end_date: Optional[str] = None,
     allowed_area_ids: Optional[List[int]] = None,
 ):
-    if start_date and end_date:
+    if start_date or end_date:
         try:
-            start_dt = datetime.fromisoformat(start_date.replace('Z', '+00:00').split('.')[0])
-            end_dt = datetime.fromisoformat(end_date.replace('Z', '+00:00').split('.')[0])
-            if len(end_date) <= 10:
-                end_dt = end_dt + timedelta(days=1)
-            statement = select(DetectionEvent).where(DetectionEvent.timestamp >= start_dt, DetectionEvent.timestamp <= end_dt)
+            start_dt = None
+            end_dt = None
+            if start_date:
+                start_dt = datetime.fromisoformat(start_date.replace('Z', '+00:00').split('.')[0])
+            if end_date:
+                end_dt = datetime.fromisoformat(end_date.replace('Z', '+00:00').split('.')[0])
+                if len(end_date) <= 10:
+                    end_dt = end_dt + timedelta(days=1)
+            
+            statement = select(DetectionEvent)
+            if start_dt:
+                statement = statement.where(DetectionEvent.timestamp >= start_dt)
+            if end_dt:
+                statement = statement.where(DetectionEvent.timestamp <= end_dt)
         except ValueError:
             cutoff = datetime.now() - timedelta(hours=hours)
             statement = select(DetectionEvent).where(DetectionEvent.timestamp >= cutoff)
@@ -124,15 +133,22 @@ def get_logs(
     end_date: Optional[str] = None,
     allowed_area_ids: Optional[List[int]] = None,
 ):
-    if start_date and end_date:
+    if start_date or end_date:
         try:
-            # Handle ISO formats
-            start_dt = datetime.fromisoformat(start_date.replace('Z', '+00:00').split('.')[0])
-            end_dt = datetime.fromisoformat(end_date.replace('Z', '+00:00').split('.')[0])
-            # Add 1 day to end_date to include the whole day if it's just a date
-            if len(end_date) <= 10:
-                end_dt = end_dt + timedelta(days=1)
-            statement = select(DetectionEvent).where(DetectionEvent.timestamp >= start_dt, DetectionEvent.timestamp <= end_dt)
+            start_dt = None
+            end_dt = None
+            if start_date:
+                start_dt = datetime.fromisoformat(start_date.replace('Z', '+00:00').split('.')[0])
+            if end_date:
+                end_dt = datetime.fromisoformat(end_date.replace('Z', '+00:00').split('.')[0])
+                if len(end_date) <= 10:
+                    end_dt = end_dt + timedelta(days=1)
+            
+            statement = select(DetectionEvent)
+            if start_dt:
+                statement = statement.where(DetectionEvent.timestamp >= start_dt)
+            if end_dt:
+                statement = statement.where(DetectionEvent.timestamp <= end_dt)
         except ValueError:
             cutoff = datetime.now() - timedelta(hours=hours)
             statement = select(DetectionEvent).where(DetectionEvent.timestamp >= cutoff)
@@ -159,13 +175,22 @@ def get_logs_summary(
 ):
     latest_intelligence = latest_intelligence or {}
     
-    if start_date and end_date:
+    if start_date or end_date:
         try:
-            start_dt = datetime.fromisoformat(start_date.replace('Z', '+00:00').split('.')[0])
-            end_dt = datetime.fromisoformat(end_date.replace('Z', '+00:00').split('.')[0])
-            if len(end_date) <= 10:
-                end_dt = end_dt + timedelta(days=1)
-            statement = select(DetectionEvent).where(DetectionEvent.timestamp >= start_dt, DetectionEvent.timestamp <= end_dt)
+            start_dt = None
+            end_dt = None
+            if start_date:
+                start_dt = datetime.fromisoformat(start_date.replace('Z', '+00:00').split('.')[0])
+            if end_date:
+                end_dt = datetime.fromisoformat(end_date.replace('Z', '+00:00').split('.')[0])
+                if len(end_date) <= 10:
+                    end_dt = end_dt + timedelta(days=1)
+            
+            statement = select(DetectionEvent)
+            if start_dt:
+                statement = statement.where(DetectionEvent.timestamp >= start_dt)
+            if end_dt:
+                statement = statement.where(DetectionEvent.timestamp <= end_dt)
         except ValueError:
             cutoff = datetime.now() - timedelta(hours=hours)
             statement = select(DetectionEvent).where(DetectionEvent.timestamp >= cutoff)

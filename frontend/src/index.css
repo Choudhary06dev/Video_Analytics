@@ -45,6 +45,19 @@
   color: #f1f5f9; /* Matching --color-text-dark */
 }
 
+/* Fix for native date picker icon visibility */
+input[type="date"]::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  opacity: 0.6;
+  transition: opacity 0.2s;
+}
+input[type="date"]::-webkit-calendar-picker-indicator:hover {
+  opacity: 1;
+}
+.dark input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+}
+
 @layer base {
   body {
     @apply bg-bg text-text-dark font-sans;

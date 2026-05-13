@@ -14,8 +14,8 @@ os.environ["OPENCV_FFMPEG_CAPTURE_OPTIONS"] = "rtsp_transport;tcp|rtsp_flags;pre
 # AI Scenarios Mapping: YOLO label -> Internal Key (matches AIScenario.key in DB)
 SCENARIO_MAPPING = {
     "person": "UNAUTHORIZED_ENTRY_INTO_RESTRICTED_AREAS",
-    "knife": "WEAPON_DETECTION",
-    "scissors": "WEAPON_DETECTION",
+    "knife": "WEAPON_DETECTION_GUN_KNIFE",
+    "scissors": "WEAPON_DETECTION_GUN_KNIFE",
     "cell phone": "MOBILE_PHONE_USAGE_IN_RESTRICTED_AREAS",
     "car": "VEHICLE_DETECTION_TRACKING",
     "truck": "VEHICLE_DETECTION_TRACKING",
@@ -27,14 +27,19 @@ SCENARIO_MAPPING = {
     "parking meter": "UNAUTHORIZED_PARKING_AMBULANCE_BLOCKAGE",
 }
 
-CONF_THRESHOLD = 0.55
+# Mission-Critical Class IDs (COCO mapping for YOLOv8)
+# 0: person, 2: car, 3: motorcycle, 5: bus, 7: truck, 10: fire hydrant (used for fire), 
+# 43: knife, 67: cell phone, 69: oven, 70: toaster, 76: scissors
+INTEREST_CLASSES = [0, 2, 3, 5, 7, 10, 43, 67, 69, 70, 76]
+
+CONF_THRESHOLD = 0.30
 IOU_THRESHOLD = 0.45
-MIN_STABLE_FRAMES_TO_LOG = 3  # Faster response: requires only 3 consecutive frames
-LOG_COOLDOWN = 10.0 # Prevent spam for the same event
+MIN_STABLE_FRAMES_TO_LOG = 2  # Only 2 consecutive frames needed for fast alerting
+LOG_COOLDOWN = 5.0 # 5s cooldown between duplicate events
 VISITOR_LIMIT = 2  # Max allowed visitors (e.g., 1 patient + 1 attendant)
 
 SCENARIO_MIN_CONFIDENCE = {
-    "person": 0.55,
+    "person": 0.30,
     "knife": 0.60,
     "scissors": 0.60,
     "cell phone": 0.65,
@@ -160,10 +165,9 @@ class InferenceEngine:
         return self.processed_frame_bytes, self.processed_events
 
     def _perform_inference(self, frame):
-        # PERFORMANCE TWEAK: Use imgsz=320 for faster processing on standard hardware.
-        # YOLOv8 handles resizing internally and scales boxes back to original frame size.
-        # This keeps the output video stream at its original high resolution!
-        results = model.predict(frame, conf=CONF_THRESHOLD, iou=IOU_THRESHOLD, verbose=False, imgsz=320)
+        # imgsz=480 gives much better accuracy for person detection vs 320
+        # classes=INTEREST_CLASSES ensures we don't detect garbage like "surfboard" or "bench"
+        results = model.predict(frame, conf=CONF_THRESHOLD, iou=IOU_THRESHOLD, classes=INTEREST_CLASSES, verbose=False, imgsz=640)
         person_count = 0
         detected_scenarios = {}
         events_to_log = []

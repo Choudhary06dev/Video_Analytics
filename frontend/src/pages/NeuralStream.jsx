@@ -38,26 +38,16 @@ import {
 } from 'lucide-react';
 
 const SCENARIO_UI = {
-  'Staff/Visitor Activity': { icon: Lock, color: 'text-blue-500', bg: 'bg-blue-500/10' },
-  'Weapon Detection (Gun/Knife)': { icon: Crosshair, color: 'text-rose-500', bg: 'bg-rose-500/15' },
-  'Mobile Phone Usage - Restricted': { icon: Phone, color: 'text-amber-500', bg: 'bg-amber-500/10' },
-  'Vehicle Observation': { icon: Car, color: 'text-indigo-500', bg: 'bg-indigo-500/10' },
-  'Object Left Unattended': { icon: Package, color: 'text-slate-500', bg: 'bg-slate-500/10' },
-  'Fire / Smoke Detection': { icon: Flame, color: 'text-orange-500', bg: 'bg-orange-500/15' },
-  'Aggressive Behaviour Detection': { icon: AlertTriangle, color: 'text-rose-600', bg: 'bg-rose-600/10' },
-  'Multiple Persons - Single Access': { icon: Target, color: 'text-blue-400', bg: 'bg-blue-400/10' },
-  'Electronic Device Detected': { icon: Cpu, color: 'text-cyan-500', bg: 'bg-cyan-500/10' },
-  'Surveillance Monitor Active': { icon: Activity, color: 'text-purple-500', bg: 'bg-purple-500/10' },
-  'Aerial Object Detected': { icon: Activity, color: 'text-indigo-400', bg: 'bg-indigo-400/10' },
-  'Maritime Vessel Detected': { icon: Activity, color: 'text-blue-400', bg: 'bg-blue-400/10' },
-  'Rail Transit Detected': { icon: Activity, color: 'text-emerald-500', bg: 'bg-emerald-500/10' },
-  'Animal Intrusion Detected': { icon: AlertCircle, color: 'text-amber-600', bg: 'bg-amber-600/10' },
-  'Consumable Item Detected': { icon: Package, color: 'text-yellow-600', bg: 'bg-yellow-600/10' },
-  'Furniture Displacement': { icon: Package, color: 'text-slate-400', bg: 'bg-slate-400/10' },
-  'Recreational Activity Detected': { icon: Target, color: 'text-lime-500', bg: 'bg-lime-500/10' },
-  'Potential Weapon - Blunt Object': { icon: Shield, color: 'text-rose-400', bg: 'bg-rose-400/15' },
-  'Traffic Signal Detected': { icon: AlertCircle, color: 'text-red-500', bg: 'bg-red-500/10' },
-  'Parking Zone Detected': { icon: Car, color: 'text-blue-500', bg: 'bg-blue-500/10' },
+  'UNAUTHORIZED_ENTRY_INTO_RESTRICTED_AREAS': { icon: Lock, color: 'text-blue-500', bg: 'bg-blue-500/10' },
+  'WEAPON_DETECTION_GUN_KNIFE': { icon: Crosshair, color: 'text-rose-500', bg: 'bg-rose-500/15' },
+  'MOBILE_PHONE_USAGE_IN_RESTRICTED_AREAS': { icon: Phone, color: 'text-amber-500', bg: 'bg-amber-500/10' },
+  'VEHICLE_DETECTION_TRACKING': { icon: Car, color: 'text-indigo-500', bg: 'bg-indigo-500/10' },
+  'OBJECT_LEFT_UNATTENDED': { icon: Package, color: 'text-slate-500', bg: 'bg-slate-500/10' },
+  'FIRE_SMOKE_DETECTION': { icon: Flame, color: 'text-orange-500', bg: 'bg-orange-500/15' },
+  'AGGRESSIVE_BEHAVIOUR_DETECTION': { icon: AlertTriangle, color: 'text-rose-600', bg: 'bg-rose-600/10' },
+  'MULTIPLE_PERSONS_ENTRY_ON_SINGLE_ACCESS': { icon: Target, color: 'text-blue-400', bg: 'bg-blue-400/10' },
+  'ELECTRONIC_DEVICE_DETECTED': { icon: Cpu, color: 'text-cyan-500', bg: 'bg-cyan-500/10' },
+  'VISITOR_COUNT_LIMIT_EXCEEDED': { icon: Activity, color: 'text-purple-500', bg: 'bg-purple-500/10' },
   'Default': { icon: Target, color: 'text-slate-400', bg: 'bg-slate-400/10' }
 };
 import CameraFeed from '../components/camera/CameraFeed';
@@ -77,7 +67,7 @@ export default function NeuralStream() {
   const [cameraLimit, setCameraLimit] = useState(6);
   const [cameraOffset, setCameraOffset] = useState(0);
   const INITIAL_CAMERA_LIMIT = 6;
-  const PAGE_SIZE = 20;
+  const PAGE_SIZE = 15;
   const [summary, setSummary] = useState({
     total_persons: 0,
     total_weapons: 0,
@@ -99,6 +89,10 @@ export default function NeuralStream() {
   const [zoneSearchQuery, setZoneSearchQuery] = useState('');
   const [matrixData, setMatrixData] = useState({ scenarios: [], cameras: [], matrix: {}, total_alerts: 0 });
   const [showOnlyActiveCams, setShowOnlyActiveCams] = useState(true);
+
+  const scenarioNameByKey = useMemo(() => {
+    return new Map(scenarios.map(s => [s.key, s.name]));
+  }, [scenarios]);
 
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
@@ -247,13 +241,27 @@ export default function NeuralStream() {
     return new Set(summary.camera_ids || []);
   }, [selectedScenarioKey, summary.camera_ids]);
 
+  const selectedScenarioId = useMemo(() => {
+    if (selectedScenarioKey === 'all') return null;
+    const scenario = scenarios.find(s => s.key === selectedScenarioKey || s.name === selectedScenarioKey);
+    return scenario ? scenario.id : null;
+  }, [scenarios, selectedScenarioKey]);
+
   const filteredCameras = useMemo(() => {
     return cameras.filter(camera => {
       const matchesArea = !selectedAreaIds || selectedAreaIds.has(camera.area_id);
-      const matchesScenario = !visibleCameraIdsByScenario || visibleCameraIdsByScenario.has(camera.id);
+
+      // Filter by scenario: matches if the camera has events OR if it is assigned to this scenario
+      let matchesScenario = true;
+      if (selectedScenarioKey !== 'all') {
+        const hasEvents = visibleCameraIdsByScenario?.has(camera.id);
+        const isEnabled = selectedScenarioId && camera.enabled_scenario_ids?.includes(selectedScenarioId);
+        matchesScenario = hasEvents || isEnabled;
+      }
+
       return matchesArea && matchesScenario;
     });
-  }, [cameras, selectedAreaIds, visibleCameraIdsByScenario]);
+  }, [cameras, selectedAreaIds, visibleCameraIdsByScenario, selectedScenarioKey, selectedScenarioId]);
 
   const activeFilters = useMemo(() => ({
     camera_id: isGlobalView ? undefined : activeCamera,
@@ -285,7 +293,8 @@ export default function NeuralStream() {
         setLogs(logsData.slice(0, 30).map(log => {
           const scenario = SCENARIO_UI[log.scenario_key] || SCENARIO_UI['Default'];
           const isAlert = log.is_alert || false;
-          const detail = log.metadata_json?.detail || log.scenario_key.toUpperCase();
+          const friendlyName = scenarioNameByKey.get(log.scenario_key);
+          const detail = friendlyName || log.scenario_key;
 
           const logDate = new Date(log.timestamp);
           const now = new Date();
@@ -512,7 +521,7 @@ export default function NeuralStream() {
 
             <button
               onClick={toggleFullscreen}
-              className="p-2 sm:p-1.5 border rounded-lg transition-colors bg-surface text-text-gray hover:text-white border-border cursor-pointer h-[32px] flex items-center justify-center gap-2 ml-1"
+              className="p-2 sm:p-1.5 border rounded-lg transition-colors bg-surface text-text-gray hover:text-accent hover:border-accent/30 cursor-pointer h-[32px] flex items-center justify-center gap-2 ml-1"
               title="Toggle Full Screen"
             >
               {isFullscreen ? <Minimize className="w-3.5 h-3.5 sm:w-3 sm:h-3" /> : <Maximize className="w-3.5 h-3.5 sm:w-3 sm:h-3" />}
@@ -522,11 +531,10 @@ export default function NeuralStream() {
         </div>
       </div>
 
-      {/* MAIN CONTENT: Zone Tree + Streaming Matrix */}
-      <div className="flex gap-4 w-full">
-
+      {/* MAIN CONTENT: Unified Neural Hub (Sidebar + Matrix) */}
+      <div className="flex flex-1 bg-card rounded-lg border border-border shadow-premium overflow-hidden min-h-0">
         {/* LEFT SIDEBAR: Area / Zone Tree */}
-        <div className="hidden lg:flex flex-col w-[260px] shrink-0 bg-card rounded-lg border border-border shadow-premium overflow-hidden">
+        <div className="hidden lg:flex flex-col w-[260px] shrink-0 border-r border-border/60 overflow-hidden">
           {/* Sidebar Header */}
           <div className="px-4 py-3 border-b border-border bg-surface/30 flex items-center gap-2.5">
             <div className="p-1.5 bg-accent/10 text-accent rounded-md border border-accent/20">
@@ -621,7 +629,7 @@ export default function NeuralStream() {
                             <button
                               key={child.id}
                               onClick={() => { setSelectedAreaId(String(child.id)); setIsGlobalView(true); setActiveCamera(null); setLogsOffset(0); setCameraOffset(0); setLogs([]); }}
-                              className={`w-full text-left px-3 py-1.5 rounded-md text-[0.6rem] font-bold flex items-center justify-between transition-all duration-200
+                              className={`w-full text-left px-3 py-2 rounded-md text-[0.65rem] font-black uppercase tracking-wider flex items-center justify-between transition-all duration-200
                  ${isChildActive ? 'bg-accent/10 text-accent border border-accent/20' : 'text-text-gray hover:bg-surface hover:text-text-dark border border-transparent'}`}
                             >
                               <span className="truncate">{child.name}</span>
@@ -640,10 +648,10 @@ export default function NeuralStream() {
         </div>
 
         {/* RIGHT: Streaming Matrix */}
-        <div className="flex-1 shrink-0 overflow-hidden bg-card rounded-lg border border-border shadow-premium p-2 sm:p-4 flex flex-col gap-2 sm:gap-4 min-w-0">
+        <div className="flex-1 shrink-0 overflow-hidden p-2 sm:p-4 flex flex-col gap-2 sm:gap-4 min-w-0 bg-slate-900/5">
 
           {/* MAIN STREAMING AREA — Unified Container to remove gaps */}
-          <div className="flex-1 flex flex-col bg-black rounded-lg border border-border overflow-hidden min-h-[400px]">
+          <div className="flex-1 flex flex-col bg-slate-950 rounded-lg border border-border/40 overflow-hidden min-h-[400px]">
             <div className="flex-1 overflow-y-auto custom-scrollbar relative">
               {isGlobalView ? (
                 /* Dynamic Grid Reflow */
@@ -680,13 +688,13 @@ export default function NeuralStream() {
                         ) : (
                           <CameraFeed streamUrl={`${VIDEO_FEED_URL}/${cam.id}`} hideOverlay={true} />
                         )}
-                        <div className="absolute top-0 left-0 right-0 px-3 py-2 bg-black/75 backdrop-blur-md border-b border-white/10 z-10 flex items-center justify-between opacity-90 group-hover:opacity-100 transition-opacity">
+                        <div className="absolute top-0 left-0 right-0 px-3 py-3 bg-gradient-to-b from-black/80 via-black/20 to-transparent z-10 flex items-center justify-between opacity-80 group-hover:opacity-100 transition-all duration-300">
                           <div className="flex items-center gap-2">
                             <div className={`w-2 h-2 rounded-full ${isDisabled ? 'bg-rose-500' : 'bg-emerald-500 animate-pulse'}`} />
                             <span className="text-[0.65rem] font-bold text-white uppercase tracking-wider truncate max-w-[120px] sm:max-w-[160px]">{cam.name} - CAM {cam.id.toString().padStart(2, '0')}</span>
                           </div>
                           {!isDisabled && (
-                            <div className="flex items-center gap-1.5 px-2 py-0.5 bg-white/10 rounded border border-white/5">
+                            <div className="flex items-center gap-1.5 px-2 py-0.5 bg-black/60 backdrop-blur-sm rounded border border-white/10">
                               <Users className="w-3 h-3 text-white/80" />
                               <span className="text-[0.6rem] font-bold text-white">{cameraCounts[cam.id] || 0}</span>
                             </div>
@@ -785,7 +793,7 @@ export default function NeuralStream() {
             )}
           </div>
         </div>
-      </div> {/* End flex: Zone Tree + Streaming Matrix */}
+      </div> {/* End Unified Neural Hub */}
 
 
       {/* FULL-WIDTH INTELLIGENCE & BREAKDOWN SECTION */}
@@ -1096,7 +1104,7 @@ export default function NeuralStream() {
                         </div>
                         <div className="ml-3 flex-1 min-w-0">
                           <div className="text-[0.65rem] font-bold text-text-dark truncate uppercase tracking-wide group-hover:text-accent transition-colors">
-                            {name}
+                            {scenarioNameByKey.get(name) || name}
                           </div>
                           <div className="w-full bg-border/50 h-1 rounded-full mt-1.5 overflow-hidden">
                             <div className={`h-full ${scenario.bg.replace('/10', '').replace('/15', '')} ${scenario.bg.includes('rose') ? 'bg-rose-500' : scenario.bg.includes('amber') ? 'bg-amber-500' : 'bg-accent'}`} style={{ width: `${Math.min(100, (count / Math.max(1, summary.count || 1)) * 100)}%` }}></div>
@@ -1173,7 +1181,7 @@ export default function NeuralStream() {
                 <table className="w-full text-[0.6rem] border-collapse">
                   <thead>
                     <tr className="border-b-2 border-border bg-surface/40">
-                      <th className="text-left px-4 py-2.5 font-black text-text-dark uppercase tracking-widest sticky left-0 bg-surface z-10 min-w-[180px] border-r border-border">Scenario</th>
+                      <th className="text-left px-4 py-2.5 font-black text-text-dark uppercase tracking-widest sticky left-0 bg-surface z-10 min-w-[80px] border-r border-border">Scenarios</th>
                       {displayedCameras.map(cam => (
                         <th key={cam.id} className="text-center px-2 py-2.5 font-black uppercase tracking-wider min-w-[90px] border-r border-border/60">
                           <div className="flex flex-col items-center gap-0.5">
@@ -1197,7 +1205,9 @@ export default function NeuralStream() {
                               <div className={`w-5 h-5 rounded flex items-center justify-center ${scenarioUI.bg}`}>
                                 <Icon className={`w-3 h-3 ${scenarioUI.color}`} />
                               </div>
-                              <span className="font-bold text-text-dark truncate max-w-[140px]">{scenario}</span>
+                              <span className="font-bold text-text-dark text-[0.7rem] tracking-tight whitespace-nowrap">
+                                {scenarioNameByKey.get(scenario) || scenario}
+                              </span>
                             </div>
                           </td>
                           {displayedCameras.map(cam => {

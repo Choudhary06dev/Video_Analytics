@@ -6,6 +6,7 @@ import {
   Bell,
   Camera,
   CheckCircle2,
+  ChevronDown,
   CircleAlert,
   Clock,
   Cpu,
@@ -146,6 +147,7 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [lastUpdated, setLastUpdated] = useState(null);
+  const [timeRange, setTimeRange] = useState('today'); // Default to Today (Midnight to now)
   const [errors, setErrors] = useState({});
   const [cameras, setCameras] = useState([]);
   const [areas, setAreas] = useState([]);
@@ -156,9 +158,19 @@ export default function Dashboard() {
   const [scenarios, setScenarios] = useState([]);
   const [health, setHealth] = useState({ status: 'unknown' });
 
-  const loadDashboard = async (showSpinner = false) => {
+  const loadDashboard = async (showSpinner = false, hoursOverride = null) => {
     if (showSpinner) setRefreshing(true);
     const nextErrors = {};
+    const range = hoursOverride || timeRange;
+    
+    let hours = 24;
+    if (range === 'today') {
+      const now = new Date();
+      const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      hours = Math.max(1, Math.ceil((now - startOfToday) / (1000 * 60 * 60)));
+    } else {
+      hours = parseInt(range, 10);
+    }
 
     const load = async (key, fn, fallback) => {
       try {
@@ -172,9 +184,9 @@ export default function Dashboard() {
     const [cameraData, areaData, alertData, logData, summaryData, intelData, healthData, scenariosData] = await Promise.all([
       load('cameras', fetchAdminCameras, []),
       load('areas', fetchAdminAreas, []),
-      load('alerts', () => fetchAlerts({ hours: 24, limit: 20 }), []),
-      load('logs', () => fetchLogs({ hours: 24, limit: 300, skip: 0 }), []),
-      load('summary', () => fetchLogsSummary(24), {}),
+      load('alerts', () => fetchAlerts({ hours, limit: 20 }), []),
+      load('logs', () => fetchLogs({ hours, limit: 300, skip: 0 }), []),
+      load('summary', () => fetchLogsSummary(hours), {}),
       load('intelligence', fetchIntelligence, { person_count: 0, objects: [], stable_objects: [] }),
       load('health', fetchHealth, { status: 'unknown' }),
       load('scenarios', fetchScenarios, [])
@@ -198,7 +210,13 @@ export default function Dashboard() {
     loadDashboard();
     const interval = setInterval(() => loadDashboard(false), 5000);
     return () => clearInterval(interval);
-  }, []);
+  }, [timeRange]);
+
+  const handleTimeRangeChange = (e) => {
+    const val = e.target.value;
+    setTimeRange(val);
+    setLoading(true);
+  };
 
   const stats = useMemo(() => {
     const activeCameras = cameras.filter((camera) => camera.is_active !== false).length;
@@ -254,6 +272,15 @@ export default function Dashboard() {
 
   const COLORS = ['#0ea5e9', '#8b5cf6', '#ec4899', '#f59e0b', '#22c55e', '#ef4444'];
 
+  // Build a lookup from machine key -> human-readable name
+  const scenarioNameMap = useMemo(() => {
+    const map = {};
+    scenarios.forEach((s) => {
+      if (s.key) map[s.key] = s.name;
+    });
+    return map;
+  }, [scenarios]);
+
   const modelRows = useMemo(() => {
     const counts = {};
     logs.forEach((log) => {
@@ -264,8 +291,8 @@ export default function Dashboard() {
     return Object.entries(counts)
       .sort((a, b) => b[1] - a[1])
       .slice(0, 6)
-      .map(([name, value]) => ({ name, value }));
-  }, [logs]);
+      .map(([key, value]) => ({ name: scenarioNameMap[key] || key.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()), value }));
+  }, [logs, scenarioNameMap]);
 
   const trendData = useMemo(() => buildTrend(logs), [logs]);
 
@@ -304,20 +331,39 @@ export default function Dashboard() {
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-3">
-            <div className={`px-4 py-2 rounded-lg border text-[10px] font-black uppercase tracking-widest ${postureTone === 'danger' ? 'bg-danger/10 text-danger border-danger/20' : postureTone === 'warning' ? 'bg-warning/10 text-warning border-warning/20' : 'bg-success/10 text-success border-success/20'}`}>
-              {stats.posture} posture
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+            <div className="relative group min-w-[120px]">
+              <select 
+                value={timeRange} 
+                onChange={handleTimeRangeChange}
+                className="w-full appearance-none pl-3 pr-9 py-2 bg-surface border border-border rounded-lg text-[10px] font-black tracking-tight text-text-dark focus:outline-none focus:ring-1 focus:ring-accent/40 cursor-pointer transition-all hover:border-accent/40"
+              >
+                <option value="today">Today</option>
+                <option value="1">Last 1h</option>
+                <option value="6">Last 6h</option>
+                <option value="24">Last 24h</option>
+                <option value="168">This Week</option>
+              </select>
+              <div className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none text-text-gray group-hover:text-accent">
+                <ChevronDown className="w-3.5 h-3.5" />
+              </div>
             </div>
-            <div className="px-4 py-2 rounded-lg border border-border bg-surface text-[10px] font-black uppercase tracking-widest text-text-gray">
-              Updated {lastUpdated ? lastUpdated.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : 'Loading'}
+
+            <div className={`px-3 py-2 rounded-lg border text-[10px] font-black tracking-tight ${postureTone === 'danger' ? 'bg-danger/10 text-danger border-danger/20' : postureTone === 'warning' ? 'bg-warning/10 text-warning border-warning/20' : 'bg-success/10 text-success border-success/20'}`}>
+              {stats.posture} Posture
             </div>
+            
+            <div className="hidden sm:block px-3 py-2 rounded-lg border border-border bg-surface text-[10px] font-black tracking-tight text-text-gray">
+              Updated {lastUpdated ? lastUpdated.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--:--'}
+            </div>
+
             <button
               onClick={() => loadDashboard(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-accent text-white rounded-lg text-[10px] font-black uppercase tracking-widest shadow-sm hover:opacity-90 transition-all disabled:opacity-60"
+              className="flex items-center gap-2 px-3 py-2 bg-accent text-white rounded-lg text-[10px] font-black tracking-tight shadow-sm hover:opacity-90 transition-all disabled:opacity-60"
               disabled={refreshing}
             >
-              <RefreshCw className={`w-3.5 h-3.5 ${refreshing ? 'animate-spin' : ''}`} />
-              Refresh
+              <RefreshCw className={`w-3 h-3 ${refreshing ? 'animate-spin' : ''}`} />
+              <span className="hidden xs:inline">Refresh</span>
             </button>
           </div>
         </div>
@@ -425,7 +471,7 @@ export default function Dashboard() {
                     {formatTime(alert.timestamp)}
                   </span>
                 </div>
-                <p className="text-xs font-black text-text-dark mt-3 line-clamp-2">{alert.metadata_json?.detail || alert.scenario_key}</p>
+                <p className="text-xs font-black text-text-dark mt-3 line-clamp-2">{alert.metadata_json?.detail || scenarioNameMap[alert.scenario_key] || alert.scenario_key}</p>
                 <p className="text-[10px] font-semibold text-text-gray mt-1">Camera #{alert.camera_id} - confidence {Math.round((alert.confidence || 0) * 100)}%</p>
               </div>
             )) : <EmptyState text="No active alerts in the selected window" />}
@@ -480,28 +526,33 @@ export default function Dashboard() {
 
         <div className="bg-card border border-border rounded-lg p-5 shadow-sm">
           <SectionHeader icon={Zap} title="Model-wise Detections" subtitle="Top AI scenarios from event logs" />
-          <div className="h-[220px] sm:h-[290px]">
+          <div className="mt-2 space-y-5">
             {modelRows.length ? (
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={modelRows} layout="vertical" margin={{ top: 0, right: 12, left: 0, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#e2e8f0" />
-                  <XAxis type="number" tick={{ fill: '#94a3b8', fontSize: 10 }} axisLine={false} tickLine={false} />
-                  <YAxis type="category" dataKey="name" width={120} tick={{ fill: '#64748b', fontSize: 10, fontWeight: 700 }} axisLine={false} tickLine={false} />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: '#1e293b',
-                      border: '1px solid rgba(255,255,255,0.1)',
-                      borderRadius: '8px',
-                      color: '#f8fafc',
-                      fontSize: '11px',
-                      fontWeight: '800',
-                      boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.3)'
-                    }}
-                    cursor={{ fill: 'rgba(255,255,255,0.05)' }}
-                  />
-                  <Bar dataKey="value" fill="#0ea5e9" radius={[0, 6, 6, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
+              modelRows.map((row, i) => {
+                const maxVal = Math.max(...modelRows.map(r => r.value), 1);
+                const percentage = (row.value / maxVal) * 100;
+                return (
+                  <div key={row.name} className="group">
+                    <div className="flex justify-between items-end mb-1.5">
+                      <span className="text-[11px] font-black uppercase tracking-tight text-text-dark group-hover:text-accent transition-colors duration-300">
+                        {row.name}
+                      </span>
+                      <span className="text-[10px] font-black text-accent bg-accent/10 px-2 py-0.5 rounded border border-accent/20">
+                        {row.value}
+                      </span>
+                    </div>
+                    <div className="h-2.5 bg-surface rounded-full overflow-hidden border border-border/50 p-[2px]">
+                      <div 
+                        className="h-full bg-gradient-to-r from-accent to-accent-light rounded-full transition-all duration-1000 ease-out" 
+                        style={{ 
+                          width: `${percentage}%`,
+                          backgroundColor: i === 0 ? '#0ea5e9' : i === 1 ? '#8b5cf6' : '#6366f1' 
+                        }}
+                      />
+                    </div>
+                  </div>
+                );
+              })
             ) : <EmptyState text="No model detections logged yet" />}
           </div>
         </div>

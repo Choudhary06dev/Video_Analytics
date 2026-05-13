@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Menu, Search, Bell, ChevronDown, Sun, Moon, Shield,
@@ -36,6 +36,7 @@ export default function Header({ isSidebarOpen, setSidebarOpen }) {
   const [notifications, setNotifications] = useState([]);
   const [showNotifications, setShowNotifications] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [scenarios, setScenarios] = useState([]);
   const searchRef = useRef(null);
   const profileRef = useRef(null);
   const mobileSearchRef = useRef(null);
@@ -65,6 +66,9 @@ export default function Header({ isSidebarOpen, setSidebarOpen }) {
           icon: Brain
         }));
 
+        if (Array.isArray(scenarios)) {
+          setScenarios(scenarios);
+        }
         setSearchIndex([...STATIC_PAGES, ...cameraItems, ...scenarioItems]);
       } catch (err) {
         console.error("Critical: Failed to build dynamic search index", err);
@@ -115,6 +119,10 @@ export default function Header({ isSidebarOpen, setSidebarOpen }) {
       setShowResults(false);
     }
   }, [searchQuery, searchIndex]);
+
+  const scenarioNameByKey = useMemo(() => {
+    return new Map(scenarios.map(s => [s.key, s.name]));
+  }, [scenarios]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -321,7 +329,9 @@ export default function Header({ isSidebarOpen, setSidebarOpen }) {
                             <span className={`text-[10px] font-black uppercase tracking-wider ${alert.severity === 'Critical' ? 'text-danger' : 'text-accent'}`}>{alert.severity}</span>
                             <span className="text-[8px] font-bold text-text-gray">{new Date(alert.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                           </div>
-                          <p className="text-[11px] font-bold text-text-dark leading-tight line-clamp-2">{alert.message || alert.scenario_key}</p>
+                          <p className="text-[11px] font-bold text-text-dark leading-tight line-clamp-2">
+                            {alert.message || scenarioNameByKey.get(alert.scenario_key) || alert.scenario_key}
+                          </p>
                           <p className="text-[9px] font-medium text-text-gray/60 mt-1 uppercase">Camera {alert.camera_id} • {alert.area_name || 'Global'}</p>
                         </div>
                       </button>
@@ -337,7 +347,7 @@ export default function Header({ isSidebarOpen, setSidebarOpen }) {
                 </div>
                 <button
                   onClick={() => {
-                    navigate('/alerts');
+                    navigate('/vault');
                     setShowNotifications(false);
                   }}
                   className="w-full p-3 text-[10px] font-black text-accent uppercase tracking-widest hover:bg-accent hover:text-white transition-all bg-accent/5 flex items-center justify-center gap-2"

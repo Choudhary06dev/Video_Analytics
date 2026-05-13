@@ -4,6 +4,7 @@ import {
 } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 import { fetchLogs as apiFetchLogs } from '../services/alertService';
+import { fetchLiveScenarios } from '../services/cameraService';
 
 /* ═══════════════════════════════════════════════════════════════════════════════
   GLOBAL CSS (Preserved for animations)
@@ -251,7 +252,24 @@ export default function ActivityVault() {
   const [stats, setStats] = useState({
     total: 0, completed: 0, inProgress: 0, flagged: 0, pending: 0, avgConf: 0, avgTime: 0, highConf: 0
   });
+  const [scenarios, setScenarios] = useState([]);
   const { isDark } = useTheme();
+
+  useEffect(() => {
+    const loadScenarios = async () => {
+      try {
+        const data = await fetchLiveScenarios();
+        setScenarios(data || []);
+      } catch (err) {
+        console.error("Failed to fetch scenarios:", err);
+      }
+    };
+    loadScenarios();
+  }, []);
+
+  const scenarioNameByKey = React.useMemo(() => {
+    return new Map(scenarios.map(s => [s.key, s.name]));
+  }, [scenarios]);
 
   useEffect(() => {
     const s = document.createElement('style'); s.id = 'vp-css'; s.textContent = VAULT_PAGE_CSS; document.head.appendChild(s);
@@ -478,7 +496,7 @@ export default function ActivityVault() {
           <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
             <thead>
               <tr style={{ background: isDark ? 'rgba(255,255,255,.02)' : 'rgba(0,0,0,.02)', borderBottom: `1px solid ${cardBorder}` }}>
-                {['Event ID', 'Scenario', 'Location', 'Severity', 'Confidence', 'Timestamp', ''].map(h => (
+                {['Event ID', 'Scenario', 'Area', 'Severity', 'Confidence', 'Timestamp', ''].map(h => (
                   <th key={h} style={{ padding: '14px 24px', fontSize: 10, fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: 1 }}>{h}</th>
                 ))}
               </tr>
@@ -492,12 +510,12 @@ export default function ActivityVault() {
                 <tr key={ev.id} style={{ borderBottom: `1px solid ${cardBorder}`, transition: 'all 0.2s' }}>
                   <td style={{ padding: '16px 24px', fontSize: 12, fontWeight: 700, color: isDark ? '#94a3b8' : '#64748b', fontFamily: 'JetBrains Mono,monospace' }}>#{ev.id}</td>
                   <td style={{ padding: '16px 24px' }}>
-                    <div style={{ fontSize: 13, fontWeight: 800, color: isDark ? '#f1f5f9' : '#1e293b' }}>{ev.scenario_key}</div>
-                    <div style={{ fontSize: 10, color: '#64748b', fontWeight: 600 }}>{ev.object_class}</div>
+                    <div style={{ fontSize: 13, fontWeight: 800, color: isDark ? '#f1f5f9' : '#1e293b' }}>
+                      {scenarioNameByKey.get(ev.scenario_key) || ev.scenario_key}
+                    </div>
                   </td>
                   <td style={{ padding: '16px 24px' }}>
-                    <div style={{ fontSize: 12, fontWeight: 700, color: isDark ? '#cbd5e1' : '#475569' }}>{ev.camera_name}</div>
-                    <div style={{ fontSize: 10, color: '#94a3b8', fontWeight: 600 }}>{ev.area_name}</div>
+                    <div style={{ fontSize: 12, fontWeight: 700, color: isDark ? '#cbd5e1' : '#475569' }}>{ev.area_name}</div>
                   </td>
                   <td style={{ padding: '16px 24px' }}>
                     <span style={{
@@ -622,7 +640,7 @@ export default function ActivityVault() {
             {/* Detail Grid */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12 }}>
               {[
-                { label: 'Scenario', value: selectedEvent.scenario_key },
+                { label: 'Scenario', value: scenarioNameByKey.get(selectedEvent.scenario_key) || selectedEvent.scenario_key },
                 { label: 'Object Class', value: selectedEvent.object_class },
                 { label: 'Camera', value: selectedEvent.camera_name },
                 { label: 'Area / Zone', value: selectedEvent.area_name },
