@@ -162,6 +162,49 @@ def get_logs(
     statement = statement.order_by(DetectionEvent.timestamp.desc()).offset(skip).limit(limit)
     return session.exec(statement).all()
 
+def _get_summary_stats(
+    session: Session,
+    start_dt: datetime,
+    end_dt: datetime,
+    camera_id: Optional[int] = None,
+    area_id: Optional[int] = None,
+    scenario_key: Optional[str] = None,
+    allowed_area_ids: Optional[List[int]] = None,
+) -> Dict:
+    statement = select(DetectionEvent).where(DetectionEvent.timestamp >= start_dt).where(DetectionEvent.timestamp <= end_dt)
+    statement = _apply_event_filters(statement, session, camera_id, area_id, scenario_key, allowed_area_ids=allowed_area_ids)
+    
+    if statement is None:
+        events = []
+    else:
+        events = session.exec(statement).all()
+    
+    total_persons = 0
+    total_weapons = 0
+    total_vehicles = 0
+    object_counts = {}
+    
+    for ev in events:
+        obj = ev.object_class
+        object_counts[obj] = object_counts.get(obj, 0) + 1
+        
+        obj_lower = obj.lower()
+        if "person" in obj_lower or "entry" in obj_lower:
+            total_persons += ev.metadata_json.get("count", 1) if ev.metadata_json else 1
+        if "weapon" in obj_lower or "knife" in obj_lower:
+            total_weapons += ev.metadata_json.get("count", 1) if ev.metadata_json else 1
+        if "vehicle" in obj_lower or "car" in obj_lower or "truck" in obj_lower:
+            total_vehicles += ev.metadata_json.get("count", 1) if ev.metadata_json else 1
+            
+    return {
+        "count": len(events),
+        "total_persons": total_persons,
+        "total_weapons": total_weapons,
+        "total_vehicles": total_vehicles,
+        "object_breakdown": object_counts,
+        "avg_confidence": float(sum(ev.confidence for ev in events) / len(events) if events else 0)
+    }
+
 def get_logs_summary(
     session: Session,
     hours: float = 24.0,
@@ -174,127 +217,69 @@ def get_logs_summary(
     end_date: Optional[str] = None,
 ):
     latest_intelligence = latest_intelligence or {}
+    now = datetime.now()
     
+    # Calculate current period range
     if start_date or end_date:
         try:
-            start_dt = None
-            end_dt = None
-            if start_date:
-                start_dt = datetime.fromisoformat(start_date.replace('Z', '+00:00').split('.')[0])
-            if end_date:
-                end_dt = datetime.fromisoformat(end_date.replace('Z', '+00:00').split('.')[0])
-                if len(end_date) <= 10:
-                    end_dt = end_dt + timedelta(days=1)
-            
-            statement = select(DetectionEvent)
-            if start_dt:
-                statement = statement.where(DetectionEvent.timestamp >= start_dt)
-            if end_dt:
-                statement = statement.where(DetectionEvent.timestamp <= end_dt)
+            start_dt = datetime.fromisoformat(start_date.replace('Z', '+00:00').split('.')[0]) if start_date else now - timedelta(hours=hours)
+            end_dt = datetime.fromisoformat(end_date.replace('Z', '+00:00').split('.')[0]) if end_date else now
+            if end_date and len(end_date) <= 10:
+                end_dt += timedelta(days=1)
         except ValueError:
-            cutoff = datetime.now() - timedelta(hours=hours)
-            statement = select(DetectionEvent).where(DetectionEvent.timestamp >= cutoff)
+            start_dt, end_dt = now - timedelta(hours=hours), now
     else:
-        cutoff = datetime.now() - timedelta(hours=hours)
-        statement = select(DetectionEvent).where(DetectionEvent.timestamp >= cutoff)
+        start_dt, end_dt = now - timedelta(hours=hours), now
         
+    # Get Current Period Stats
+    current_stats = _get_summary_stats(session, start_dt, end_dt, camera_id, area_id, scenario_key, allowed_area_ids)
+    
+    # Calculate Previous Period Range (same duration before start_dt)
+    duration = end_dt - start_dt
+    prev_start_dt = start_dt - duration
+    prev_end_dt = start_dt
+    
+    # Get Previous Period Stats
+    previous_stats = _get_summary_stats(session, prev_start_dt, prev_end_dt, camera_id, area_id, scenario_key, allowed_area_ids)
+    
+    # Additional data for the response (Heatmaps, Threat levels based on current period)
+    statement = select(DetectionEvent).where(DetectionEvent.timestamp >= start_dt).where(DetectionEvent.timestamp <= end_dt)
     statement = _apply_event_filters(statement, session, camera_id, area_id, scenario_key, allowed_area_ids=allowed_area_ids)
+    events = session.exec(statement).all() if statement is not None else []
     
-    if statement is None:
-        events = []
-    else:
-        events = session.exec(statement).all()
-    
-    total_persons = 0
-    total_weapons = 0
-    total_vehicles = 0
-    object_counts = {}
-    camera_ids = set()
-    
-    # Activity Vault stats
     hourly_distribution = [0] * 24
-    weekly_distribution = [[0] * 24 for _ in range(7)]  # 7 days (Mon=0, Sun=6) x 24 hours
-    categorical_hourly = {
-        "Low": [0] * 24,
-        "Medium": [0] * 24,
-        "High": [0] * 24
-    }
+    weekly_distribution = [[0] * 24 for _ in range(7)]
     severity_distribution = {"Low": 0, "Medium": 0, "High": 0, "Critical": 0}
     
     for ev in events:
-        obj = ev.object_class
-        camera_ids.add(ev.camera_id)
-        object_counts[obj] = object_counts.get(obj, 0) + 1
-        
-        # Time and Severity distribution
         hour = ev.timestamp.hour
         hourly_distribution[hour] += 1
-        
-        # Weekly Heatmap (0=Monday, 6=Sunday)
-        weekday = ev.timestamp.weekday()
-        weekly_distribution[weekday][hour] += 1
-        
-        # Categorical Hourly based strictly on severity mapping
-        SEVERITY_TO_CAT = {
-            "Critical": "High",
-            "High": "High",
-            "Medium": "Medium",
-            "Low": "Low"
-        }
-        category = SEVERITY_TO_CAT.get(ev.severity, "Low")
-        categorical_hourly[category][hour] += 1
-
-        sev = ev.severity
-        if sev in severity_distribution:
-            severity_distribution[sev] += 1
-        
-        obj_lower = obj.lower()
-        if "person" in obj_lower or "entry" in obj_lower:
-            total_persons += ev.metadata_json.get("count", 1) if ev.metadata_json else 1
-        if "weapon" in obj_lower or "knife" in obj_lower:
-            total_weapons += ev.metadata_json.get("count", 1) if ev.metadata_json else 1
-        if "vehicle" in obj_lower or "car" in obj_lower or "truck" in obj_lower:
-            total_vehicles += ev.metadata_json.get("count", 1) if ev.metadata_json else 1
+        weekly_distribution[ev.timestamp.weekday()][hour] += 1
+        if ev.severity in severity_distribution:
+            severity_distribution[ev.severity] += 1
             
     live_persons = latest_intelligence.get("person_count", 0)
-    live_objects = latest_intelligence.get("objects", [])
+    live_weapons = sum(1 for obj in latest_intelligence.get("objects", []) if any(x in obj.lower() for x in ["weapon", "knife"]))
     
-    live_weapons = sum(1 for obj in live_objects if any(x in obj.lower() for x in ["weapon", "knife"]))
-    live_vehicles = sum(1 for obj in live_objects if any(v in obj.lower() for v in ["vehicle", "car", "truck", "bus"]))
-
-    # Use Match-Case for Threat Assessment (Python 3.10+)
-    # This evaluates logically from top to bottom
     if live_weapons > 0:
-        threat_level, status_msg = "Critical", f"CRITICAL: WEAPON DETECTED - Threat identified"
+        threat_level, status_msg = "Critical", "Critical: weapon detected - Threat identified"
     elif live_persons > 10:
-        threat_level, status_msg = "Elevated", f"CROWD ALERT: {live_persons} persons in sector"
-    elif live_vehicles > 5:
-        threat_level, status_msg = "Notice", f"Increased transit activity: {live_vehicles} units"
+        threat_level, status_msg = "Elevated", f"Crowd alert: {live_persons} persons in sector"
     else:
         threat_level, status_msg = "Normal", "Security posture stable"
 
-    avg_conf = sum(ev.confidence for ev in events) / len(events) if events else 0
-    
     return {
         "hours": hours,
-        "camera_id": camera_id,
-        "area_id": area_id,
-        "scenario_key": scenario_key,
-        "count": len(events),
-        "total_logs": len(events),
-        "camera_ids": sorted(camera_ids),
-        "total_persons": total_persons,
-        "total_weapons": total_weapons,
-        "total_vehicles": total_vehicles,
+        "current": current_stats,
+        "previous": previous_stats,
         "threat_level": threat_level,
         "status_message": status_msg,
-        "object_breakdown": object_counts,
         "hourly_distribution": hourly_distribution,
-        "categorical_hourly": categorical_hourly,
         "weekly_distribution": weekly_distribution,
         "severity_distribution": severity_distribution,
-        "avg_confidence": float(avg_conf),
-        "timestamp": datetime.now().isoformat()
+        "count": current_stats["count"], # For backward compatibility
+        "total_persons": current_stats["total_persons"],
+        "timestamp": now.isoformat()
     }
 
 def get_scenario_camera_matrix(

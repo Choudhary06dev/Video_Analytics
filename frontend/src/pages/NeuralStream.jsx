@@ -91,7 +91,11 @@ export default function NeuralStream() {
   const [showOnlyActiveCams, setShowOnlyActiveCams] = useState(true);
 
   const scenarioNameByKey = useMemo(() => {
-    return new Map(scenarios.map(s => [s.key, s.name]));
+    const map = new Map();
+    scenarios.forEach(s => {
+      if (s.key) map.set(s.key.toLowerCase(), s.name);
+    });
+    return map;
   }, [scenarios]);
 
   useEffect(() => {
@@ -275,6 +279,8 @@ export default function NeuralStream() {
 
   const activeScenarioLabel = selectedScenarioKey === 'all' ? 'All Scenarios' : selectedScenarioKey;
 
+  const currentSummary = summary.current || summary;
+
   useEffect(() => {
     if (!isGlobalView && activeCamera && !filteredCameras.some(camera => camera.id === activeCamera)) {
       setActiveCamera(null);
@@ -293,8 +299,8 @@ export default function NeuralStream() {
         setLogs(logsData.slice(0, 30).map(log => {
           const scenario = SCENARIO_UI[log.scenario_key] || SCENARIO_UI['Default'];
           const isAlert = log.is_alert || false;
-          const friendlyName = scenarioNameByKey.get(log.scenario_key);
-          const detail = friendlyName || log.scenario_key;
+          const friendlyName = scenarioNameByKey.get(log.scenario_key.toLowerCase());
+          const detail = friendlyName || log.scenario_key.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
 
           const logDate = new Date(log.timestamp);
           const now = new Date();
@@ -321,7 +327,7 @@ export default function NeuralStream() {
             confidence: `${(log.confidence * 100).toFixed(1)}%`,
             timestamp: logDate.toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' }),
             timeAgo: timeAgo,
-            severity: log.severity.toUpperCase(),
+            severity: log.severity.charAt(0).toUpperCase() + log.severity.slice(1).toLowerCase(),
             rawLog: log
           };
         }));
@@ -426,7 +432,7 @@ export default function NeuralStream() {
           </div>
           <div className="flex flex-col min-w-0">
             <div className="flex items-center gap-2.5">
-              <h1 className="text-base sm:text-lg font-black text-text-dark tracking-tight uppercase leading-none truncate pr-1">Live Stream</h1>
+              <h1 className="text-base sm:text-lg font-black text-text-dark tracking-wider uppercase leading-none truncate pr-1">Live  Stream</h1>
               <div className="px-2 py-0.5 bg-success/10 text-success border border-success/20 rounded text-[0.55rem] font-black tracking-widest flex items-center gap-1.5 uppercase shrink-0">
                 <div className="w-1.5 h-1.5 bg-success rounded-full animate-pulse" />
                 Live
@@ -474,7 +480,7 @@ export default function NeuralStream() {
               <select
                 value={selectedScenarioKey}
                 onChange={(e) => { setSelectedScenarioKey(e.target.value); setIsGlobalView(true); setActiveCamera(null); setLogsOffset(0); setCameraOffset(0); setLogs([]); }}
-                className="w-full sm:max-w-[150px] bg-transparent text-[0.65rem] font-black uppercase tracking-wider text-text-dark outline-none cursor-pointer"
+                className="w-full sm:max-w-[150px] bg-transparent text-[0.65rem] font-black tracking-wider text-text-dark outline-none cursor-pointer"
               >
                 <option value="all">Scenarios</option>
                 {scenarios.map(s => (
@@ -488,7 +494,7 @@ export default function NeuralStream() {
               <select
                 value={cameraLimit}
                 onChange={(e) => { setCameraLimit(Number(e.target.value)); setCameraOffset(0); }}
-                className="w-full sm:max-w-[100px] bg-transparent text-[0.65rem] font-black uppercase tracking-wider text-text-dark outline-none cursor-pointer"
+                className="w-full sm:max-w-[100px] bg-transparent text-[0.65rem] font-black tracking-wider text-text-dark outline-none cursor-pointer"
               >
                 <option value={6}>6 Nodes</option>
                 <option value={9}>9 Nodes</option>
@@ -525,7 +531,7 @@ export default function NeuralStream() {
               title="Toggle Full Screen"
             >
               {isFullscreen ? <Minimize className="w-3.5 h-3.5 sm:w-3 sm:h-3" /> : <Maximize className="w-3.5 h-3.5 sm:w-3 sm:h-3" />}
-              <span className="hidden sm:block text-[10px] font-bold uppercase tracking-widest">Full Screen</span>
+              <span className="hidden sm:block text-[10px] font-bold tracking-widest">Full Screen</span>
             </button>
           </div>
         </div>
@@ -820,13 +826,13 @@ export default function NeuralStream() {
 
             <div className="flex items-center gap-3 flex-1 justify-end">
               {/* Compact Inline Status Message */}
-              {summary.status_message && (
+              {currentSummary.status_message && (
                 <div className={`hidden sm:flex items-center gap-2 px-2.5 py-1 rounded-md border text-[0.6rem] font-black uppercase tracking-tight
-         ${summary.threat_level === 'Critical' ? 'bg-rose-500/10 border-rose-500/20 text-rose-600' :
-                    summary.threat_level === 'Elevated' ? 'bg-amber-500/10 border-amber-500/20 text-amber-600' :
+         ${currentSummary.threat_level === 'Critical' ? 'bg-rose-500/10 border-rose-500/20 text-rose-600' :
+                    currentSummary.threat_level === 'Elevated' ? 'bg-amber-500/10 border-amber-500/20 text-amber-600' :
                       'bg-emerald-500/5 border-emerald-500/20 text-emerald-600'}`}>
-                  <div className={`w-1.5 h-1.5 rounded-full ${summary.threat_level === 'Critical' ? 'bg-rose-500 animate-pulse' : 'bg-emerald-500'}`} />
-                  <span className="truncate max-w-[100px] lg:max-w-none">{summary.status_message}</span>
+                  <div className={`w-1.5 h-1.5 rounded-full ${currentSummary.threat_level === 'Critical' ? 'bg-rose-500 animate-pulse' : 'bg-emerald-500'}`} />
+                  <span className="truncate max-w-[100px] lg:max-w-none">{currentSummary.status_message}</span>
                 </div>
               )}
 
@@ -885,16 +891,16 @@ export default function NeuralStream() {
 
           {/* TABLE HEADER */}
           {/* TABLE HEADER — hidden on mobile, card view instead */}
-          <div className="hidden lg:grid grid-cols-12 gap-2 px-5 py-2 bg-surface/50 border-b border-border text-[0.6rem] font-black text-text-gray uppercase tracking-widest">
-            <div className="col-span-1">Status</div>
-            <div className="col-span-2">Event</div>
-            <div className="col-span-2">Event ID</div>
-            <div className="col-span-1">Camera</div>
-            <div className="col-span-1">Conf.</div>
-            <div className="col-span-1">Severity</div>
-            <div className="col-span-2">Timestamp</div>
-            <div className="col-span-1">Elapsed</div>
-            <div className="col-span-1 text-center">Action</div>
+          <div className="hidden lg:grid grid-cols-12 bg-surface/80 border-y border-border text-[0.65rem] font-black tracking-widest text-text-gray">
+            <div className="col-span-1 border-r border-border/30 px-4 py-2.5 text-center">Status</div>
+            <div className="col-span-3 border-r border-border/30 px-4 py-2.5">Event Detail</div>
+            <div className="col-span-2 border-r border-border/30 px-4 py-2.5">Event ID</div>
+            <div className="col-span-1 border-r border-border/30 px-2 py-2.5">Node</div>
+            <div className="col-span-1 border-r border-border/30 px-2 py-2.5 text-center">Conf.</div>
+            <div className="col-span-1 border-r border-border/30 px-2 py-2.5 text-center">Severity</div>
+            <div className="col-span-1 border-r border-border/30 px-4 py-2.5">Timestamp</div>
+            <div className="col-span-1 border-r border-border/30 px-4 py-2.5">Elapsed</div>
+            <div className="col-span-1 px-4 py-2.5 text-center">Action</div>
           </div>
 
           {/* LOG ROWS */}
@@ -920,35 +926,35 @@ export default function NeuralStream() {
                 key={log.id}
                 className={`
          /* Desktop: table row */
-         lg:grid lg:grid-cols-12 lg:gap-2 lg:px-5 lg:py-2.5 lg:items-center
+         lg:grid lg:grid-cols-12 lg:items-stretch
          /* Mobile: card layout */
          flex flex-col gap-2 p-3 sm:p-4 lg:p-0 lg:flex-row
-         transition-all duration-200 border-b hover:bg-card-hover cursor-default
-       ${log.isAlert ? 'bg-rose-500/5 border-rose-500/20 hover:bg-rose-500/10' : 'border-border/30'}`}
+         transition-all duration-200 border-b hover:bg-surface/50 group/row
+       ${log.isAlert ? 'bg-rose-500/[0.02] border-rose-500/20 hover:bg-rose-500/[0.05]' : 'border-border/40 even:bg-surface/20'}`}
               >
                 {/* Icon or Thumbnail */}
                 {/* Status Icon/Thumbnail */}
-                <div className="lg:col-span-1 flex items-center gap-3 lg:gap-0">
+                <div className="lg:col-span-1 border-r border-border/20 px-4 py-2 flex items-center justify-center gap-3 lg:gap-0 shrink-0">
                   {log.rawLog?.image_base64 ? (
-                    <div className="w-10 h-10 lg:w-8 lg:h-8 rounded-lg overflow-hidden border border-border/50 shadow-sm relative group cursor-pointer shrink-0" onClick={() => setSelectedLog(log)}>
+                    <div className="w-10 h-10 lg:w-8 lg:h-8 rounded overflow-hidden border border-border/50 shadow-sm relative group cursor-pointer shrink-0" onClick={() => setSelectedLog(log)}>
                       <img
                         src={`data:image/jpeg;base64,${log.rawLog.image_base64}`}
                         alt="Event"
                         className="w-full h-full object-cover transition-transform group-hover:scale-110"
                       />
-                      {log.isAlert && <div className="absolute inset-0 border border-rose-500 rounded-lg pointer-events-none"></div>}
+                      {log.isAlert && <div className="absolute inset-0 border border-rose-500 rounded pointer-events-none"></div>}
                     </div>
                   ) : (
-                    <div className={`w-10 h-10 lg:w-8 lg:h-8 rounded-lg ${log.bg} flex items-center justify-center border border-border/10 shrink-0`}>
+                    <div className={`w-10 h-10 lg:w-8 lg:h-8 rounded ${log.bg} flex items-center justify-center border border-border/10 shrink-0`}>
                       <log.icon className={`w-4 h-4 ${log.iconColor}`} />
                     </div>
                   )}
                   {/* Mobile: show event name next to icon */}
                   <div className="lg:hidden flex-1 min-w-0">
-                    <span className={`text-[0.75rem] font-extrabold tracking-wide uppercase ${log.iconColor} truncate block`}>{log.type}</span>
+                    <span className={`text-[0.75rem] font-extrabold tracking-wide ${log.iconColor} truncate block`}>{log.type}</span>
                     <div className="flex items-center gap-2 mt-0.5">
                       <span className="text-[0.6rem] font-mono text-text-gray">{log.camera}</span>
-                      <span className={`text-[0.5rem] px-1.5 py-0.5 rounded font-black tracking-widest uppercase border ${log.severity === 'CRITICAL' ? 'bg-rose-500/20 text-rose-500 border-rose-500/30' : log.severity === 'HIGH' ? 'bg-amber-500/20 text-amber-500 border-amber-500/30' : 'bg-blue-500/20 text-blue-500 border-blue-500/30'}`}>{log.severity}</span>
+                      <span className={`text-[0.5rem] px-1.5 py-0.5 rounded font-black tracking-tight border ${log.severity === 'CRITICAL' ? 'bg-rose-500/20 text-rose-500 border-rose-500/30' : log.severity === 'HIGH' ? 'bg-amber-500/20 text-amber-500 border-amber-500/30' : 'bg-blue-500/20 text-blue-500 border-blue-500/30'}`}>{log.severity}</span>
                     </div>
                   </div>
                   {/* Mobile: action button */}
@@ -959,7 +965,7 @@ export default function NeuralStream() {
 
                 {/* Desktop-only table columns */}
                 <div
-                  className="hidden lg:flex col-span-2 items-center gap-2 min-w-0 cursor-pointer group/event"
+                  className="hidden lg:flex col-span-3 border-r border-border/20 px-4 py-2 items-center gap-2 min-w-0 cursor-pointer group/event"
                   onClick={(e) => {
                     e.stopPropagation();
                     setSelectedScenarioKey(log.rawLog.scenario_key);
@@ -970,48 +976,48 @@ export default function NeuralStream() {
                   }}
                   title={`Filter by ${log.type}`}
                 >
-                  <span className={`text-[0.7rem] font-extrabold tracking-wide uppercase ${log.iconColor} truncate group-hover/event:text-accent transition-colors`}>
+                  <span className={`text-[0.7rem] font-extrabold tracking-tight ${log.iconColor} truncate group-hover/event:text-accent transition-colors`}>
                     {log.type}
                   </span>
                   {log.isAlert && (
-                    <span className="text-rose-500 text-[0.55rem] font-black animate-pulse uppercase tracking-wider shrink-0">Alert</span>
+                    <span className="text-rose-500 text-[0.55rem] font-black animate-pulse tracking-wider shrink-0">Alert</span>
                   )}
                 </div>
 
-                <div className="hidden lg:block col-span-2">
-                  <span className="text-[0.6rem] font-mono text-text-gray">{log.eventId}</span>
+                <div className="hidden lg:flex col-span-2 border-r border-border/20 px-4 py-2 items-center">
+                  <span className="text-[0.6rem] font-mono text-text-gray font-bold tracking-tight">{log.eventId}</span>
                 </div>
 
-                <div className="hidden lg:block col-span-1">
-                  <span className="flex items-center gap-1.5 text-[0.65rem] font-bold text-text-dark">
+                <div className="hidden lg:flex col-span-1 border-r border-border/20 px-2 py-2 items-center">
+                  <span className="flex items-center gap-1.5 text-[0.65rem] font-bold text-text-dark whitespace-nowrap">
                     <span className="w-1.5 h-1.5 bg-accent rounded-full"></span>
                     {log.camera}
                   </span>
                 </div>
 
-                <div className="hidden lg:block col-span-1">
+                <div className="hidden lg:flex col-span-1 border-r border-border/20 px-2 py-2 items-center justify-center">
                   <span className="text-[0.65rem] font-bold text-text-dark">{log.confidence}</span>
                 </div>
 
-                <div className="hidden lg:block col-span-1">
-                  <span className={`inline-block w-[60px] mr-4 text-center text-[0.5rem] px-1.5 py-0.5 rounded font-black tracking-widest uppercase border ${log.severity === 'CRITICAL' ? 'bg-rose-500/20 text-rose-500 border-rose-500/30' :
+                <div className="hidden lg:flex col-span-1 border-r border-border/20 px-2 py-2 items-center justify-center">
+                  <span className={`inline-block w-full text-center text-[0.55rem] px-1 py-0.5 rounded font-black tracking-tight border ${log.severity === 'CRITICAL' ? 'bg-rose-500/20 text-rose-500 border-rose-500/30' :
                     log.severity === 'HIGH' ? 'bg-amber-500/20 text-amber-500 border-amber-500/30' :
                       log.severity === 'MEDIUM' ? 'bg-blue-500/20 text-blue-500 border-blue-500/30' :
                         'bg-slate-500/20 text-slate-500 border-slate-500/30'
                     }`}>
-                    {log.severity}
+                    {log.severity.charAt(0) + log.severity.slice(1).toLowerCase()}
                   </span>
                 </div>
 
-                <div className="hidden lg:block col-span-2">
+                <div className="hidden lg:flex col-span-1 border-r border-border/20 px-4 py-2 items-center justify-center">
                   <span className="text-[0.65rem] font-mono text-text-dark font-bold">{log.timestamp}</span>
                 </div>
 
-                <div className="hidden lg:block col-span-1">
-                  <span className="text-[0.6rem] text-text-gray font-medium font-mono">{log.timeAgo}</span>
+                <div className="hidden lg:flex col-span-1 border-r border-border/20 px-4 py-2 items-center">
+                  <span className="text-[0.6rem] text-text-gray font-bold font-mono tracking-tight whitespace-nowrap">{log.timeAgo}</span>
                 </div>
 
-                <div className="hidden lg:flex col-span-1 justify-center">
+                <div className="hidden lg:flex col-span-1 justify-center px-4 py-2 items-center">
                   <button
                     onClick={() => setSelectedLog(log)}
                     className="p-1.5 text-text-gray hover:text-accent hover:bg-accent/10 rounded-lg transition-colors"
@@ -1041,8 +1047,8 @@ export default function NeuralStream() {
 
           {/* FOOTER BAR */}
           <div className="px-3 sm:px-5 py-2 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-2 bg-surface/30 shrink-0">
-            <span className="text-[0.6rem] text-text-gray uppercase tracking-widest font-bold">
-              Showing {summary.count ? logsOffset + 1 : 0}-{Math.min(logsOffset + logs.length, summary.count || 0)} of {summary.count || 0} events
+            <span className="text-[0.65rem] text-text-gray font-bold tracking-tight">
+              Showing {currentSummary.count ? logsOffset + 1 : 0}-{Math.min(logsOffset + logs.length, currentSummary.count || 0)} of {currentSummary.count || 0} events
             </span>
             <div className="flex gap-2">
               <button
@@ -1054,7 +1060,7 @@ export default function NeuralStream() {
               </button>
               <button
                 onClick={() => { setLogsOffset(prev => prev + PAGE_SIZE); }}
-                disabled={logsOffset + logs.length >= (summary.count || 0) || loadingLogs}
+                disabled={logsOffset + logs.length >= (currentSummary.count || 0) || loadingLogs}
                 className="px-3 py-1 bg-surface border border-border rounded text-[0.6rem] font-bold uppercase tracking-wider text-text-dark hover:bg-border disabled:opacity-50 transition-colors"
               >
                 Next
@@ -1073,58 +1079,85 @@ export default function NeuralStream() {
               <BarChart2 className="w-4 h-4 text-accent" />
               <h3 className="text-sm font-bold text-text-dark tracking-tight">Analytics Breakdown</h3>
             </div>
-            <p className="text-[0.6rem] font-bold text-text-gray uppercase tracking-widest mt-1.5 flex justify-between">
+            <p className="text-[0.6rem] font-bold text-text-gray tracking-tight mt-1.5 flex justify-between">
               <span>Total Entities</span>
-              <span className="text-accent">{summary.object_breakdown ? Object.values(summary.object_breakdown).reduce((a, b) => a + b, 0) : 0} detected</span>
+              <span className="text-accent">{currentSummary.object_breakdown ? Object.values(currentSummary.object_breakdown).reduce((a, b) => a + b, 0) : 0} detected</span>
             </p>
           </div>
 
           <div className="flex-1 overflow-y-auto px-4 py-3 custom-scrollbar">
-            {summary.object_breakdown && Object.keys(summary.object_breakdown).length > 0 ? (
-              <div className="space-y-1">
-                {Object.entries(summary.object_breakdown)
-                  .sort((a, b) => b[1] - a[1]) // Sort highest count first
-                  .map(([name, count]) => {
-                    const scenario = SCENARIO_UI[name] || SCENARIO_UI['Default'];
-                    return (
-                      <div
-                        key={name}
-                        className="flex items-center p-2 rounded-lg hover:bg-surface transition-colors group cursor-pointer"
-                        onClick={() => {
-                          setSelectedScenarioKey(name);
-                          setIsGlobalView(true);
-                          setActiveCamera(null);
-                          setLogsOffset(0);
-                          setLogs([]);
-                        }}
-                        title={`Filter by ${name}`}
-                      >
-                        <div className={`w-8 h-8 rounded-md ${scenario.bg} flex items-center justify-center border border-border/10 shrink-0`}>
-                          <scenario.icon className={`w-3.5 h-3.5 ${scenario.iconColor}`} />
-                        </div>
-                        <div className="ml-3 flex-1 min-w-0">
-                          <div className="text-[0.65rem] font-bold text-text-dark truncate uppercase tracking-wide group-hover:text-accent transition-colors">
-                            {scenarioNameByKey.get(name) || name}
+            {(() => {
+              const breakdown = currentSummary.object_breakdown || {};
+              // Aggregate by friendly name to avoid duplicates like person/Person or machine keys
+              const aggregated = {};
+              Object.entries(breakdown).forEach(([rawKey, count]) => {
+                const normalizedRawKey = rawKey.toLowerCase().trim();
+                const registryName = scenarioNameByKey.get(normalizedRawKey);
+
+                // If in registry, use exact registry name. Otherwise format the key.
+                const rawName = registryName || rawKey.replace(/_/g, ' ');
+                const displayName = rawName.charAt(0).toUpperCase() + rawName.slice(1).toLowerCase();
+                const groupKey = displayName.toLowerCase().trim();
+
+                if (!aggregated[groupKey]) {
+                  aggregated[groupKey] = {
+                    count: 0,
+                    rawKey,
+                    name: displayName
+                  };
+                }
+                aggregated[groupKey].count += count;
+              });
+
+              const items = Object.values(aggregated).sort((a, b) => b.count - a.count);
+
+              if (items.length > 0) {
+                return (
+                  <div className="space-y-1">
+                    {items.map((item) => {
+                      const scenario = SCENARIO_UI[item.rawKey] || SCENARIO_UI['Default'];
+                      return (
+                        <div
+                          key={item.name}
+                          className="flex items-center p-2 rounded-lg hover:bg-surface transition-colors group cursor-pointer"
+                          onClick={() => {
+                            setSelectedScenarioKey(item.rawKey);
+                            setIsGlobalView(true);
+                            setActiveCamera(null);
+                            setLogsOffset(0);
+                            setLogs([]);
+                          }}
+                          title={`Filter by ${item.name}`}
+                        >
+                          <div className={`w-8 h-8 rounded-md ${scenario.bg} flex items-center justify-center border border-border/10 shrink-0`}>
+                            <scenario.icon className={`w-3.5 h-3.5 ${scenario.iconColor}`} />
                           </div>
-                          <div className="w-full bg-border/50 h-1 rounded-full mt-1.5 overflow-hidden">
-                            <div className={`h-full ${scenario.bg.replace('/10', '').replace('/15', '')} ${scenario.bg.includes('rose') ? 'bg-rose-500' : scenario.bg.includes('amber') ? 'bg-amber-500' : 'bg-accent'}`} style={{ width: `${Math.min(100, (count / Math.max(1, summary.count || 1)) * 100)}%` }}></div>
+                          <div className="ml-3 flex-1 min-w-0">
+                            <div className="text-[0.65rem] font-bold text-text-dark truncate tracking-tight group-hover:text-accent transition-colors">
+                              {item.name}
+                            </div>
+                            <div className="w-full bg-border/50 h-1 rounded-full mt-1.5 overflow-hidden">
+                              <div className={`h-full ${scenario.bg.replace('/10', '').replace('/15', '')} ${scenario.bg.includes('rose') ? 'bg-rose-500' : scenario.bg.includes('amber') ? 'bg-amber-500' : 'bg-accent'}`} style={{ width: `${Math.min(100, (item.count / Math.max(1, currentSummary.count || 1)) * 100)}%` }}></div>
+                            </div>
+                          </div>
+                          <div className="ml-4 flex items-center justify-center min-w-[2rem]">
+                            <span className="text-sm font-black text-text-dark">{item.count}</span>
                           </div>
                         </div>
-                        <div className="ml-4 flex items-center justify-center min-w-[2rem]">
-                          <span className="text-sm font-black text-text-dark">{count}</span>
-                        </div>
-                      </div>
-                    );
-                  })}
-              </div>
-            ) : (
-              <div className="text-center py-12 flex flex-col items-center">
-                <div className="w-10 h-10 bg-surface rounded-full flex items-center justify-center mb-2">
-                  <Target className="w-4 h-4 text-border" />
+                      );
+                    })}
+                  </div>
+                );
+              }
+              return (
+                <div className="text-center py-12 flex flex-col items-center">
+                  <div className="w-10 h-10 bg-surface rounded-full flex items-center justify-center mb-2">
+                    <Target className="w-4 h-4 text-border" />
+                  </div>
+                  <span className="text-[0.65rem] font-bold text-text-gray uppercase tracking-widest">No detailed analytics</span>
                 </div>
-                <span className="text-[0.65rem] font-bold text-text-gray uppercase tracking-widest">No detailed analytics</span>
-              </div>
-            )}
+              );
+            })()}
           </div>
         </div>
       </div>
@@ -1136,14 +1169,14 @@ export default function NeuralStream() {
               <div className="p-1.5 bg-accent/10 text-accent rounded-md border border-accent/20">
                 <LayoutGrid className="w-4 h-4" />
               </div>
-              <div className="flex items-center gap-3">
-                <h2 className="text-sm font-black text-text-dark tracking-tight uppercase">Scenarios - Camera Wise Status</h2>
-                <span className="text-[0.55rem] font-black text-text-gray uppercase tracking-widest bg-surface px-2 py-0.5 rounded border border-border">
-                  {activeAreaLabel}
+              <div className="flex flex-col">
+                <h2 className="text-sm font-black text-text-dark tracking-tight">Camera Wise Status</h2>
+                <span className="text-[0.6rem] font-bold text-text-gray tracking-tight">
+                  Intelligence overlay for {activeAreaLabel}
                 </span>
               </div>
             </div>
-            <div className="flex items-center gap-4 text-[0.55rem] font-black uppercase tracking-widest text-text-gray">
+            <div className="flex items-center gap-4 text-[0.6rem] font-bold tracking-tight text-text-gray">
               {matrixData.cameras.length > 10 && (
                 <button
                   onClick={() => setShowOnlyActiveCams(!showOnlyActiveCams)}
@@ -1151,15 +1184,15 @@ export default function NeuralStream() {
                     }`}
                 >
                   <div className={`w-1.5 h-1.5 rounded-full ${showOnlyActiveCams ? 'bg-accent animate-pulse' : 'bg-text-gray'}`}></div>
-                  {showOnlyActiveCams ? 'Showing Active Cams' : 'Showing All Cams'}
+                  {showOnlyActiveCams ? 'Showing Active' : 'Showing All'}
                 </button>
               )}
               <div className="h-4 w-px bg-border hidden sm:block"></div>
               <div className="flex items-center gap-3">
-                <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-sm bg-surface border border-border"></span> No Events</span>
-                <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-sm bg-amber-500"></span> 1-2 Low</span>
-                <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-sm bg-amber-600"></span> 3-5 Medium</span>
-                <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-sm bg-rose-500"></span> &gt;5 High</span>
+                <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-sm bg-surface border border-border"></span> No events</span>
+                <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-sm bg-amber-500"></span> 1-2 Low</span>
+                <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-sm bg-amber-600"></span> 3-5 Medium</span>
+                <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-sm bg-rose-500"></span> &gt;5 High</span>
               </div>
             </div>
           </div>
@@ -1177,36 +1210,43 @@ export default function NeuralStream() {
                 ? matrixData.cameras.filter(c => activeCameraIds.has(c.id))
                 : matrixData.cameras;
 
+              const filteredScenarios = matrixData.scenarios.filter(s =>
+                selectedScenarioKey === 'all' || s.toLowerCase() === selectedScenarioKey.toLowerCase()
+              );
+
               return (
                 <table className="w-full text-[0.6rem] border-collapse">
                   <thead>
-                    <tr className="border-b-2 border-border bg-surface/40">
-                      <th className="text-left px-4 py-2.5 font-black text-text-dark uppercase tracking-widest sticky left-0 bg-surface z-10 min-w-[80px] border-r border-border">Scenarios</th>
+                    <tr className="border-b border-border bg-surface/40">
+                      <th className="text-left px-4 py-2 font-bold text-text-dark tracking-tight sticky left-0 bg-surface z-10 min-w-[120px] border-r border-border shadow-[2px_0_5px_rgba(0,0,0,0.05)]">Scenario</th>
                       {displayedCameras.map(cam => (
-                        <th key={cam.id} className="text-center px-2 py-2.5 font-black uppercase tracking-wider min-w-[90px] border-r border-border/60">
-                          <div className="flex flex-col items-center gap-0.5">
-                            <span className="text-[0.5rem] text-text-gray">CAM {String(cam.id).padStart(2, '0')}</span>
-                            <span className="text-[0.55rem] text-text-dark truncate max-w-[80px]">{cam.name}</span>
+                        <th key={cam.id} className="text-center px-1 py-2 font-bold tracking-tight min-w-[75px] border-r border-border/40">
+                          <div className="flex flex-col items-center">
+                            <span className="text-[0.5rem] text-text-gray/70 font-mono">CAM {String(cam.id).padStart(2, '0')}</span>
+                            <span className="text-[0.6rem] text-text-dark truncate max-w-[70px] leading-tight">{cam.name}</span>
                           </div>
                         </th>
                       ))}
-                      <th className="text-center px-3 py-2.5 font-black text-text-dark uppercase tracking-widest min-w-[80px]">Total Alerts</th>
+                      <th className="text-center px-3 py-2 font-bold text-text-dark tracking-tight min-w-[75px]">Total Alerts</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {matrixData.scenarios.map((scenario, idx) => {
+                    {filteredScenarios.map((scenario, idx) => {
                       const scenarioUI = SCENARIO_UI[scenario] || SCENARIO_UI['Default'];
                       const Icon = scenarioUI.icon;
                       const rowTotal = matrixData.cameras.reduce((sum, cam) => sum + ((matrixData.matrix[scenario] || {})[cam.id] || 0), 0);
                       return (
-                        <tr key={scenario} className={`border-b border-border hover:bg-surface/30 transition-colors ${idx % 2 === 0 ? '' : 'bg-surface/10'}`}>
-                          <td className="px-4 py-2.5 sticky left-0 bg-card z-10 border-r border-border">
+                        <tr key={scenario} className={`border-b border-border/40 hover:bg-surface/30 transition-colors ${idx % 2 === 0 ? '' : 'bg-surface/5'}`}>
+                          <td className="px-4 py-2 sticky left-0 bg-card z-10 border-r border-border shadow-[2px_0_5px_rgba(0,0,0,0.02)]">
                             <div className="flex items-center gap-2">
-                              <div className={`w-5 h-5 rounded flex items-center justify-center ${scenarioUI.bg}`}>
-                                <Icon className={`w-3 h-3 ${scenarioUI.color}`} />
+                              <div className={`w-4.5 h-4.5 rounded flex items-center justify-center ${scenarioUI.bg}`}>
+                                <Icon className={`w-2.5 h-2.5 ${scenarioUI.color}`} />
                               </div>
-                              <span className="font-bold text-text-dark text-[0.7rem] tracking-tight whitespace-nowrap">
-                                {scenarioNameByKey.get(scenario) || scenario}
+                              <span className="font-semibold text-text-dark text-[0.65rem] tracking-tight whitespace-nowrap">
+                                {(() => {
+                                  const name = scenarioNameByKey.get(scenario.toLowerCase()) || scenario.replace(/_/g, ' ');
+                                  return name.charAt(0).toUpperCase() + name.slice(1).toLowerCase();
+                                })()}
                               </span>
                             </div>
                           </td>
@@ -1243,11 +1283,11 @@ export default function NeuralStream() {
                   </tbody>
                   <tfoot>
                     <tr className="border-t-2 border-border bg-surface/30">
-                      <td className="px-4 py-2.5 font-black text-text-dark uppercase tracking-widest text-[0.6rem] sticky left-0 bg-surface z-10 border-r border-border">
+                      <td className="px-4 py-2.5 font-black text-text-dark tracking-widest text-[0.6rem] sticky left-0 bg-surface z-10 border-r border-border">
                         Total Alerts ({activeAreaLabel})
                       </td>
                       {displayedCameras.map(cam => {
-                        const colTotal = matrixData.scenarios.reduce((sum, sk) => sum + ((matrixData.matrix[sk] || {})[cam.id] || 0), 0);
+                        const colTotal = filteredScenarios.reduce((sum, sk) => sum + ((matrixData.matrix[sk] || {})[cam.id] || 0), 0);
                         return (
                           <td key={cam.id} className="text-center px-2 py-2.5 border-r border-border/40">
                             {colTotal > 0 ? (
@@ -1260,7 +1300,9 @@ export default function NeuralStream() {
                       })}
                       <td className="text-center px-3 py-2.5">
                         <span className="inline-block px-2.5 py-0.5 rounded-md bg-accent text-white text-[0.7rem] font-black shadow-sm">
-                          {matrixData.total_alerts}
+                          {filteredScenarios.reduce((sum, sk) => {
+                            return sum + matrixData.cameras.reduce((cSum, cam) => cSum + ((matrixData.matrix[sk] || {})[cam.id] || 0), 0);
+                          }, 0)}
                         </span>
                       </td>
                     </tr>

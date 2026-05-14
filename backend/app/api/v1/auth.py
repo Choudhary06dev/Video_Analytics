@@ -56,7 +56,7 @@ def login_user(login_data: UserLogin, session: Session = Depends(get_session)):
 def get_current_user(token: str = Depends(get_authorization_token)):
     payload = decode_access_token(token)
     if not payload:
-        raise HTTPException(status_code=401, detail="Invalid or expired token")
+        raise HTTPException(status_code= status.HTTP_401_UNAUTHORIZED, detail="Invalid or expired token")
     return payload
 
 @router.get("/me")

@@ -32,15 +32,15 @@ const actionColors = {
 
 // Sub-component for premium cards
 const MetricCard = ({ title, value, icon: Icon, colorClass, gradientClass, subtext, loading }) => (
- <div className="group relative bg-card border border-border/60 rounded-2xl p-5 hover:border-accent/40 transition-all duration-500 shadow-sm overflow-hidden">
-  <div className={`absolute -right-8 -top-8 w-32 h-32 blur-[60px] opacity-10 group-hover:opacity-30 transition-all duration-700 ${gradientClass}`} />
+ <div className="group relative bg-card border border-border/60 rounded-xl p-4 hover:border-accent/40 transition-all duration-500 shadow-sm overflow-hidden">
+  <div className={`absolute -right-6 -top-6 w-24 h-24 blur-[40px] opacity-10 group-hover:opacity-30 transition-all duration-700 ${gradientClass}`} />
   <div className="relative z-10 flex flex-col h-full justify-between">
-   <div className="flex justify-between items-start mb-4">
+   <div className="flex justify-between items-start mb-2">
     {loading ? (
-     <div className="w-10 h-10 bg-surface rounded-xl animate-pulse"/>
+     <div className="w-8 h-8 bg-surface rounded animate-pulse"/>
     ) : (
-     <div className={`p-2.5 rounded-xl bg-surface border border-border/40 group-hover:scale-110 transition-transform duration-500 ${colorClass} shadow-lg shadow-current/10`}>
-      <Icon className="w-5 h-5"/>
+     <div className={`p-2 rounded bg-surface border border-border/40 group-hover:scale-110 transition-transform duration-500 ${colorClass} shadow-lg shadow-current/5`}>
+      <Icon className="w-4 h-4"/>
      </div>
     )}
    </div>
@@ -51,8 +51,8 @@ const MetricCard = ({ title, value, icon: Icon, colorClass, gradientClass, subte
       <div className="h-8 bg-surface rounded w-1/2 animate-pulse"/>
      ) : (
       <>
-       <h3 className="text-2xl font-black tracking-tighter text-text-dark">{value}</h3>
-       {subtext && <span className="text-[10px] font-medium text-text-gray/60">{subtext}</span>}
+       <h3 className="text-xl font-black tracking-tighter text-text-dark">{value}</h3>
+       {subtext && <span className="text-[9px] font-medium text-text-gray/60">{subtext}</span>}
       </>
      )}
     </div>
@@ -91,16 +91,18 @@ export default function AdminDashboard() {
  const fetchStats = async () => {
   try {
    setLoading(true);
+   console.log("Fetching dashboard stats...");
    const [usersData, camerasData, areasData, scenariosData, alertsData, auditsData, summaryData, healthData] = await Promise.all([
-    fetchAdminUsers().catch(() => []),
-    fetchAdminCameras().catch(() => []),
-    fetchAdminAreas().catch(() => []),
-    fetchScenarios().catch(() => []),
-    fetchAlerts({ hours: 24 }).catch(() => []),
-    fetchAuditLogs().catch(() => []),
-    fetchLogsSummary(24).catch(() => ({})),
-    fetchSystemHealth().catch(() => ({}))
+    fetchAdminUsers().catch(e => { console.error("Users API failed:", e); return []; }),
+    fetchAdminCameras().catch(e => { console.error("Cameras API failed:", e); return []; }),
+    fetchAdminAreas().catch(e => { console.error("Areas API failed:", e); return []; }),
+    fetchScenarios().catch(e => { console.error("Scenarios API failed:", e); return 401; }), // Marker for 401
+    fetchAlerts({ hours: 24 }).catch(e => { console.error("Alerts API failed:", e); return []; }),
+    fetchAuditLogs().catch(e => { console.error("Audits API failed:", e); return []; }),
+    fetchLogsSummary(24).catch(e => { console.error("Summary API failed:", e); return {}; }),
+    fetchSystemHealth().catch(e => { console.error("Health API failed:", e); return {}; })
    ]);
+   console.log("Scenarios Data Received:", scenariosData);
 
    // Normalize data (handle both direct arrays and nested objects like { users: [] })
    const u = Array.isArray(usersData) ? usersData : (usersData?.users || []);
@@ -154,13 +156,13 @@ export default function AdminDashboard() {
  return (
   <div className="p-1 space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700 max-w-[1600px] mx-auto pb-10">
    {/* ── Top Intelligence Bar ── */}
-   <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 bg-gradient-to-r from-card/80 to-surface/80 backdrop-blur-md border border-border/50 rounded-2xl p-4 sm:p-6 shadow-sm relative overflow-hidden">
-    <div className="absolute top-0 right-0 w-64 h-64 bg-accent/5 blur-[80px] -mr-32 -mt-32"/>
+    <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 bg-gradient-to-r from-card/80 to-surface/80 backdrop-blur-md border border-border/50 rounded-xl p-4 shadow-sm relative overflow-hidden">
+     <div className="absolute top-0 right-0 w-64 h-64 bg-accent/5 blur-[80px] -mr-32 -mt-32"/>
 
-    <div className="flex items-center gap-4 sm:gap-6">
-     <div className="hidden xs:flex w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-blue-600 to-cyan-500 border border-white/20 rounded-xl sm:rounded-2xl items-center justify-center relative overflow-hidden group shadow-lg shadow-blue-500/20 shrink-0">
+    <div className="flex items-center gap-4">
+     <div className="hidden xs:flex w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-blue-600 to-cyan-500 border border-white/20 rounded-lg sm:rounded-xl items-center justify-center relative overflow-hidden group shadow-lg shadow-blue-500/20 shrink-0">
       <div className="absolute inset-0 bg-white/10 group-hover:bg-transparent transition-colors"/>
-      <Activity className="w-6 h-6 sm:w-7 sm:h-7 text-white relative z-10 group-hover:scale-110 transition-transform"/>
+      <Activity className="w-5 h-5 sm:w-6 sm:h-6 text-white relative z-10 group-hover:scale-110 transition-transform"/>
      </div>
      <div className="min-w-0">
       <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
@@ -174,7 +176,6 @@ export default function AdminDashboard() {
       </div>
       <div className="flex items-center gap-3 sm:gap-4 mt-1.5 sm:mt-1">
        <p className="text-[9px] sm:text-[10px] font-bold text-text-gray uppercase tracking-widest flex items-center gap-1.5 truncate">
-        {/* <Globe className="w-3 h-3 text-accent shrink-0"/> Block A */}
        </p>
        <div className="w-1 h-1 rounded-full bg-border shrink-0"/>
        <p className="text-[9px] sm:text-[10px] font-mono font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-cyan-500">
@@ -188,7 +189,7 @@ export default function AdminDashboard() {
      <button
       onClick={fetchStats}
       disabled={loading}
-      className={`flex-1 lg:flex-none flex items-center justify-center gap-2.5 px-6 py-3 bg-black text-white rounded-xl text-[9px] sm:text-[10px] font-black uppercase tracking-widest shadow-xl hover:-translate-y-0.5 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap`}
+      className={`flex-1 lg:flex-none flex items-center justify-center gap-2.5 px-6 py-3 bg-black text-white rounded-lg text-[9px] sm:text-[10px] font-black uppercase tracking-widest shadow-xl hover:-translate-y-0.5 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap`}
      >
       <RefreshCw className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${loading ? 'animate-spin' : ''}`} />
       {loading ? 'Processing...' : 'Refresh'}
@@ -210,40 +211,40 @@ export default function AdminDashboard() {
    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
     {/* CAMERA OVERVIEW MODULE */}
-    <div className="bg-card border border-border/60 rounded-2xl p-6 shadow-sm relative overflow-hidden group h-[340px] flex flex-col">
+    <div className="bg-card border border-border/60 rounded-xl p-4 shadow-sm relative overflow-hidden group h-[300px] flex flex-col">
      <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 blur-[40px] -mr-16 -mt-16 group-hover:bg-emerald-500/10 transition-all"/>
-     <h2 className="text-xs font-black uppercase tracking-[0.2em] text-text-dark mb-6 flex items-center gap-3">
-      <div className="p-1.5 bg-emerald-500/10 rounded-lg"><Camera size={16} className="text-emerald-500"/></div>
+     <h2 className="text-[10px] font-black uppercase tracking-[0.2em] text-text-dark mb-4 flex items-center gap-2">
+      <div className="p-1.5 bg-emerald-500/10 rounded-lg"><Camera size={14} className="text-emerald-500"/></div>
       Cameras Overview
      </h2>
      <div className="space-y-4 overflow-y-auto flex-1 pr-2 scrollbar-thin scrollbar-thumb-emerald-500/10 scrollbar-track-transparent">
       {loading ? (
        [...Array(4)].map((_, i) => (
-        <div key={i} className="h-12 bg-surface/50 rounded-xl border border-border/30 animate-pulse"/>
+        <div key={i} className="h-10 bg-surface/50 rounded-lg border border-border/30 animate-pulse"/>
        ))
       ) : (
        <>
-        <div className="flex justify-between items-center p-3 bg-surface/50 rounded-xl border border-border/30">
-         <span className="text-[11px] font-bold text-text-gray uppercase tracking-wider">🟢 Online Nodes</span>
-         <span className="text-sm font-black text-emerald-500">
+        <div className="flex justify-between items-center p-2.5 bg-surface/50 rounded-lg border border-border/30">
+         <span className="text-[10px] font-bold text-text-gray uppercase tracking-wider">🟢 Online Nodes</span>
+         <span className="text-xs font-black text-emerald-500">
           {(rawStats?.cameras || []).filter(c => c && (c.status === 'online' || c.is_active)).length} Units
          </span>
         </div>
-        <div className="flex justify-between items-center p-3 bg-surface/50 rounded-xl border border-border/30">
-         <span className="text-[11px] font-bold text-text-gray uppercase tracking-wider">🔴 Offline Nodes</span>
-         <span className="text-sm font-black text-red-500">
+        <div className="flex justify-between items-center p-2.5 bg-surface/50 rounded-lg border border-border/30">
+         <span className="text-[10px] font-bold text-text-gray uppercase tracking-wider">🔴 Offline Nodes</span>
+         <span className="text-xs font-black text-red-500">
           {(rawStats?.cameras || []).filter(c => c && c.status !== 'online' && !c.is_active).length} Units
          </span>
         </div>
-        <div className="flex justify-between items-center p-3 bg-surface/50 rounded-xl border border-border/30">
-         <span className="text-[11px] font-bold text-text-gray uppercase tracking-wider">📍 Coverage Areas</span>
-         <span className="text-sm font-black text-emerald-500">
+        <div className="flex justify-between items-center p-2.5 bg-surface/50 rounded-lg border border-border/30">
+         <span className="text-[10px] font-bold text-text-gray uppercase tracking-wider">📍 Coverage Areas</span>
+         <span className="text-xs font-black text-emerald-500">
           {stats.areas} Sectors
          </span>
         </div>
-        <div className="flex justify-between items-center p-3 bg-gradient-to-r from-emerald-500/10 to-transparent rounded-xl border border-emerald-500/20">
-         <span className="text-[11px] font-bold text-emerald-600 uppercase tracking-wider">🤖 Neural Inference</span>
-         <span className="text-sm font-black text-emerald-600">{(rawStats?.cameras || []).length} Enabled</span>
+        <div className="flex justify-between items-center p-2.5 bg-gradient-to-r from-emerald-500/10 to-transparent rounded-lg border border-emerald-500/20">
+         <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider">🤖 Neural Inference</span>
+         <span className="text-xs font-black text-emerald-600">{(rawStats?.cameras || []).length} Enabled</span>
         </div>
        </>
       )}
@@ -251,38 +252,37 @@ export default function AdminDashboard() {
     </div>
 
     {/* AI SCENARIOS MODULE */}
-    <div className="bg-card border border-border/60 rounded-2xl p-6 shadow-sm relative overflow-hidden group h-[340px] flex flex-col">
+    <div className="bg-card border border-border/60 rounded-xl p-4 shadow-sm relative overflow-hidden group h-[300px] flex flex-col">
      <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/5 blur-[40px] -mr-16 -mt-16 group-hover:bg-amber-500/10 transition-all"/>
-     <h2 className="text-xs font-black uppercase tracking-[0.2em] text-text-dark mb-6 flex items-center gap-3">
-      <div className="p-1.5 bg-amber-500/10 rounded-lg"><Settings size={16} className="text-amber-500"/></div>
+     <h2 className="text-[10px] font-black uppercase tracking-[0.2em] text-text-dark mb-4 flex items-center gap-2">
+      <div className="p-1.5 bg-amber-500/10 rounded-lg"><Settings size={14} className="text-amber-500"/></div>
       AI Intelligence Mesh
      </h2>
      <div className="space-y-3 overflow-y-auto flex-1 pr-2 scrollbar-thin scrollbar-thumb-amber-500/10 scrollbar-track-transparent">
       {loading ? (
        [...Array(5)].map((_, i) => (
-        <div key={i} className="h-10 bg-surface/50 rounded-lg animate-pulse"/>
+        <div key={i} className="h-8 bg-surface/50 rounded-lg animate-pulse"/>
        ))
       ) : rawStats?.scenarios?.length > 0 ? rawStats.scenarios.map((scenario, i) => {
        const alertCount = rawStats.summary?.object_breakdown?.[scenario.name] || 0;
        const isCritical = scenario.default_severity === 'Critical' || scenario.default_severity === 'High';
 
        return (
-        <div key={i} className="flex justify-between items-center p-2.5 hover:bg-surface transition-colors rounded-lg group/scen">
+        <div key={i} className="flex justify-between items-center p-2 hover:bg-surface transition-colors rounded-lg group/scen">
          <div className="flex flex-col">
-          <span className="text-[11px] font-bold text-text-dark group-hover/scen:text-accent transition-colors">{scenario?.name || 'Unknown Scenario'}</span>
+          <span className="text-[10px] font-bold text-text-dark group-hover/scen:text-accent transition-colors">{scenario?.name || 'Unknown Scenario'}</span>
           <div className="flex items-center gap-2 mt-0.5">
-           <div className="w-12 h-0.5 bg-emerald-500/20 rounded-full overflow-hidden">
+           <div className="w-10 h-0.5 bg-emerald-500/20 rounded-full overflow-hidden">
             <div className="h-full bg-emerald-500 w-[98%]"/>
            </div>
-           <span className="text-[7px] font-black text-emerald-500/60 uppercase">Health {(96 + (Math.random() * 3.5)).toFixed(1)}%</span>
+           <span className="text-[7px] font-black text-emerald-500/60 uppercase">{(96 + (Math.random() * 3.5)).toFixed(1)}%</span>
           </div>
-          <span className="text-[8px] font-medium text-text-gray/50 uppercase tracking-tighter mt-1">{scenario.default_severity} Priority</span>
          </div>
-         <span className={`text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded border transition-all
+         <span className={`text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded border transition-all
           ${alertCount > 0
            ? (isCritical ? 'bg-red-500/10 text-red-500 border-red-500/20' : 'bg-amber-500/10 text-amber-500 border-amber-500/20')
            : 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20'}`}>
-          {alertCount > 0 ?`${alertCount} Alerts`: 'Stable'}
+          {alertCount > 0 ?`${alertCount} A`: 'Stable'}
          </span>
         </div>
        );
@@ -293,16 +293,16 @@ export default function AdminDashboard() {
     </div>
 
     {/* AUDIT LOG MODULE */}
-    <div className="bg-card border border-border/60 rounded-2xl p-6 shadow-sm relative overflow-hidden group flex flex-col h-[340px]">
+    <div className="bg-card border border-border/60 rounded-xl p-4 shadow-sm relative overflow-hidden group flex flex-col h-[300px]">
      <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/5 blur-[40px] -mr-16 -mt-16 group-hover:bg-blue-500/10 transition-all"/>
-     <h2 className="text-xs font-black uppercase tracking-[0.2em] text-text-dark mb-6 flex items-center gap-3">
-      <div className="p-1.5 bg-blue-500/10 rounded-lg"><FileText size={16} className="text-blue-500"/></div>
+     <h2 className="text-[10px] font-black uppercase tracking-[0.2em] text-text-dark mb-4 flex items-center gap-2">
+      <div className="p-1.5 bg-blue-500/10 rounded-lg"><FileText size={14} className="text-blue-500"/></div>
       Intelligence Audit
      </h2>
-     <div className="space-y-4 overflow-y-auto flex-1 pr-2 scrollbar-thin scrollbar-thumb-blue-500/10 scrollbar-track-transparent">
+     <div className="space-y-3 overflow-y-auto flex-1 pr-2 scrollbar-thin scrollbar-thumb-blue-500/10 scrollbar-track-transparent">
       {loading ? (
        [...Array(6)].map((_, i) => (
-        <div key={i} className="h-12 bg-surface/50 rounded-xl border border-border/30 animate-pulse"/>
+        <div key={i} className="h-10 bg-surface/50 rounded-lg border border-border/30 animate-pulse"/>
        ))
       ) : rawStats?.audits?.length > 0 ? rawStats.audits.slice(0, 6).map((log, i) => (
        <div key={i} className="flex gap-3 items-start p-3 rounded-xl hover:bg-surface/80 transition-all border border-transparent hover:border-border/40 group/item">

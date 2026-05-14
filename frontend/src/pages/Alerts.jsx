@@ -67,7 +67,11 @@ export default function Alerts() {
   }, []);
 
   const scenarioNameByKey = React.useMemo(() => {
-    return new Map(scenarios.map(s => [s.key, s.name]));
+    const map = new Map();
+    scenarios.forEach(s => {
+      if (s.key) map.set(s.key.toLowerCase(), s.name);
+    });
+    return map;
   }, [scenarios]);
 
   useEffect(() => {
@@ -162,14 +166,14 @@ export default function Alerts() {
       {/* Page Header */}
       <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4 px-2">
         <div className="min-w-0">
-          <h2 className="text-xl sm:text-[1.8rem] font-black text-text-dark mb-1 tracking-tight uppercase flex items-center gap-3">
+          <h2 className="text-xl sm:text-[1.8rem] font-black text-text-dark mb-1 tracking-tight flex items-center gap-3">
             <BellRing className={`w-6 h-6 sm:w-8 sm:h-8 text-danger shrink-0 ${stats.critical > 0 ? 'animate-bounce' : ''}`} />
-            <span className="truncate">Crisis Response Center</span>
+            <span className="truncate">Alert Management Center</span>
           </h2>
           <div className="text-[0.75rem] sm:text-[0.9rem] text-text-gray font-semibold flex items-center gap-2 flex-wrap">
-            Intelligent Incident Management
+            Intelligent incident management and response
             <span className="hidden sm:block w-1 h-1 bg-text-gray rounded-full opacity-30" />
-            <span className="text-accent">{stats.total} Active Alerts Observed</span>
+            <span className="text-accent">{stats.total} Active alerts observed</span>
           </div>
         </div>
         <div className="flex items-center gap-2 sm:gap-3">
@@ -309,7 +313,7 @@ export default function Alerts() {
                       <td className="px-3 sm:px-4 py-3 sm:py-4">
                         <div className="flex flex-col gap-0.5 min-w-[150px]">
                           <span className="text-[0.75rem] sm:text-[0.8rem] font-black tracking-tight text-text-dark line-clamp-1">
-                            {scenarioNameByKey.get(alert.scenario_key) || alert.metadata_json?.detail || alert.scenario_key}
+                            {scenarioNameByKey.get(alert.scenario_key.toLowerCase()) || alert.metadata_json?.detail || alert.scenario_key.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}
                           </span>
                           <div className="flex items-center gap-2">
                             <span className="text-[0.5rem] sm:text-[0.55rem] font-black text-accent uppercase tracking-tighter opacity-60">Conf: {(alert.confidence * 100).toFixed(1)}%</span>
@@ -438,7 +442,7 @@ export default function Alerts() {
                 <div className="bg-surface p-3 sm:p-4 rounded-lg border border-border">
                   <span className="text-[0.6rem] sm:text-[0.65rem] font-bold text-text-gray uppercase tracking-widest block mb-1">Scenario Node</span>
                   <span className="text-xs sm:text-sm font-bold text-text-dark">
-                    {scenarioNameByKey.get(selectedAlert.scenario_key) || selectedAlert.scenario_key}
+                    {scenarioNameByKey.get(selectedAlert.scenario_key.toLowerCase()) || selectedAlert.scenario_key.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}
                   </span>
                 </div>
                 <div className="bg-surface p-3 sm:p-4 rounded-lg border border-border">

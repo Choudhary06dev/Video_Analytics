@@ -161,34 +161,27 @@ export default function RolePermissionsPanel({ roleId, initialPermissions, onUpd
                 </div>
               </div>
 
-              <div className="grid gap-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
                 {groupModules.map((mod) => {
                   const perm = findPermission(mod.id);
                   const enabled = hasModuleAccess(perm);
                   return (
-                    <div key={mod.id} className="bg-card border border-border rounded-xl p-4 flex items-center justify-between group hover:border-accent/40 transition-all shadow-sm hover:shadow-md">
-                      <div className="flex items-center gap-4">
-                        <div className="w-10 h-10 bg-surface rounded-lg flex items-center justify-center border border-border group-hover:bg-accent group-hover:border-accent transition-all">
-                          <Activity className="w-5 h-5 text-text-gray group-hover:text-white transition-colors" />
+                    <div key={mod.id} className="bg-card border border-border rounded-lg p-2.5 flex items-center justify-between group hover:border-accent/40 transition-all shadow-sm">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="w-8 h-8 bg-surface rounded flex items-center justify-center border border-border group-hover:bg-accent group-hover:border-accent transition-all shrink-0">
+                          <Activity className="w-4 h-4 text-text-gray group-hover:text-white transition-colors" />
                         </div>
-                        <div>
-                          <h4 className="text-[11px] font-black uppercase tracking-widest text-text-dark group-hover:text-accent transition-colors">
-                            {MODULE_LABELS[mod.key] || mod.name}
-                          </h4>
-                        </div>
+                        <h4 className="text-[10px] font-black uppercase tracking-tight text-text-dark group-hover:text-accent transition-colors truncate">
+                          {MODULE_LABELS[mod.key] || mod.name}
+                        </h4>
                       </div>
 
-                      <div className="flex items-center gap-3">
-                        <span className={`text-[8px] font-black uppercase tracking-widest ${enabled ? 'text-success' : 'text-text-gray opacity-50'}`}>
-                          {enabled ? 'Access On' : 'Access Off'}
-                        </span>
-                        <button
-                          onClick={() => toggleModuleAccess(mod.id)}
-                          className={`w-12 h-6 rounded-full relative transition-all ${enabled ? 'bg-success' : 'bg-slate-700'}`}
-                        >
-                          <div className={`absolute top-0.5 w-5 h-5 rounded-full bg-white transition-all shadow-sm ${enabled ? 'right-0.5' : 'left-0.5'}`}></div>
-                        </button>
-                      </div>
+                      <button
+                        onClick={() => toggleModuleAccess(mod.id)}
+                        className={`w-9 h-4.5 rounded-full relative transition-all shrink-0 ${enabled ? 'bg-success' : 'bg-slate-700'}`}
+                      >
+                        <div className={`absolute top-0.5 w-3.5 h-3.5 rounded-full bg-white transition-all shadow-sm ${enabled ? 'right-0.5' : 'left-0.5'}`}></div>
+                      </button>
                     </div>
                   );
                 })}

@@ -196,13 +196,13 @@ export default function AreaManagement() {
      { label: 'Sub Zones', val: childAreas.length, icon: GitBranch, color: 'text-purple-500' },
      { label: 'Zone Depth', val: childAreas.length > 0 ? '2+' : '1', icon: FolderTree, color: 'text-amber-500' },
     ].map((s, i) => (
-     <div key={i} className="bg-card border border-border p-3 sm:p-4 rounded-lg flex items-center justify-between shadow-sm min-w-0">
+     <div key={i} className="bg-card border border-border p-2.5 sm:p-3 rounded-lg flex items-center justify-between shadow-sm min-w-0">
       <div className="min-w-0">
-       <p className="text-[7px] sm:text-[8px] font-black text-text-gray uppercase tracking-widest mb-1 truncate">{s.label}</p>
-       <p className={`text-lg sm:text-xl font-black ${s.color} truncate`}>{s.val}</p>
+       <p className="text-[7px] font-black text-text-gray uppercase tracking-widest mb-0.5 truncate">{s.label}</p>
+       <p className={`text-base sm:text-lg font-black ${s.color} truncate`}>{s.val}</p>
       </div>
-      <div className="p-2 sm:p-2.5 rounded-lg bg-surface border border-border shrink-0">
-       <s.icon className={`w-3.5 sm:w-4 h-3.5 sm:h-4 ${s.color}`} />
+      <div className="p-1.5 sm:p-2 rounded flex items-center justify-center bg-surface border border-border shrink-0">
+       <s.icon className={`w-3 sm:w-3.5 h-3 sm:h-3.5 ${s.color}`} />
       </div>
      </div>
     ))}
@@ -213,49 +213,49 @@ export default function AreaManagement() {
     <div className="overflow-x-auto no-scrollbar">
      <table className="w-full text-left border-collapse min-w-[800px]">
       <thead>
-       <tr className="bg-surface/50 border-b border-border text-[9px] font-black uppercase tracking-widest text-text-gray">
-        <th className="p-4 pl-6">Zone ID</th>
-        <th className="p-4">Zone Name</th>
-        <th className="p-4">Description</th>
-        <th className="p-4">Parent Zone</th>
-        <th className="p-4 pr-6 text-right">Actions</th>
+       <tr className="bg-surface/50 border-b border-border text-[8px] font-black uppercase tracking-widest text-text-gray">
+        <th className="p-2.5 pl-6">Zone ID</th>
+        <th className="p-2.5">Zone Name</th>
+        <th className="p-2.5">Description</th>
+        <th className="p-2.5">Parent Zone</th>
+        <th className="p-2.5 pr-6 text-right">Actions</th>
        </tr>
       </thead>
       <tbody className="divide-y divide-border">
        {filteredAreas.map((area) => (
         <tr key={area.id} className="hover:bg-surface/30 transition-colors group">
-         <td className="p-4 pl-6">
-          <div className="flex items-center gap-1.5 text-[10px] font-bold text-text-gray bg-surface px-2 py-1 rounded-lg border border-border w-fit">
-           <MapPin className="w-3 h-3"/>
+         <td className="p-2.5 pl-6">
+          <div className="flex items-center gap-1.5 text-[9px] font-bold text-text-gray bg-surface px-1.5 py-0.5 rounded border border-border w-fit">
+           <MapPin className="w-2.5 h-2.5"/>
            #{area.id}
           </div>
          </td>
-         <td className="p-4">
-          <div className="flex items-center gap-3">
-           <div className={`w-10 h-10 rounded-lg flex items-center justify-center border-2 ${area.parent_id ? 'border-purple-500/10 bg-purple-500/5' : 'border-emerald-500/10 bg-emerald-500/5'}`}>
-            {area.parent_id ? <GitBranch className="w-5 h-5 text-purple-500"/> : <Building2 className="w-5 h-5 text-emerald-500"/>}
+         <td className="p-2.5">
+          <div className="flex items-center gap-2.5">
+           <div className={`w-8 h-8 rounded-lg flex items-center justify-center border ${area.parent_id ? 'border-purple-500/10 bg-purple-500/5' : 'border-emerald-500/10 bg-emerald-500/5'}`}>
+            {area.parent_id ? <GitBranch className="w-4 h-4 text-purple-500"/> : <Building2 className="w-4 h-4 text-emerald-500"/>}
            </div>
            <div>
-            <p className="text-xs font-black text-text-dark uppercase tracking-wide">{area.name}</p>
-            <p className="text-[10px] text-text-gray font-bold mt-0.5">{area.parent_id ? 'Sub-Zone' : 'Root Zone'}</p>
+            <p className="text-[11px] font-black text-text-dark uppercase tracking-tight leading-none">{area.name}</p>
+            <p className="text-[9px] text-text-gray font-bold mt-1">{area.parent_id ? 'Sub-Zone' : 'Root Zone'}</p>
            </div>
           </div>
          </td>
-         <td className="p-4">
-          <p className="text-xs font-bold text-text-gray max-w-[200px] truncate">{area.description || '—'}</p>
+         <td className="p-2.5">
+          <p className="text-[10px] font-bold text-text-gray max-w-[200px] truncate">{area.description || '—'}</p>
          </td>
-         <td className="p-4">
-          <span className={`px-2.5 py-1 rounded-md text-[10px] font-black uppercase tracking-widest border ${area.parent_id ? 'bg-purple-500/10 text-purple-500 border-purple-500/20' : 'bg-surface text-text-gray border-border'}`}>
+         <td className="p-2.5">
+          <span className={`px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-widest border ${area.parent_id ? 'bg-purple-500/10 text-purple-500 border-purple-500/20' : 'bg-surface text-text-gray border-border'}`}>
            {getParentName(area.parent_id)}
           </span>
          </td>
-         <td className="p-4 pr-6">
-          <div className="flex items-center justify-end gap-2">
-           <button onClick={() => openEditModal(area)} className="p-2 border border-border text-text-gray rounded-lg hover:text-accent hover:border-accent transition-all bg-card"title="Edit Zone">
-            <Edit2 className="w-3.5 h-3.5"/>
+         <td className="p-2.5 pr-6">
+          <div className="flex items-center justify-end gap-1.5">
+           <button onClick={() => openEditModal(area)} className="p-1.5 border border-border text-text-gray rounded hover:text-emerald-500 hover:border-emerald-500 transition-all bg-card" title="Edit Zone">
+            <Edit2 className="w-3 h-3"/>
            </button>
-           <button onClick={() => openDeleteModal(area)} className="p-2 border border-border text-text-gray rounded-lg hover:text-danger hover:border-danger transition-all bg-card"title="Delete Zone">
-            <Trash2 className="w-3.5 h-3.5"/>
+           <button onClick={() => openDeleteModal(area)} className="p-1.5 border border-border text-text-gray rounded hover:text-danger hover:border-danger transition-all bg-card" title="Delete Zone">
+            <Trash2 className="w-3 h-3"/>
            </button>
           </div>
          </td>

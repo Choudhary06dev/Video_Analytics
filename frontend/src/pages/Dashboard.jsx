@@ -17,6 +17,8 @@ import {
   ShieldAlert,
   ShieldCheck,
   Siren,
+  TrendingDown,
+  TrendingUp,
   Users,
   Video,
   VideoOff,
@@ -92,7 +94,7 @@ const buildTrend = (logs) => {
   return Array.from(buckets.values());
 };
 
-function MetricCard({ label, value, sublabel, icon: Icon, tone = 'accent' }) {
+function MetricCard({ label, value, sublabel, icon: Icon, tone = 'accent', trend }) {
   const toneClass = {
     accent: 'text-accent bg-accent/10 border-accent/20',
     success: 'text-success bg-success/10 border-success/20',
@@ -102,18 +104,22 @@ function MetricCard({ label, value, sublabel, icon: Icon, tone = 'accent' }) {
   }[tone];
 
   return (
-    <div className="bg-card border border-border rounded-lg p-3 sm:p-4 shadow-sm min-h-[110px] sm:min-h-[126px] flex flex-col justify-between">
-      <div className="flex items-start justify-between gap-3">
-        <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-lg border flex items-center justify-center ${toneClass}`}>
+    <div className="bg-card border border-border rounded-lg p-3 sm:p-4 shadow-premium hover:shadow-premium-lg transition-all min-h-[110px] sm:min-h-[126px] flex flex-col justify-between group overflow-hidden relative">
+      <div className="flex items-start justify-between gap-3 relative z-10">
+        <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-lg border flex items-center justify-center ${toneClass} group-hover:scale-110 transition-transform duration-300`}>
           <Icon className="w-4 h-4 sm:w-5 sm:h-5" />
         </div>
-        <div className="text-[9px] font-black uppercase tracking-widest text-text-gray text-right">Live</div>
+        <div className="flex flex-col items-end gap-1">
+          <div className="text-[9px] font-bold text-text-gray tracking-tight">Live</div>
+          {trend}
+        </div>
       </div>
-      <div className="mt-2 sm:mt-0">
-        <div className="text-xl sm:text-2xl font-black text-text-dark tracking-tight">{value}</div>
-        <div className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-text-gray mt-1">{label}</div>
-        <div className="text-[10px] sm:text-[11px] font-semibold text-text-gray mt-1.5 sm:mt-2 truncate">{sublabel}</div>
+      <div className="mt-2 sm:mt-0 relative z-10">
+        <div className="text-xl sm:text-2xl font-black text-text-dark tracking-tighter">{value}</div>
+        <div className="text-[10px] sm:text-[11px] font-bold text-text-gray tracking-tight mt-0.5">{label}</div>
+        <div className="text-[10px] sm:text-[11px] font-medium text-text-gray/70 mt-1 truncate">{sublabel}</div>
       </div>
+      <Icon className="absolute -bottom-2 -right-2 w-16 h-16 opacity-[0.03] group-hover:opacity-[0.06] transition-opacity" />
     </div>
   );
 }
@@ -139,6 +145,28 @@ function EmptyState({ text }) {
     <div className="h-full min-h-[180px] flex flex-col items-center justify-center text-center border border-dashed border-border rounded-lg bg-surface/40 p-6">
       <CheckCircle2 className="w-8 h-8 text-text-gray/40 mb-3" />
       <p className="text-[11px] font-black uppercase tracking-widest text-text-gray">{text}</p>
+    </div>
+  );
+}
+
+function TrendIndicator({ current, previous }) {
+  if (previous === undefined || previous === null) return null;
+  
+  const diff = current - previous;
+  if (diff === 0) return (
+    <div className="flex items-center gap-1 text-[10px] font-bold text-text-gray">
+      <div className="w-1.5 h-1.5 rounded-full bg-text-gray/40" />
+      Stable
+    </div>
+  );
+  
+  const percent = previous === 0 ? (current > 0 ? 100 : 0) : Math.round((diff / previous) * 100);
+  const isUp = diff > 0;
+  
+  return (
+    <div className={`flex items-center gap-1 text-[10px] font-bold ${isUp ? 'text-danger' : 'text-success'}`}>
+      {isUp ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
+      {isUp ? '+' : ''}{percent}%
     </div>
   );
 }
@@ -386,25 +414,28 @@ export default function Dashboard() {
           sublabel={`${stats.offlineCameras} offline or disabled`}
           icon={Video}
           tone={stats.offlineCameras > 0 ? 'warning' : 'success'}
+          trend={<TrendIndicator current={stats.activeCameras} previous={cameras.length} />} // Simple ratio trend
         />
         <MetricCard
-          label="Critical / High Alerts"
-          value={`${stats.critical}/${stats.high}`}
-          sublabel={`${alerts.length} alerts in the last 24 hours`}
+          label="Detections & Alerts"
+          value={summary.current?.count || 0}
+          sublabel={`${alerts.length} active alerts logged`}
           icon={Siren}
           tone={stats.critical > 0 ? 'danger' : stats.high > 0 ? 'warning' : 'success'}
+          trend={<TrendIndicator current={summary.current?.count} previous={summary.previous?.count} />}
         />
         <MetricCard
           label="Live Occupancy Signal"
           value={stats.activePersons}
-          sublabel={`${(intel.objects || []).length} object classes currently visible`}
+          sublabel={`${(intel.objects || []).length} objects currently visible`}
           icon={Users}
           tone={stats.activePersons > 10 ? 'warning' : 'accent'}
+          trend={<TrendIndicator current={summary.current?.total_persons} previous={summary.previous?.total_persons} />}
         />
         <MetricCard
-          label="AI Model Assignments"
+          label="AI Model Registry"
           value={stats.activeModels}
-          sublabel={`${scenarios.length}+ supported detection scenarios`}
+          sublabel={`${scenarios.length}+ scenarios supported`}
           icon={Cpu}
           tone="accent"
         />

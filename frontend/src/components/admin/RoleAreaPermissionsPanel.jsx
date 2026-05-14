@@ -124,39 +124,39 @@ export default function RoleAreaPermissionsPanel({ roleId, onUpdated }) {
       <React.Fragment key={area.area_id}>
         <div 
           className={`relative flex items-center transition-all duration-300`}
-          style={{ paddingLeft: `${depth * 40}px` }}
+          style={{ paddingLeft: `${depth * 24}px` }}
         >
           {/* Connector Line for nested items */}
           {depth > 0 && (
             <div 
-              className="absolute left-0 border-l-2 border-accent/30 rounded-bl-xl" 
+              className="absolute left-0 border-l-2 border-accent/20 rounded-bl-lg" 
               style={{ 
-                left: `${(depth - 1) * 40 + 20}px`, 
-                top: '-20px', 
-                height: '42px', 
-                width: '20px',
-                borderBottom: '2px solid rgba(14, 165, 233, 0.3)' // Using accent color with low opacity
+                left: `${(depth - 1) * 24 + 12}px`, 
+                top: '-12px', 
+                height: '28px', 
+                width: '12px',
+                borderBottom: '2px solid rgba(14, 165, 233, 0.2)'
               }} 
             />
           )}
 
           <div 
-            className={`flex-1 bg-card border rounded-xl p-4 flex items-center justify-between group hover:border-accent/40 transition-all shadow-sm hover:shadow-md
-              ${depth === 0 ? 'border-border/80 bg-surface/5' : 'border-border/40 bg-card scale-[0.98]'}
+            className={`flex-1 bg-card border rounded-lg p-2 flex items-center justify-between group hover:border-accent/40 transition-all shadow-sm
+              ${depth === 0 ? 'border-border/80 bg-surface/5' : 'border-border/40 bg-card'}
             `}
           >
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3">
               <div className={`
-                w-10 h-10 rounded-lg flex items-center justify-center border transition-all
+                w-8 h-8 rounded flex items-center justify-center border transition-all
                 ${depth === 0 
                   ? 'bg-accent/10 border-accent/20 text-accent group-hover:bg-accent group-hover:text-white' 
-                  : 'bg-surface border-border text-text-gray group-hover:bg-accent/80 group-hover:text-white group-hover:border-accent/50 scale-90'}
+                  : 'bg-surface border-border text-text-gray group-hover:bg-accent/80 group-hover:text-white group-hover:border-accent/50'}
               `}>
-                <MapPin className={`${depth === 0 ? 'w-5 h-5' : 'w-4 h-4'}`} />
+                <MapPin className={`${depth === 0 ? 'w-4 h-4' : 'w-3.5 h-3.5'}`} />
               </div>
               <div>
-                <h4 className={`font-black uppercase tracking-widest transition-colors
-                  ${depth === 0 ? 'text-[11px] text-text-dark group-hover:text-accent' : 'text-[10px] text-text-gray group-hover:text-text-dark'}
+                <h4 className={`font-black uppercase tracking-tight transition-colors
+                  ${depth === 0 ? 'text-[10px] text-text-dark group-hover:text-accent' : 'text-[9px] text-text-gray group-hover:text-text-dark'}
                 `}>
                   {area.area_name}
                 </h4>
@@ -176,9 +176,9 @@ export default function RoleAreaPermissionsPanel({ roleId, onUpdated }) {
                 </span>
                 <button
                   onClick={() => toggleAreaAccess(area.area_id)}
-                  className={`w-12 h-6 rounded-full relative transition-all cursor-pointer ${enabled ? 'bg-success shadow-[0_0_10px_rgba(34,197,94,0.3)]' : 'bg-slate-700'}`}
+                  className={`w-9 h-4.5 rounded-full relative transition-all cursor-pointer ${enabled ? 'bg-success' : 'bg-slate-700'}`}
                 >
-                  <div className={`absolute top-0.5 w-5 h-5 rounded-full bg-white transition-all shadow-sm ${enabled ? 'right-0.5' : 'left-0.5'}`}></div>
+                  <div className={`absolute top-0.5 w-3.5 h-3.5 rounded-full bg-white transition-all shadow-sm ${enabled ? 'right-0.5' : 'left-0.5'}`}></div>
                 </button>
               </div>
             </div>

@@ -286,8 +286,17 @@ async def notify_ai_service_reload(camera_id: int, enabled_names: list, scenario
 
 # --- AI SCENARIOS (CRUD) ---
 
+def verify_intelligence_access(current_user: dict = Depends(get_current_user), session: Session = Depends(get_session)):
+    return verify_module_access("intelligence_registry", current_user, session, access_level="view")
+
+def verify_intelligence_edit(current_user: dict = Depends(get_current_user), session: Session = Depends(get_session)):
+    return verify_module_access("intelligence_registry", current_user, session, access_level="edit")
+
+def verify_intelligence_delete(current_user: dict = Depends(get_current_user), session: Session = Depends(get_session)):
+    return verify_module_access("intelligence_registry", current_user, session, access_level="delete")
+
 @router.get("/admin/scenarios")
-def get_all_scenarios(session: Session = Depends(get_session), admin_data: dict = Depends(lambda cur=Depends(get_current_user), s=Depends(get_session): verify_module_access("intelligence_registry", cur, s, access_level="view"))):
+def get_all_scenarios(session: Session = Depends(get_session), admin_data: dict = Depends(verify_intelligence_access)):
     """
     Returns the list of all AI scenarios in the system.
     """
@@ -295,7 +304,7 @@ def get_all_scenarios(session: Session = Depends(get_session), admin_data: dict 
 
 
 @router.post("/admin/scenarios")
-def create_scenario(data: ScenarioCreate, session: Session = Depends(get_session), admin_data: dict = Depends(lambda cur=Depends(get_current_user), s=Depends(get_session): verify_module_access("intelligence_registry", cur, s, access_level="edit"))):
+def create_scenario(data: ScenarioCreate, session: Session = Depends(get_session), admin_data: dict = Depends(verify_intelligence_edit)):
 
     """
     Adds a new AI scenario to the system registry.
@@ -318,7 +327,7 @@ def create_scenario(data: ScenarioCreate, session: Session = Depends(get_session
 
 
 @router.put("/admin/scenarios/{scenario_id}")
-def update_scenario(scenario_id: int, data: ScenarioUpdate, session: Session = Depends(get_session), admin_data: dict = Depends(lambda cur=Depends(get_current_user), s=Depends(get_session): verify_module_access("intelligence_registry", cur, s, access_level="edit"))):
+def update_scenario(scenario_id: int, data: ScenarioUpdate, session: Session = Depends(get_session), admin_data: dict = Depends(verify_intelligence_edit)):
 
     """
     Updates an existing AI scenario.
@@ -339,7 +348,7 @@ def update_scenario(scenario_id: int, data: ScenarioUpdate, session: Session = D
 
 
 @router.delete("/admin/scenarios/{scenario_id}")
-def delete_scenario(scenario_id: int, session: Session = Depends(get_session), admin_data: dict = Depends(lambda cur=Depends(get_current_user), s=Depends(get_session): verify_module_access("intelligence_registry", cur, s, access_level="delete"))):
+def delete_scenario(scenario_id: int, session: Session = Depends(get_session), admin_data: dict = Depends(verify_intelligence_delete)):
 
     """
     Removes a scenario from the system.

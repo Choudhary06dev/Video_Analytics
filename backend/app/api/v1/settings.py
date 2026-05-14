@@ -4,7 +4,7 @@ from app.core.database import engine
 from app.models.system_setting import SystemSetting
 from typing import Any
 
-router = APIRouter(prefix="/settings", tags=["System Settings"])
+router = APIRouter(prefix="/settings", tags=["System Settings"], redirect_slashes=False)
 
 @router.get("/")
 async def get_settings():

@@ -243,13 +243,13 @@ export default function SurveillanceConfig() {
       { label: 'Deployed Zones', value: areas.length, icon: Layers, color: 'text-emerald-500' },
       { label: 'AI Inference Load', value: health?.metrics?.cpu_load || '0%', icon: Cpu, color: 'text-amber-500' },
     ].map((stat, i) => (
-      <div key={i} className="bg-card border border-border rounded-lg p-4 sm:p-6 flex items-center gap-4 sm:gap-6 shadow-sm min-w-0">
-        <div className={`p-3 sm:p-4 bg-surface border border-border rounded-lg ${stat.color} shrink-0`}>
-          <stat.icon className="w-5 h-5 sm:w-6 sm:h-6"/>
+      <div key={i} className="bg-card border border-border rounded-lg p-2.5 sm:p-3 flex items-center gap-3 sm:gap-4 shadow-sm min-w-0">
+        <div className={`p-1.5 sm:p-2 bg-surface border border-border rounded-lg ${stat.color} shrink-0`}>
+          <stat.icon className="w-4 h-4 sm:w-4.5 sm:h-4.5"/>
         </div>
         <div className="min-w-0">
-          <p className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-text-gray mb-1 truncate">{stat.label}</p>
-          <p className={`text-xl sm:text-2xl font-black ${stat.color} truncate`}>{stat.value}</p>
+          <p className="text-[7px] sm:text-[8px] font-black uppercase tracking-widest text-text-gray mb-0.5 truncate">{stat.label}</p>
+          <p className={`text-base sm:text-lg font-black ${stat.color} truncate`}>{stat.value}</p>
         </div>
       </div>
     ))}
@@ -278,12 +278,12 @@ export default function SurveillanceConfig() {
       <table className="w-full text-left border-collapse min-w-[1000px]">
         <thead>
           <tr className="border-b border-border bg-surface/30">
-            <th className="py-5 px-6 sm:px-8 text-[10px] sm:text-[11px] font-black uppercase tracking-[0.1em] text-text-gray">Node ID</th>
-            <th className="py-5 px-6 sm:px-8 text-[10px] sm:text-[11px] font-black uppercase tracking-[0.1em] text-text-gray">Feed Designation</th>
-            <th className="py-5 px-6 sm:px-8 text-[10px] sm:text-[11px] font-black uppercase tracking-[0.1em] text-text-gray">Assigned Zone</th>
-            <th className="py-5 px-6 sm:px-8 text-[10px] sm:text-[11px] font-black uppercase tracking-[0.1em] text-text-gray">Stream Source</th>
-            <th className="py-5 px-6 sm:px-8 text-[10px] sm:text-[11px] font-black uppercase tracking-[0.1em] text-text-gray">Status</th>
-            <th className="py-5 px-6 sm:px-8 text-[10px] sm:text-[11px] font-black uppercase tracking-[0.1em] text-text-gray text-right">Actions</th>
+            <th className="py-2.5 px-6 sm:px-8 text-[8px] sm:text-[9px] font-black uppercase tracking-widest text-text-gray">Node ID</th>
+            <th className="py-2.5 px-6 sm:px-8 text-[8px] sm:text-[9px] font-black uppercase tracking-widest text-text-gray">Feed Designation</th>
+            <th className="py-2.5 px-6 sm:px-8 text-[8px] sm:text-[9px] font-black uppercase tracking-widest text-text-gray">Assigned Zone</th>
+            <th className="py-2.5 px-6 sm:px-8 text-[8px] sm:text-[9px] font-black uppercase tracking-widest text-text-gray">Stream Source</th>
+            <th className="py-2.5 px-6 sm:px-8 text-[8px] sm:text-[9px] font-black uppercase tracking-widest text-text-gray">Status</th>
+            <th className="py-2.5 px-6 sm:px-8 text-[8px] sm:text-[9px] font-black uppercase tracking-widest text-text-gray text-right">Actions</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-border">
@@ -291,27 +291,27 @@ export default function SurveillanceConfig() {
             const area = areas.find(a => a.id === cam.area_id);
             return (
               <tr key={cam.id} className="hover:bg-surface/30 transition-all group/row font-sans">
-                <td className="py-6 px-8 text-[10px] font-bold text-text-gray">#{cam.id.toString().padStart(3, '0')}</td>
-                <td className="py-6 px-8">
-                  <div className="flex items-center gap-3">
-                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center border ${cam.is_active !== false ? 'bg-accent/10 border-accent/20 text-accent' : 'bg-surface border-border text-text-gray'}`}>
-                      <Video className="w-4 h-4"/>
+                <td className="py-2.5 px-8 text-[9px] font-bold text-text-gray">#{cam.id.toString().padStart(3, '0')}</td>
+                <td className="py-2.5 px-8">
+                  <div className="flex items-center gap-2.5">
+                    <div className={`w-7 h-7 rounded flex items-center justify-center border ${cam.is_active !== false ? 'bg-accent/10 border-accent/20 text-accent' : 'bg-surface border-border text-text-gray'}`}>
+                      <Video className="w-3.5 h-3.5"/>
                     </div>
-                    <span className="text-sm font-black text-text-dark">{cam.name}</span>
+                    <span className="text-[11px] font-black text-text-dark uppercase tracking-tight">{cam.name}</span>
                   </div>
                 </td>
-                <td className="py-6 px-8">
-                  <span className="px-3 py-1 rounded-full bg-surface border border-border text-[10px] font-black uppercase tracking-widest text-text-gray">
+                <td className="py-2.5 px-8">
+                  <span className="px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-widest bg-surface border border-border text-text-gray">
                     {area ? area.name :`Area-${cam.area_id}`}
                   </span>
                 </td>
-                <td className="py-6 px-8 text-[10px] font-mono text-text-gray truncate max-w-[200px]"title={cam.source_url}>
+                <td className="py-2.5 px-8 text-[9px] font-mono text-text-gray truncate max-w-[200px]"title={cam.source_url}>
                   {cam.source_url}
                 </td>
-                <td className="py-6 px-8">
-                  <div className="flex items-center gap-2">
-                    <div className={`w-1.5 h-1.5 rounded-full ${cam.is_active !== false ? 'bg-success shadow-[0_0_8px_rgba(16,185,129,0.5)]' : 'bg-danger animate-pulse shadow-[0_0_8px_rgba(244,63,94,0.5)]'}`}></div>
-                    <span className={`text-[10px] font-black uppercase tracking-widest ${cam.is_active !== false ? 'text-success' : 'text-danger'}`}>
+                <td className="py-2.5 px-8">
+                  <div className="flex items-center gap-1.5">
+                    <div className={`w-1.5 h-1.5 rounded-full ${cam.is_active !== false ? 'bg-success shadow-[0_0_8px_rgba(16,185,129,0.5)]' : 'bg-danger animate-pulse'}`}></div>
+                    <span className={`text-[9px] font-black uppercase tracking-widest ${cam.is_active !== false ? 'text-success' : 'text-danger'}`}>
                       {cam.is_active !== false ? 'Online' : 'Disabled'}
                     </span>
                   </div>
@@ -531,20 +531,20 @@ export default function SurveillanceConfig() {
          </div>
          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
           {scenarioData.map(scenario => (
-           <div 
-            key={scenario.id} 
-            onClick={() => toggleScenarioInState(scenario.id)}
-            className={`flex items-center justify-between p-4 rounded-lg border transition-all cursor-pointer group
-             ${scenario.is_enabled ? 'bg-accent/5 border-accent/30 shadow-sm' : 'bg-surface border-border hover:border-accent/30'}`}
-           >
-            <div className="flex items-center gap-3">
-             <div className={`w-2 h-2 rounded-full ${scenario.is_enabled ? 'bg-accent animate-pulse' : 'bg-border'}`} />
-             <span className={`text-[11px] font-black uppercase tracking-tight transition-colors ${scenario.is_enabled ? 'text-accent' : 'text-text-gray group-hover:text-text-dark'}`}>
-              {scenario.name}
-             </span>
+            <div 
+             key={scenario.id} 
+             onClick={() => toggleScenarioInState(scenario.id)}
+             className={`flex items-center justify-between p-2.5 rounded-lg border transition-all cursor-pointer group
+              ${scenario.is_enabled ? 'bg-accent/5 border-accent/30 shadow-sm' : 'bg-surface border-border hover:border-accent/30'}`}
+            >
+             <div className="flex items-center gap-2.5">
+              <div className={`w-1.5 h-1.5 rounded-full ${scenario.is_enabled ? 'bg-accent animate-pulse' : 'bg-border'}`} />
+              <span className={`text-[10px] font-black uppercase tracking-tight transition-colors ${scenario.is_enabled ? 'text-accent' : 'text-text-gray group-hover:text-text-dark'}`}>
+               {scenario.name}
+              </span>
+             </div>
+             {scenario.is_enabled && <CheckCircle2 className="w-3 h-3 text-accent"/>}
             </div>
-            {scenario.is_enabled && <CheckCircle2 className="w-4 h-4 text-accent"/>}
-           </div>
           ))}
          </div>
          
