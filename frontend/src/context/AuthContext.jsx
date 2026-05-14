@@ -21,7 +21,12 @@ export const AuthProvider = ({ children }) => {
       const data = await apiFetchPermissions();
       setPermissions(data?.permissions || {});
     } catch (err) {
+      console.error("AuthContext: Permission sync failed:", err);
       setPermissions({});
+      // If we get a 401 during initialization, we should clear the state
+      if (err.message.includes('401')) {
+        logout();
+      }
     }
   };
 
@@ -32,6 +37,8 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
     setPermissions({});
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    // Force a redirect to clear any background polling or stale state
+    window.location.href = '/login';
   };
 
   const resetTimer = () => {

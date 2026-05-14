@@ -21,6 +21,7 @@ def _camera_with_scenario_count(camera: Camera, session: Session):
 
 
 @router.get("/live/areas")
+@router.get("/live/areas/")
 def get_live_areas(session: Session = Depends(get_session), live_data: dict = Depends(lambda cur=Depends(get_current_user), s=Depends(get_session): verify_module_access("live_monitoring", cur, s, access_level="view"))):
     allowed_area_ids = get_allowed_area_ids(live_data.get("id"), session)
     if not allowed_area_ids:
@@ -29,6 +30,7 @@ def get_live_areas(session: Session = Depends(get_session), live_data: dict = De
 
 
 @router.get("/live/cameras")
+@router.get("/live/cameras/")
 def get_live_cameras(session: Session = Depends(get_session), live_data: dict = Depends(lambda cur=Depends(get_current_user), s=Depends(get_session): verify_module_access("live_monitoring", cur, s, access_level="view"))):
     allowed_area_ids = get_allowed_area_ids(live_data.get("id"), session)
     if not allowed_area_ids:
@@ -38,12 +40,14 @@ def get_live_cameras(session: Session = Depends(get_session), live_data: dict = 
 
 
 @router.get("/live/scenarios")
+@router.get("/live/scenarios/")
 def get_live_scenarios(session: Session = Depends(get_session), live_data: dict = Depends(lambda cur=Depends(get_current_user), s=Depends(get_session): verify_module_access("live_monitoring", cur, s, access_level="view"))):
     return session.exec(select(AIScenario)).all()
 
 # --- AREAS ---
 
 @router.get("/admin/areas")
+@router.get("/admin/areas/")
 def get_areas(skip: int = 0, limit: int = 20, session: Session = Depends(get_session), admin_data: dict = Depends(lambda cur=Depends(get_current_user), s=Depends(get_session): verify_module_access("areas", cur, s, access_level="view"))):
     allowed_area_ids = get_allowed_area_ids(admin_data.get("id"), session)
     if not allowed_area_ids:
@@ -133,6 +137,7 @@ def delete_area(area_id: int, session: Session = Depends(get_session), admin_dat
 # --- CAMERAS ---
 
 @router.get("/admin/cameras")
+@router.get("/admin/cameras/")
 def get_cameras(skip: int = 0, limit: int = 20, session: Session = Depends(get_session), admin_data: dict = Depends(lambda cur=Depends(get_current_user), s=Depends(get_session): verify_module_access("cameras", cur, s, access_level="view"))):
     allowed_area_ids = get_allowed_area_ids(admin_data.get("id"), session)
     if not allowed_area_ids:
@@ -296,6 +301,7 @@ def verify_intelligence_delete(current_user: dict = Depends(get_current_user), s
     return verify_module_access("intelligence_registry", current_user, session, access_level="delete")
 
 @router.get("/admin/scenarios")
+@router.get("/admin/scenarios/")
 def get_all_scenarios(session: Session = Depends(get_session), admin_data: dict = Depends(verify_intelligence_access)):
     """
     Returns the list of all AI scenarios in the system.

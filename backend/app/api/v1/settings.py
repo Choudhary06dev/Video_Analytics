@@ -1,11 +1,14 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import Session, select
-from app.core.database import engine
+from app.core.database import engine, get_session
+from app.api.v1.auth import get_current_user
+from app.api.v1.users import verify_module_access
 from app.models.system_setting import SystemSetting
 from typing import Any
 
-router = APIRouter(prefix="/settings", tags=["System Settings"], redirect_slashes=False)
+router = APIRouter(prefix="/settings", tags=["System Settings"])
 
+@router.get("")
 @router.get("/")
 async def get_settings():
     with Session(engine) as session:
@@ -18,8 +21,9 @@ async def get_settings():
             session.refresh(setting)
         return setting
 
+@router.post("")
 @router.post("/")
-async def update_settings(new_settings: dict):
+async def update_settings(new_settings: dict, admin_data: dict = Depends(lambda cur=Depends(get_current_user), s=Depends(get_session): verify_module_access("settings", cur, s, access_level="edit"))):
     with Session(engine) as session:
         setting = session.exec(select(SystemSetting)).first()
         if not setting:

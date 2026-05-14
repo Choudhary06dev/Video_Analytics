@@ -6,7 +6,7 @@ import {
   Zap, CheckCircle2, Loader2, RefreshCw, Car, Baby, Ban, Building, Mountain,
   Lock, AlertTriangle, Crosshair, UserX, UserPlus, UserCheck, Phone, Flame, Truck, Video, BrainCircuit, Users, User
 } from 'lucide-react';
-import { fetchScenarios, fetchAdminCameras, fetchSystemHealth } from '../services/cameraService';
+import { fetchLiveScenarios, fetchLiveCameras, fetchSystemHealth } from '../services/cameraService';
 
 const SCENARIO_METADATA = {
   'UNAUTHORIZED_ENTRY_INTO_RESTRICTED_AREAS': { icon: Lock, color: 'var(--color-danger)', image: '/assets/images/restricted_entry.png' },
@@ -40,14 +40,14 @@ export default function AIScenarios() {
   const [searchTerm, setSearchTerm] = useState('');
   const [viewMode, setViewMode] = useState('grid');
   const location = useLocation();
-  const { canView } = useAuth();
+  const { canView, logout } = useAuth();
 
   const loadData = async () => {
     try {
       setLoading(true);
       const [sData, cData, hData] = await Promise.all([
-        fetchScenarios(),
-        fetchAdminCameras(),
+        fetchLiveScenarios(),
+        fetchLiveCameras(),
         fetchSystemHealth()
       ]);
       setScenarios(sData);
