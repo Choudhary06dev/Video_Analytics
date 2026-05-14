@@ -32,14 +32,14 @@ SCENARIO_MAPPING = {
 # 43: knife, 67: cell phone, 69: oven, 70: toaster, 76: scissors
 INTEREST_CLASSES = [0, 2, 3, 5, 7, 10, 43, 67, 69, 70, 76]
 
-CONF_THRESHOLD = 0.30
+CONF_THRESHOLD = 0.25
 IOU_THRESHOLD = 0.45
 MIN_STABLE_FRAMES_TO_LOG = 2  # Only 2 consecutive frames needed for fast alerting
 LOG_COOLDOWN = 5.0 # 5s cooldown between duplicate events
 VISITOR_LIMIT = 2  # Max allowed visitors (e.g., 1 patient + 1 attendant)
 
 SCENARIO_MIN_CONFIDENCE = {
-    "person": 0.30,
+    "person": 0.20,
     "knife": 0.60,
     "scissors": 0.60,
     "cell phone": 0.65,
@@ -77,6 +77,7 @@ class InferenceEngine:
         self.enabled_scenarios = set()
         self.scenario_configs = {}
         self._load_initial_config()
+        print(f"[CAMERA {camera_id}] ENGINE START | Source: {source} | Enabled Scenarios: {self.enabled_scenarios}")
         
         self.latest_raw_frame = None
         self.processed_frame_bytes = self.placeholder_frame
@@ -109,6 +110,7 @@ class InferenceEngine:
         self.enabled_scenarios = set(enabled_names)
         if scenario_configs is not None:
             self.scenario_configs = scenario_configs
+        print(f"[CAMERA {self.camera_id}] CONFIG RELOADED | Enabled: {self.enabled_scenarios}")
 
     def _capture_loop(self):
         """Thread 1: Keeps the OpenCV buffer empty and always has the LATEST frame ready."""
@@ -165,9 +167,8 @@ class InferenceEngine:
         return self.processed_frame_bytes, self.processed_events
 
     def _perform_inference(self, frame):
-        # imgsz=480 gives much better accuracy for person detection vs 320
-        # classes=INTEREST_CLASSES ensures we don't detect garbage like "surfboard" or "bench"
-        results = model.predict(frame, conf=CONF_THRESHOLD, iou=IOU_THRESHOLD, classes=INTEREST_CLASSES, verbose=False, imgsz=640)
+        # imgsz=1024 gives much better accuracy for small/distant objects
+        results = model.predict(frame, conf=CONF_THRESHOLD, iou=IOU_THRESHOLD, classes=INTEREST_CLASSES, verbose=False, imgsz=1024)
         person_count = 0
         detected_scenarios = {}
         events_to_log = []
@@ -255,6 +256,9 @@ class InferenceEngine:
                 "count": current_count, "stable_frames": stable_frames, "absent_frames": absent_frames,
                 "present": present, "last_logged": prev["last_logged"],
             }
+
+        if current_objects:
+            print(f"[CAMERA {self.camera_id}] Detected: {current_objects} | Stable: {stable_objects}")
 
         self.scene_state = future_scene_state
         self.latest_intelligence.update({

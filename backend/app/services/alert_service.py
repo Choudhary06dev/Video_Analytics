@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 from typing import Optional, List, Dict
-from sqlmodel import Session, select
+from sqlalchemy import func, text
+from sqlmodel import Session, select, col
 from app.models import DetectionEvent, Camera, Area
 
 
@@ -171,38 +172,67 @@ def _get_summary_stats(
     scenario_key: Optional[str] = None,
     allowed_area_ids: Optional[List[int]] = None,
 ) -> Dict:
-    statement = select(DetectionEvent).where(DetectionEvent.timestamp >= start_dt).where(DetectionEvent.timestamp <= end_dt)
-    statement = _apply_event_filters(statement, session, camera_id, area_id, scenario_key, allowed_area_ids=allowed_area_ids)
+    # Build base statement for count
+    base_statement = select(func.count(DetectionEvent.id)).where(DetectionEvent.timestamp >= start_dt).where(DetectionEvent.timestamp <= end_dt)
     
-    if statement is None:
-        events = []
-    else:
-        events = session.exec(statement).all()
+    # Use the same filters
+    count_statement = _apply_event_filters(base_statement, session, camera_id, area_id, scenario_key, allowed_area_ids=allowed_area_ids)
     
+    if count_statement is None:
+        return {
+            "count": 0,
+            "total_persons": 0,
+            "total_weapons": 0,
+            "total_vehicles": 0,
+            "object_breakdown": {},
+            "avg_confidence": 0
+        }
+    
+    total_count = session.exec(count_statement).first() or 0
+    
+    if total_count == 0:
+        return {
+            "count": 0,
+            "total_persons": 0,
+            "total_weapons": 0,
+            "total_vehicles": 0,
+            "object_breakdown": {},
+            "avg_confidence": 0
+        }
+
+    # For objects, we still need a breakdown but we can use GROUP BY
+    breakdown_stmt = select(DetectionEvent.object_class, func.count(DetectionEvent.id)).where(DetectionEvent.timestamp >= start_dt).where(DetectionEvent.timestamp <= end_dt)
+    breakdown_stmt = _apply_event_filters(breakdown_stmt, session, camera_id, area_id, scenario_key, allowed_area_ids=allowed_area_ids)
+    breakdown_stmt = breakdown_stmt.group_by(DetectionEvent.object_class)
+    
+    breakdown_results = session.exec(breakdown_stmt).all()
+    object_counts = {obj: count for obj, count in breakdown_results}
+
+    # Calculate specific totals from breakdown to avoid fetching all
     total_persons = 0
     total_weapons = 0
     total_vehicles = 0
-    object_counts = {}
-    
-    for ev in events:
-        obj = ev.object_class
-        object_counts[obj] = object_counts.get(obj, 0) + 1
-        
+    for obj, count in object_counts.items():
         obj_lower = obj.lower()
         if "person" in obj_lower or "entry" in obj_lower:
-            total_persons += ev.metadata_json.get("count", 1) if ev.metadata_json else 1
+            total_persons += count
         if "weapon" in obj_lower or "knife" in obj_lower:
-            total_weapons += ev.metadata_json.get("count", 1) if ev.metadata_json else 1
+            total_weapons += count
         if "vehicle" in obj_lower or "car" in obj_lower or "truck" in obj_lower:
-            total_vehicles += ev.metadata_json.get("count", 1) if ev.metadata_json else 1
-            
+            total_vehicles += count
+
+    # Avg confidence
+    conf_stmt = select(func.avg(DetectionEvent.confidence)).where(DetectionEvent.timestamp >= start_dt).where(DetectionEvent.timestamp <= end_dt)
+    conf_stmt = _apply_event_filters(conf_stmt, session, camera_id, area_id, scenario_key, allowed_area_ids=allowed_area_ids)
+    avg_conf = session.exec(conf_stmt).first() or 0
+
     return {
-        "count": len(events),
+        "count": total_count,
         "total_persons": total_persons,
         "total_weapons": total_weapons,
         "total_vehicles": total_vehicles,
         "object_breakdown": object_counts,
-        "avg_confidence": float(sum(ev.confidence for ev in events) / len(events) if events else 0)
+        "avg_confidence": float(avg_conf)
     }
 
 def get_logs_summary(
@@ -242,21 +272,27 @@ def get_logs_summary(
     # Get Previous Period Stats
     previous_stats = _get_summary_stats(session, prev_start_dt, prev_end_dt, camera_id, area_id, scenario_key, allowed_area_ids)
     
-    # Additional data for the response (Heatmaps, Threat levels based on current period)
-    statement = select(DetectionEvent).where(DetectionEvent.timestamp >= start_dt).where(DetectionEvent.timestamp <= end_dt)
-    statement = _apply_event_filters(statement, session, camera_id, area_id, scenario_key, allowed_area_ids=allowed_area_ids)
-    events = session.exec(statement).all() if statement is not None else []
-    
+    # Get distribution stats via SQL grouping to avoid fetching all records
     hourly_distribution = [0] * 24
     weekly_distribution = [[0] * 24 for _ in range(7)]
     severity_distribution = {"Low": 0, "Medium": 0, "High": 0, "Critical": 0}
+
+    # Hourly distribution
+    hour_stmt = select(func.extract('hour', DetectionEvent.timestamp), func.count(DetectionEvent.id)).where(DetectionEvent.timestamp >= start_dt).where(DetectionEvent.timestamp <= end_dt)
+    hour_stmt = _apply_event_filters(hour_stmt, session, camera_id, area_id, scenario_key, allowed_area_ids=allowed_area_ids)
+    hour_stmt = hour_stmt.group_by(func.extract('hour', DetectionEvent.timestamp))
     
-    for ev in events:
-        hour = ev.timestamp.hour
-        hourly_distribution[hour] += 1
-        weekly_distribution[ev.timestamp.weekday()][hour] += 1
-        if ev.severity in severity_distribution:
-            severity_distribution[ev.severity] += 1
+    for h, count in session.exec(hour_stmt).all():
+        hourly_distribution[int(h)] = count
+
+    # Severity distribution
+    sev_stmt = select(DetectionEvent.severity, func.count(DetectionEvent.id)).where(DetectionEvent.timestamp >= start_dt).where(DetectionEvent.timestamp <= end_dt)
+    sev_stmt = _apply_event_filters(sev_stmt, session, camera_id, area_id, scenario_key, allowed_area_ids=allowed_area_ids)
+    sev_stmt = sev_stmt.group_by(DetectionEvent.severity)
+    
+    for sev, count in session.exec(sev_stmt).all():
+        if sev in severity_distribution:
+            severity_distribution[sev] = count
             
     live_persons = latest_intelligence.get("person_count", 0)
     live_weapons = sum(1 for obj in latest_intelligence.get("objects", []) if any(x in obj.lower() for x in ["weapon", "knife"]))

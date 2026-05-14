@@ -19,8 +19,8 @@ class DetectionEvent(SQLModel, table=True):
     Model for storing AI detection events.
     """
     id: Optional[int] = Field(default=None, primary_key=True)
-    timestamp: datetime = Field(default_factory=datetime.now)
-    camera_id: int = Field(foreign_key="camera.id")
+    timestamp: datetime = Field(default_factory=datetime.now, index=True)
+    camera_id: int = Field(foreign_key="camera.id", index=True)
     scenario_key: str  # Links back to AIScenario.key
     object_class: str
     confidence: float

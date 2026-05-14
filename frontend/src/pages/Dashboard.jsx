@@ -47,7 +47,7 @@ import { fetchAlerts, fetchLogs, fetchLogsSummary } from '../services/alertServi
 
 const severityStyle = {
   Critical: 'bg-danger/10 text-danger border-danger/20',
-  High: 'bg-warning/10 text-warning border-warning/20',
+  High: 'bg-danger/10 text-danger border-danger/20',
   Medium: 'bg-accent/10 text-accent border-accent/20',
   Low: 'bg-success/10 text-success border-success/20'
 };
@@ -68,14 +68,16 @@ const formatTime = (value) => {
 };
 
 const buildTrend = (logs) => {
-  const buckets = new Map();
+  const buckets = [];
   const now = new Date();
 
-  for (let i = 5; i >= 0; i -= 1) {
+  // Create 24 hourly buckets ending at current hour
+  for (let i = 23; i >= 0; i--) {
     const d = new Date(now);
-    d.setHours(now.getHours() - i * 4, 0, 0, 0);
-    buckets.set(d.getHours(), {
-      time: d.toLocaleTimeString([], { hour: '2-digit' }),
+    d.setHours(now.getHours() - i, 0, 0, 0);
+    buckets.push({
+      timestamp: d.getTime(),
+      time: d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       detections: 0,
       alerts: 0
     });
@@ -84,14 +86,22 @@ const buildTrend = (logs) => {
   logs.forEach((log) => {
     const date = new Date(log.timestamp);
     if (Number.isNaN(date.getTime())) return;
-    const hour = Math.floor(date.getHours() / 4) * 4;
-    const bucket = buckets.get(hour);
-    if (!bucket) return;
-    bucket.detections += 1;
-    if (log.is_alert) bucket.alerts += 1;
+
+    // Floor to the hour to match bucket timestamp
+    const logHourTs = new Date(date).setMinutes(0, 0, 0);
+
+    const bucket = buckets.find(b => b.timestamp === logHourTs);
+    if (bucket) {
+      bucket.detections += 1;
+      // Show both Critical and High alerts on the red line
+      const sev = log.severity?.toUpperCase();
+      if (log.is_alert && (sev === 'CRITICAL' || sev === 'HIGH')) {
+        bucket.alerts += 1;
+      }
+    }
   });
 
-  return Array.from(buckets.values());
+  return buckets;
 };
 
 function MetricCard({ label, value, sublabel, icon: Icon, tone = 'accent', trend }) {
@@ -151,7 +161,7 @@ function EmptyState({ text }) {
 
 function TrendIndicator({ current, previous }) {
   if (previous === undefined || previous === null) return null;
-  
+
   const diff = current - previous;
   if (diff === 0) return (
     <div className="flex items-center gap-1 text-[10px] font-bold text-text-gray">
@@ -159,10 +169,10 @@ function TrendIndicator({ current, previous }) {
       Stable
     </div>
   );
-  
+
   const percent = previous === 0 ? (current > 0 ? 100 : 0) : Math.round((diff / previous) * 100);
   const isUp = diff > 0;
-  
+
   return (
     <div className={`flex items-center gap-1 text-[10px] font-bold ${isUp ? 'text-danger' : 'text-success'}`}>
       {isUp ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
@@ -190,7 +200,7 @@ export default function Dashboard() {
     if (showSpinner) setRefreshing(true);
     const nextErrors = {};
     const range = hoursOverride || timeRange;
-    
+
     let hours = 24;
     if (range === 'today') {
       const now = new Date();
@@ -202,32 +212,50 @@ export default function Dashboard() {
 
     const load = async (key, fn, fallback) => {
       try {
-        return await fn();
+        const result = await fn();
+        return result;
       } catch (err) {
         nextErrors[key] = readErrorMessage(err);
         return fallback;
       }
     };
 
-    const [cameraData, areaData, alertData, logData, summaryData, intelData, healthData, scenariosData] = await Promise.all([
-      load('cameras', fetchAdminCameras, []),
-      load('areas', fetchAdminAreas, []),
+    // Parallel fetch for all required data
+    // We only fetch static data (cameras, areas, scenarios) if they haven't been loaded yet
+    const needsStatic = cameras.length === 0 || areas.length === 0 || scenarios.length === 0;
+
+    const [
+      alertData,
+      logData,
+      summaryData,
+      intelData,
+      healthData,
+      cameraData,
+      areaData,
+      scenariosData
+    ] = await Promise.all([
       load('alerts', () => fetchAlerts({ hours, limit: 20 }), []),
       load('logs', () => fetchLogs({ hours, limit: 300, skip: 0 }), []),
       load('summary', () => fetchLogsSummary(hours), {}),
       load('intelligence', fetchIntelligence, { person_count: 0, objects: [], stable_objects: [] }),
       load('health', fetchHealth, { status: 'unknown' }),
-      load('scenarios', fetchScenarios, [])
+      needsStatic ? load('cameras', fetchAdminCameras, []) : Promise.resolve(null),
+      needsStatic ? load('areas', fetchAdminAreas, []) : Promise.resolve(null),
+      needsStatic ? load('scenarios', fetchScenarios, []) : Promise.resolve(null),
     ]);
 
-    setCameras(safeArray(cameraData.cameras || cameraData));
-    setAreas(safeArray(areaData.areas || areaData));
+    // Update dynamic state
     setAlerts(safeArray(alertData));
     setLogs(safeArray(logData));
     setSummary(summaryData || {});
     setIntel(intelData || { person_count: 0, objects: [], stable_objects: [] });
-    setScenarios(safeArray(scenariosData.scenarios || scenariosData));
     setHealth(healthData || { status: 'unknown' });
+
+    // Update static state only if fetched
+    if (cameraData) setCameras(safeArray(cameraData.cameras || cameraData));
+    if (areaData) setAreas(safeArray(areaData.areas || areaData));
+    if (scenariosData) setScenarios(safeArray(scenariosData.scenarios || scenariosData));
+
     setErrors(nextErrors);
     setLastUpdated(new Date());
     setLoading(false);
@@ -235,10 +263,10 @@ export default function Dashboard() {
   };
 
   useEffect(() => {
-    loadDashboard();
+    loadDashboard(true);
     const interval = setInterval(() => loadDashboard(false), 5000);
     return () => clearInterval(interval);
-  }, [timeRange]);
+  }, [timeRange]); // Re-run when timeRange changes to trigger the logic
 
   const handleTimeRangeChange = (e) => {
     const val = e.target.value;
@@ -361,8 +389,8 @@ export default function Dashboard() {
 
           <div className="flex flex-wrap items-center gap-2 sm:gap-3">
             <div className="relative group min-w-[120px]">
-              <select 
-                value={timeRange} 
+              <select
+                value={timeRange}
                 onChange={handleTimeRangeChange}
                 className="w-full appearance-none pl-3 pr-9 py-2 bg-surface border border-border rounded-lg text-[10px] font-black tracking-tight text-text-dark focus:outline-none focus:ring-1 focus:ring-accent/40 cursor-pointer transition-all hover:border-accent/40"
               >
@@ -380,7 +408,7 @@ export default function Dashboard() {
             <div className={`px-3 py-2 rounded-lg border text-[10px] font-black tracking-tight ${postureTone === 'danger' ? 'bg-danger/10 text-danger border-danger/20' : postureTone === 'warning' ? 'bg-warning/10 text-warning border-warning/20' : 'bg-success/10 text-success border-success/20'}`}>
               {stats.posture} Posture
             </div>
-            
+
             <div className="hidden sm:block px-3 py-2 rounded-lg border border-border bg-surface text-[10px] font-black tracking-tight text-text-gray">
               Updated {lastUpdated ? lastUpdated.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--:--'}
             </div>
@@ -463,7 +491,7 @@ export default function Dashboard() {
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-                <XAxis dataKey="time" tick={{ fill: '#94a3b8', fontSize: 11, fontWeight: 700 }} axisLine={false} tickLine={false} />
+                <XAxis dataKey="time" minTickGap={20} tick={{ fill: '#94a3b8', fontSize: 11, fontWeight: 700 }} axisLine={false} tickLine={false} />
                 <YAxis tick={{ fill: '#94a3b8', fontSize: 11, fontWeight: 700 }} axisLine={false} tickLine={false} />
                 <Tooltip
                   contentStyle={{
@@ -478,7 +506,7 @@ export default function Dashboard() {
                   itemStyle={{ color: '#0ea5e9' }}
                 />
                 <Area type="monotone" dataKey="detections" name="Detections" stroke="#0ea5e9" strokeWidth={2.5} fill="url(#detGrad)" />
-                <Area type="monotone" dataKey="alerts" name="Alerts" stroke="#ef4444" strokeWidth={2.5} fill="url(#alertGrad)" />
+                <Area type="monotone" dataKey="alerts" name="Critical Alerts" stroke="#ef4444" strokeWidth={2.5} fill="url(#alertGrad)" />
               </AreaChart>
             </ResponsiveContainer>
           </div>
@@ -573,11 +601,11 @@ export default function Dashboard() {
                       </span>
                     </div>
                     <div className="h-2.5 bg-surface rounded-full overflow-hidden border border-border/50 p-[2px]">
-                      <div 
-                        className="h-full bg-gradient-to-r from-accent to-accent-light rounded-full transition-all duration-1000 ease-out" 
-                        style={{ 
+                      <div
+                        className="h-full bg-gradient-to-r from-accent to-accent-light rounded-full transition-all duration-1000 ease-out"
+                        style={{
                           width: `${percentage}%`,
-                          backgroundColor: i === 0 ? '#0ea5e9' : i === 1 ? '#8b5cf6' : '#6366f1' 
+                          backgroundColor: i === 0 ? '#0ea5e9' : i === 1 ? '#8b5cf6' : '#6366f1'
                         }}
                       />
                     </div>

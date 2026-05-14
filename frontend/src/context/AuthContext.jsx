@@ -41,45 +41,19 @@ export const AuthProvider = ({ children }) => {
     window.location.href = '/login';
   };
 
-  const resetTimer = () => {
-    if (timeoutRef.current) clearTimeout(timeoutRef.current);
-    
-    if (token) {
-        const expiryMin = sessionTimeout || 60;
-        timeoutRef.current = setTimeout(() => {
-            console.log("Session expired due to inactivity.");
-            logout();
-        }, expiryMin * 60 * 1000);
-    }
-  };
-
-  useEffect(() => {
-    resetTimer();
-  }, [sessionTimeout]);
-
   useEffect(() => {
     const initializeSession = async () => {
       const savedUser = localStorage.getItem('user');
       if (savedUser && token) {
         setUser(JSON.parse(savedUser));
         await fetchPermissions(token);
-        resetTimer();
       } else {
         setPermissions({});
       }
       setLoading(false);
     };
     initializeSession();
-
-    // Activity listeners for session timeout
-    const events = ['mousedown', 'keydown', 'scroll', 'touchstart'];
-    events.forEach(event => window.addEventListener(event, resetTimer));
-
-    return () => {
-        events.forEach(event => window.removeEventListener(event, resetTimer));
-        if (timeoutRef.current) clearTimeout(timeoutRef.current);
-    };
-  }, [token, sessionTimeout]); // Added sessionTimeout to sync listeners
+  }, [token]);
 
   const canView = (moduleKey) => {
     if (!moduleKey) return true;

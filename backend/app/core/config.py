@@ -18,7 +18,7 @@ class Settings(BaseModel):
         "9a2b3c4d5e6f7g8h9i0j1k2l3m4n5o6p",
     )
     ALGORITHM: str = os.getenv("ALGORITHM", "HS256")
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "1440"))
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "43200"))
 
     CAMERA_SOURCE: str = os.getenv("CAMERA_SOURCE", "0")
     LOG_INTERVAL_SECONDS: float = float(os.getenv("LOG_INTERVAL_SECONDS", "3.0"))

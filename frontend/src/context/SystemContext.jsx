@@ -8,7 +8,6 @@ export const SystemProvider = ({ children }) => {
     maintenanceMode: false,
     debugMode: false,
     clusterSync: true,
-    sessionTimeout: 60,
     publicEnrollment: true
   });
   const [loading, setLoading] = useState(true);
@@ -21,7 +20,6 @@ export const SystemProvider = ({ children }) => {
           maintenanceMode: data.maintenance_mode || data.maintenanceMode || false,
           debugMode: data.debug_mode || data.debugMode || false,
           clusterSync: data.cluster_sync !== undefined ? (data.cluster_sync || data.clusterSync) : true,
-          sessionTimeout: data.session_timeout || data.sessionTimeout || 60,
           publicEnrollment: data.public_enrollment !== undefined ? (data.public_enrollment || data.publicEnrollment) : true
         });
       }

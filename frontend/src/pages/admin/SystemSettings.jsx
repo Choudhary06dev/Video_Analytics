@@ -8,8 +8,6 @@ import {
   Terminal,
   User,
   RefreshCw,
-  ShieldAlert,
-  Activity,
   Save,
   Zap,
   RefreshCcw,
@@ -28,8 +26,6 @@ export default function SystemSettings() {
     maintenanceMode: false,
     debugMode: false,
     publicEnrollment: true,
-    clusterSync: true,
-    sessionTimeout: 60,
     retentionLogs: 30,
     retentionVideo: 7,
     autoPurge: true
@@ -44,8 +40,6 @@ export default function SystemSettings() {
           maintenanceMode: settingsData.maintenance_mode ?? settingsData.maintenanceMode ?? false,
           debugMode: settingsData.debug_mode ?? settingsData.debugMode ?? false,
           publicEnrollment: settingsData.public_enrollment ?? settingsData.publicEnrollment ?? true,
-          clusterSync: settingsData.cluster_sync ?? settingsData.clusterSync ?? true,
-          sessionTimeout: settingsData.session_timeout ?? settingsData.sessionTimeout ?? 60,
           retentionLogs: settingsData.retention_logs ?? settingsData.retentionLogs ?? 30,
           retentionVideo: settingsData.retention_video ?? settingsData.retentionVideo ?? 7,
           autoPurge: settingsData.auto_purge ?? settingsData.autoPurge ?? true
@@ -165,7 +159,6 @@ export default function SystemSettings() {
               { id: 'maintenanceMode', title: 'Maintenance Mode', desc: 'Disable public access', icon: Power },
               { id: 'debugMode', title: 'Diagnostic Overlays', desc: 'Show neural debug info', icon: Terminal },
               { id: 'publicEnrollment', title: 'Public Enrollment', desc: 'Allow new users to register', icon: User },
-              { id: 'clusterSync', title: 'Real-time Cluster Sync', desc: 'Keep all edge nodes in harmony', icon: RefreshCw },
             ].map(item => (
               <div key={item.id} className="flex items-center justify-between p-3 sm:p-4 bg-surface/30 rounded-xl border border-border group hover:border-accent/30 transition-all">
                 <div className="flex items-center gap-3 sm:gap-4 min-w-0">
@@ -226,39 +219,7 @@ export default function SystemSettings() {
           </div>
         </div>
 
-        {/* Security & Access */}
-        <div className="bg-card border border-border rounded-lg p-8 shadow-sm">
-          <SectionHeader icon={ShieldAlert} title="Security & Access" subtitle="Active Session Policies" />
 
-          <div className="space-y-6">
-            <div className="p-5 sm:p-6 bg-surface/50 border border-border rounded-xl group hover:border-accent/20 transition-all">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center border border-accent/20">
-                    <Activity className="w-4 h-4 text-accent" />
-                  </div>
-                  <p className="text-[10px] sm:text-[11px] font-black uppercase tracking-widest text-text-dark">Neural Session Expiry</p>
-                </div>
-
-                <div className="flex items-center gap-3">
-                  <input
-                    type="number"
-                    value={settings.sessionTimeout}
-                    onChange={(e) => setSettings({ ...settings, sessionTimeout: parseInt(e.target.value) })}
-                    className="w-24 bg-card border-2 border-border focus:border-accent rounded-lg px-4 py-2 text-sm font-black text-center text-accent outline-none transition-all shadow-sm"
-                  />
-                  <span className="text-[10px] font-black text-text-gray uppercase tracking-widest">Minutes</span>
-                </div>
-              </div>
-              <div className="flex items-start gap-2 pl-1">
-                <div className="w-1 h-1 rounded-full bg-accent mt-1.5 shrink-0 animate-pulse"></div>
-                <p className="text-[9px] font-bold text-text-gray uppercase tracking-widest leading-relaxed opacity-60">
-                  Automatically terminate neural link and clear local cache after inactivity period.
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
 
       </div>
 

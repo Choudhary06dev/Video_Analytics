@@ -954,7 +954,7 @@ export default function NeuralStream() {
                     <span className={`text-[0.75rem] font-extrabold tracking-wide ${log.iconColor} truncate block`}>{log.type}</span>
                     <div className="flex items-center gap-2 mt-0.5">
                       <span className="text-[0.6rem] font-mono text-text-gray">{log.camera}</span>
-                      <span className={`text-[0.5rem] px-1.5 py-0.5 rounded font-black tracking-tight border ${log.severity === 'CRITICAL' ? 'bg-rose-500/20 text-rose-500 border-rose-500/30' : log.severity === 'HIGH' ? 'bg-amber-500/20 text-amber-500 border-amber-500/30' : 'bg-blue-500/20 text-blue-500 border-blue-500/30'}`}>{log.severity}</span>
+                      <span className={`text-[0.5rem] px-1.5 py-0.5 rounded font-black tracking-tight border ${(log.severity.toUpperCase() === 'CRITICAL' || log.severity.toUpperCase() === 'HIGH') ? 'bg-rose-500/20 text-rose-500 border-rose-500/30' : log.severity.toUpperCase() === 'MEDIUM' ? 'bg-blue-500/20 text-blue-500 border-blue-500/30' : 'bg-emerald-500/20 text-emerald-500 border-emerald-500/30'}`}>{log.severity}</span>
                     </div>
                   </div>
                   {/* Mobile: action button */}
@@ -1000,10 +1000,9 @@ export default function NeuralStream() {
                 </div>
 
                 <div className="hidden lg:flex col-span-1 border-r border-border/20 px-2 py-2 items-center justify-center">
-                  <span className={`inline-block w-full text-center text-[0.55rem] px-1 py-0.5 rounded font-black tracking-tight border ${log.severity === 'CRITICAL' ? 'bg-rose-500/20 text-rose-500 border-rose-500/30' :
-                    log.severity === 'HIGH' ? 'bg-amber-500/20 text-amber-500 border-amber-500/30' :
-                      log.severity === 'MEDIUM' ? 'bg-blue-500/20 text-blue-500 border-blue-500/30' :
-                        'bg-slate-500/20 text-slate-500 border-slate-500/30'
+                  <span className={`inline-block w-full text-center text-[0.55rem] px-1 py-0.5 rounded font-black tracking-tight border ${(log.severity.toUpperCase() === 'CRITICAL' || log.severity.toUpperCase() === 'HIGH') ? 'bg-rose-500/20 text-rose-500 border-rose-500/30' :
+                    log.severity.toUpperCase() === 'MEDIUM' ? 'bg-blue-500/20 text-blue-500 border-blue-500/30' :
+                      'bg-emerald-500/20 text-emerald-500 border-emerald-500/30'
                     }`}>
                     {log.severity.charAt(0) + log.severity.slice(1).toLowerCase()}
                   </span>
@@ -1351,10 +1350,9 @@ export default function NeuralStream() {
                 <div className="bg-surface p-4 rounded-lg border border-border">
                   <span className="text-[0.65rem] font-bold text-text-gray uppercase tracking-widest block mb-1">Severity & Confidence</span>
                   <div className="flex items-center gap-3">
-                    <span className={`text-[0.6rem] px-2 py-0.5 rounded font-black tracking-widest uppercase border ${selectedLog.severity === 'CRITICAL' ? 'bg-rose-500/20 text-rose-500 border-rose-500/30' :
-                      selectedLog.severity === 'HIGH' ? 'bg-amber-500/20 text-amber-500 border-amber-500/30' :
-                        selectedLog.severity === 'MEDIUM' ? 'bg-blue-500/20 text-blue-500 border-blue-500/30' :
-                          'bg-slate-500/20 text-slate-500 border-slate-500/30'
+                    <span className={`text-[0.6rem] px-2 py-0.5 rounded font-black tracking-widest uppercase border ${(selectedLog.severity.toUpperCase() === 'CRITICAL' || selectedLog.severity.toUpperCase() === 'HIGH') ? 'bg-rose-500/20 text-rose-500 border-rose-500/30' :
+                      selectedLog.severity.toUpperCase() === 'MEDIUM' ? 'bg-blue-500/20 text-blue-500 border-blue-500/30' :
+                        'bg-emerald-500/20 text-emerald-500 border-emerald-500/30'
                       }`}>
                       {selectedLog.severity}
                     </span>

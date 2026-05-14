@@ -297,7 +297,7 @@ export default function ActivityVault() {
         const critical = data.summary.severity_distribution?.Critical || 0;
         const high = data.summary.severity_distribution?.High || 0;
 
-        const avgConf = data.summary.avg_confidence || 0;
+        const avgConf = data.summary.current?.avg_confidence || 0;
         const highConfCount = data.high_conf_count || 0;
 
         setStats({
@@ -391,8 +391,8 @@ export default function ActivityVault() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
             {[
               { label: 'Total Audits', value: stats.total.toLocaleString(), color: '#38bdf8', Icon: Activity, sub: 'All time records' },
-              { label: 'High Confidence', value: stats.total > 0 ? `${((stats.highConf / stats.total) * 100).toFixed(1)}%` : '0%', color: '#4ade80', Icon: ShieldCheck, sub: `${stats.highConf} ≥90%` },
               { label: 'Average Accuracy', value: `${stats.avgConf}%`, color: '#fbbf24', Icon: BarChart3, sub: 'Mean confidence score' },
+              { label: 'High Confidence', value: stats.total > 0 ? `${((stats.highConf / stats.total) * 100).toFixed(1)}%` : '0%', color: '#4ade80', Icon: ShieldCheck, sub: `${stats.highConf} ≥90%` },
               { label: 'Active Alerts', value: stats.flagged.toString(), color: '#f87171', Icon: AlertCircle, sub: 'Requires attention' },
             ].map(({ label, value, color, Icon, sub }, i) => (
               <div key={i} className="vp-stat-card" style={{
@@ -520,11 +520,11 @@ export default function ActivityVault() {
                   <td style={{ padding: '16px 24px' }}>
                     <span style={{
                       padding: '4px 10px', borderRadius: 4, fontSize: 9, fontWeight: 900, textTransform: 'uppercase', letterSpacing: 1,
-                      background: ev.severity === 'Critical' ? '#ef444420' : ev.severity === 'High' ? '#f59e0b20' : '#3b82f620',
-                      color: ev.severity === 'Critical' ? '#ef4444' : ev.severity === 'High' ? '#f59e0b' : '#3b82f6',
-                      border: `1px solid ${ev.severity === 'Critical' ? '#ef444430' : ev.severity === 'High' ? '#f59e0b30' : '#3b82f630'}`
+                      background: (ev.severity === 'Critical' || ev.severity === 'High') ? '#ef444420' : ev.severity === 'Medium' ? '#3b82f620' : '#22c55e20',
+                      color: (ev.severity === 'Critical' || ev.severity === 'High') ? '#ef4444' : ev.severity === 'Medium' ? '#3b82f6' : '#22c55e',
+                      border: `1px solid ${(ev.severity === 'Critical' || ev.severity === 'High') ? '#ef444430' : ev.severity === 'Medium' ? '#3b82f630' : '#22c55e30'}`
                     }}>
-                      {ev.severity}
+                      {ev.severity || 'Low'}
                     </span>
                   </td>
                   <td style={{ padding: '16px 24px' }}>

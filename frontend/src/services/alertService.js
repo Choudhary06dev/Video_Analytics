@@ -1,7 +1,7 @@
 import { get, put, BASE } from './api';
 
 export const fetchAlerts = (opts = {}) =>
-  get("/alerts", {
+  get("/alerts/", {
     hours: opts.hours ?? 24,
     severity: opts.severity ?? undefined,
     limit: opts.limit ?? 100,
@@ -10,7 +10,7 @@ export const fetchAlerts = (opts = {}) =>
   });
 
 export const fetchLogs = (opts = {}) =>
-  get("/logs", {
+  get("/logs/", {
     hours: opts.hours ?? 24,
     camera_id: opts.camera_id ?? opts.cameraId ?? undefined,
     area_id: opts.area_id ?? opts.areaId ?? undefined,
@@ -26,7 +26,7 @@ export const fetchLogsSummary = (hours = 24, filters = {}) => {
     ? filters
     : { camera_id: filters };
 
-  return get("/logs/summary", {
+  return get("/logs/summary/", {
     hours,
     camera_id: filterObject.camera_id ?? filterObject.cameraId ?? undefined,
     area_id: filterObject.area_id ?? filterObject.areaId ?? undefined,
@@ -34,7 +34,7 @@ export const fetchLogsSummary = (hours = 24, filters = {}) => {
   });
 };
 
-export const resolveAlert = (alertId) => put(`/alerts/${alertId}/resolve`);
+export const resolveAlert = (alertId) => put(`/alerts/${alertId}/resolve/`);
 
 export function subscribeToEvents({ onSnapshot, onDetection, onError }) {
     const token = encodeURIComponent(localStorage.getItem('token') || '');

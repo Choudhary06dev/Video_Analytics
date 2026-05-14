@@ -107,10 +107,9 @@ export default function Alerts() {
 
   const getSeverityStyles = (severity) => {
     const s = (severity || 'Low').toLowerCase();
-    if (s === 'critical') return { bg: 'bg-danger/10', text: 'text-danger', border: 'border-danger/20', icon: ShieldAlert, label: 'Critical' };
-    if (s === 'high') return { bg: 'bg-warning/10', text: 'text-warning', border: 'border-warning/20', icon: AlertTriangle, label: 'High' };
-    if (s === 'medium') return { bg: 'bg-amber-500/10', text: 'text-amber-600', border: 'border-amber-500/20', icon: AlertTriangle, label: 'Medium' };
-    return { bg: 'bg-accent/10', text: 'text-accent', border: 'border-accent/20', icon: Info, label: 'Low' };
+    if (s === 'critical' || s === 'high') return { bg: 'bg-danger/10', text: 'text-danger', border: 'border-danger/20', icon: ShieldAlert, label: s.toUpperCase() };
+    if (s === 'medium') return { bg: 'bg-accent/10', text: 'text-accent', border: 'border-accent/20', icon: AlertTriangle, label: 'MEDIUM' };
+    return { bg: 'bg-success/10', text: 'text-success', border: 'border-success/20', icon: Info, label: 'LOW' };
   };
 
   const filteredAlerts = alerts.filter(a => {
@@ -191,8 +190,8 @@ export default function Alerts() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
         {[
           { label: 'Critical', value: stats.critical, color: 'text-danger', bg: 'bg-danger/10', icon: ShieldAlert },
-          { label: 'High', value: stats.high, color: 'text-warning', bg: 'bg-warning/10', icon: AlertTriangle },
-          { label: 'Medium', value: stats.medium, color: 'text-amber-600', bg: 'bg-amber-500/10', icon: AlertTriangle },
+          { label: 'High', value: stats.high, color: 'text-danger', bg: 'bg-danger/10', icon: AlertTriangle },
+          { label: 'Medium', value: stats.medium, color: 'text-accent', bg: 'bg-accent/10', icon: AlertTriangle },
         ].map((s, i) => (
           <div key={i} className="bg-card rounded-lg p-4 sm:p-6 border border-border shadow-premium flex items-center gap-4 sm:gap-5 hover:-translate-y-1 transition-all group">
             <div className={`w-12 h-12 sm:w-14 sm:h-14 rounded-lg ${s.bg} flex items-center justify-center ${s.color} shrink-0`}>
@@ -459,10 +458,10 @@ export default function Alerts() {
                   <div className="sm:text-right">
                     <span className="text-[0.6rem] sm:text-[0.65rem] font-bold text-text-gray uppercase tracking-widest block mb-1">Severity Matrix</span>
                     <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[0.6rem] sm:text-[0.65rem] font-black uppercase tracking-wider border
-           ${selectedAlert.severity === 'Critical' ? 'bg-danger/10 text-danger border-danger/20' :
-                        selectedAlert.severity === 'High' ? 'bg-warning/10 text-warning border-warning/20' :
-                          'bg-accent/10 text-accent border-accent/20'}`}>
-                      {selectedAlert.severity}
+           ${(selectedAlert.severity === 'Critical' || selectedAlert.severity === 'High') ? 'bg-danger/10 text-danger border-danger/20' :
+                        selectedAlert.severity === 'Medium' ? 'bg-accent/10 text-accent border-accent/20' :
+                          'bg-success/10 text-success border-success/20'}`}>
+                      {selectedAlert.severity || 'Low'}
                     </span>
                   </div>
                 </div>

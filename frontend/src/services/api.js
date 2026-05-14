@@ -28,11 +28,8 @@ export async function get(path, params = {}) {
       headers: headers
   });
   if (res.status === 401 && path !== '/auth/login') {
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      if (window.location.pathname !== '/login') {
-          window.location.href = '/login';
-      }
+      console.error(`API: Unauthorized (401) on ${path}. Session may be expired.`);
+      // We don't force redirect here anymore to prevent aggressive logouts
   }
   if (!res.ok) throw new Error(`GET ${path} → ${res.status}`);
   return res.json();
@@ -61,11 +58,7 @@ export async function post(path, body) {
         body: JSON.stringify(body),
     });
     if (res.status === 401 && path !== '/auth/login') {
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-        if (window.location.pathname !== '/login') {
-            window.location.href = '/login';
-        }
+        console.error(`API: Unauthorized (401) on ${path}. Session may be expired.`);
     }
     if (!res.ok) {
         const err = await res.json().catch(() => ({}));
@@ -101,11 +94,7 @@ export async function put(path, body) {
         body: JSON.stringify(body),
     });
     if (res.status === 401 && path !== '/auth/login') {
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-        if (window.location.pathname !== '/login') {
-            window.location.href = '/login';
-        }
+        console.error(`API: Unauthorized (401) on ${path}. Session may be expired.`);
     }
     if (!res.ok) {
         const err = await res.json().catch(() => ({}));
@@ -141,11 +130,7 @@ export async function patch(path, body) {
         body: JSON.stringify(body),
     });
     if (res.status === 401 && path !== '/auth/login') {
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-        if (window.location.pathname !== '/login') {
-            window.location.href = '/login';
-        }
+        console.error(`API: Unauthorized (401) on ${path}. Session may be expired.`);
     }
     if (!res.ok) {
         const err = await res.json().catch(() => ({}));
@@ -180,11 +165,7 @@ export async function del(path) {
         headers: headers,
     });
     if (res.status === 401 && path !== '/auth/login') {
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-        if (window.location.pathname !== '/login') {
-            window.location.href = '/login';
-        }
+        console.error(`API: Unauthorized (401) on ${path}. Session may be expired.`);
     }
     if (!res.ok) {
         const err = await res.json().catch(() => ({}));
