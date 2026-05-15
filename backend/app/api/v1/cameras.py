@@ -57,6 +57,7 @@ def get_areas(skip: int = 0, limit: int = 20, session: Session = Depends(get_ses
     return {"total": total_count, "areas": areas}
 
 @router.post("/admin/areas")
+@router.post("/admin/areas/")
 def create_area(area_data: AreaCreate, session: Session = Depends(get_session), admin_data: dict = Depends(lambda cur=Depends(get_current_user), s=Depends(get_session): verify_module_access("areas", cur, s, access_level="edit"))):
     if area_data.parent_id:
         parent = session.get(Area, area_data.parent_id)
@@ -96,6 +97,7 @@ def create_area(area_data: AreaCreate, session: Session = Depends(get_session), 
     return new_area
 
 @router.put("/admin/areas/{area_id}")
+@router.put("/admin/areas/{area_id}/")
 def update_area(area_id: int, area_data: AreaUpdate, session: Session = Depends(get_session), admin_data: dict = Depends(lambda cur=Depends(get_current_user), s=Depends(get_session): verify_module_access("areas", cur, s, access_level="edit"))):
     area = session.get(Area, area_id)
     if not area:
@@ -121,6 +123,7 @@ def update_area(area_id: int, area_data: AreaUpdate, session: Session = Depends(
     return area
 
 @router.delete("/admin/areas/{area_id}")
+@router.delete("/admin/areas/{area_id}/")
 def delete_area(area_id: int, session: Session = Depends(get_session), admin_data: dict = Depends(lambda cur=Depends(get_current_user), s=Depends(get_session): verify_module_access("areas", cur, s, access_level="delete"))):
     area = session.get(Area, area_id)
     if not area:
@@ -148,6 +151,7 @@ def get_cameras(skip: int = 0, limit: int = 20, session: Session = Depends(get_s
 
 
 @router.post("/admin/cameras")
+@router.post("/admin/cameras/")
 def create_camera(camera_data: CameraCreate, session: Session = Depends(get_session), admin_data: dict = Depends(lambda cur=Depends(get_current_user), s=Depends(get_session): verify_module_access("cameras", cur, s, access_level="edit"))):
     area = session.get(Area, camera_data.area_id)
     if not area:
@@ -163,6 +167,7 @@ def create_camera(camera_data: CameraCreate, session: Session = Depends(get_sess
     return new_camera
 
 @router.put("/admin/cameras/{camera_id}")
+@router.put("/admin/cameras/{camera_id}/")
 def update_camera(camera_id: int, camera_data: CameraUpdate, session: Session = Depends(get_session), admin_data: dict = Depends(lambda cur=Depends(get_current_user), s=Depends(get_session): verify_module_access("cameras", cur, s, access_level="edit"))):
     camera = session.get(Camera, camera_id)
     if not camera:
@@ -184,6 +189,7 @@ def update_camera(camera_id: int, camera_data: CameraUpdate, session: Session = 
     return camera
 
 @router.delete("/admin/cameras/{camera_id}")
+@router.delete("/admin/cameras/{camera_id}/")
 def delete_camera(camera_id: int, session: Session = Depends(get_session), admin_data: dict = Depends(lambda cur=Depends(get_current_user), s=Depends(get_session): verify_module_access("cameras", cur, s, access_level="delete"))):
     camera = session.get(Camera, camera_id)
     if not camera:
@@ -196,6 +202,7 @@ def delete_camera(camera_id: int, session: Session = Depends(get_session), admin
     return {"message": "Camera deactivated successfully"}
 
 @router.get("/admin/cameras/{camera_id}/scenarios")
+@router.get("/admin/cameras/{camera_id}/scenarios/")
 def get_camera_scenarios(camera_id: int, session: Session = Depends(get_session), admin_data: dict = Depends(lambda cur=Depends(get_current_user), s=Depends(get_session): verify_module_access("scenario_orchestration", cur, s, access_level="view"))):
     """
     Returns all scenarios with their is_enabled status from the JSON field.
@@ -249,6 +256,7 @@ def get_enabled_camera_scenarios(camera_id: int, session: Session = Depends(get_
     }
 
 @router.put("/admin/cameras/{camera_id}/scenarios")
+@router.put("/admin/cameras/{camera_id}/scenarios/")
 async def sync_camera_scenarios(camera_id: int, data: ScenarioBulkUpdate, background_tasks: BackgroundTasks, session: Session = Depends(get_session), admin_data: dict = Depends(lambda cur=Depends(get_current_user), s=Depends(get_session): verify_module_access("scenario_orchestration", cur, s, access_level="edit"))):
     """
     Updates enabled scenarios in a single JSON column and notifies AI service.
@@ -310,6 +318,7 @@ def get_all_scenarios(session: Session = Depends(get_session), admin_data: dict 
 
 
 @router.post("/admin/scenarios")
+@router.post("/admin/scenarios/")
 def create_scenario(data: ScenarioCreate, session: Session = Depends(get_session), admin_data: dict = Depends(verify_intelligence_edit)):
 
     """
@@ -333,6 +342,7 @@ def create_scenario(data: ScenarioCreate, session: Session = Depends(get_session
 
 
 @router.put("/admin/scenarios/{scenario_id}")
+@router.put("/admin/scenarios/{scenario_id}/")
 def update_scenario(scenario_id: int, data: ScenarioUpdate, session: Session = Depends(get_session), admin_data: dict = Depends(verify_intelligence_edit)):
 
     """
@@ -354,6 +364,7 @@ def update_scenario(scenario_id: int, data: ScenarioUpdate, session: Session = D
 
 
 @router.delete("/admin/scenarios/{scenario_id}")
+@router.delete("/admin/scenarios/{scenario_id}/")
 def delete_scenario(scenario_id: int, session: Session = Depends(get_session), admin_data: dict = Depends(verify_intelligence_delete)):
 
     """

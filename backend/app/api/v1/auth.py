@@ -15,6 +15,7 @@ from app.services.user_service import get_user_by_email
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
 @router.post("/register")
+@router.post("/register/")
 def register_user(user_data: UserRegister, session: Session = Depends(get_session)):
     existing = get_user_by_email(session, user_data.email)
     if existing:
@@ -36,6 +37,7 @@ def register_user(user_data: UserRegister, session: Session = Depends(get_sessio
         raise HTTPException(status_code=500, detail=f"Database Error: {str(e)}")
 
 @router.post("/login", response_model=Token)
+@router.post("/login/", response_model=Token)
 def login_user(login_data: UserLogin, session: Session = Depends(get_session)):
     user = get_user_by_email(session, login_data.email)
     if not user or not verify_password(login_data.password, user.hashed_password):
@@ -60,10 +62,12 @@ def get_current_user(token: str = Depends(get_authorization_token)):
     return payload
 
 @router.get("/me")
+@router.get("/me/")
 def read_current_user(current_user: dict = Depends(get_current_user)):
     return {"user": current_user}
 
 @router.get("/permissions")
+@router.get("/permissions/")
 def read_current_permissions(
     current_user: dict = Depends(get_current_user),
     session: Session = Depends(get_session)

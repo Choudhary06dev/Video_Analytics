@@ -36,6 +36,7 @@ def get_system_metrics():
         }
 
 @router.get("/stats")
+@router.get("/stats/")
 async def get_health_stats():
     # 1. Fetch Real Camera Stats
     with Session(engine) as session:

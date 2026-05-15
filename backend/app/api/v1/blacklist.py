@@ -7,6 +7,7 @@ from datetime import datetime
 
 router = APIRouter()
 
+@router.get("")
 @router.get("/", response_model=List[BlacklistPerson])
 async def get_blacklist(session: Session = Depends(get_session)):
     """
@@ -16,6 +17,7 @@ async def get_blacklist(session: Session = Depends(get_session)):
     results = session.exec(statement).all()
     return results
 
+@router.post("")
 @router.post("/", response_model=BlacklistPerson)
 async def create_blacklist_entry(entry: BlacklistPerson, session: Session = Depends(get_session)):
     """
@@ -31,7 +33,8 @@ async def create_blacklist_entry(entry: BlacklistPerson, session: Session = Depe
     session.refresh(entry)
     return entry
 
-@router.put("/{entry_id}", response_model=BlacklistPerson)
+@router.put("/{entry_id}")
+@router.put("/{entry_id}/", response_model=BlacklistPerson)
 async def update_blacklist_entry(entry_id: int, updated_entry: BlacklistPerson, session: Session = Depends(get_session)):
     """
     Update a blacklisted person's profile.
@@ -52,6 +55,7 @@ async def update_blacklist_entry(entry_id: int, updated_entry: BlacklistPerson, 
     return db_entry
 
 @router.delete("/{entry_id}")
+@router.delete("/{entry_id}/")
 async def delete_blacklist_entry(entry_id: int, session: Session = Depends(get_session)):
     """
     Remove a person from the blacklist.

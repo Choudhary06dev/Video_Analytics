@@ -98,6 +98,7 @@ async def receive_events(events: list[WebhookEvent], session: Session = Depends(
 
 @router.get("/intelligence/{camera_id}")
 @router.get("/intelligence")
+@router.get("/intelligence/")
 async def get_intelligence(
     camera_id: Optional[int] = None,
     session: Session = Depends(get_session),
@@ -205,6 +206,7 @@ async def event_stream(
     return StreamingResponse(event_generator(), media_type="text/event-stream")
 
 @router.get("/alerts")
+@router.get("/alerts/")
 def fetch_alerts(
     hours: float = 24.0,
     severity: Optional[str] = None,
@@ -220,6 +222,7 @@ def fetch_alerts(
     return get_alerts(session, hours, severity, limit, start_date, end_date, allowed_area_ids=allowed_area_ids)
 
 @router.get("/logs")
+@router.get("/logs/")
 def fetch_logs(
     hours: float = 24.0,
     camera_id: Optional[int] = None,
@@ -242,6 +245,7 @@ def fetch_logs(
     return get_logs(session, hours, camera_id, area_id, scenario_key, object_class, severity, limit, skip, allowed_area_ids=allowed_area_ids)
 
 @router.get("/logs/summary")
+@router.get("/logs/summary/")
 def fetch_logs_summary(
     hours: float = 24.0,
     camera_id: Optional[int] = None,
@@ -275,6 +279,7 @@ def resolve_alert(
     return {"status": "success", "message": f"Alert {alert_id} resolved"}
 
 @router.get("/logs/matrix")
+@router.get("/logs/matrix/")
 def fetch_scenario_camera_matrix(
     hours: float = 24.0,
     area_id: Optional[int] = None,

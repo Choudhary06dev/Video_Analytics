@@ -78,6 +78,7 @@ def verify_admin_hub_access(current_user: dict = Depends(get_current_user), sess
     return verify_module_access("admin_hub", current_user, session, access_level="edit")
 
 
+@router.get("")
 @router.get("/")
 def get_all_users(skip: int = 0, limit: int = 20, session: Session = Depends(get_session), admin_data: dict = Depends(lambda cur=Depends(get_current_user), s=Depends(get_session): verify_module_access("users", cur, s, access_level="view"))):
     total_count = len(session.exec(select(User)).all())
@@ -96,6 +97,7 @@ def get_all_users(skip: int = 0, limit: int = 20, session: Session = Depends(get
         })
     return {"total": total_count, "users": result}
 
+@router.post("")
 @router.post("/")
 def create_user_by_admin(user_data: AdminUserCreate, session: Session = Depends(get_session), admin_data: dict = Depends(lambda cur=Depends(get_current_user), s=Depends(get_session): verify_module_access("users", cur, s, access_level="edit"))):
     existing = get_user_by_email(session, user_data.email)
@@ -124,6 +126,7 @@ def create_user_by_admin(user_data: AdminUserCreate, session: Session = Depends(
         raise HTTPException(status_code=500, detail=f"Database Error: {str(e)}")
 
 @router.get("/audit-logs")
+@router.get("/audit-logs/")
 def get_audit_logs(skip: int = 0, limit: int = 50, session: Session = Depends(get_session), admin_data: dict = Depends(lambda cur=Depends(get_current_user), s=Depends(get_session): verify_module_access("audit", cur, s, access_level="view"))):
     from app.models import AuditLog
     
@@ -147,6 +150,7 @@ def get_audit_logs(skip: int = 0, limit: int = 50, session: Session = Depends(ge
     return {"total": total_count, "logs": result}
 
 @router.put("/{user_id}")
+@router.put("/{user_id}/")
 def update_user_by_admin(user_id: int, user_data: AdminUserUpdate, session: Session = Depends(get_session), admin_data: dict = Depends(lambda cur=Depends(get_current_user), s=Depends(get_session): verify_module_access("users", cur, s, access_level="edit"))):
     user = session.get(User, user_id)
     if not user:
@@ -197,6 +201,7 @@ def update_user_by_admin(user_id: int, user_data: AdminUserUpdate, session: Sess
     return {"message": "User updated successfully", "id": user.id}
 
 @router.delete("/{user_id}")
+@router.delete("/{user_id}/")
 def delete_user(user_id: int, session: Session = Depends(get_session), admin_data: dict = Depends(lambda cur=Depends(get_current_user), s=Depends(get_session): verify_module_access("users", cur, s, access_level="delete"))):
     user = session.get(User, user_id)
     if not user:
@@ -210,6 +215,7 @@ def delete_user(user_id: int, session: Session = Depends(get_session), admin_dat
     return {"message": "User deleted successfully"}
 
 @router.patch("/{user_id}/status")
+@router.patch("/{user_id}/status/")
 def toggle_user_status(user_id: int, status_data: dict, session: Session = Depends(get_session), admin_data: dict = Depends(lambda cur=Depends(get_current_user), s=Depends(get_session): verify_module_access("users", cur, s, access_level="edit"))):
     user = session.get(User, user_id)
     if not user:

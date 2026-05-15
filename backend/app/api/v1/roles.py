@@ -10,6 +10,7 @@ from app.services.user_service import record_audit_log
 
 router = APIRouter(prefix="/admin/roles", tags=["Admin Role Management"])
 
+@router.get("")
 @router.get("/")
 def get_roles(session: Session = Depends(get_session), admin_data: dict = Depends(lambda cur=Depends(get_current_user), s=Depends(get_session): verify_module_access("roles", cur, s, access_level="view"))):
     roles = session.exec(select(Role).order_by(Role.id)).all()
@@ -39,10 +40,12 @@ def get_roles(session: Session = Depends(get_session), admin_data: dict = Depend
     return result
 
 @router.get("/modules")
+@router.get("/modules/")
 def get_modules(session: Session = Depends(get_session), admin_data: dict = Depends(lambda cur=Depends(get_current_user), s=Depends(get_session): verify_module_access("roles", cur, s, access_level="view"))):
     modules = session.exec(select(ModulePermission)).all()
     return modules
 
+@router.post("")
 @router.post("/")
 def create_role(role_data: RoleCreateRequest, session: Session = Depends(get_session), admin_data: dict = Depends(lambda cur=Depends(get_current_user), s=Depends(get_session): verify_module_access("roles", cur, s, access_level="edit"))):
     normalized_name = role_data.name.strip().lower().replace(" ", "_")
@@ -72,6 +75,7 @@ def create_role(role_data: RoleCreateRequest, session: Session = Depends(get_ses
     return {"message": "Role created successfully", "role": new_role}
 
 @router.put("/{role_id}")
+@router.put("/{role_id}/")
 def update_role(role_id: int, role_data: RoleUpdateRequest, session: Session = Depends(get_session), admin_data: dict = Depends(lambda cur=Depends(get_current_user), s=Depends(get_session): verify_module_access("roles", cur, s, access_level="edit"))):
     role = session.get(Role, role_id)
     if not role:
@@ -105,6 +109,7 @@ def update_role(role_id: int, role_data: RoleUpdateRequest, session: Session = D
     return {"message": "Role updated successfully", "role": role}
 
 @router.put("/{role_id}/permissions")
+@router.put("/{role_id}/permissions/")
 def update_role_permissions(role_id: int, perms: List[PermissionUpdate], session: Session = Depends(get_session), admin_data: dict = Depends(lambda cur=Depends(get_current_user), s=Depends(get_session): verify_module_access("roles", cur, s, access_level="edit"))):
     role = session.get(Role, role_id)
     if not role:
@@ -141,6 +146,7 @@ def update_role_permissions(role_id: int, perms: List[PermissionUpdate], session
 
 
 @router.get("/{role_id}/areas")
+@router.get("/{role_id}/areas/")
 def get_role_area_permissions(role_id: int, session: Session = Depends(get_session), admin_data: dict = Depends(lambda cur=Depends(get_current_user), s=Depends(get_session): verify_module_access("roles", cur, s, access_level="view"))):
     """
     Returns all areas with their view permission status for the specific role.
@@ -167,6 +173,7 @@ def get_role_area_permissions(role_id: int, session: Session = Depends(get_sessi
 
 
 @router.put("/{role_id}/areas")
+@router.put("/{role_id}/areas/")
 def update_role_area_permissions(role_id: int, perms: List[AreaPermissionUpdate], session: Session = Depends(get_session), admin_data: dict = Depends(lambda cur=Depends(get_current_user), s=Depends(get_session): verify_module_access("roles", cur, s, access_level="edit"))):
     """
     Updates area-level permissions for a role.
