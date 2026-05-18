@@ -213,7 +213,7 @@ export default function AIScenarioRegistry() {
                   <div className="min-w-0 flex-1">
                     <h3 className="text-sm font-black text-text-dark tracking-tight leading-tight mb-1">{scenario.name}</h3>
                     <div className="flex">
-                      <code className="text-[7px] text-accent/70 font-mono bg-accent/5 px-1.5 py-0.5 rounded border border-accent/10 truncate max-w-full" title="Machine Key">
+                      <code className="text-[7px] text-text-dark font-black font-mono bg-accent/10 px-1.5 py-0.5 rounded border border-accent/20 truncate max-w-full" title="Machine Key">
                         {scenario.key}
                       </code>
                     </div>
