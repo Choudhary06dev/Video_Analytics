@@ -8,8 +8,11 @@ from ultralytics import YOLO
 import os
 from config import BACKEND_URL
 
-# Optimize OpenCV/FFmpeg for RTSP stability (IMOU/Dahua specialized)
-os.environ["OPENCV_FFMPEG_CAPTURE_OPTIONS"] = "rtsp_transport;tcp|rtsp_flags;prefer_tcp|stimeout;10000000" # 10s timeout, TCP
+# Optimize OpenCV/FFmpeg for low-latency RTSP reads.
+os.environ["OPENCV_FFMPEG_CAPTURE_OPTIONS"] = (
+    "rtsp_transport;tcp|rtsp_flags;prefer_tcp|fflags;nobuffer|flags;low_delay|"
+    "max_delay;0|stimeout;10000000"
+)
 
 # AI Scenarios Mapping: YOLO label -> Internal Key (matches AIScenario.key in DB)
 SCENARIO_MAPPING = {
@@ -37,6 +40,11 @@ IOU_THRESHOLD = 0.45
 MIN_STABLE_FRAMES_TO_LOG = 2  # Only 2 consecutive frames needed for fast alerting
 LOG_COOLDOWN = 5.0 # 5s cooldown between duplicate events
 VISITOR_LIMIT = 2  # Max allowed visitors (e.g., 1 patient + 1 attendant)
+UNAUTHORIZED_ENTRY_KEY = "UNAUTHORIZED_ENTRY_INTO_RESTRICTED_AREAS"
+INFERENCE_IMAGE_SIZE = 640
+STREAM_JPEG_QUALITY = 85
+SNAPSHOT_JPEG_QUALITY = 98
+STREAM_MAX_WIDTH = 1280
 
 SCENARIO_MIN_CONFIDENCE = {
     "person": 0.20,
@@ -56,6 +64,81 @@ SCENARIO_MIN_CONFIDENCE = {
 
 # Global AI Engine Model
 model = YOLO(os.path.join(os.path.dirname(__file__), "..", "models", "yolov8n.pt"))
+
+
+def _point_in_polygon(point, polygon):
+    """Ray-casting point-in-polygon test for normalized frame coordinates."""
+    if not polygon or len(polygon) < 3:
+        return False
+
+    x, y = point
+    inside = False
+    j = len(polygon) - 1
+    for i in range(len(polygon)):
+        xi, yi = polygon[i]["x"], polygon[i]["y"]
+        xj, yj = polygon[j]["x"], polygon[j]["y"]
+        intersects = (yi > y) != (yj > y) and x < (xj - xi) * (y - yi) / ((yj - yi) or 1e-9) + xi
+        if intersects:
+            inside = not inside
+        j = i
+    return inside
+
+
+def _normalize_restricted_zones(config):
+    if "restricted_zone" in config:
+        zone = config.get("restricted_zone")
+        return [zone] if isinstance(zone, list) and len(zone) >= 3 else []
+
+    zone = config.get("restricted_zone")
+    zones = config.get("restricted_zones")
+    if zones:
+        return [z for z in zones if isinstance(z, list) and len(z) >= 3]
+    if isinstance(zone, list) and len(zone) >= 3:
+        return [zone]
+    return []
+
+
+def _bbox_inside_any_zone(xyxy, frame_w, frame_h, zones):
+    x1, y1, x2, y2 = xyxy
+    candidate_points = [
+        (((x1 + x2) / 2) / frame_w, y2 / frame_h),                    # feet/lower center
+        (((x1 + x2) / 2) / frame_w, ((y1 + y2) / 2) / frame_h),        # bbox center
+        (((x1 + x2) / 2) / frame_w, (y1 + ((y2 - y1) * 0.75)) / frame_h),
+        (x1 / frame_w, y2 / frame_h),
+        (x2 / frame_w, y2 / frame_h),
+    ]
+
+    for zone_index, zone in enumerate(zones):
+        for x, y in candidate_points:
+            point = (max(0.0, min(1.0, x)), max(0.0, min(1.0, y)))
+            if _point_in_polygon(point, zone):
+                return zone_index, {"x": round(point[0], 4), "y": round(point[1], 4)}
+    return None, None
+
+
+def _resize_for_stream(frame):
+    height, width = frame.shape[:2]
+    if width <= STREAM_MAX_WIDTH:
+        return frame
+    scale = STREAM_MAX_WIDTH / width
+    return cv2.resize(frame, (STREAM_MAX_WIDTH, int(height * scale)), interpolation=cv2.INTER_AREA)
+
+
+def _draw_restricted_zones(frame, zones, frame_w, frame_h):
+    if not zones:
+        return frame
+
+    output = frame.copy()
+    for zone in zones:
+        pts = np.array([[
+            int(point["x"] * frame_w),
+            int(point["y"] * frame_h)
+        ] for point in zone], np.int32)
+        cv2.polylines(output, [pts], isClosed=True, color=(0, 0, 255), thickness=2)
+        overlay = output.copy()
+        cv2.fillPoly(overlay, [pts], color=(0, 0, 255))
+        output = cv2.addWeighted(overlay, 0.12, output, 0.88, 0)
+    return output
 
 class InferenceEngine:
     def __init__(self, camera_id: int, source):
@@ -81,6 +164,7 @@ class InferenceEngine:
         
         self.latest_raw_frame = None
         self.processed_frame_bytes = self.placeholder_frame
+        self.snapshot_frame_bytes = self.placeholder_frame
         self.processed_events = []
         self.running = True
         
@@ -137,8 +221,9 @@ class InferenceEngine:
             if self.latest_raw_frame is not None:
                 # Use a local copy to avoid mutation during processing
                 frame = self.latest_raw_frame.copy()
-                frame_bytes, events = self._perform_inference(frame)
+                frame_bytes, events, snapshot_bytes = self._perform_inference(frame)
                 self.processed_frame_bytes = frame_bytes
+                self.snapshot_frame_bytes = snapshot_bytes
                 self.processed_events = events
             else:
                 time.sleep(0.1)
@@ -164,17 +249,27 @@ class InferenceEngine:
         return self.video is not None and self.video.isOpened()
 
     def process_frame(self):
-        return self.processed_frame_bytes, self.processed_events
+        return self.processed_frame_bytes, self.processed_events, self.snapshot_frame_bytes
 
     def _perform_inference(self, frame):
-        # imgsz=1024 gives much better accuracy for small/distant objects
-        results = model.predict(frame, conf=CONF_THRESHOLD, iou=IOU_THRESHOLD, classes=INTEREST_CLASSES, verbose=False, imgsz=1024)
+        results = model.predict(
+            frame,
+            conf=CONF_THRESHOLD,
+            iou=IOU_THRESHOLD,
+            classes=INTEREST_CLASSES,
+            verbose=False,
+            imgsz=INFERENCE_IMAGE_SIZE,
+        )
+        frame_h, frame_w = frame.shape[:2]
         person_count = 0
         detected_scenarios = {}
         events_to_log = []
+        restricted_zones = _normalize_restricted_zones(self.scenario_configs.get(UNAUTHORIZED_ENTRY_KEY, {}))
+        restricted_entries = []
 
         # We now plot directly on the high-resolution original frame
         annotated_frame = frame.copy()
+        snapshot_frame = frame.copy()
         if results and len(results) > 0:
             annotated_frame = results[0].plot()
             for box in results[0].boxes:
@@ -190,12 +285,32 @@ class InferenceEngine:
                 if confidence >= min_required_conf:
                     scenario_name = SCENARIO_MAPPING.get(label)
                     if scenario_name and scenario_name in self.enabled_scenarios:
+                        if scenario_name == UNAUTHORIZED_ENTRY_KEY and restricted_zones:
+                            xyxy = box.xyxy[0].tolist()
+                            matching_zone, matched_point = _bbox_inside_any_zone(xyxy, frame_w, frame_h, restricted_zones)
+                            if matching_zone is None:
+                                continue
+                            restricted_entries.append({"zone_index": matching_zone, "matched_point": matched_point})
+                            cv2.circle(
+                                annotated_frame,
+                                (int(matched_point["x"] * frame_w), int(matched_point["y"] * frame_h)),
+                                7,
+                                (0, 255, 255),
+                                -1
+                            )
+
                         if scenario_name not in detected_scenarios:
                             detected_scenarios[scenario_name] = {"max_conf": confidence, "count": 1, "labels": {label}}
                         else:
                             detected_scenarios[scenario_name]["max_conf"] = max(detected_scenarios[scenario_name]["max_conf"], confidence)
                             detected_scenarios[scenario_name]["count"] += 1
                             detected_scenarios[scenario_name]["labels"].add(label)
+
+        annotated_frame = _draw_restricted_zones(annotated_frame, restricted_zones, frame_w, frame_h)
+        snapshot_frame = _draw_restricted_zones(snapshot_frame, restricted_zones, frame_w, frame_h)
+
+        if restricted_entries and UNAUTHORIZED_ENTRY_KEY in detected_scenarios:
+            detected_scenarios[UNAUTHORIZED_ENTRY_KEY]["restricted_entries"] = restricted_entries
 
         # Check for visitor limit
         visitor_scenario_key = "VISITOR_COUNT_LIMIT_EXCEEDED"
@@ -234,7 +349,8 @@ class InferenceEngine:
 
             if current_count > 0:
                 # Scenario 1: New appearance or count increase
-                if stable_frames >= MIN_STABLE_FRAMES_TO_LOG:
+                required_stable_frames = 1 if scenario_name == UNAUTHORIZED_ENTRY_KEY else MIN_STABLE_FRAMES_TO_LOG
+                if stable_frames >= required_stable_frames:
                     if not present or current_count > prev["count"]:
                         if time_since_log > LOG_COOLDOWN or current_count > prev["count"]:
                             should_log = True
@@ -245,10 +361,16 @@ class InferenceEngine:
             if present and current_count > 0: stable_objects.append(scenario_name)
 
             if should_log:
+                metadata = {
+                    "count": current_count,
+                    "raw_labels": list(data.get("labels", []))
+                }
+                if scenario_name == UNAUTHORIZED_ENTRY_KEY:
+                    metadata["restricted_entries"] = data.get("restricted_entries", [])
                 events_to_log.append({
                     "scenario_key": scenario_name,
                     "confidence": data.get("max_conf", 0.0),
-                    "metadata": {"count": current_count, "raw_labels": list(data.get("labels", []))}
+                    "metadata": metadata
                 })
                 prev["last_logged"] = current_time
 
@@ -266,9 +388,14 @@ class InferenceEngine:
             "stable_objects": sorted(stable_objects), "last_update": current_time
         })
 
-        # Encode with higher JPEG quality for a crisp video stream
-        ret, jpeg = cv2.imencode(".jpg", annotated_frame, [int(cv2.IMWRITE_JPEG_QUALITY), 95])
-        return (jpeg.tobytes() if ret else self.placeholder_frame), events_to_log
+        stream_frame = _resize_for_stream(annotated_frame)
+        ret, jpeg = cv2.imencode(".jpg", stream_frame, [int(cv2.IMWRITE_JPEG_QUALITY), STREAM_JPEG_QUALITY])
+        snapshot_ret, snapshot_jpeg = cv2.imencode(".jpg", snapshot_frame, [int(cv2.IMWRITE_JPEG_QUALITY), SNAPSHOT_JPEG_QUALITY])
+        return (
+            jpeg.tobytes() if ret else self.placeholder_frame,
+            events_to_log,
+            snapshot_jpeg.tobytes() if snapshot_ret else self.placeholder_frame,
+        )
 
     def _build_placeholder_frame(self, message: str) -> bytes:
         frame = np.zeros((360, 640, 3), dtype=np.uint8)

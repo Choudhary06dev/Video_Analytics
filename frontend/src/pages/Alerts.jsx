@@ -118,19 +118,22 @@ export default function Alerts() {
     return (
       a.scenario_key.toLowerCase().includes(search) ||
       (a.metadata_json?.detail || '').toLowerCase().includes(search) ||
+      (a.camera_name || '').toLowerCase().includes(search) ||
+      (a.area_name || '').toLowerCase().includes(search) ||
       String(a.camera_id).includes(search)
     );
   });
 
   const handleExportCSV = () => {
-    const headers = ['Alert ID', 'Severity', 'Scenario', 'Camera', 'Confidence', 'Timestamp'];
+    const headers = ['Alert ID', 'Severity', 'Scenario', 'Camera', 'Area', 'Confidence', 'Timestamp'];
     const csvContent = [
       headers.join(','),
       ...visibleAlerts.map(a => [
         `ALT-${a.id}`,
         a.severity,
         a.scenario_key,
-        `Stream-${a.camera_id}`,
+        a.camera_name || `Stream-${a.camera_id}`,
+        a.area_name || 'Unknown Area',
         (a.confidence * 100).toFixed(1) + '%',
         new Date(a.timestamp).toISOString()
       ].join(','))
@@ -320,9 +323,16 @@ export default function Alerts() {
                         </div>
                       </td>
                       <td className="px-3 sm:px-4 py-3 sm:py-4">
-                        <div className="flex items-center gap-1.5 text-text-gray font-bold text-[0.65rem] sm:text-[0.7rem] whitespace-nowrap">
-                          <MapPin className="w-3 sm:w-3.5 h-3 sm:w-3.5 text-accent" />
-                          Str-{String(alert.camera_id).padStart(2, '0')}
+                        <div className="flex items-start gap-1.5 text-text-gray font-bold text-[0.65rem] sm:text-[0.7rem] min-w-[150px]">
+                          <MapPin className="w-3 sm:w-3.5 h-3 sm:h-3.5 text-accent mt-0.5 shrink-0" />
+                          <div className="flex flex-col leading-tight">
+                            <span className="text-text-dark">
+                              {alert.camera_name || `Str-${String(alert.camera_id).padStart(2, '0')}`}
+                            </span>
+                            <span className="text-[0.55rem] uppercase tracking-wider text-text-gray">
+                              {alert.area_name || 'Unknown Area'}
+                            </span>
+                          </div>
                         </div>
                       </td>
                       <td className="px-3 sm:px-4 py-3 sm:py-4">
@@ -450,6 +460,18 @@ export default function Alerts() {
                     {new Date(selectedAlert.timestamp).toLocaleString()}
                   </span>
                 </div>
+                <div className="bg-surface p-3 sm:p-4 rounded-lg border border-border sm:col-span-2">
+                  <span className="text-[0.6rem] sm:text-[0.65rem] font-bold text-text-gray uppercase tracking-widest block mb-1">Camera & Area</span>
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3">
+                    <span className="text-xs sm:text-sm font-bold text-text-dark">
+                      {selectedAlert.camera_name || `CAM-${String(selectedAlert.camera_id).padStart(2, '0')}`}
+                    </span>
+                    <span className="hidden sm:inline text-text-gray">/</span>
+                    <span className="text-xs sm:text-sm font-bold text-accent">
+                      {selectedAlert.area_name || 'Unknown Area'}
+                    </span>
+                  </div>
+                </div>
                 <div className="bg-surface p-3 sm:p-4 rounded-lg border border-border sm:col-span-2 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <div>
                     <span className="text-[0.6rem] sm:text-[0.65rem] font-bold text-text-gray uppercase tracking-widest block mb-1">AI Confidence Score</span>
@@ -473,23 +495,11 @@ export default function Alerts() {
                   <Video className="w-3.5 h-3.5" /> Security Footage Snapshot
                 </h3>
                 {selectedAlert.image_base64 ? (
-                  <div className="bg-black rounded-lg border border-border overflow-hidden relative shadow-inner">
-                    <div className="absolute top-3 left-3 flex items-center gap-1.5 px-2 py-0.5 bg-black/60 backdrop-blur-md border border-white/20 rounded font-black text-[0.55rem] uppercase tracking-widest text-white z-10">
-                      <span className="w-1.5 h-1.5 bg-rose-500 rounded-full animate-pulse" />
-                      Captured Frame
-                    </div>
-                    <div className="absolute bottom-3 left-3 right-3 flex justify-between items-end z-10 opacity-70">
-                      <span className="font-mono text-[0.5rem] text-white/70">
-                        {new Date(selectedAlert.timestamp).toISOString()}
-                      </span>
-                      <span className="font-mono text-[0.5rem] text-white/70">
-                        CAM_{selectedAlert.camera_id}_SECURE
-                      </span>
-                    </div>
+                  <div className="rounded-lg overflow-hidden">
                     <img
                       src={`data:image/jpeg;base64,${selectedAlert.image_base64}`}
                       alt="Event Snapshot"
-                      className="w-full h-auto object-contain max-h-[300px]"
+                      className="w-full h-auto object-contain max-h-[340px]"
                     />
                   </div>
                 ) : (

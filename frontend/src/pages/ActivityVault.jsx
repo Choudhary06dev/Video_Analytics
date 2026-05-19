@@ -613,7 +613,15 @@ export default function ActivityVault() {
             </div>
 
             {/* Snapshot Image */}
-            <div style={{ marginBottom: 20, borderRadius: 8, overflow: 'hidden', border: `1px solid ${cardBorder}`, position: 'relative', background: '#000', minHeight: 220 }}>
+            <div style={{ marginBottom: 20, borderRadius: 8, overflow: 'hidden', border: `1px solid ${cardBorder}`, background: '#000', minHeight: 220 }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '8px 12px', background: isDark ? '#020617' : '#0f172a', borderBottom: `1px solid ${cardBorder}` }}>
+                <div style={{ fontSize: 10, fontWeight: 800, color: '#f8fafc', letterSpacing: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  {selectedEvent.camera_name}
+                </div>
+                <div style={{ fontSize: 9, fontWeight: 800, color: '#94a3b8', letterSpacing: 0.5, fontFamily: 'JetBrains Mono,monospace', flexShrink: 0 }}>
+                  {new Date(selectedEvent.timestamp).toLocaleTimeString()}
+                </div>
+              </div>
               {selectedEvent.image_base64 ? (
                 <img
                   src={`data:image/jpeg;base64,${selectedEvent.image_base64}`}
@@ -629,10 +637,10 @@ export default function ActivityVault() {
                   <div style={{ fontSize: 9, color: '#475569', fontWeight: 600 }}>{selectedEvent.camera_name} • {selectedEvent.area_name}</div>
                 </div>
               )}
-              <div style={{ position: 'absolute', top: 10, left: 10, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(4px)', borderRadius: 6, padding: '4px 10px', fontSize: 10, fontWeight: 800, color: '#f8fafc', letterSpacing: 1 }}>
+              <div style={{ display: 'none' }}>
                 📷 {selectedEvent.camera_name}
               </div>
-              <div style={{ position: 'absolute', top: 10, right: 10, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(4px)', borderRadius: 6, padding: '4px 10px', fontSize: 9, fontWeight: 800, color: '#94a3b8', letterSpacing: 0.5, fontFamily: 'JetBrains Mono,monospace' }}>
+              <div style={{ display: 'none' }}>
                 {new Date(selectedEvent.timestamp).toLocaleTimeString()}
               </div>
             </div>

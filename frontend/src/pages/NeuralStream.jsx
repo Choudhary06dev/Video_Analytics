@@ -323,7 +323,9 @@ export default function NeuralStream() {
             bg: isAlert ? 'bg-rose-500/20' : scenario.bg,
             iconColor: isAlert ? 'text-rose-600' : scenario.color,
             isAlert: isAlert,
-            camera: `CAM-${log.camera_id.toString().padStart(2, '0')}`,
+            camera: log.camera_name || `CAM-${log.camera_id.toString().padStart(2, '0')}`,
+            cameraCode: `CAM-${log.camera_id.toString().padStart(2, '0')}`,
+            area: log.area_name || 'Unknown Area',
             confidence: `${(log.confidence * 100).toFixed(1)}%`,
             timestamp: logDate.toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' }),
             timeAgo: timeAgo,
@@ -1341,11 +1343,16 @@ export default function NeuralStream() {
                   <span className="text-sm font-bold text-text-dark">{selectedLog.type}</span>
                 </div>
                 <div className="bg-surface p-4 rounded-lg border border-border">
-                  <span className="text-[0.65rem] font-bold text-text-gray uppercase tracking-widest block mb-1">Camera</span>
-                  <span className="text-sm font-bold text-text-dark flex items-center gap-2">
-                    <span className="w-2 h-2 bg-accent rounded-full animate-pulse"></span>
-                    {selectedLog.camera}
-                  </span>
+                  <span className="text-[0.65rem] font-bold text-text-gray uppercase tracking-widest block mb-1">Camera & Area</span>
+                  <div className="flex flex-col gap-1">
+                    <span className="text-sm font-bold text-text-dark flex items-center gap-2">
+                      <span className="w-2 h-2 bg-accent rounded-full animate-pulse"></span>
+                      {selectedLog.camera} <span className="text-xs text-text-gray font-mono">({selectedLog.cameraCode})</span>
+                    </span>
+                    <span className="text-xs font-bold text-text-gray uppercase tracking-wider pl-4">
+                      Area: <span className="text-text-dark">{selectedLog.area}</span>
+                    </span>
+                  </div>
                 </div>
                 <div className="bg-surface p-4 rounded-lg border border-border">
                   <span className="text-[0.65rem] font-bold text-text-gray uppercase tracking-widest block mb-1">Severity & Confidence</span>
@@ -1368,15 +1375,11 @@ export default function NeuralStream() {
               {selectedLog.rawLog.image_base64 && (
                 <div className="flex flex-col gap-2">
                   <h3 className="text-sm font-bold text-text-dark tracking-tight">Detection Snapshot</h3>
-                  <div className="bg-black rounded-lg border border-border overflow-hidden relative shadow-inner">
-                    <div className="absolute top-3 left-3 flex items-center gap-1.5 px-2 py-0.5 bg-black/60 backdrop-blur-md border border-white/20 rounded font-black text-[0.55rem] uppercase tracking-widest text-white z-10">
-                      <span className="w-1.5 h-1.5 bg-rose-500 rounded-full animate-pulse" />
-                      Captured Frame
-                    </div>
+                  <div className="rounded-lg overflow-hidden">
                     <img
                       src={`data:image/jpeg;base64,${selectedLog.rawLog.image_base64}`}
                       alt="Detection Event"
-                      className="w-full object-contain max-h-[350px] border border-white/5"
+                      className="w-full object-contain max-h-[380px]"
                     />
                   </div>
                 </div>

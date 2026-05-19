@@ -10,7 +10,7 @@ from app.core.database import get_session
 from app.core.security import decode_access_token
 from app.api.v1.auth import get_current_user
 from app.api.v1.users import verify_module_access, get_allowed_area_ids
-from app.models import DetectionEvent, Camera
+from app.models import DetectionEvent, Camera, Area
 from app.services.alert_service import get_alerts, get_logs, get_logs_summary, get_scenario_camera_matrix
 
 router = APIRouter(prefix="", tags=["Intelligence & Alerts"])
@@ -38,6 +38,26 @@ class WebhookEvent(BaseModel):
     confidence: float
     metadata: dict
     image_base64: Optional[str] = None
+
+
+def _events_with_location_context(events: list[DetectionEvent], session: Session):
+    camera_ids = {event.camera_id for event in events}
+    cameras = session.exec(select(Camera).where(Camera.id.in_(camera_ids))).all() if camera_ids else []
+    camera_map = {camera.id: camera for camera in cameras}
+    area_ids = {camera.area_id for camera in cameras if camera.area_id is not None}
+    areas = session.exec(select(Area).where(Area.id.in_(area_ids))).all() if area_ids else []
+    area_map = {area.id: area for area in areas}
+
+    result = []
+    for event in events:
+        item = event.dict()
+        camera = camera_map.get(event.camera_id)
+        area = area_map.get(camera.area_id) if camera else None
+        item["camera_name"] = camera.name if camera else f"CAM-{event.camera_id}"
+        item["area_id"] = camera.area_id if camera else None
+        item["area_name"] = area.name if area else "Unknown Area"
+        result.append(item)
+    return result
 
 def verify_event_stream_access(
     token: str = Query(None),
@@ -219,7 +239,8 @@ def fetch_alerts(
 ):
     # Filter by allowed areas
     allowed_area_ids = get_allowed_area_ids(current_user["id"], session)
-    return get_alerts(session, hours, severity, limit, start_date, end_date, allowed_area_ids=allowed_area_ids)
+    alerts = get_alerts(session, hours, severity, limit, start_date, end_date, allowed_area_ids=allowed_area_ids)
+    return _events_with_location_context(alerts, session)
 
 @router.get("/logs")
 @router.get("/logs/")
@@ -241,8 +262,8 @@ def fetch_logs(
     
     # Filter by allowed areas
     allowed_area_ids = get_allowed_area_ids(current_user["id"], session)
-    
-    return get_logs(session, hours, camera_id, area_id, scenario_key, object_class, severity, limit, skip, allowed_area_ids=allowed_area_ids)
+    logs = get_logs(session, hours, camera_id, area_id, scenario_key, object_class, severity, limit, skip, allowed_area_ids=allowed_area_ids)
+    return _events_with_location_context(logs, session)
 
 @router.get("/logs/summary")
 @router.get("/logs/summary/")

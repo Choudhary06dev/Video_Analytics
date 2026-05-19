@@ -160,9 +160,15 @@ export default function SurveillanceConfig() {
 
  const handleSaveScenarios = async () => {
   const enabledIds = scenarioData.filter(s => s.is_enabled).map(s => s.id);
+  const configs = {};
+  scenarioData.forEach(s => {
+   if (s.is_enabled && s.config) {
+    configs[s.key] = s.config;
+   }
+  });
   try {
    setSubmitting(true);
-   await syncCameraScenarios(selectedCamera.id, enabledIds);
+   await syncCameraScenarios(selectedCamera.id, enabledIds, configs);
    setShowScenarioModal(false);
   } catch (err) {
    alert(err.message ||"Failed to sync scenarios");

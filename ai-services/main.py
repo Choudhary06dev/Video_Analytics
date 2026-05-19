@@ -26,10 +26,10 @@ async def get_engine(camera_id: int, source: str) -> InferenceEngine:
         active_engines[camera_id] = InferenceEngine(camera_id, source)
     return active_engines[camera_id]
 
-async def send_events_to_backend(camera_id: int, events: list, frame_bytes: bytes):
+async def send_events_to_backend(camera_id: int, events: list, snapshot_bytes: bytes):
     if not events: return
     
-    image_base64 = base64.b64encode(frame_bytes).decode('utf-8')
+    image_base64 = base64.b64encode(snapshot_bytes).decode('utf-8')
     
     payload = []
     for ev in events:
@@ -52,9 +52,9 @@ async def stream_camera(camera_id: int, source: str):
     
     async def frame_generator():
         while True:
-            frame_bytes, events = engine.process_frame()
+            frame_bytes, events, snapshot_bytes = engine.process_frame()
             if events:
-                asyncio.create_task(send_events_to_backend(camera_id, events, frame_bytes))
+                asyncio.create_task(send_events_to_backend(camera_id, events, snapshot_bytes))
             # In a real microservice, we would send 'events' to a message broker (Redis/RabbitMQ) 
             # or provide an endpoint for the backend to poll.
             # For simplicity, we'll just stream the video for now.

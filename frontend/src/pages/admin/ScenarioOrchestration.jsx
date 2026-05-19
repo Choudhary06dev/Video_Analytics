@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import {
   fetchAdminCameras,
   fetchCameraScenarios,
-  syncCameraScenarios
+  syncCameraScenarios,
+  getStreamUrl
 } from '../../services/cameraService';
 import {
   BrainCircuit,
@@ -18,6 +19,90 @@ import {
   MousePointer2,
   Brain
 } from 'lucide-react';
+
+const UNAUTHORIZED_ENTRY_KEY = "UNAUTHORIZED_ENTRY_INTO_RESTRICTED_AREAS";
+
+function getRestrictedZonePoints(config = {}) {
+  if (Array.isArray(config.restricted_zone)) return config.restricted_zone;
+  if (Array.isArray(config.restricted_zones?.[0])) return config.restricted_zones[0];
+  return [];
+}
+
+function RestrictedZoneEditor({ camera, points = [], onChange }) {
+  const handleCanvasClick = (event) => {
+    const rect = event.currentTarget.getBoundingClientRect();
+    const x = (event.clientX - rect.left) / rect.width;
+    const y = (event.clientY - rect.top) / rect.height;
+    onChange([...points, {
+      x: Number(Math.max(0, Math.min(1, x)).toFixed(4)),
+      y: Number(Math.max(0, Math.min(1, y)).toFixed(4)),
+    }]);
+  };
+
+  const pointString = points.map(point => `${point.x * 100},${point.y * 100}`).join(' ');
+
+  return (
+    <div className="mt-3 pt-3 border-t border-accent/10" onClick={event => event.stopPropagation()}>
+      <div className="flex items-center justify-between mb-2">
+        <span className="text-[9px] font-black uppercase tracking-widest text-accent/80 flex items-center gap-1.5">
+          <MousePointer2 className="w-3 h-3" />
+          Restricted Zone
+        </span>
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={() => onChange(points.slice(0, -1))}
+            disabled={!points.length}
+            className="text-[8px] font-black uppercase tracking-widest text-text-gray hover:text-accent disabled:opacity-30"
+          >
+            Undo
+          </button>
+          <button
+            type="button"
+            onClick={() => onChange([])}
+            disabled={!points.length}
+            className="text-[8px] font-black uppercase tracking-widest text-rose-500 hover:text-rose-600 disabled:opacity-30"
+          >
+            Clear
+          </button>
+        </div>
+      </div>
+
+      <div
+        onClick={handleCanvasClick}
+        className="relative aspect-video bg-slate-950 rounded-lg overflow-hidden border border-accent/20 cursor-crosshair"
+      >
+        <img
+          src={getStreamUrl(camera.id)}
+          alt=""
+          className="absolute inset-0 w-full h-full object-cover opacity-80"
+        />
+        <svg className="absolute inset-0 w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
+          {points.length >= 3 && (
+            <polygon points={pointString} fill="rgba(239,68,68,0.28)" stroke="rgb(239,68,68)" strokeWidth="0.7" />
+          )}
+          {points.length === 2 && (
+            <polyline points={pointString} fill="none" stroke="rgb(239,68,68)" strokeWidth="0.7" />
+          )}
+          {points.map((point, index) => (
+            <circle key={`${point.x}-${point.y}-${index}`} cx={point.x * 100} cy={point.y * 100} r="1.8" fill="rgb(239,68,68)" stroke="white" strokeWidth="0.4" />
+          ))}
+        </svg>
+        {!points.length && (
+          <div className="absolute inset-0 flex items-center justify-center bg-black/30">
+            <span className="px-3 py-1 rounded bg-black/70 text-white text-[8px] font-black uppercase tracking-widest">
+              Click 3+ points
+            </span>
+          </div>
+        )}
+      </div>
+
+      <p className="mt-2 text-[8px] font-bold uppercase tracking-widest text-text-gray">
+        Person feet inside this polygon will trigger the restricted-area alert.
+      </p>
+    </div>
+  );
+}
 
 export default function ScenarioOrchestration() {
   const [cameras, setCameras] = useState([]);
@@ -66,7 +151,7 @@ export default function ScenarioOrchestration() {
     const configs = {};
     scenarioData.forEach(s => {
       if (s.is_enabled && s.config) {
-        configs[s.name] = s.config;
+        configs[s.key] = s.config;
       }
     });
 
@@ -92,6 +177,15 @@ export default function ScenarioOrchestration() {
     setScenarioData(prev => prev.map(s =>
       s.id === id ? { ...s, config: { ...s.config, [key]: value } } : s
     ));
+  };
+
+  const updateRestrictedZone = (id, points) => {
+    setScenarioData(prev => prev.map(s => {
+      if (s.id !== id) return s;
+      const nextConfig = { ...(s.config || {}), restricted_zone: points };
+      delete nextConfig.restricted_zones;
+      return { ...s, config: nextConfig };
+    }));
   };
 
   const toggleAllScenarios = (enable) => {
@@ -260,7 +354,8 @@ export default function ScenarioOrchestration() {
                         className={`group flex flex-col p-4 rounded-lg border transition-all duration-200
              ${scenario.is_enabled
                             ? 'bg-accent/5 border-accent/20 shadow-sm'
-                            : 'bg-card border-border hover:border-accent/30 hover:bg-surface'}`}
+                            : 'bg-card border-border hover:border-accent/30 hover:bg-surface'}
+             ${scenario.is_enabled && scenario.key === UNAUTHORIZED_ENTRY_KEY ? 'md:col-span-2 xl:col-span-2' : ''}`}
                       >
                         <div className="flex items-center justify-between cursor-pointer" onClick={() => toggleScenarioInState(scenario.id)}>
                           <div className="flex items-center gap-3 max-w-[85%]">
@@ -289,6 +384,14 @@ export default function ScenarioOrchestration() {
                               className="w-16 bg-white border border-accent/20 rounded px-2 py-1 text-[11px] font-bold text-accent outline-none focus:border-accent/40 text-center shadow-sm"
                             />
                           </div>
+                        )}
+
+                        {scenario.is_enabled && scenario.key === UNAUTHORIZED_ENTRY_KEY && (
+                          <RestrictedZoneEditor
+                            camera={selectedCamera}
+                            points={getRestrictedZonePoints(scenario.config)}
+                            onChange={(points) => updateRestrictedZone(scenario.id, points)}
+                          />
                         )}
                       </div>
                     ))}
