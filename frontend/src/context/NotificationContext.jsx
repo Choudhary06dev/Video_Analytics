@@ -12,6 +12,9 @@ export const NotificationProvider = ({ children }) => {
 
   // Load scenario name map once on mount
   useEffect(() => {
+    const user = localStorage.getItem('user');
+    if (!user) return;
+
     fetchScenarios()
       .then((data) => {
         const list = Array.isArray(data) ? data : data?.scenarios || [];
@@ -37,8 +40,8 @@ export const NotificationProvider = ({ children }) => {
   }, []);
 
   const pollAlerts = useCallback(async () => {
-    const token = localStorage.getItem('token');
-    if (!token) return;
+    const user = localStorage.getItem('user');
+    if (!user) return;
 
     try {
       // Fetch latest 5 alerts from the last 1 hour

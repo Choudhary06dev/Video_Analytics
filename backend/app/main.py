@@ -3,6 +3,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from sqlmodel import Session, select
 
+from app.core.config import settings as config_settings
 from app.core.database import init_db, engine
 from app.models import Role, ModulePermission, AIScenario
 from app.api.v1 import auth, users, roles, cameras, alerts, activity, health, blacklist, settings
@@ -161,12 +162,20 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="Hospital AI Surveillance API",
     version="1.0.0",
-    lifespan=lifespan
+    lifespan=lifespan,
+    docs_url=None,      # Disable Swagger UI in production
+    redoc_url=None,      # Disable ReDoc in production
+    openapi_url=None,    # Disable OpenAPI schema exposure
 )
 
+# ─── Middleware Stack (order matters: outermost first) ────────────────────────
+from app.core.middleware import SecurityHeadersMiddleware, RateLimitMiddleware
+
+app.add_middleware(SecurityHeadersMiddleware)
+app.add_middleware(RateLimitMiddleware)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=config_settings.cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -175,11 +184,7 @@ app.add_middleware(
 # Root Endpoint
 @app.get("/")
 def read_root():
-    return {
-        "status": "Hospital AI Surveillance Online",
-        "version": "1.0.0",
-        "engine": "FastAPI Modular Architecture"
-    }
+    return {"status": "online"}
 
 @app.get("/health")
 @app.get("/health/")

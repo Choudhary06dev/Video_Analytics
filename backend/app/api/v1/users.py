@@ -123,7 +123,7 @@ def create_user_by_admin(user_data: AdminUserCreate, session: Session = Depends(
         return {"message": "User created successfully", "user_id": new_user.id, "role": role.name}
     except Exception as e:
         print(f"Admin Registration Error: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Database Error: {str(e)}")
+        raise HTTPException(status_code=500, detail="User creation failed. Please try again later.")
 
 @router.get("/audit-logs")
 @router.get("/audit-logs/")

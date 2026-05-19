@@ -161,7 +161,7 @@ export default function RolePermissionsPanel({ roleId, initialPermissions, onUpd
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                 {groupModules.map((mod) => {
                   const perm = findPermission(mod.id);
                   const enabled = hasModuleAccess(perm);
@@ -171,7 +171,7 @@ export default function RolePermissionsPanel({ roleId, initialPermissions, onUpd
                         <div className="w-8 h-8 bg-surface rounded flex items-center justify-center border border-border group-hover:bg-accent group-hover:border-accent transition-all shrink-0">
                           <Activity className="w-4 h-4 text-text-gray group-hover:text-white transition-colors" />
                         </div>
-                        <h4 className="text-[10px] font-black uppercase tracking-tight text-text-dark group-hover:text-accent transition-colors truncate">
+                        <h4 className="text-[10px] font-black uppercase tracking-tight text-text-dark group-hover:text-accent transition-colors leading-tight">
                           {MODULE_LABELS[mod.key] || mod.name}
                         </h4>
                       </div>

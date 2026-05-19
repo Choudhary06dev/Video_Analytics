@@ -44,19 +44,26 @@ def decode_access_token(token: str):
     except JWTError:
         return None
 
-from fastapi import Header, HTTPException, Query
+from fastapi import Header, HTTPException, Query, Request
 
 def get_authorization_token(
+    request: Request,
     authorization: Optional[str] = Header(None),
     token: Optional[str] = Query(None)
 ) -> str:
     """
-    Extracts token from either the Authorization header or a 'token' query parameter.
-    Query parameter support is essential for EventSource (SSE) connections.
+    Extracts token from HttpOnly cookie, Authorization header, or a 'token' query parameter.
     """
+    # 1. Check HttpOnly Cookie
+    cookie_token = request.cookies.get("access_token")
+    if cookie_token:
+        return cookie_token.strip()
+        
+    # 2. Check Authorization Header
     if authorization and authorization.startswith("Bearer "):
         return authorization.split(" ", 1)[1].strip()
     
+    # 3. Check Query Parameter (for SSE / WebSockets)
     if token:
         return token
         

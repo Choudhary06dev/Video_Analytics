@@ -96,7 +96,7 @@ export default function RoleManagement() {
   return (
    <div className="h-[60vh] flex flex-col items-center justify-center gap-4">
     <Loader2 className="w-10 h-10 text-accent animate-spin"/>
-    <p className="text-[10px] font-black uppercase tracking-widest text-text-gray">Accessing Role Hierarchy...</p>
+    <p className="text-[8px] font-black uppercase tracking-widest text-text-gray">Accessing Role Hierarchy...</p>
    </div>
   );
  }
@@ -123,7 +123,7 @@ export default function RoleManagement() {
     <div className="flex items-center gap-2">
      <button
       onClick={openCreateRoleModal}
-      className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2.5 bg-card border border-border rounded-lg text-[9px] font-black uppercase tracking-widest text-text-gray hover:bg-surface hover:text-text-dark transition-all"
+      className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2.5 bg-card border border-border rounded-lg text-[8px] font-black uppercase tracking-widest text-text-gray hover:bg-surface hover:text-text-dark transition-all"
      >
       <Plus className="w-4 h-4"/>
       Define Role
@@ -297,7 +297,7 @@ export default function RoleManagement() {
       </div>
       <form onSubmit={handleRoleSubmit} className="p-6 space-y-4">
        <div className="space-y-1.5">
-        <label className="text-[10px] font-black uppercase tracking-widest text-text-gray ml-1">Role Name</label>
+        <label className="text-[8px] font-black uppercase tracking-widest text-text-gray ml-1">Role Name</label>
         <input
          type="text"
          required
@@ -309,7 +309,7 @@ export default function RoleManagement() {
        </div>
 
        <div className="space-y-1.5">
-        <label className="text-[10px] font-black uppercase tracking-widest text-text-gray ml-1">Description</label>
+        <label className="text-[8px] font-black uppercase tracking-widest text-text-gray ml-1">Description</label>
         <textarea
          rows={3}
          value={roleFormData.description}
@@ -323,7 +323,7 @@ export default function RoleManagement() {
         <button
          type="button"
          onClick={() => { setShowRoleModal(false); setEditingRole(null); }}
-         className="flex-1 py-2.5 bg-surface border border-border rounded-lg text-[10px] font-black uppercase tracking-widest text-text-gray hover:text-text-dark transition-all"
+         className="flex-1 py-2.5 bg-surface border border-border rounded-lg text-[8px] font-black uppercase tracking-widest text-text-gray hover:text-text-dark transition-all"
         >
          Cancel
         </button>

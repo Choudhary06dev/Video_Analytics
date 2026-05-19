@@ -161,7 +161,7 @@ export default function UserManagement() {
   return (
    <div className="h-[60vh] flex flex-col items-center justify-center gap-4">
     <Loader2 className="w-10 h-10 text-accent animate-spin"/>
-    <p className="text-[10px] font-black uppercase tracking-widest text-text-gray">Decrypting Identity Matrix...</p>
+    <p className="text-[8px] font-black uppercase tracking-widest text-text-gray">Decrypting Identity Matrix...</p>
    </div>
   );
  }
@@ -216,7 +216,7 @@ export default function UserManagement() {
     ].map((s, i) => (
       <div key={i} className="bg-card border border-border p-3 sm:p-4 rounded-lg flex items-center justify-between shadow-sm min-w-0 hover:border-accent/30 transition-colors">
         <div className="min-w-0">
-          <p className="text-[7px] sm:text-[8px] font-black text-text-gray uppercase tracking-widest mb-1 truncate">{s.label}</p>
+          <p className="text-[9px] sm:text-[10px] font-black text-text-gray uppercase tracking-widest mb-1 truncate">{s.label}</p>
           <p className={`text-base sm:text-xl font-black ${s.color} truncate`}>{s.val}</p>
         </div>
         <div className="p-1.5 sm:p-2.5 rounded-lg bg-surface border border-border shrink-0 ml-2">
@@ -231,30 +231,30 @@ export default function UserManagement() {
     <div className="overflow-x-auto custom-scrollbar">
      <table className="w-full text-left border-collapse min-w-[800px]">
       <thead>
-       <tr className="bg-surface/50 border-b border-border text-[9px] font-black uppercase tracking-widest text-text-gray">
-        <th className="p-4 pl-6">System ID</th>
-        <th className="p-4">Personnel Info</th>
-        <th className="p-4">Authorization</th>
-        <th className="p-4">Node Status</th>
-        <th className="p-4">Onboarding</th>
-        <th className="p-4 pr-6 text-right">Actions</th>
+       <tr className="bg-surface/50 border-b border-border text-[8px] font-black uppercase tracking-widest text-text-gray">
+        <th className="p-2.5 pl-6">System ID</th>
+        <th className="p-2.5">Personnel Info</th>
+        <th className="p-2.5">Authorization</th>
+        <th className="p-2.5">Node Status</th>
+        <th className="p-2.5">Onboarding</th>
+        <th className="p-2.5 pr-6 text-right">Actions</th>
        </tr>
       </thead>
       <tbody className="divide-y divide-border">
        {filteredUsers.map((user) => (
         <tr key={user.id} className="hover:bg-surface/30 transition-colors group">
-         <td className="p-4 pl-6">
+         <td className="p-2.5 pl-6">
           <div className="flex items-center gap-1.5 text-[10px] font-bold text-text-gray bg-surface px-2 py-1 rounded-lg border border-border w-fit font-mono">
             <Activity className="w-3 h-3"/>
             #{user.id}
           </div>
          </td>
-         <td className="p-4">
+         <td className="p-2.5">
           <div className="flex items-center gap-3">
-           <div className={`relative w-10 h-10 rounded-lg flex items-center justify-center border-2 shrink-0
+           <div className={`relative w-8 h-8 rounded-lg flex items-center justify-center border-2 shrink-0
             ${user.is_active !== false ? 'border-accent/10 bg-accent/5' : 'border-danger/10 bg-danger/5'}`}>
-            <img src={`https://ui-avatars.com/api/?name=${user.full_name}&background=random&color=fff&bold=true`} className="w-8 h-8 rounded-lg"alt=""/>
-            <div className={`absolute -bottom-1 -right-1 w-3 h-3 rounded-full border-2 border-card ${user.is_active !== false ? 'bg-success' : 'bg-danger'}`}></div>
+            <img src={`https://ui-avatars.com/api/?name=${user.full_name}&background=random&color=fff&bold=true`} className="w-6 h-6 rounded-md"alt=""/>
+            <div className={`absolute -bottom-1 -right-1 w-2.5 h-2.5 rounded-full border-2 border-card ${user.is_active !== false ? 'bg-success' : 'bg-danger'}`}></div>
            </div>
            <div className="min-w-0">
             <p className="text-xs font-black text-text-dark uppercase tracking-wide truncate">{user.full_name}</p>
@@ -265,13 +265,13 @@ export default function UserManagement() {
            </div>
           </div>
          </td>
-         <td className="p-4">
+         <td className="p-2.5">
           <div className="flex items-center gap-2">
            <Shield className={`w-3.5 h-3.5 ${user.role === 'super_admin' ? 'text-purple-500' : user.role === 'admin' ? 'text-accent' : 'text-emerald-500'}`} />
            <span className="text-[10px] font-black uppercase tracking-widest text-text-dark">{user.role?.replace('_', ' ')}</span>
           </div>
          </td>
-         <td className="p-4">
+         <td className="p-2.5">
           <button
             onClick={() => toggleUserStatus(user.id, user.is_active !== false)}
             className={`w-24 flex items-center justify-center gap-1.5 px-2.5 py-1 rounded-md text-[9px] font-black uppercase tracking-widest border transition-all ${user.is_active !== false ? 'bg-success/10 text-success border-success/20 hover:bg-success/20' : 'bg-danger/10 text-danger border-danger/20 hover:bg-danger/20'}`}
@@ -280,13 +280,13 @@ export default function UserManagement() {
             {user.is_active !== false ? 'Active' : 'Suspended'}
           </button>
          </td>
-         <td className="p-4">
+         <td className="p-2.5">
           <div className="flex items-center gap-1.5 text-[10px] font-bold text-text-gray">
             <Calendar className="w-3 h-3"/>
             {new Date(user.created_at).toLocaleDateString()}
           </div>
          </td>
-         <td className="p-4 pr-6">
+         <td className="p-2.5 pr-6">
           <div className="flex items-center justify-end gap-2">
            <button onClick={() => openEditModal(user)} className="p-2 border border-border text-text-gray rounded-lg hover:text-accent hover:border-accent transition-all bg-card"title="Edit Node">
             <Edit2 className="w-3.5 h-3.5"/>
@@ -300,7 +300,7 @@ export default function UserManagement() {
        ))}
        {filteredUsers.length === 0 && (
         <tr>
-          <td colSpan={6} className="p-8 text-center text-[10px] font-black uppercase tracking-widest text-text-gray">
+          <td colSpan={6} className="p-8 text-center text-[8px] font-black uppercase tracking-widest text-text-gray">
             No identities found matching the criteria
           </td>
         </tr>
@@ -311,7 +311,7 @@ export default function UserManagement() {
 
     {/* Pagination Bar */}
     <div className="px-4 sm:px-6 py-4 bg-surface/30 border-t border-border flex flex-col md:flex-row items-center justify-between gap-4">
-     <div className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-text-gray text-center md:text-left">
+     <div className="text-[9px] sm:text-[8px] font-black uppercase tracking-widest text-text-gray text-center md:text-left">
       Showing <span className="text-text-dark">{Math.min(totalItems, (currentPage - 1) * pageSize + 1)}</span> to <span className="text-text-dark">{Math.min(totalItems, currentPage * pageSize)}</span> of <span className="text-text-dark">{totalItems}</span> personnel records
      </div>
      
@@ -369,21 +369,21 @@ export default function UserManagement() {
         <form onSubmit={showEditModal ? handleEditUser : handleCreateUser} className="p-6 space-y-4">
           
           <div className="space-y-1.5">
-            <label className="text-[10px] font-black uppercase tracking-widest text-text-gray ml-1">Full Name</label>
+            <label className="text-[8px] font-black uppercase tracking-widest text-text-gray ml-1">Full Name</label>
             <input type="text"required value={formData.full_name} onChange={e => setFormData({...formData, full_name: e.target.value})}
                 className="w-full bg-surface border border-border rounded-lg px-4 py-2.5 text-xs font-bold text-text-dark outline-none focus:border-accent focus:ring-2 focus:ring-accent/10 transition-all"
                 placeholder="Enter full name"/>
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-[10px] font-black uppercase tracking-widest text-text-gray ml-1">Comms Uplink (Email)</label>
+            <label className="text-[8px] font-black uppercase tracking-widest text-text-gray ml-1">Comms Uplink (Email)</label>
             <input type="email"required value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})}
                 className="w-full bg-surface border border-border rounded-lg px-4 py-2.5 text-xs font-bold text-text-dark outline-none focus:border-accent focus:ring-2 focus:ring-accent/10 transition-all"
                 placeholder="Enter email address"/>
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-[10px] font-black uppercase tracking-widest text-text-gray ml-1">Access Protocol (Role)</label>
+            <label className="text-[8px] font-black uppercase tracking-widest text-text-gray ml-1">Access Protocol (Role)</label>
             <select required value={formData.role_name} onChange={e => setFormData({...formData, role_name: e.target.value})}
                 className="w-full bg-surface border border-border rounded-lg pl-4 pr-16 py-2.5 text-xs font-bold text-text-dark outline-none focus:border-accent focus:ring-2 focus:ring-accent/10 transition-all cursor-pointer">
               {roles.map(role => (
@@ -400,14 +400,14 @@ export default function UserManagement() {
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-[10px] font-black uppercase tracking-widest text-text-gray ml-1">Security Key (Password)</label>
+            <label className="text-[8px] font-black uppercase tracking-widest text-text-gray ml-1">Security Key (Password)</label>
             <input type={showEditModal ?"password":"text"} required={!showEditModal} value={formData.password} onChange={e => setFormData({...formData, password: e.target.value})}
                 className="w-full bg-surface border border-border rounded-lg px-4 py-2.5 text-xs font-bold text-text-dark outline-none focus:border-accent focus:ring-2 focus:ring-accent/10 transition-all"
                 placeholder={showEditModal ?"Leave blank to keep unchanged":"Set secure password"} />
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-[10px] font-black uppercase tracking-widest text-text-gray ml-1">Node Status</label>
+            <label className="text-[8px] font-black uppercase tracking-widest text-text-gray ml-1">Node Status</label>
             <div className="flex items-center gap-3">
               <button type="button"onClick={() => setFormData({...formData, is_active: true})}
                   className={`flex-1 py-2.5 px-3 rounded-lg text-[9px] font-black uppercase tracking-widest border transition-all ${formData.is_active ? 'bg-success/10 text-success border-success/20' : 'bg-surface border-border text-text-gray'}`}>
@@ -422,7 +422,7 @@ export default function UserManagement() {
 
           <div className="pt-4 flex gap-3">
             <button type="button"onClick={() => { setShowAddModal(false); setShowEditModal(false); }}
-                className="flex-1 py-2.5 bg-surface border border-border rounded-lg text-[10px] font-black uppercase tracking-widest text-text-gray hover:text-text-dark transition-all">
+                className="flex-1 py-2.5 bg-surface border border-border rounded-lg text-[8px] font-black uppercase tracking-widest text-text-gray hover:text-text-dark transition-all">
               Cancel
             </button>
             <button type="submit"disabled={submitting}
@@ -449,7 +449,7 @@ export default function UserManagement() {
           </p>
           <div className="pt-4 flex gap-3">
             <button onClick={() => setShowDeleteModal(false)}
-                className="flex-1 py-2.5 bg-surface border border-border rounded-lg text-[10px] font-black uppercase tracking-widest text-text-gray hover:text-text-dark transition-all">
+                className="flex-1 py-2.5 bg-surface border border-border rounded-lg text-[8px] font-black uppercase tracking-widest text-text-gray hover:text-text-dark transition-all">
               Cancel
             </button>
             <button onClick={handleDeleteUser} disabled={submitting}

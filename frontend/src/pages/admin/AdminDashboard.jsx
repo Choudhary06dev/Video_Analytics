@@ -275,7 +275,7 @@ export default function AdminDashboard() {
            <div className="w-10 h-0.5 bg-emerald-500/20 rounded-full overflow-hidden">
             <div className="h-full bg-emerald-500 w-[98%]"/>
            </div>
-           <span className="text-[7px] font-black text-emerald-500/60 uppercase">{(96 + (Math.random() * 3.5)).toFixed(1)}%</span>
+           <span className="text-[9px] font-black text-emerald-500/60 uppercase">{(96 + (Math.random() * 3.5)).toFixed(1)}%</span>
           </div>
          </div>
          <span className={`text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded border transition-all

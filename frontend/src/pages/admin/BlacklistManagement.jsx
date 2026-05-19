@@ -159,7 +159,7 @@ export default function BlacklistManagement() {
   return (
    <div className="h-[60vh] flex flex-col items-center justify-center gap-4">
     <Loader2 className="w-10 h-10 text-accent animate-spin"/>
-    <p className="text-[10px] font-black uppercase tracking-widest text-text-gray">Syncing Neural Blacklist...</p>
+    <p className="text-[8px] font-black uppercase tracking-widest text-text-gray">Syncing Neural Blacklist...</p>
    </div>
   );
  }
@@ -214,7 +214,7 @@ export default function BlacklistManagement() {
     ].map((s, i) => (
       <div key={i} className="bg-card border border-border p-3 sm:p-4 rounded-lg flex items-center justify-between shadow-sm min-w-0">
         <div className="min-w-0">
-          <p className="text-[7px] sm:text-[8px] font-black text-text-gray uppercase tracking-widest mb-1 truncate">{s.label}</p>
+          <p className="text-[9px] sm:text-[10px] font-black text-text-gray uppercase tracking-widest mb-1 truncate">{s.label}</p>
           <p className={`text-lg sm:text-xl font-black ${s.color} truncate`}>{s.val}</p>
         </div>
         <div className="p-2 sm:p-2.5 rounded-lg bg-surface border border-border shrink-0">
@@ -229,53 +229,53 @@ export default function BlacklistManagement() {
     <div className="overflow-x-auto no-scrollbar">
      <table className="w-full text-left border-collapse min-w-[900px]">
       <thead>
-       <tr className="bg-surface/50 border-b border-border text-[9px] font-black uppercase tracking-widest text-text-gray">
-        <th className="p-4 pl-6 text-center">Neural ID</th>
-        <th className="p-4">Identity & Biometrics</th>
-        <th className="p-4">Primary Reason</th>
-        <th className="p-4">Threat Level</th>
-        <th className="p-4">Registration</th>
-        <th className="p-4 pr-6 text-right">Actions</th>
+       <tr className="bg-surface/50 border-b border-border text-[8px] font-black uppercase tracking-widest text-text-gray">
+        <th className="p-2.5 pl-6 text-center">Neural ID</th>
+        <th className="p-2.5">Identity & Biometrics</th>
+        <th className="p-2.5">Primary Reason</th>
+        <th className="p-2.5">Threat Level</th>
+        <th className="p-2.5">Registration</th>
+        <th className="p-2.5 pr-6 text-right">Actions</th>
        </tr>
       </thead>
       <tbody className="divide-y divide-border">
        {filteredBlacklist.map((person, index) => (
         <tr key={person.id} className="hover:bg-surface/30 transition-colors group">
-         <td className="p-4 pl-6 text-center">
+         <td className="p-2.5 pl-6 text-center">
           <div className="flex items-center justify-center gap-1.5 text-[10px] font-bold text-text-gray bg-surface px-2 py-1 rounded-lg border border-border w-12 h-8 mx-auto">
             #{(index + 1).toString().padStart(3, '0')}
           </div>
          </td>
-         <td className="p-4">
+         <td className="p-2.5">
           <div className="flex items-center gap-3">
-           <div className="relative w-12 h-12 rounded-lg flex items-center justify-center border-2 border-red-500/10 bg-red-500/5 overflow-hidden">
+           <div className="relative w-10 h-10 rounded-lg flex items-center justify-center border-2 border-red-500/10 bg-red-500/5 overflow-hidden shrink-0">
             {person.image_preview ? (
              <img src={person.image_preview} className="w-full h-full object-cover"alt=""/>
             ) : (
-             <ImageIcon className="w-6 h-6 text-text-gray/40"/>
+             <ImageIcon className="w-5 h-5 text-text-gray/40"/>
             )}
            </div>
-           <div>
-            <p className="text-xs font-black text-text-dark uppercase tracking-wide">{person.full_name}</p>
-            <p className="text-[10px] text-text-gray font-bold mt-0.5 uppercase tracking-tighter">Biometric Match Ready</p>
+           <div className="min-w-0">
+            <p className="text-xs font-black text-text-dark uppercase tracking-wide truncate">{person.full_name}</p>
+            <p className="text-[9px] text-text-gray font-bold mt-0.5 uppercase tracking-tighter truncate">Biometric Match Ready</p>
            </div>
           </div>
          </td>
-         <td className="p-4">
+         <td className="p-2.5">
           <p className="text-[11px] font-bold text-text-dark max-w-[200px] truncate">{person.reason}</p>
          </td>
-         <td className="p-4">
+         <td className="p-2.5">
           <div className={`w-24 text-center px-3 py-1 rounded-md text-[9px] font-black uppercase tracking-widest border ${severityColors[person.severity] || severityColors.MEDIUM}`}>
            {person.severity}
           </div>
          </td>
-         <td className="p-4">
+         <td className="p-2.5">
           <div className="flex items-center gap-1.5 text-[10px] font-bold text-text-gray">
             <Calendar className="w-3 h-3"/>
             {person.created_at ? new Date(person.created_at).toLocaleDateString() : 'N/A'}
           </div>
          </td>
-         <td className="p-4 pr-6">
+         <td className="p-2.5 pr-6">
           <div className="flex items-center justify-end gap-2">
            <button onClick={() => openEditModal(person)} className="p-2 border border-border text-text-gray rounded-lg hover:text-red-500 hover:border-red-500 transition-all bg-card"title="Edit Profile">
             <Edit2 className="w-3.5 h-3.5"/>
@@ -289,7 +289,7 @@ export default function BlacklistManagement() {
        ))}
        {filteredBlacklist.length === 0 && (
         <tr>
-          <td colSpan={6} className="p-8 text-center text-[10px] font-black uppercase tracking-widest text-text-gray">
+          <td colSpan={6} className="p-8 text-center text-[8px] font-black uppercase tracking-widest text-text-gray">
             No blacklisted identities found matching the criteria
           </td>
         </tr>
@@ -300,7 +300,7 @@ export default function BlacklistManagement() {
 
     {/* Pagination Bar */}
     <div className="px-4 sm:px-6 py-4 bg-surface/30 border-t border-border flex flex-col md:flex-row items-center justify-between gap-4">
-     <div className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-text-gray text-center md:text-left">
+     <div className="text-[9px] sm:text-[8px] font-black uppercase tracking-widest text-text-gray text-center md:text-left">
       Showing <span className="text-text-dark">{Math.min(totalItems, (currentPage - 1) * pageSize + 1)}</span> to <span className="text-text-dark">{Math.min(totalItems, currentPage * pageSize)}</span> of <span className="text-text-dark">{totalItems}</span> identities
      </div>
      
@@ -341,14 +341,14 @@ export default function BlacklistManagement() {
           {/* Conditional Layout: Grid for Edit, Stack for Add */}
           <div className={showEditModal ?"grid grid-cols-1 md:grid-cols-2 gap-5":"space-y-4"}>
             <div className="space-y-1.5">
-              <label className="text-[10px] font-black uppercase tracking-widest text-text-gray ml-1">Full Name / Alias</label>
+              <label className="text-[8px] font-black uppercase tracking-widest text-text-gray ml-1">Full Name / Alias</label>
               <input type="text"required value={formData.full_name} onChange={e => setFormData({...formData, full_name: e.target.value})}
                 className="w-full bg-surface border border-border rounded-lg px-4 py-2.5 text-xs font-bold text-text-dark outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/10 transition-all"
                 placeholder="e.g. Unknown Subject"/>
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-[10px] font-black uppercase tracking-widest text-text-gray ml-1">Threat Level (Severity)</label>
+              <label className="text-[8px] font-black uppercase tracking-widest text-text-gray ml-1">Threat Level (Severity)</label>
               <select required value={formData.severity} onChange={e => setFormData({...formData, severity: e.target.value})}
                   className="w-full bg-surface border border-border rounded-lg pl-4 pr-16 py-2.5 text-xs font-bold text-text-dark outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/10 transition-all cursor-pointer">
                 <option value="CRITICAL">CRITICAL</option>
@@ -361,7 +361,7 @@ export default function BlacklistManagement() {
 
           <div className={showEditModal ?"grid grid-cols-1 md:grid-cols-2 gap-5":"space-y-4"}>
             <div className="space-y-1.5">
-              <label className="text-[10px] font-black uppercase tracking-widest text-text-gray ml-1">Primary Reason for Listing</label>
+              <label className="text-[8px] font-black uppercase tracking-widest text-text-gray ml-1">Primary Reason for Listing</label>
               <textarea required value={formData.reason} onChange={e => setFormData({...formData, reason: e.target.value})}
                   className={`w-full bg-surface border border-border rounded-lg px-4 py-2.5 text-xs font-bold text-text-dark outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/10 transition-all resize-none ${showEditModal ? 'h-[124px]' : 'h-20'}`}
                   placeholder="Describe the incident or reason..."/>
@@ -369,7 +369,7 @@ export default function BlacklistManagement() {
 
             <div className="space-y-1.5">
               <div className="flex items-center justify-between ml-1">
-                <label className="text-[10px] font-black uppercase tracking-widest text-text-gray">Biometric Evidence (Image)</label>
+                <label className="text-[8px] font-black uppercase tracking-widest text-text-gray">Biometric Evidence (Image)</label>
                 {formData.image_preview && (
                   <div className="flex bg-surface border border-border rounded-lg p-0.5">
                     <button 
@@ -419,7 +419,7 @@ export default function BlacklistManagement() {
 
           <div className="pt-2 flex gap-3">
             <button type="button"onClick={() => { setShowAddModal(false); setShowEditModal(false); }}
-                className="flex-1 py-2.5 bg-surface border border-border rounded-lg text-[10px] font-black uppercase tracking-widest text-text-gray hover:text-text-dark transition-all">
+                className="flex-1 py-2.5 bg-surface border border-border rounded-lg text-[8px] font-black uppercase tracking-widest text-text-gray hover:text-text-dark transition-all">
               Cancel
             </button>
             <button type="submit"disabled={submitting}
@@ -446,7 +446,7 @@ export default function BlacklistManagement() {
           </p>
           <div className="pt-4 flex gap-3">
             <button onClick={() => setShowDeleteModal(false)}
-                className="flex-1 py-2.5 bg-surface border border-border rounded-lg text-[10px] font-black uppercase tracking-widest text-text-gray hover:text-text-dark transition-all">
+                className="flex-1 py-2.5 bg-surface border border-border rounded-lg text-[8px] font-black uppercase tracking-widest text-text-gray hover:text-text-dark transition-all">
               Cancel
             </button>
             <button onClick={handleDeleteEntry} disabled={submitting}

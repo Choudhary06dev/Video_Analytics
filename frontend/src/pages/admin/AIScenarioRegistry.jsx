@@ -213,7 +213,7 @@ export default function AIScenarioRegistry() {
                   <div className="min-w-0 flex-1">
                     <h3 className="text-sm font-black text-text-dark tracking-tight leading-tight mb-1">{scenario.name}</h3>
                     <div className="flex">
-                      <code className="text-[7px] text-text-dark font-black font-mono bg-accent/10 px-1.5 py-0.5 rounded border border-accent/20 truncate max-w-full" title="Machine Key">
+                      <code className="text-[9px] text-text-dark font-black font-mono bg-accent/10 px-1.5 py-0.5 rounded border border-accent/20 truncate max-w-full" title="Machine Key">
                         {scenario.key}
                       </code>
                     </div>
@@ -292,7 +292,7 @@ export default function AIScenarioRegistry() {
             </div>
             <form onSubmit={handleSubmit} className="p-6 space-y-5">
               <div className="space-y-1.5">
-                <label className="text-[10px] font-black uppercase tracking-widest text-text-gray">Scenario Name</label>
+                <label className="text-[8px] font-black uppercase tracking-widest text-text-gray">Scenario Name</label>
                 <input
                   type="text"
                   required
@@ -303,7 +303,7 @@ export default function AIScenarioRegistry() {
                 />
               </div>
               <div className="space-y-1.5">
-                <label className="text-[10px] font-black uppercase tracking-widest text-text-gray">Internal Key (Machine Name)</label>
+                <label className="text-[8px] font-black uppercase tracking-widest text-text-gray">Internal Key (Machine Name)</label>
                 <input
                   type="text"
                   required
@@ -314,7 +314,7 @@ export default function AIScenarioRegistry() {
                 />
               </div>
               <div className="space-y-1.5">
-                <label className="text-[10px] font-black uppercase tracking-widest text-text-gray">Description</label>
+                <label className="text-[8px] font-black uppercase tracking-widest text-text-gray">Description</label>
                 <textarea
                   value={formData.description}
                   onChange={e => setFormData({ ...formData, description: e.target.value })}
@@ -323,7 +323,7 @@ export default function AIScenarioRegistry() {
                 />
               </div>
               <div className="space-y-1.5">
-                <label className="text-[10px] font-black uppercase tracking-widest text-text-gray">Default Severity</label>
+                <label className="text-[8px] font-black uppercase tracking-widest text-text-gray">Default Severity</label>
                 <select
                   value={formData.default_severity}
                   onChange={e => setFormData({ ...formData, default_severity: e.target.value })}
@@ -340,7 +340,7 @@ export default function AIScenarioRegistry() {
                 <button
                   type="button"
                   onClick={() => setShowModal(false)}
-                  className="flex-1 px-6 py-2.5 bg-surface border border-border rounded-lg text-[10px] font-black uppercase tracking-widest text-text-gray"
+                  className="flex-1 px-6 py-2.5 bg-surface border border-border rounded-lg text-[8px] font-black uppercase tracking-widest text-text-gray"
                 >
                   Cancel
                 </button>

@@ -300,7 +300,7 @@ export default function NeuralStream() {
           const scenario = SCENARIO_UI[log.scenario_key] || SCENARIO_UI['Default'];
           const isAlert = log.is_alert || false;
           const friendlyName = scenarioNameByKey.get(log.scenario_key.toLowerCase());
-          const detail = friendlyName || log.scenario_key.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+          const detail = friendlyName || log.scenario_key.toLowerCase().replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
 
           const logDate = new Date(log.timestamp);
           const now = new Date();
@@ -351,8 +351,7 @@ export default function NeuralStream() {
     let retryTimer;
 
     const connect = () => {
-      const token = encodeURIComponent(localStorage.getItem('token') || '');
-      source = new EventSource(`${EVENTS_URL}?token=${token}`);
+      source = new EventSource(EVENTS_URL, { withCredentials: true });
       source.onopen = () => setStreamConnected(true);
       source.onmessage = (event) => {
         try {
@@ -373,7 +372,6 @@ export default function NeuralStream() {
 
     connect();
     fetchLogsData(true);
-
     return () => {
       if (source) source.close();
       if (retryTimer) clearTimeout(retryTimer);
@@ -894,14 +892,14 @@ export default function NeuralStream() {
           {/* TABLE HEADER */}
           {/* TABLE HEADER — hidden on mobile, card view instead */}
           <div className="hidden lg:grid grid-cols-12 bg-surface/80 border-y border-border text-[0.65rem] font-black tracking-widest text-text-gray">
-            <div className="col-span-1 border-r border-border/30 px-4 py-2.5 text-center">Status</div>
-            <div className="col-span-3 border-r border-border/30 px-4 py-2.5">Event Detail</div>
-            <div className="col-span-2 border-r border-border/30 px-4 py-2.5">Event ID</div>
-            <div className="col-span-1 border-r border-border/30 px-2 py-2.5">Node</div>
-            <div className="col-span-1 border-r border-border/30 px-2 py-2.5 text-center">Conf.</div>
-            <div className="col-span-1 border-r border-border/30 px-2 py-2.5 text-center">Severity</div>
-            <div className="col-span-1 border-r border-border/30 px-4 py-2.5">Timestamp</div>
-            <div className="col-span-1 border-r border-border/30 px-4 py-2.5">Elapsed</div>
+            <div className="col-span-1 px-4 py-2.5 text-center">Status</div>
+            <div className="col-span-3 px-4 py-2.5">Event Detail</div>
+            <div className="col-span-2 px-4 py-2.5">Event ID</div>
+            <div className="col-span-1 px-2 py-2.5">Node</div>
+            <div className="col-span-1 px-2 py-2.5 text-center">Conf.</div>
+            <div className="col-span-1 px-2 py-2.5 text-center">Severity</div>
+            <div className="col-span-1 px-4 py-2.5">Timestamp</div>
+            <div className="col-span-1 px-4 py-2.5">Elapsed</div>
             <div className="col-span-1 px-4 py-2.5 text-center">Action</div>
           </div>
 
@@ -936,7 +934,7 @@ export default function NeuralStream() {
               >
                 {/* Icon or Thumbnail */}
                 {/* Status Icon/Thumbnail */}
-                <div className="lg:col-span-1 border-r border-border/20 px-4 py-2 flex items-center justify-center gap-3 lg:gap-0 shrink-0">
+                <div className="lg:col-span-1 px-4 py-2 flex items-center justify-center gap-3 lg:gap-0 shrink-0">
                   {log.rawLog?.image_base64 ? (
                     <div className="w-10 h-10 lg:w-8 lg:h-8 rounded overflow-hidden border border-border/50 shadow-sm relative group cursor-pointer shrink-0" onClick={() => setSelectedLog(log)}>
                       <img
@@ -967,7 +965,7 @@ export default function NeuralStream() {
 
                 {/* Desktop-only table columns */}
                 <div
-                  className="hidden lg:flex col-span-3 border-r border-border/20 px-4 py-2 items-center gap-2 min-w-0 cursor-pointer group/event"
+                  className="hidden lg:flex col-span-3 px-4 py-2 items-center gap-2 min-w-0 cursor-pointer group/event"
                   onClick={(e) => {
                     e.stopPropagation();
                     setSelectedScenarioKey(log.rawLog.scenario_key);
@@ -986,22 +984,22 @@ export default function NeuralStream() {
                   )}
                 </div>
 
-                <div className="hidden lg:flex col-span-2 border-r border-border/20 px-4 py-2 items-center">
+                <div className="hidden lg:flex col-span-2 px-4 py-2 items-center">
                   <span className="text-[0.6rem] font-mono text-text-gray font-bold tracking-tight">{log.eventId}</span>
                 </div>
 
-                <div className="hidden lg:flex col-span-1 border-r border-border/20 px-2 py-2 items-center">
+                <div className="hidden lg:flex col-span-1 px-2 py-2 items-center">
                   <span className="flex items-center gap-1.5 text-[0.65rem] font-bold text-text-dark whitespace-nowrap">
                     <span className="w-1.5 h-1.5 bg-accent rounded-full"></span>
                     {log.camera}
                   </span>
                 </div>
 
-                <div className="hidden lg:flex col-span-1 border-r border-border/20 px-2 py-2 items-center justify-center">
+                <div className="hidden lg:flex col-span-1 px-2 py-2 items-center justify-center">
                   <span className="text-[0.65rem] font-bold text-text-dark">{log.confidence}</span>
                 </div>
 
-                <div className="hidden lg:flex col-span-1 border-r border-border/20 px-2 py-2 items-center justify-center">
+                <div className="hidden lg:flex col-span-1 px-2 py-2 items-center justify-center">
                   <span className={`inline-block w-full text-center text-[0.55rem] px-1 py-0.5 rounded font-black tracking-tight border ${(log.severity.toUpperCase() === 'CRITICAL' || log.severity.toUpperCase() === 'HIGH') ? 'bg-rose-500/20 text-rose-500 border-rose-500/30' :
                     log.severity.toUpperCase() === 'MEDIUM' ? 'bg-blue-500/20 text-blue-500 border-blue-500/30' :
                       'bg-emerald-500/20 text-emerald-500 border-emerald-500/30'
@@ -1010,11 +1008,11 @@ export default function NeuralStream() {
                   </span>
                 </div>
 
-                <div className="hidden lg:flex col-span-1 border-r border-border/20 px-4 py-2 items-center justify-center">
+                <div className="hidden lg:flex col-span-1 px-4 py-2 items-center justify-center">
                   <span className="text-[0.65rem] font-mono text-text-dark font-bold">{log.timestamp}</span>
                 </div>
 
-                <div className="hidden lg:flex col-span-1 border-r border-border/20 px-4 py-2 items-center">
+                <div className="hidden lg:flex col-span-1 px-4 py-2 items-center">
                   <span className="text-[0.6rem] text-text-gray font-bold font-mono tracking-tight whitespace-nowrap">{log.timeAgo}</span>
                 </div>
 
@@ -1055,14 +1053,14 @@ export default function NeuralStream() {
               <button
                 onClick={() => { setLogsOffset(prev => Math.max(0, prev - PAGE_SIZE)); }}
                 disabled={logsOffset === 0 || loadingLogs}
-                className="px-3 py-1 bg-surface border border-border rounded text-[0.6rem] font-bold uppercase tracking-wider text-text-dark hover:bg-border disabled:opacity-50 transition-colors"
+                className="px-3 py-1 bg-surface border border-border rounded text-[0.6rem] font-bold uppercase tracking-wider text-text-dark btn-hover-vibrant disabled:opacity-50 transition-colors"
               >
                 Prev
               </button>
               <button
                 onClick={() => { setLogsOffset(prev => prev + PAGE_SIZE); }}
                 disabled={logsOffset + logs.length >= (currentSummary.count || 0) || loadingLogs}
-                className="px-3 py-1 bg-surface border border-border rounded text-[0.6rem] font-bold uppercase tracking-wider text-text-dark hover:bg-border disabled:opacity-50 transition-colors"
+                className="px-3 py-1 bg-surface border border-border rounded text-[0.6rem] font-bold uppercase tracking-wider text-text-dark btn-hover-vibrant disabled:opacity-50 transition-colors"
               >
                 Next
               </button>
@@ -1388,7 +1386,7 @@ export default function NeuralStream() {
 
             {/* Footer */}
             <div className="px-6 py-4 border-t border-border bg-surface/30 flex justify-end">
-              <button onClick={() => setSelectedLog(null)} className="px-4 py-2 bg-surface border border-border rounded-lg text-sm font-bold text-text-dark hover:bg-border transition-colors">
+              <button onClick={() => setSelectedLog(null)} className="px-4 py-2 bg-surface border border-border rounded-lg text-sm font-bold text-text-dark btn-hover-vibrant transition-colors">
                 Close
               </button>
             </div>

@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { fetchSystemSettings } from '../services/settingsService';
+import { fetchPublicSystemSettings } from '../services/settingsService';
 
 const SystemContext = createContext();
 
@@ -14,7 +14,7 @@ export const SystemProvider = ({ children }) => {
 
   const refreshSettings = async () => {
     try {
-      const data = await fetchSystemSettings();
+      const data = await fetchPublicSystemSettings();
       if (data) {
         setSettings({
           maintenanceMode: data.maintenance_mode || data.maintenanceMode || false,

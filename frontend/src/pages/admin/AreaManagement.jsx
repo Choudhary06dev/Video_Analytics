@@ -143,7 +143,7 @@ export default function AreaManagement() {
   return (
    <div className="h-[60vh] flex flex-col items-center justify-center gap-4">
     <Loader2 className="w-10 h-10 text-accent animate-spin"/>
-    <p className="text-[10px] font-black uppercase tracking-widest text-text-gray">Mapping Zone Topology...</p>
+    <p className="text-[8px] font-black uppercase tracking-widest text-text-gray">Mapping Zone Topology...</p>
    </div>
   );
  }
@@ -198,7 +198,7 @@ export default function AreaManagement() {
     ].map((s, i) => (
      <div key={i} className="bg-card border border-border p-2.5 sm:p-3 rounded-lg flex items-center justify-between shadow-sm min-w-0">
       <div className="min-w-0">
-       <p className="text-[7px] font-black text-text-gray uppercase tracking-widest mb-0.5 truncate">{s.label}</p>
+       <p className="text-[9px] font-black text-text-gray uppercase tracking-widest mb-0.5 truncate">{s.label}</p>
        <p className={`text-base sm:text-lg font-black ${s.color} truncate`}>{s.val}</p>
       </div>
       <div className="p-1.5 sm:p-2 rounded flex items-center justify-center bg-surface border border-border shrink-0">
@@ -263,7 +263,7 @@ export default function AreaManagement() {
        ))}
        {filteredAreas.length === 0 && (
         <tr>
-         <td colSpan={5} className="p-8 text-center text-[10px] font-black uppercase tracking-widest text-text-gray">
+         <td colSpan={5} className="p-8 text-center text-[8px] font-black uppercase tracking-widest text-text-gray">
           No zones found matching the criteria
          </td>
         </tr>
@@ -274,7 +274,7 @@ export default function AreaManagement() {
 
     {/* Pagination Bar */}
     <div className="px-4 sm:px-6 py-4 bg-surface/30 border-t border-border flex flex-col md:flex-row items-center justify-between gap-4">
-     <div className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-text-gray text-center md:text-left">
+     <div className="text-[9px] sm:text-[8px] font-black uppercase tracking-widest text-text-gray text-center md:text-left">
       Showing <span className="text-text-dark">{Math.min(totalItems, (currentPage - 1) * pageSize + 1)}</span> to <span className="text-text-dark">{Math.min(totalItems, currentPage * pageSize)}</span> of <span className="text-text-dark">{totalItems}</span> zone records
      </div>
      
@@ -332,21 +332,21 @@ export default function AreaManagement() {
       <form onSubmit={showEditModal ? handleEditArea : handleCreateArea} className="p-6 space-y-4">
 
        <div className="space-y-1.5">
-        <label className="text-[10px] font-black uppercase tracking-widest text-text-gray ml-1">Zone Name</label>
+        <label className="text-[8px] font-black uppercase tracking-widest text-text-gray ml-1">Zone Name</label>
         <input type="text"required value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })}
          className="w-full bg-surface border border-border rounded-lg px-4 py-2.5 text-xs font-bold text-text-dark outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/10 transition-all"
          placeholder="e.g. ICU Block A, Floor 3"/>
        </div>
 
        <div className="space-y-1.5">
-        <label className="text-[10px] font-black uppercase tracking-widest text-text-gray ml-1">Description</label>
+        <label className="text-[8px] font-black uppercase tracking-widest text-text-gray ml-1">Description</label>
         <textarea value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })}
          className="w-full bg-surface border border-border rounded-lg px-4 py-2.5 text-xs font-bold text-text-dark outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/10 transition-all resize-none h-20"
          placeholder="Brief description of this zone..."/>
        </div>
 
        <div className="space-y-1.5">
-        <label className="text-[10px] font-black uppercase tracking-widest text-text-gray ml-1">Parent Zone (Optional)</label>
+        <label className="text-[8px] font-black uppercase tracking-widest text-text-gray ml-1">Parent Zone (Optional)</label>
         <select value={formData.parent_id || ''} onChange={e => setFormData({ ...formData, parent_id: e.target.value || null })}
          className="w-full bg-surface border border-border rounded-lg px-4 py-2.5 text-xs font-bold text-text-dark outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/10 transition-all cursor-pointer">
          <option value="">None (Root Zone)</option>
@@ -358,7 +358,7 @@ export default function AreaManagement() {
 
        <div className="pt-4 flex gap-3">
         <button type="button"onClick={() => { setShowAddModal(false); setShowEditModal(false); }}
-         className="flex-1 py-2.5 bg-surface border border-border rounded-lg text-[10px] font-black uppercase tracking-widest text-text-gray hover:text-text-dark transition-all">
+         className="flex-1 py-2.5 bg-surface border border-border rounded-lg text-[8px] font-black uppercase tracking-widest text-text-gray hover:text-text-dark transition-all">
          Cancel
         </button>
         <button type="submit"disabled={submitting}
@@ -385,7 +385,7 @@ export default function AreaManagement() {
        </p>
        <div className="pt-4 flex gap-3">
         <button onClick={() => setShowDeleteModal(false)}
-         className="flex-1 py-2.5 bg-surface border border-border rounded-lg text-[10px] font-black uppercase tracking-widest text-text-gray hover:text-text-dark transition-all">
+         className="flex-1 py-2.5 bg-surface border border-border rounded-lg text-[8px] font-black uppercase tracking-widest text-text-gray hover:text-text-dark transition-all">
          Cancel
         </button>
         <button onClick={handleDeleteArea} disabled={submitting}

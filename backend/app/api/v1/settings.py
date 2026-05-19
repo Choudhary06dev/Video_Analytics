@@ -8,9 +8,26 @@ from typing import Any
 
 router = APIRouter(prefix="/settings", tags=["System Settings"])
 
+@router.get("/public")
+@router.get("/public/")
+async def get_public_settings():
+    with Session(engine) as session:
+        setting = session.exec(select(SystemSetting)).first()
+        if not setting:
+            setting = SystemSetting()
+            session.add(setting)
+            session.commit()
+            session.refresh(setting)
+        return {
+            "maintenance_mode": setting.maintenance_mode,
+            "public_enrollment": setting.public_enrollment,
+            "debug_mode": setting.debug_mode,
+            "cluster_sync": setting.cluster_sync
+        }
+
 @router.get("")
 @router.get("/")
-async def get_settings():
+async def get_settings(admin_data: dict = Depends(lambda cur=Depends(get_current_user), s=Depends(get_session): verify_module_access("settings", cur, s, access_level="view"))):
     with Session(engine) as session:
         setting = session.exec(select(SystemSetting)).first()
         if not setting:
@@ -20,6 +37,7 @@ async def get_settings():
             session.commit()
             session.refresh(setting)
         return setting
+
 
 @router.post("")
 @router.post("/")

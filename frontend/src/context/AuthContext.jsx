@@ -7,13 +7,12 @@ const AuthContext = createContext();
 export const AuthProvider = ({ children }) => {
   const { sessionTimeout } = useSystem();
   const [user, setUser] = useState(null);
-  const [token, setToken] = useState(localStorage.getItem('token'));
   const [loading, setLoading] = useState(true);
   const [permissions, setPermissions] = useState({});
   const timeoutRef = useRef(null);
 
-  const fetchPermissions = async (activeToken) => {
-    if (!activeToken) {
+  const fetchPermissions = async (isLoggedIn) => {
+    if (!isLoggedIn) {
       setPermissions({});
       return;
     }
@@ -24,16 +23,14 @@ export const AuthProvider = ({ children }) => {
       console.error("AuthContext: Permission sync failed:", err);
       setPermissions({});
       // If we get a 401 during initialization, we should clear the state
-      if (err.message.includes('401')) {
+      if (err.message && err.message.includes('401')) {
         logout();
       }
     }
   };
 
   const logout = () => {
-    localStorage.removeItem('token');
     localStorage.removeItem('user');
-    setToken(null);
     setUser(null);
     setPermissions({});
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
@@ -44,16 +41,16 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const initializeSession = async () => {
       const savedUser = localStorage.getItem('user');
-      if (savedUser && token) {
+      if (savedUser) {
         setUser(JSON.parse(savedUser));
-        await fetchPermissions(token);
+        await fetchPermissions(true);
       } else {
         setPermissions({});
       }
       setLoading(false);
     };
     initializeSession();
-  }, [token]);
+  }, []);
 
   const canView = (moduleKey) => {
     if (!moduleKey) return true;
@@ -71,12 +68,10 @@ export const AuthProvider = ({ children }) => {
     return !!permissions[moduleKey]?.can_delete;
   };
 
-  const login = (userData, userToken) => {
-    localStorage.setItem('token', userToken);
+  const login = (userData) => {
     localStorage.setItem('user', JSON.stringify(userData));
-    setToken(userToken);
     setUser(userData);
-    fetchPermissions(userToken);
+    fetchPermissions(true);
   };
 
   const updateProfile = (updatedFields) => {
@@ -86,7 +81,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, role: user?.role, permissions, canView, canEdit, canDelete, login, logout, updateProfile, isAuthenticated: !!token, loading }}>
+    <AuthContext.Provider value={{ user, role: user?.role, permissions, canView, canEdit, canDelete, login, logout, updateProfile, isAuthenticated: !!user, loading }}>
       {!loading && children}
     </AuthContext.Provider>
   );

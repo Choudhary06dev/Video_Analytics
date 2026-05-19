@@ -5,7 +5,7 @@ import json
 import httpx
 import base64
 import uvicorn
-from config import BACKEND_URL, AI_PORT
+from config import BACKEND_URL, AI_PORT, WEBHOOK_SECRET
 from pipelines.inference import InferenceEngine
 from typing import Dict
 
@@ -42,7 +42,11 @@ async def send_events_to_backend(camera_id: int, events: list, snapshot_bytes: b
         })
     try:
         async with httpx.AsyncClient() as client:
-            await client.post(f"{BACKEND_URL}/webhook/events", json=payload)
+            await client.post(
+                f"{BACKEND_URL}/webhook/events",
+                json=payload,
+                headers={"X-Webhook-Secret": WEBHOOK_SECRET},
+            )
     except Exception as e:
         print("Webhook error:", e)
 

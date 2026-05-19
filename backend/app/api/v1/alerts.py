@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Header
 from fastapi.responses import StreamingResponse
 from sqlmodel import Session, select
 from typing import Optional
@@ -7,6 +7,7 @@ import json
 import asyncio
 from pydantic import BaseModel
 from app.core.database import get_session
+from app.core.config import settings as config_settings
 from app.core.security import decode_access_token
 from app.api.v1.auth import get_current_user
 from app.api.v1.users import verify_module_access, get_allowed_area_ids
@@ -60,20 +61,22 @@ def _events_with_location_context(events: list[DetectionEvent], session: Session
     return result
 
 def verify_event_stream_access(
-    token: str = Query(None),
+    current_user: dict = Depends(get_current_user),
     session: Session = Depends(get_session),
 ):
-    if not token:
-        raise HTTPException(status_code=401, detail="Authorization token missing")
-
-    current_user = decode_access_token(token)
-    if not current_user:
-        raise HTTPException(status_code=401, detail="Invalid or expired token")
-
     return verify_module_access("live_monitoring", current_user, session, access_level="view")
 
 @router.post("/webhook/events")
-async def receive_events(events: list[WebhookEvent], session: Session = Depends(get_session)):
+async def receive_events(
+    events: list[WebhookEvent],
+    session: Session = Depends(get_session),
+    x_webhook_secret: Optional[str] = Header(None),
+):
+    # Verify internal webhook secret
+    expected_secret = config_settings.SECRET_KEY
+    if not x_webhook_secret or x_webhook_secret != expected_secret:
+        raise HTTPException(status_code=403, detail="Invalid webhook secret")
+
     object_names = []
     stable_objects = []
     person_count = 0

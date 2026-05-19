@@ -4,7 +4,7 @@ from typing import Optional
 class SystemSetting(SQLModel, table=True):
     id: Optional[int] = Field(default=1, primary_key=True)
     maintenance_mode: bool = Field(default=False)
-    debug_mode: bool = Field(default=True)
+    debug_mode: bool = Field(default=False)
     public_enrollment: bool = Field(default=False)
     cluster_sync: bool = Field(default=True)
     region: str = Field(default="South Asia (PK-1)")

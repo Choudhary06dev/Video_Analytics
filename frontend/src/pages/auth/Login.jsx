@@ -25,7 +25,7 @@ export default function LoginPage() {
 
   try {
    const data = await apiLogin(email, password);
-   login(data.user, data.access_token);
+   login(data.user);
    navigate('/');
   } catch (err) {
    setError(err.message || 'System Authentication Failed. Access Denied.');

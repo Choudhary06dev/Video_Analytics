@@ -131,7 +131,7 @@ export default function SystemSettings() {
           <button
             onClick={fetchData}
             disabled={refreshing}
-            className="flex-1 sm:flex-none flex items-center justify-center gap-2 sm:gap-3 bg-surface border border-border text-text-gray px-4 sm:px-6 py-2.5 sm:py-3 rounded-lg font-black uppercase tracking-widest text-[9px] sm:text-[11px] transition-all hover:bg-border hover:text-text-dark"
+            className="flex-1 sm:flex-none flex items-center justify-center gap-2 sm:gap-3 bg-surface border border-border text-text-gray px-4 sm:px-6 py-2.5 sm:py-3 rounded-lg font-black uppercase tracking-widest text-[9px] sm:text-[11px] transition-all btn-hover-vibrant"
           >
             <RefreshCcw className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${refreshing ? 'animate-spin' : ''}`} />
             Check Health

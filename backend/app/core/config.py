@@ -25,6 +25,21 @@ class Settings(BaseModel):
     AI_SERVICE_URL: str = os.getenv("AI_SERVICE_URL", "http://localhost:8001")
 
     @property
+    def cors_origins(self) -> list[str]:
+        origins = os.getenv("CORS_ORIGINS")
+        if origins:
+            return [o.strip() for o in origins.split(",")]
+        return [
+            "http://localhost:3000",
+            "http://localhost:5173",
+            "http://127.0.0.1:3000",
+            "http://127.0.0.1:5173",
+            "http://localhost:8000",
+            "http://127.0.0.1:8000",
+        ]
+
+
+    @property
     def database_url(self) -> str:
         return (
             f"postgresql://{self.DB_USER}:{quote_plus(self.DB_PASSWORD)}"

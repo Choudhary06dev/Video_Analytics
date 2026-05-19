@@ -37,8 +37,7 @@ export const fetchLogsSummary = (hours = 24, filters = {}) => {
 export const resolveAlert = (alertId) => put(`/alerts/${alertId}/resolve`);
 
 export function subscribeToEvents({ onSnapshot, onDetection, onError }) {
-    const token = encodeURIComponent(localStorage.getItem('token') || '');
-    const es = new EventSource(`${BASE}/events?token=${token}`);
+    const es = new EventSource(`${BASE}/events`, { withCredentials: true });
   
     es.onmessage = (e) => {
         try {

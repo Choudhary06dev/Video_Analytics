@@ -128,7 +128,7 @@ export default function ActionAudit() {
                 <div className="bg-card border border-border rounded-lg p-4 sm:p-5 hover:border-accent/30 transition-all duration-300 shadow-sm">
                   <div className="flex flex-col sm:flex-row sm:items-start justify-between mb-4 gap-3">
                     <div className="flex items-center gap-3">
-                      <div className={`px-2 py-1 rounded-md text-[7px] sm:text-[8px] font-black tracking-widest border ${actionColors[log.action] || 'bg-white/5 border-border text-text-gray'}`}>
+                      <div className={`px-2 py-1 rounded-md text-[9px] sm:text-[10px] font-black tracking-widest border ${actionColors[log.action] || 'bg-white/5 border-border text-text-gray'}`}>
                         {log.action}
                       </div>
                       <div className="flex items-center gap-1.5 text-text-gray min-w-0">
@@ -153,7 +153,7 @@ export default function ActionAudit() {
                       </div>
                       <div className="min-w-0">
                         <p className="text-[9px] sm:text-[10px] font-black text-text-dark uppercase tracking-tight leading-none truncate">{log.user_name}</p>
-                        <p className="text-[7px] sm:text-[8px] font-bold text-text-gray uppercase tracking-widest leading-none mt-1 truncate">{log.user_email}</p>
+                        <p className="text-[9px] sm:text-[10px] font-bold text-text-gray uppercase tracking-widest leading-none mt-1 truncate">{log.user_email}</p>
                       </div>
                     </div>
                     <button className="p-1.5 text-text-gray hover:text-accent transition-all shrink-0">
@@ -174,7 +174,7 @@ export default function ActionAudit() {
         {/* Pagination Bar */}
         {totalItems > pageSize && (
          <div className="bg-card border border-border rounded-lg px-4 sm:px-6 py-4 flex flex-col md:flex-row items-center justify-between gap-4">
-          <div className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-text-gray text-center md:text-left">
+          <div className="text-[9px] sm:text-[8px] font-black uppercase tracking-widest text-text-gray text-center md:text-left">
            Showing <span className="text-text-dark">{Math.min(totalItems, (currentPage - 1) * pageSize + 1)}</span> to <span className="text-text-dark">{Math.min(totalItems, currentPage * pageSize)}</span> of <span className="text-text-dark">{totalItems}</span> logs
           </div>
           

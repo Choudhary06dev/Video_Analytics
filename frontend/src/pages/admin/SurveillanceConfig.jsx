@@ -197,7 +197,7 @@ export default function SurveillanceConfig() {
    return (
      <div className="h-[60vh] flex flex-col items-center justify-center gap-4">
        <Loader2 className="w-10 h-10 text-accent animate-spin"/>
-       <p className="text-[10px] font-black uppercase tracking-widest text-text-gray">Indexing Neural Hubs...</p>
+       <p className="text-[8px] font-black uppercase tracking-widest text-text-gray">Indexing Neural Hubs...</p>
      </div>
    );
  }
@@ -224,7 +224,7 @@ export default function SurveillanceConfig() {
     <div className="flex flex-col sm:flex-row gap-3">
       <button 
         onClick={() => navigate('/admin/areas')}
-        className="flex-1 sm:flex-none flex items-center justify-center gap-3 bg-surface border border-border text-text-gray px-6 py-3 rounded-lg font-black uppercase tracking-widest text-[10px] sm:text-[11px] transition-all hover:bg-border hover:text-text-dark"
+        className="flex-1 sm:flex-none flex items-center justify-center gap-3 bg-surface border border-border text-text-gray px-6 py-3 rounded-lg font-black uppercase tracking-widest text-[10px] sm:text-[11px] transition-all btn-hover-vibrant"
       >
         <Map className="w-4 h-4"/>
         Edit Mapping
@@ -254,7 +254,7 @@ export default function SurveillanceConfig() {
           <stat.icon className="w-4 h-4 sm:w-4.5 sm:h-4.5"/>
         </div>
         <div className="min-w-0">
-          <p className="text-[7px] sm:text-[8px] font-black uppercase tracking-widest text-text-gray mb-0.5 truncate">{stat.label}</p>
+          <p className="text-[9px] sm:text-[8px] font-black uppercase tracking-widest text-text-gray mb-0.5 truncate">{stat.label}</p>
           <p className={`text-base sm:text-lg font-black ${stat.color} truncate`}>{stat.value}</p>
         </div>
       </div>
@@ -284,12 +284,12 @@ export default function SurveillanceConfig() {
       <table className="w-full text-left border-collapse min-w-[1000px]">
         <thead>
           <tr className="border-b border-border bg-surface/30">
-            <th className="py-2.5 px-6 sm:px-8 text-[8px] sm:text-[9px] font-black uppercase tracking-widest text-text-gray">Node ID</th>
-            <th className="py-2.5 px-6 sm:px-8 text-[8px] sm:text-[9px] font-black uppercase tracking-widest text-text-gray">Feed Designation</th>
-            <th className="py-2.5 px-6 sm:px-8 text-[8px] sm:text-[9px] font-black uppercase tracking-widest text-text-gray">Assigned Zone</th>
-            <th className="py-2.5 px-6 sm:px-8 text-[8px] sm:text-[9px] font-black uppercase tracking-widest text-text-gray">Stream Source</th>
-            <th className="py-2.5 px-6 sm:px-8 text-[8px] sm:text-[9px] font-black uppercase tracking-widest text-text-gray">Status</th>
-            <th className="py-2.5 px-6 sm:px-8 text-[8px] sm:text-[9px] font-black uppercase tracking-widest text-text-gray text-right">Actions</th>
+            <th className="p-2.5 pl-6 text-[8px] font-black uppercase tracking-widest text-text-gray">Node ID</th>
+            <th className="p-2.5 text-[8px] font-black uppercase tracking-widest text-text-gray">Feed Designation</th>
+            <th className="p-2.5 text-[8px] font-black uppercase tracking-widest text-text-gray">Assigned Zone</th>
+            <th className="p-2.5 text-[8px] font-black uppercase tracking-widest text-text-gray">Stream Source</th>
+            <th className="p-2.5 text-[8px] font-black uppercase tracking-widest text-text-gray">Status</th>
+            <th className="p-2.5 pr-6 text-[8px] font-black uppercase tracking-widest text-text-gray text-right">Actions</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-border">
@@ -297,8 +297,8 @@ export default function SurveillanceConfig() {
             const area = areas.find(a => a.id === cam.area_id);
             return (
               <tr key={cam.id} className="hover:bg-surface/30 transition-all group/row font-sans">
-                <td className="py-2.5 px-8 text-[9px] font-bold text-text-gray">#{cam.id.toString().padStart(3, '0')}</td>
-                <td className="py-2.5 px-8">
+                <td className="p-2.5 pl-6 text-[9px] font-bold text-text-gray">#{cam.id.toString().padStart(3, '0')}</td>
+                <td className="p-2.5">
                   <div className="flex items-center gap-2.5">
                     <div className={`w-7 h-7 rounded flex items-center justify-center border ${cam.is_active !== false ? 'bg-accent/10 border-accent/20 text-accent' : 'bg-surface border-border text-text-gray'}`}>
                       <Video className="w-3.5 h-3.5"/>
@@ -306,15 +306,15 @@ export default function SurveillanceConfig() {
                     <span className="text-[11px] font-black text-text-dark uppercase tracking-tight">{cam.name}</span>
                   </div>
                 </td>
-                <td className="py-2.5 px-8">
+                <td className="p-2.5">
                   <span className="px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-widest bg-surface border border-border text-text-gray">
                     {area ? area.name :`Area-${cam.area_id}`}
                   </span>
                 </td>
-                <td className="py-2.5 px-8 text-[9px] font-mono text-text-gray truncate max-w-[200px]"title={cam.source_url}>
+                <td className="p-2.5 text-[9px] font-mono text-text-gray truncate max-w-[200px]"title={cam.source_url}>
                   {cam.source_url}
                 </td>
-                <td className="py-2.5 px-8">
+                <td className="p-2.5">
                   <div className="flex items-center gap-1.5">
                     <div className={`w-1.5 h-1.5 rounded-full ${cam.is_active !== false ? 'bg-success shadow-[0_0_8px_rgba(16,185,129,0.5)]' : 'bg-danger animate-pulse'}`}></div>
                     <span className={`text-[9px] font-black uppercase tracking-widest ${cam.is_active !== false ? 'text-success' : 'text-danger'}`}>
@@ -322,7 +322,7 @@ export default function SurveillanceConfig() {
                     </span>
                   </div>
                 </td>
-                <td className="py-6 px-8 text-right">
+                <td className="p-2.5 pr-6 text-right">
                   <div className="flex items-center justify-end gap-2">
                     <button onClick={() => openScenarioModal(cam)} className="p-2 border border-border text-accent rounded-lg hover:bg-accent hover:text-white transition-all bg-card"title="AI Model Configuration">
                       <BrainCircuit className="w-4 h-4"/>
@@ -341,7 +341,7 @@ export default function SurveillanceConfig() {
           })}
           {filteredCameras.length === 0 && (
             <tr>
-              <td colSpan={6} className="py-8 px-8 text-center text-[10px] font-black uppercase tracking-widest text-text-gray">
+              <td colSpan={6} className="py-8 px-8 text-center text-[8px] font-black uppercase tracking-widest text-text-gray">
                 No hardware nodes found
               </td>
             </tr>
@@ -352,7 +352,7 @@ export default function SurveillanceConfig() {
 
      {/* Pagination Bar */}
      <div className="px-4 sm:px-8 py-4 bg-surface/30 border-t border-border flex flex-col md:flex-row items-center justify-between gap-4">
-      <div className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-text-gray text-center md:text-left">
+      <div className="text-[9px] sm:text-[8px] font-black uppercase tracking-widest text-text-gray text-center md:text-left">
        Showing <span className="text-text-dark">{Math.min(totalItems, (currentPage - 1) * pageSize + 1)}</span> to <span className="text-text-dark">{Math.min(totalItems, currentPage * pageSize)}</span> of <span className="text-text-dark">{totalItems}</span> hardware nodes
       </div>
       
@@ -410,21 +410,21 @@ export default function SurveillanceConfig() {
       <form onSubmit={showEditModal ? handleEditCamera : handleCreateCamera} className="p-6 space-y-4">
 
        <div className="space-y-1.5">
-        <label className="text-[10px] font-black uppercase tracking-widest text-text-gray ml-1">Camera Designation</label>
+        <label className="text-[8px] font-black uppercase tracking-widest text-text-gray ml-1">Camera Designation</label>
         <input type="text"required value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })}
          className="w-full bg-surface border border-border rounded-lg px-4 py-2.5 text-xs font-bold text-text-dark outline-none focus:border-accent focus:ring-2 focus:ring-accent/10 transition-all"
          placeholder="e.g. ICU Corridor North"/>
        </div>
 
        <div className="space-y-1.5">
-        <label className="text-[10px] font-black uppercase tracking-widest text-text-gray ml-1">Stream Source (RTSP/URL)</label>
+        <label className="text-[8px] font-black uppercase tracking-widest text-text-gray ml-1">Stream Source (RTSP/URL)</label>
         <input type="text"required value={formData.source_url} onChange={e => setFormData({ ...formData, source_url: e.target.value })}
          className="w-full bg-surface border border-border rounded-lg px-4 py-2.5 text-xs font-bold text-text-dark outline-none focus:border-accent focus:ring-2 focus:ring-accent/10 transition-all"
          placeholder="rtsp://admin:pass@ip:port/stream"/>
        </div>
 
        <div className="space-y-1.5">
-        <label className="text-[10px] font-black uppercase tracking-widest text-text-gray ml-1">Assigned Zone</label>
+        <label className="text-[8px] font-black uppercase tracking-widest text-text-gray ml-1">Assigned Zone</label>
         <select required value={formData.area_id} onChange={e => setFormData({ ...formData, area_id: parseInt(e.target.value) })}
          className="w-full bg-surface border border-border rounded-lg px-4 py-2.5 text-xs font-bold text-text-dark outline-none focus:border-accent focus:ring-2 focus:ring-accent/10 transition-all cursor-pointer">
          <option value=""disabled>Select a Zone</option>
@@ -435,7 +435,7 @@ export default function SurveillanceConfig() {
        </div>
 
        <div className="space-y-1.5">
-        <label className="text-[10px] font-black uppercase tracking-widest text-text-gray ml-1">Node Status</label>
+        <label className="text-[8px] font-black uppercase tracking-widest text-text-gray ml-1">Node Status</label>
         <div className="flex items-center gap-3">
           <button type="button"onClick={() => setFormData({...formData, is_active: true})}
               className={`flex-1 py-2.5 px-3 rounded-lg text-[9px] font-black uppercase tracking-widest border transition-all ${formData.is_active ? 'bg-success/10 text-success border-success/20' : 'bg-surface border-border text-text-gray'}`}>
@@ -450,7 +450,7 @@ export default function SurveillanceConfig() {
 
        <div className="pt-4 flex gap-3">
         <button type="button"onClick={() => { setShowAddModal(false); setShowEditModal(false); }}
-         className="flex-1 py-2.5 bg-surface border border-border rounded-lg text-[10px] font-black uppercase tracking-widest text-text-gray hover:text-text-dark transition-all">
+         className="flex-1 py-2.5 bg-surface border border-border rounded-lg text-[8px] font-black uppercase tracking-widest text-text-gray hover:text-text-dark transition-all">
          Cancel
         </button>
         <button type="submit"disabled={submitting}
@@ -477,7 +477,7 @@ export default function SurveillanceConfig() {
        </p>
        <div className="pt-4 flex gap-3">
         <button onClick={() => setShowDeleteModal(false)}
-         className="flex-1 py-2.5 bg-surface border border-border rounded-lg text-[10px] font-black uppercase tracking-widest text-text-gray hover:text-text-dark transition-all">
+         className="flex-1 py-2.5 bg-surface border border-border rounded-lg text-[8px] font-black uppercase tracking-widest text-text-gray hover:text-text-dark transition-all">
          Cancel
         </button>
         <button onClick={handleDeleteCamera} disabled={submitting}
@@ -513,12 +513,12 @@ export default function SurveillanceConfig() {
        {loadingScenarios ? (
         <div className="py-20 flex flex-col items-center gap-3">
          <Loader2 className="w-8 h-8 text-accent animate-spin"/>
-         <p className="text-[10px] font-black uppercase tracking-widest text-text-gray">Mapping Neural Paths...</p>
+         <p className="text-[8px] font-black uppercase tracking-widest text-text-gray">Mapping Neural Paths...</p>
         </div>
        ) : (
         <>
          <div className="flex items-center justify-between mb-4 bg-surface/50 p-2.5 rounded-lg border border-border">
-          <span className="text-[10px] font-black uppercase tracking-widest text-text-gray">Scenario Selection Matrix</span>
+          <span className="text-[8px] font-black uppercase tracking-widest text-text-gray">Scenario Selection Matrix</span>
           <div className="flex gap-2">
             <button 
               onClick={() => toggleAllScenarios(true)}
@@ -529,7 +529,7 @@ export default function SurveillanceConfig() {
             <div className="w-px h-3 bg-border my-auto"></div>
             <button 
               onClick={() => toggleAllScenarios(false)}
-              className="text-[9px] font-black uppercase tracking-widest text-text-gray hover:text-text-dark px-2 py-1 rounded hover:bg-surface transition-all"
+              className="text-[8px] font-black uppercase tracking-widest text-text-gray hover:text-text-dark px-2 py-1 rounded hover:bg-surface transition-all"
             >
               Clear All
             </button>
@@ -549,18 +549,22 @@ export default function SurveillanceConfig() {
                {scenario.name}
               </span>
              </div>
-             {scenario.is_enabled && <CheckCircle2 className="w-3 h-3 text-accent"/>}
+             {scenario.is_enabled ? (
+              <CheckCircle2 className="w-3.5 h-3.5 text-accent shrink-0" />
+             ) : (
+              <div className="w-3.5 h-3.5 rounded-full border border-border group-hover:border-text-gray/40 transition-all shrink-0" />
+             )}
             </div>
           ))}
          </div>
          
          <div className="mt-8 pt-6 border-t border-border flex items-center justify-between">
-          <div className="text-[10px] font-black uppercase tracking-widest text-text-gray">
+          <div className="text-[8px] font-black uppercase tracking-widest text-text-gray">
            <span className="text-accent">{scenarioData.filter(s => s.is_enabled).length}</span> Models Selected
           </div>
           <div className="flex gap-3">
            <button onClick={() => setShowScenarioModal(false)}
-            className="px-6 py-2.5 bg-surface border border-border rounded-lg text-[10px] font-black uppercase tracking-widest text-text-gray hover:text-text-dark transition-all">
+            className="px-6 py-2.5 bg-surface border border-border rounded-lg text-[8px] font-black uppercase tracking-widest text-text-gray hover:text-text-dark transition-all">
             Discard
            </button>
            <button onClick={handleSaveScenarios} disabled={submitting}
