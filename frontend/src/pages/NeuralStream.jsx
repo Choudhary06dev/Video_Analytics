@@ -760,15 +760,15 @@ export default function NeuralStream() {
 
             {/* CAMERA GRID PAGINATION FOOTER (Attached directly to the black container) */}
             {isGlobalView && filteredCameras.length > cameraLimit && (
-              <div className="p-3 bg-surface/5 border-t border-white/5 flex items-center justify-between">
-                <span className="text-[0.65rem] text-text-gray font-medium">
+              <div className="p-3 bg-accent/5 dark:bg-slate-900 border-t border-accent/30 dark:border-white/10 flex items-center justify-between">
+                <span className="text-[0.7rem] text-accent font-semibold">
                   Showing {cameraOffset + 1} to {Math.min(cameraOffset + cameraLimit, filteredCameras.length)} of {filteredCameras.length} cameras
                 </span>
                 <div className="flex gap-1">
                   <button
                     onClick={() => setCameraOffset(prev => Math.max(0, prev - cameraLimit))}
                     disabled={cameraOffset === 0}
-                    className="w-7 h-7 flex items-center justify-center bg-transparent border border-white/10 rounded hover:bg-white/5 disabled:opacity-30 transition-all text-white/70"
+                    className="w-7 h-7 flex items-center justify-center bg-transparent dark:bg-transparent border border-accent/30 dark:border-white/10 rounded hover:bg-accent/20 dark:hover:bg-white/5 disabled:opacity-30 transition-all text-accent dark:text-white/70"
                   >
                     {'<'}
                   </button>
@@ -780,7 +780,7 @@ export default function NeuralStream() {
                       <button
                         key={idx}
                         onClick={() => setCameraOffset(pageOffset)}
-                        className={`w-7 h-7 flex items-center justify-center border rounded text-[0.7rem] font-bold transition-all ${isActive ? 'bg-blue-600 text-white border-blue-500 shadow-[0_0_10px_rgba(37,99,235,0.3)]' : 'bg-transparent text-white/70 border-white/10 hover:bg-white/5'}`}
+                        className={`w-7 h-7 flex items-center justify-center border rounded text-[0.7rem] font-bold transition-all ${isActive ? 'bg-blue-600 text-white border-blue-500 shadow-[0_0_10px_rgba(37,99,235,0.3)]' : 'bg-transparent text-accent dark:text-white/70 border-accent/30 dark:border-white/10 hover:bg-accent/20 dark:hover:bg-white/5'}`}
                       >
                         {idx + 1}
                       </button>
@@ -790,7 +790,7 @@ export default function NeuralStream() {
                   <button
                     onClick={() => setCameraOffset(prev => prev + cameraLimit)}
                     disabled={cameraOffset + cameraLimit >= filteredCameras.length}
-                    className="w-7 h-7 flex items-center justify-center bg-transparent border border-white/10 rounded hover:bg-white/5 disabled:opacity-30 transition-all text-white/70"
+                    className="w-7 h-7 flex items-center justify-center bg-transparent dark:bg-transparent border border-accent/30 dark:border-white/10 rounded hover:bg-accent/20 dark:hover:bg-white/5 disabled:opacity-30 transition-all text-accent dark:text-white/70"
                   >
                     {'>'}
                   </button>

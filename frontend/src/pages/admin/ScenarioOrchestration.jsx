@@ -387,11 +387,23 @@ export default function ScenarioOrchestration() {
                         )}
 
                         {scenario.is_enabled && scenario.key === UNAUTHORIZED_ENTRY_KEY && (
-                          <RestrictedZoneEditor
-                            camera={selectedCamera}
-                            points={getRestrictedZonePoints(scenario.config)}
-                            onChange={(points) => updateRestrictedZone(scenario.id, points)}
-                          />
+                          <>
+                            <div className="mt-3 pt-3 border-t border-accent/10 flex items-center justify-between" onClick={e => e.stopPropagation()}>
+                              <span className="text-[10px] font-black uppercase tracking-widest text-accent/80">Dwell Time (Seconds):</span>
+                              <input
+                                type="number"
+                                min="0"
+                                value={scenario.config?.dwell_time || 0}
+                                onChange={(e) => updateScenarioConfig(scenario.id, 'dwell_time', parseInt(e.target.value) || 0)}
+                                className="w-16 bg-white border border-accent/20 rounded px-2 py-1 text-[11px] font-bold text-accent outline-none focus:border-accent/40 text-center shadow-sm"
+                              />
+                            </div>
+                            <RestrictedZoneEditor
+                              camera={selectedCamera}
+                              points={getRestrictedZonePoints(scenario.config)}
+                              onChange={(points) => updateRestrictedZone(scenario.id, points)}
+                            />
+                          </>
                         )}
                       </div>
                     ))}

@@ -110,6 +110,7 @@ def get_alerts(
         statement = select(DetectionEvent).where(DetectionEvent.timestamp >= cutoff)
 
     statement = statement.where(DetectionEvent.is_alert == True)
+    statement = statement.where(DetectionEvent.is_resolved == False)  # Only show unresolved alerts
     
     # Apply security and severity filters
     statement = _apply_event_filters(statement, session, severity=severity, allowed_area_ids=allowed_area_ids)

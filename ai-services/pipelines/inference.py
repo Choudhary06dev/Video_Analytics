@@ -50,7 +50,7 @@ SCENARIO_MIN_CONFIDENCE = {
     "person": 0.20,
     "knife": 0.60,
     "scissors": 0.60,
-    "cell phone": 0.65,
+    "cell phone": 0.50,  # Lowered from 0.65 for faster mobile detection
     "car": 0.60,
     "truck": 0.60,
     "bus": 0.60,
@@ -60,6 +60,12 @@ SCENARIO_MIN_CONFIDENCE = {
     "suitcase": 0.60,
     "bicycle": 0.60,
     "fire hydrant": 0.55,
+}
+
+# Scenario-specific minimum stable frames for logging (for faster detection of critical items)
+SCENARIO_MIN_STABLE_FRAMES = {
+    "MOBILE_PHONE_USAGE_IN_RESTRICTED_AREAS": 1,  # Log immediately for mobile detection
+    "WEAPON_DETECTION_GUN_KNIFE": 1,  # Log immediately for weapons
 }
 
 # Global AI Engine Model
@@ -269,7 +275,6 @@ class InferenceEngine:
 
         # We now plot directly on the high-resolution original frame
         annotated_frame = frame.copy()
-        snapshot_frame = frame.copy()
         if results and len(results) > 0:
             annotated_frame = results[0].plot()
             for box in results[0].boxes:
@@ -306,11 +311,33 @@ class InferenceEngine:
                             detected_scenarios[scenario_name]["count"] += 1
                             detected_scenarios[scenario_name]["labels"].add(label)
 
+        snapshot_frame = annotated_frame.copy()
         annotated_frame = _draw_restricted_zones(annotated_frame, restricted_zones, frame_w, frame_h)
         snapshot_frame = _draw_restricted_zones(snapshot_frame, restricted_zones, frame_w, frame_h)
 
         if restricted_entries and UNAUTHORIZED_ENTRY_KEY in detected_scenarios:
             detected_scenarios[UNAUTHORIZED_ENTRY_KEY]["restricted_entries"] = restricted_entries
+
+        # Draw Dwell Time warning banner if someone is in the restricted zone
+        if len(restricted_entries) > 0 and UNAUTHORIZED_ENTRY_KEY in self.enabled_scenarios:
+            unauth_state = self.scene_state.get(UNAUTHORIZED_ENTRY_KEY, {})
+            entry_start_time = unauth_state.get("entry_start_time")
+            current_time = time.time()
+            elapsed = current_time - entry_start_time if entry_start_time is not None else 0.0
+            
+            dwell_config = self.scenario_configs.get(UNAUTHORIZED_ENTRY_KEY, {})
+            dwell_limit = float(dwell_config.get("dwell_time", 0))
+            
+            banner_text = f"RESTRICTED AREA BREACH | DWELL: {elapsed:.1f}s / {dwell_limit:.1f}s" if dwell_limit > 0 else f"RESTRICTED AREA BREACH | DWELL: {elapsed:.1f}s"
+            
+            overlay = annotated_frame.copy()
+            bg_color = (0, 0, 180) if elapsed >= dwell_limit else (0, 120, 255)
+            cv2.rectangle(overlay, (10, 10), (520, 45), bg_color, -1)
+            cv2.addWeighted(overlay, 0.6, annotated_frame, 0.4, 0, annotated_frame)
+            cv2.addWeighted(overlay, 0.6, snapshot_frame, 0.4, 0, snapshot_frame)
+            
+            cv2.putText(annotated_frame, banner_text, (20, 32), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 2, cv2.LINE_AA)
+            cv2.putText(snapshot_frame, banner_text, (20, 32), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 2, cv2.LINE_AA)
 
         # Check for visitor limit
         visitor_scenario_key = "VISITOR_COUNT_LIMIT_EXCEEDED"
@@ -347,16 +374,43 @@ class InferenceEngine:
             # 3. BUT only if cooldown has passed or count changed
             time_since_log = current_time - prev["last_logged"]
 
-            if current_count > 0:
-                # Scenario 1: New appearance or count increase
-                required_stable_frames = 1 if scenario_name == UNAUTHORIZED_ENTRY_KEY else MIN_STABLE_FRAMES_TO_LOG
-                if stable_frames >= required_stable_frames:
-                    if not present or current_count > prev["count"]:
-                        if time_since_log > LOG_COOLDOWN or current_count > prev["count"]:
-                            should_log = True
-                            present = True
-            elif present and absent_frames >= 30: # Wait ~1sec (30 frames) before clearing
-                present = False
+            # Initialize or retrieve dwell-related states
+            entry_start_time = prev.get("entry_start_time", None)
+            dwell_alert_triggered = prev.get("dwell_alert_triggered", False)
+
+            if scenario_name == UNAUTHORIZED_ENTRY_KEY:
+                dwell_config = self.scenario_configs.get(UNAUTHORIZED_ENTRY_KEY, {})
+                dwell_limit = float(dwell_config.get("dwell_time", 0))
+
+                if current_count > 0:
+                    if entry_start_time is None:
+                        entry_start_time = current_time
+                        dwell_alert_triggered = False
+                    
+                    elapsed = current_time - entry_start_time
+                    if elapsed >= dwell_limit:
+                        if not present or current_count > prev["count"] or (time_since_log > LOG_COOLDOWN and not dwell_alert_triggered):
+                            if not dwell_alert_triggered or current_count > prev["count"]:
+                                should_log = True
+                                present = True
+                                dwell_alert_triggered = True
+                else:
+                    if absent_frames >= 30:
+                        present = False
+                        entry_start_time = None
+                        dwell_alert_triggered = False
+            else:
+                if current_count > 0:
+                    # Scenario 1: New appearance or count increase
+                    # Use scenario-specific stable frames if defined, else use global
+                    required_stable_frames = SCENARIO_MIN_STABLE_FRAMES.get(scenario_name, MIN_STABLE_FRAMES_TO_LOG)
+                    if stable_frames >= required_stable_frames:
+                        if not present or current_count > prev["count"]:
+                            if time_since_log > LOG_COOLDOWN or current_count > prev["count"]:
+                                should_log = True
+                                present = True
+                elif present and absent_frames >= 30: # Wait ~1sec (30 frames) before clearing
+                    present = False
 
             if present and current_count > 0: stable_objects.append(scenario_name)
 
@@ -367,6 +421,10 @@ class InferenceEngine:
                 }
                 if scenario_name == UNAUTHORIZED_ENTRY_KEY:
                     metadata["restricted_entries"] = data.get("restricted_entries", [])
+                    dwell_config = self.scenario_configs.get(UNAUTHORIZED_ENTRY_KEY, {})
+                    dwell_limit = float(dwell_config.get("dwell_time", 0))
+                    metadata["dwell_duration"] = round(current_time - (entry_start_time or current_time), 2)
+                    metadata["dwell_limit"] = dwell_limit
                 events_to_log.append({
                     "scenario_key": scenario_name,
                     "confidence": data.get("max_conf", 0.0),
@@ -375,9 +433,15 @@ class InferenceEngine:
                 prev["last_logged"] = current_time
 
             future_scene_state[scenario_name] = {
-                "count": current_count, "stable_frames": stable_frames, "absent_frames": absent_frames,
-                "present": present, "last_logged": prev["last_logged"],
+                "count": current_count,
+                "stable_frames": stable_frames,
+                "absent_frames": absent_frames,
+                "present": present,
+                "last_logged": prev["last_logged"],
             }
+            if scenario_name == UNAUTHORIZED_ENTRY_KEY:
+                future_scene_state[scenario_name]["entry_start_time"] = entry_start_time
+                future_scene_state[scenario_name]["dwell_alert_triggered"] = dwell_alert_triggered
 
         if current_objects:
             print(f"[CAMERA {self.camera_id}] Detected: {current_objects} | Stable: {stable_objects}")
