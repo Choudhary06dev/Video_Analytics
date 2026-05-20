@@ -32,30 +32,28 @@ const actionColors = {
 
 // Sub-component for premium cards
 const MetricCard = ({ title, value, icon: Icon, colorClass, gradientClass, subtext, loading }) => (
- <div className="group relative bg-card border border-border/60 rounded-xl p-4 hover:border-accent/40 transition-all duration-500 shadow-sm overflow-hidden">
+ <div className="group relative bg-card border border-border/60 rounded-xl p-3 hover:border-accent/40 transition-all duration-500 shadow-sm overflow-hidden">
   <div className={`absolute -right-6 -top-6 w-24 h-24 blur-[40px] opacity-10 group-hover:opacity-30 transition-all duration-700 ${gradientClass}`} />
-  <div className="relative z-10 flex flex-col h-full justify-between">
-   <div className="flex justify-between items-start mb-2">
+  <div className="relative z-10 flex items-center justify-between gap-3">
+   <div className="flex items-center gap-3 min-w-0">
     {loading ? (
-     <div className="w-8 h-8 bg-surface rounded animate-pulse"/>
+     <div className="w-8 h-8 bg-surface rounded animate-pulse shrink-0"/>
     ) : (
-     <div className={`p-2 rounded bg-surface border border-border/40 group-hover:scale-110 transition-transform duration-500 ${colorClass} shadow-lg shadow-current/5`}>
+     <div className={`p-2 rounded bg-surface border border-border/40 group-hover:scale-110 transition-transform duration-500 ${colorClass} shadow-lg shadow-current/5 shrink-0`}>
       <Icon className="w-4 h-4"/>
      </div>
     )}
-   </div>
-   <div>
-    <p className="text-[10px] font-bold text-text-gray uppercase tracking-[0.15em] mb-1">{title}</p>
-    <div className="flex items-baseline gap-2">
-     {loading ? (
-      <div className="h-8 bg-surface rounded w-1/2 animate-pulse"/>
-     ) : (
-      <>
-       <h3 className="text-xl font-black tracking-tighter text-text-dark">{value}</h3>
-       {subtext && <span className="text-[9px] font-medium text-text-gray/60">{subtext}</span>}
-      </>
-     )}
+    <div className="min-w-0">
+     <p className="text-[10px] font-bold text-text-gray uppercase tracking-[0.15em] whitespace-nowrap">{title}</p>
+     {subtext && <span className="text-[9px] font-medium text-text-gray/60 block mt-0.5 whitespace-nowrap">{subtext}</span>}
     </div>
+   </div>
+   <div className="text-right shrink-0 ml-3">
+    {loading ? (
+     <div className="h-6 bg-surface rounded w-8 animate-pulse"/>
+    ) : (
+     <h3 className="text-xl font-black tracking-tighter text-text-dark">{value}</h3>
+    )}
    </div>
   </div>
  </div>

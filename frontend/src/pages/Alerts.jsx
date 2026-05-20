@@ -304,7 +304,7 @@ export default function Alerts() {
                   return (
                     <tr key={alert.id} className={`transition-colors group ${isResolved ? 'bg-bg/10' : 'hover:bg-bg/30'}`}>
                       <td className="px-3 sm:px-4 py-3 sm:py-4">
-                        <span className="text-[0.6rem] sm:text-[0.65rem] font-black text-text-gray opacity-40">#ALT-{alert.id}</span>
+                        <span className="text-[0.6rem] sm:text-[0.65rem] font-black text-text-gray opacity-80">#ALT-{alert.id}</span>
                       </td>
                       <td className="px-3 sm:px-4 py-3 sm:py-4">
                         <div className={`inline-flex items-center justify-center gap-1.5 w-[75px] sm:w-[85px] px-1.5 py-1 rounded-full text-[0.5rem] sm:text-[0.55rem] font-black uppercase tracking-wider border ${style.bg} ${style.text} ${style.border}`}>
@@ -327,7 +327,8 @@ export default function Alerts() {
                           <MapPin className="w-3 sm:w-3.5 h-3 sm:h-3.5 text-accent mt-0.5 shrink-0" />
                           <div className="flex flex-col leading-tight">
                             <span className="text-text-dark">
-                              {alert.camera_name || `Str-${String(alert.camera_id).padStart(2, '0')}`}
+                              {`CAM-${String(alert.camera_id).padStart(2, '0')}`}
+                              {alert.camera_name && ` - ${alert.camera_name}`}
                             </span>
                             <span className="text-[0.55rem] uppercase tracking-wider text-text-gray">
                               {alert.area_name || 'Unknown Area'}
@@ -460,7 +461,7 @@ export default function Alerts() {
                     {new Date(selectedAlert.timestamp).toLocaleString()}
                   </span>
                 </div>
-                <div className="bg-surface p-3 sm:p-4 rounded-lg border border-border sm:col-span-2">
+                <div className="bg-surface p-3 sm:p-4 rounded-lg border border-border">
                   <span className="text-[0.6rem] sm:text-[0.65rem] font-bold text-text-gray uppercase tracking-widest block mb-1">Camera & Area</span>
                   <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3">
                     <span className="text-xs sm:text-sm font-bold text-text-dark">
@@ -472,7 +473,7 @@ export default function Alerts() {
                     </span>
                   </div>
                 </div>
-                <div className="bg-surface p-3 sm:p-4 rounded-lg border border-border sm:col-span-2 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div className="bg-surface p-3 sm:p-4 rounded-lg border border-border flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <div>
                     <span className="text-[0.6rem] sm:text-[0.65rem] font-bold text-text-gray uppercase tracking-widest block mb-1">AI Confidence Score</span>
                     <span className="text-lg sm:text-xl font-black text-accent">{(selectedAlert.confidence * 100).toFixed(1)}%</span>

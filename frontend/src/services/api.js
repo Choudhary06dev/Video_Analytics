@@ -10,32 +10,32 @@ const PUBLIC_PATHS = ['/settings/public', '/auth/login', '/auth/register'];
  */
 let _redirecting = false;
 function handleUnauthorized(path) {
-  if (_redirecting) return;
-  if (path === '/auth/login' || path === '/auth/login/') return;
-  console.error(`API: Session expired on ${path}. Redirecting to login.`);
-  _redirecting = true;
-  localStorage.removeItem('token');
-  localStorage.removeItem('user');
-  window.location.href = '/login';
+    if (_redirecting) return;
+    if (path === '/auth/login' || path === '/auth/login/') return;
+    console.error(`API: Session expired on ${path}. Redirecting to login.`);
+    _redirecting = true;
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    window.location.href = '/login';
 }
 
 export async function get(path, params = {}) {
-  const url = new URL(BASE + path);
-  Object.entries(params).forEach(([k, v]) => {
-    if (v !== undefined && v !== null) url.searchParams.set(k, v);
-  });
-  
-  const isPublic = PUBLIC_PATHS.some(p => path === p || path === p + '/');
+    const url = new URL(BASE + path);
+    Object.entries(params).forEach(([k, v]) => {
+        if (v !== undefined && v !== null) url.searchParams.set(k, v);
+    });
 
-  const res = await fetch(url.toString(), {
-      cache: 'no-store',
-      credentials: 'include'
-  });
-  if (res.status === 401 && !isPublic) {
-      handleUnauthorized(path);
-  }
-  if (!res.ok) throw new Error(`GET ${path} → ${res.status}`);
-  return res.json();
+    const isPublic = PUBLIC_PATHS.some(p => path === p || path === p + '/');
+
+    const res = await fetch(url.toString(), {
+        cache: 'no-store',
+        credentials: 'include'
+    });
+    if (res.status === 401 && !isPublic) {
+        handleUnauthorized(path);
+    }
+    if (!res.ok) throw new Error(`GET ${path} → ${res.status}`);
+    return res.json();
 }
 
 export async function post(path, body) {
