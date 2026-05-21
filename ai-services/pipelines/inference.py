@@ -360,12 +360,13 @@ class InferenceEngine:
         for scenario_name in set(list(self.scene_state.keys()) + current_objects):
             data = detected_scenarios.get(scenario_name, {"count": 0})
             current_count = data["count"]
-            prev = self.scene_state.get(scenario_name, {"count": 0, "stable_frames": 0, "absent_frames": 0, "present": False, "last_logged": 0})
+            prev = self.scene_state.get(scenario_name, {"count": 0, "stable_frames": 0, "absent_frames": 0, "present": False, "last_logged": 0, "max_count_seen": 0})
 
             # Check for stability
             stable_frames = prev["stable_frames"] + 1 if current_count == prev["count"] else 1
             absent_frames = prev["absent_frames"] + 1 if current_count == 0 else 0
-            present = prev["present"]
+            present = prev.get("present", False)  # Safety: handle missing "present" key
+            max_count_seen = max(prev.get("max_count_seen", 0), current_count)  # Track highest count
             should_log = False
 
             # Logging Logic:
@@ -389,28 +390,36 @@ class InferenceEngine:
                     
                     elapsed = current_time - entry_start_time
                     if elapsed >= dwell_limit:
-                        if not present or current_count > prev["count"] or (time_since_log > LOG_COOLDOWN and not dwell_alert_triggered):
-                            if not dwell_alert_triggered or current_count > prev["count"]:
-                                should_log = True
-                                present = True
-                                dwell_alert_triggered = True
+                        # Log on NEW breach or when max_count increases (more people in zone)
+                        if not present:
+                            should_log = True
+                            present = True
+                            dwell_alert_triggered = True
+                        elif max_count_seen > prev.get("max_count_seen", 0):
+                            # More people detected in restricted zone
+                            should_log = True
+                            dwell_alert_triggered = True
                 else:
                     if absent_frames >= 30:
                         present = False
                         entry_start_time = None
                         dwell_alert_triggered = False
+                        max_count_seen = 0
             else:
                 if current_count > 0:
-                    # Scenario 1: New appearance or count increase
-                    # Use scenario-specific stable frames if defined, else use global
+                    # Log if: NEW detection (not present) OR when max_count increases (new object detected)
                     required_stable_frames = SCENARIO_MIN_STABLE_FRAMES.get(scenario_name, MIN_STABLE_FRAMES_TO_LOG)
                     if stable_frames >= required_stable_frames:
-                        if not present or current_count > prev["count"]:
-                            if time_since_log > LOG_COOLDOWN or current_count > prev["count"]:
-                                should_log = True
-                                present = True
+                        if not present:
+                            # First appearance
+                            should_log = True
+                            present = True
+                        elif max_count_seen > prev.get("max_count_seen", 0):
+                            # New object detected (e.g., 1 phone → 2 phones)
+                            should_log = True
                 elif present and absent_frames >= 30: # Wait ~1sec (30 frames) before clearing
                     present = False
+                    max_count_seen = 0  # Reset when object disappears
 
             if present and current_count > 0: stable_objects.append(scenario_name)
 
@@ -438,6 +447,7 @@ class InferenceEngine:
                 "absent_frames": absent_frames,
                 "present": present,
                 "last_logged": prev["last_logged"],
+                "max_count_seen": max_count_seen,
             }
             if scenario_name == UNAUTHORIZED_ENTRY_KEY:
                 future_scene_state[scenario_name]["entry_start_time"] = entry_start_time

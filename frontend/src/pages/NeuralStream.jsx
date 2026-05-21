@@ -909,15 +909,15 @@ export default function NeuralStream() {
               <div className="flex flex-col">
                 {[...Array(8)].map((_, i) => (
                   <div key={i} className="grid grid-cols-12 gap-2 px-5 py-4 border-b border-border/30 animate-pulse">
-                    <div className="col-span-1 h-8 w-8 bg-surface rounded-lg" />
-                    <div className="col-span-2 h-4 bg-surface rounded w-3/4" />
-                    <div className="col-span-2 h-4 bg-surface rounded w-1/2" />
-                    <div className="col-span-1 h-4 bg-surface rounded w-full" />
-                    <div className="col-span-1 h-4 bg-surface rounded w-1/2" />
-                    <div className="col-span-1 h-4 bg-surface rounded w-3/4" />
-                    <div className="col-span-2 h-4 bg-surface rounded w-2/3" />
-                    <div className="col-span-1 h-4 bg-surface rounded w-1/2" />
-                    <div className="col-span-1 h-6 bg-surface rounded w-6 mx-auto" />
+                    <div className="col-span-1 h-8 w-8 bg-gray-200 dark:bg-slate-700 rounded-lg" />
+                    <div className="col-span-2 h-4 bg-gray-200 dark:bg-slate-700 rounded w-3/4" />
+                    <div className="col-span-2 h-4 bg-gray-200 dark:bg-slate-700 rounded w-1/2" />
+                    <div className="col-span-1 h-4 bg-gray-200 dark:bg-slate-700 rounded w-full" />
+                    <div className="col-span-1 h-4 bg-gray-200 dark:bg-slate-700 rounded w-1/2" />
+                    <div className="col-span-1 h-4 bg-gray-200 dark:bg-slate-700 rounded w-3/4" />
+                    <div className="col-span-2 h-4 bg-gray-200 dark:bg-slate-700 rounded w-2/3" />
+                    <div className="col-span-1 h-4 bg-gray-200 dark:bg-slate-700 rounded w-1/2" />
+                    <div className="col-span-1 h-6 bg-gray-200 dark:bg-slate-700 rounded w-6 mx-auto" />
                   </div>
                 ))}
               </div>
@@ -1185,7 +1185,7 @@ export default function NeuralStream() {
               </div>
             </div>
             <div className="flex items-center gap-4 text-[0.6rem] font-bold tracking-tight text-text-gray">
-              {matrixData.cameras.length > 10 && (
+              {!activeCamera && matrixData.cameras.length > 10 && (
                 <button
                   onClick={() => setShowOnlyActiveCams(!showOnlyActiveCams)}
                   className={`flex items-center gap-1.5 px-2 py-1 rounded border transition-all ${showOnlyActiveCams ? 'bg-accent/10 border-accent/30 text-accent' : 'bg-surface border-border text-text-gray'
@@ -1214,9 +1214,11 @@ export default function NeuralStream() {
                 });
               });
 
-              const displayedCameras = showOnlyActiveCams && matrixData.cameras.length > 10
-                ? matrixData.cameras.filter(c => activeCameraIds.has(c.id))
-                : matrixData.cameras;
+              const displayedCameras = activeCamera
+                ? matrixData.cameras.filter(c => c.id === Number(activeCamera))
+                : (showOnlyActiveCams && matrixData.cameras.length > 10
+                  ? matrixData.cameras.filter(c => activeCameraIds.has(c.id))
+                  : matrixData.cameras);
 
               const filteredScenarios = matrixData.scenarios.filter(s =>
                 selectedScenarioKey === 'all' || s.toLowerCase() === selectedScenarioKey.toLowerCase()
@@ -1242,7 +1244,7 @@ export default function NeuralStream() {
                     {filteredScenarios.map((scenario, idx) => {
                       const scenarioUI = SCENARIO_UI[scenario] || SCENARIO_UI['Default'];
                       const Icon = scenarioUI.icon;
-                      const rowTotal = matrixData.cameras.reduce((sum, cam) => sum + ((matrixData.matrix[scenario] || {})[cam.id] || 0), 0);
+                      const rowTotal = displayedCameras.reduce((sum, cam) => sum + ((matrixData.matrix[scenario] || {})[cam.id] || 0), 0);
                       return (
                         <tr key={scenario} className={`border-b border-border/40 hover:bg-surface/30 transition-colors ${idx % 2 === 0 ? '' : 'bg-surface/5'}`}>
                           <td className="px-4 py-2 sticky left-0 bg-card z-10 border-r border-border shadow-[2px_0_5px_rgba(0,0,0,0.02)]">
@@ -1309,7 +1311,7 @@ export default function NeuralStream() {
                       <td className="text-center px-3 py-2.5">
                         <span className="inline-block px-2.5 py-0.5 rounded-md bg-accent text-white text-[0.7rem] font-black shadow-sm">
                           {filteredScenarios.reduce((sum, sk) => {
-                            return sum + matrixData.cameras.reduce((cSum, cam) => cSum + ((matrixData.matrix[sk] || {})[cam.id] || 0), 0);
+                            return sum + displayedCameras.reduce((cSum, cam) => cSum + ((matrixData.matrix[sk] || {})[cam.id] || 0), 0);
                           }, 0)}
                         </span>
                       </td>
