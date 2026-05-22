@@ -24,6 +24,24 @@ class Settings(BaseModel):
     LOG_INTERVAL_SECONDS: float = float(os.getenv("LOG_INTERVAL_SECONDS", "3.0"))
     AI_SERVICE_URL: str = os.getenv("AI_SERVICE_URL", "http://localhost:8001")
 
+    # SMTP Email Notification Settings
+    SMTP_HOST: str = os.getenv("SMTP_HOST", "smtp.gmail.com")
+    SMTP_PORT: int = int(os.getenv("SMTP_PORT", "587"))
+    SMTP_USER: str | None = os.getenv("SMTP_USER", None)
+    SMTP_PASSWORD: str | None = os.getenv("SMTP_PASSWORD", None)
+    SMTP_SENDER: str | None = os.getenv("SMTP_SENDER", None)  # Falls back to SMTP_USER
+    ALERT_RECEIVER_EMAIL: str | None = os.getenv("ALERT_RECEIVER_EMAIL", None)
+    ALERT_NOTIFY_SEVERITIES: str = os.getenv("ALERT_NOTIFY_SEVERITIES", "Critical,High")
+    ALERT_NOTIFY_ROLES: str = os.getenv("ALERT_NOTIFY_ROLES", "super_admin,admin")
+
+    @property
+    def alert_notify_severities_list(self) -> list[str]:
+        return [s.strip() for s in self.ALERT_NOTIFY_SEVERITIES.split(",") if s.strip()]
+
+    @property
+    def alert_notify_roles_list(self) -> list[str]:
+        return [r.strip() for r in self.ALERT_NOTIFY_ROLES.split(",") if r.strip()]
+
     @property
     def cors_origins(self) -> list[str]:
         origins = os.getenv("CORS_ORIGINS")

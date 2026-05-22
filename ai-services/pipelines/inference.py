@@ -39,7 +39,6 @@ CONF_THRESHOLD = 0.25
 IOU_THRESHOLD = 0.45
 MIN_STABLE_FRAMES_TO_LOG = 2  # Only 2 consecutive frames needed for fast alerting
 LOG_COOLDOWN = 10.0 # 5s cooldown between duplicate events
-VISITOR_LIMIT = 2  # Max allowed visitors (e.g., 1 patient + 1 attendant)
 UNAUTHORIZED_ENTRY_KEY = "UNAUTHORIZED_ENTRY_INTO_RESTRICTED_AREAS"
 INFERENCE_IMAGE_SIZE = 640
 STREAM_JPEG_QUALITY = 85
@@ -50,7 +49,7 @@ SCENARIO_MIN_CONFIDENCE = {
     "person": 0.50,
     "knife": 0.60,
     "scissors": 0.60,
-    "cell phone": 0.50,  # Lowered from 0.65 for faster mobile detection
+    "cell phone": 0.60,  # Lowered from 0.65 for faster mobile detection
     "car": 0.60,
     "truck": 0.60,
     "bus": 0.60,
@@ -282,10 +281,12 @@ class InferenceEngine:
                 label = results[0].names[class_id]
                 confidence = float(box.conf[0]) if hasattr(box.conf, "__getitem__") else float(box.conf)
                 
-                if label == "person": person_count += 1
-                
                 # Check if this label meets its specific scenario confidence threshold
                 min_required_conf = SCENARIO_MIN_CONFIDENCE.get(label, CONF_THRESHOLD)
+                
+                # Only count person if confidence meets threshold
+                if label == "person" and confidence >= min_required_conf: 
+                    person_count += 1
                 
                 if confidence >= min_required_conf:
                     scenario_name = SCENARIO_MAPPING.get(label)
@@ -339,18 +340,22 @@ class InferenceEngine:
             cv2.putText(annotated_frame, banner_text, (20, 32), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 2, cv2.LINE_AA)
             cv2.putText(snapshot_frame, banner_text, (20, 32), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 2, cv2.LINE_AA)
 
-        # Check for visitor limit
+        # Display person count on frame
+        person_count_text = f"PERSONS DETECTED: {person_count}"
+        cv2.putText(annotated_frame, person_count_text, (10, frame_h - 15), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2, cv2.LINE_AA)
+        cv2.putText(snapshot_frame, person_count_text, (10, frame_h - 15), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2, cv2.LINE_AA)
+
+        # Check for visitor limit (if scenario is enabled in backend)
         visitor_scenario_key = "VISITOR_COUNT_LIMIT_EXCEEDED"
-        
-        # Get dynamic limit from configs, default to global VISITOR_LIMIT
-        dynamic_limit = int(self.scenario_configs.get(visitor_scenario_key, {}).get("limit", VISITOR_LIMIT))
-        
-        if person_count > dynamic_limit and visitor_scenario_key in self.enabled_scenarios:
-            detected_scenarios[visitor_scenario_key] = {
-                "max_conf": 0.9, # High confidence assumed for limit breach
-                "count": person_count, 
-                "labels": {"person"}
-            }
+        if visitor_scenario_key in self.enabled_scenarios:
+            visitor_config = self.scenario_configs.get(visitor_scenario_key, {})
+            visitor_limit = int(visitor_config.get("limit", 0))
+            if visitor_limit > 0 and person_count > visitor_limit:
+                detected_scenarios[visitor_scenario_key] = {
+                    "max_conf": 0.99,  # High confidence for limit breach
+                    "count": person_count,
+                    "labels": {"person"}
+                }
 
         current_objects = sorted(list(detected_scenarios.keys()))
         current_time = time.time()
@@ -423,7 +428,11 @@ class InferenceEngine:
 
             if present and current_count > 0: stable_objects.append(scenario_name)
 
-            if should_log:
+            # Add cooldown check: Only log if enough time has passed since last log
+            ALERT_COOLDOWN = 15.0  # 15 second cooldown between alerts for same scenario
+            time_since_log = current_time - prev["last_logged"]
+            
+            if should_log and time_since_log >= ALERT_COOLDOWN:
                 metadata = {
                     "count": current_count,
                     "raw_labels": list(data.get("labels", []))

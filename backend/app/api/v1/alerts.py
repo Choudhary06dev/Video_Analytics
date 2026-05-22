@@ -1,10 +1,11 @@
-from fastapi import APIRouter, Depends, HTTPException, Query, Header
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, Header
 from fastapi.responses import StreamingResponse
 from sqlmodel import Session, select
 from typing import Optional
 import httpx
 import json
 import asyncio
+from datetime import datetime
 from pydantic import BaseModel
 from app.core.database import get_session
 from app.core.config import settings as config_settings
@@ -13,6 +14,7 @@ from app.api.v1.auth import get_current_user
 from app.api.v1.users import verify_module_access, get_allowed_area_ids
 from app.models import DetectionEvent, Camera, Area
 from app.services.alert_service import get_alerts, get_logs, get_logs_summary, get_scenario_camera_matrix
+from app.services.notification_service import send_alert_email
 
 router = APIRouter(prefix="", tags=["Intelligence & Alerts"])
 
@@ -69,6 +71,7 @@ def verify_event_stream_access(
 @router.post("/webhook/events")
 async def receive_events(
     events: list[WebhookEvent],
+    background_tasks: BackgroundTasks,
     session: Session = Depends(get_session),
     x_webhook_secret: Optional[str] = Header(None),
 ):
@@ -82,9 +85,45 @@ async def receive_events(
     person_count = 0
 
     from sqlmodel import select
-    from app.models import AIScenario
+    from app.models import AIScenario, User, Role
+    from app.models.user import RoleAreaPermission
     scenarios = session.exec(select(AIScenario)).all()
     scenario_severity_map = {s.key: s.default_severity for s in scenarios}
+
+    # Pre-fetch notify-eligible users (configured via roles in .env)
+    notify_roles = config_settings.alert_notify_roles_list
+    admin_roles = session.exec(
+        select(Role).where(Role.name.in_(notify_roles))
+    ).all() if notify_roles else []
+    admin_role_ids = [r.id for r in admin_roles]
+    notify_users = []
+    if admin_role_ids:
+        notify_users = session.exec(
+            select(User).where(
+                User.role_id.in_(admin_role_ids),
+                User.is_active == True
+            )
+        ).all()
+
+    # Pre-fetch all area permissions for quick lookup: {role_id: set(area_ids)}
+    all_area_perms = session.exec(
+        select(RoleAreaPermission).where(
+            RoleAreaPermission.role_id.in_(admin_role_ids),
+            RoleAreaPermission.can_view == True
+        )
+    ).all() if admin_role_ids else []
+    role_area_map = {}
+    for perm in all_area_perms:
+        role_area_map.setdefault(perm.role_id, set()).add(perm.area_id)
+
+    # Custom alert receiver from .env (always receives all alerts regardless of area)
+    custom_receiver = config_settings.ALERT_RECEIVER_EMAIL
+
+    # Pre-fetch camera and area info for email context
+    all_cameras = session.exec(select(Camera)).all()
+    camera_map = {c.id: c for c in all_cameras}
+    all_areas = session.exec(select(Area)).all()
+    area_map = {a.id: a for a in all_areas}
 
     for ev in events:
         severity = scenario_severity_map.get(ev.scenario_key, "Medium")
@@ -108,6 +147,39 @@ async def receive_events(
             stable_objects.append(ev.scenario_key)
         if "person" in ev.scenario_key.lower() or "entry" in ev.scenario_key.lower():
             person_count += int(ev.metadata.get("count", 1))
+
+        # Schedule email notification for configured severity alerts
+        notify_severities = config_settings.alert_notify_severities_list
+        if is_alert and severity in notify_severities and notify_users:
+            cam = camera_map.get(ev.camera_id)
+            area = area_map.get(cam.area_id) if cam else None
+            alert_area_id = cam.area_id if cam else None
+
+            # Filter users: only those whose role has can_view permission for this area
+            filtered_emails = []
+            for u in notify_users:
+                if u.email and alert_area_id is not None:
+                    user_allowed_areas = role_area_map.get(u.role_id, set())
+                    if alert_area_id in user_allowed_areas:
+                        filtered_emails.append(u.email)
+
+            # Always add custom receiver from .env (global override)
+            if custom_receiver and custom_receiver not in filtered_emails:
+                filtered_emails.append(custom_receiver)
+
+            if filtered_emails:
+                email_details = {
+                    "scenario_key": ev.scenario_key,
+                    "camera_id": ev.camera_id,
+                    "camera_name": cam.name if cam else f"CAM-{ev.camera_id}",
+                    "area_name": area.name if area else "Unknown Area",
+                    "severity": severity,
+                    "confidence": ev.confidence,
+                    "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                    "metadata": ev.metadata,
+                    "image_base64": ev.image_base64,
+                }
+                background_tasks.add_task(send_alert_email, email_details, filtered_emails)
 
     session.commit()
 
