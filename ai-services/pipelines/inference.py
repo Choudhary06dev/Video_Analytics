@@ -38,7 +38,7 @@ INTEREST_CLASSES = [0, 2, 3, 5, 7, 10, 43, 67, 69, 70, 76]
 CONF_THRESHOLD = 0.25
 IOU_THRESHOLD = 0.45
 MIN_STABLE_FRAMES_TO_LOG = 2  # Only 2 consecutive frames needed for fast alerting
-LOG_COOLDOWN = 5.0 # 5s cooldown between duplicate events
+LOG_COOLDOWN = 10.0 # 5s cooldown between duplicate events
 VISITOR_LIMIT = 2  # Max allowed visitors (e.g., 1 patient + 1 attendant)
 UNAUTHORIZED_ENTRY_KEY = "UNAUTHORIZED_ENTRY_INTO_RESTRICTED_AREAS"
 INFERENCE_IMAGE_SIZE = 640
@@ -47,7 +47,7 @@ SNAPSHOT_JPEG_QUALITY = 98
 STREAM_MAX_WIDTH = 1280
 
 SCENARIO_MIN_CONFIDENCE = {
-    "person": 0.20,
+    "person": 0.50,
     "knife": 0.60,
     "scissors": 0.60,
     "cell phone": 0.50,  # Lowered from 0.65 for faster mobile detection
