@@ -110,7 +110,7 @@ const Toast = ({ notification }) => {
           {notification.type === 'alert' || notification.severity ? (
             <>
               <span className="text-[10px] font-bold text-text-gray/60 uppercase">
-                CAM-{notification.cameraId} • {new Date(notification.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                CAM-{notification.cameraId} {notification.areaName ? `• ${notification.areaName}` : ''} • {new Date(notification.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
               </span>
               <button 
                 onClick={handleView}

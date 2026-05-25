@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { fetchLiveAreas, fetchLiveCameras, fetchLiveScenarios } from '../services/cameraService';
 import { fetchLogs, fetchLogsSummary } from '../services/alertService';
 import { EVENTS_URL, VIDEO_FEED_URL, fetchIntelligence, fetchScenarioMatrix } from '../api';
+import { useNotifications } from '../context/NotificationContext';
 import {
   Radio,
   Shield,

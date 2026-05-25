@@ -3,11 +3,12 @@ import { useNavigate } from 'react-router-dom';
 import {
   Menu, Search, Bell, ChevronDown, Sun, Moon, Shield,
   LayoutDashboard, Radio, Brain, Users, ClipboardList,
-  Cpu, GraduationCap, Settings, X, ArrowRight
+  Cpu, GraduationCap, Settings, X, ArrowRight, MapPin, Check
 } from 'lucide-react';
 import { APP_CONFIG } from '../../config';
 import { useTheme } from '../../context/ThemeContext';
 import { useAuth } from '../../context/AuthContext';
+import { useNotifications } from '../../context/NotificationContext';
 import { LogOut } from 'lucide-react';
 
 const STATIC_PAGES = [
@@ -24,6 +25,7 @@ const STATIC_PAGES = [
 export default function Header({ isSidebarOpen, setSidebarOpen }) {
   const { isDark, toggleTheme } = useTheme();
   const { user, logout } = useAuth();
+  const { areas } = useNotifications();
   const navigate = useNavigate();
 
   const [searchIndex, setSearchIndex] = useState(STATIC_PAGES);
@@ -37,11 +39,10 @@ export default function Header({ isSidebarOpen, setSidebarOpen }) {
   const [showNotifications, setShowNotifications] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const [scenarios, setScenarios] = useState([]);
+  const notificationRef = useRef(null);
   const searchRef = useRef(null);
   const profileRef = useRef(null);
   const mobileSearchRef = useRef(null);
-  const notificationRef = useRef(null);
-
   // Fetch dynamic data for search index
   useEffect(() => {
     const loadDynamicData = async () => {
@@ -86,7 +87,6 @@ export default function Header({ isSidebarOpen, setSidebarOpen }) {
         const alerts = await alertService.fetchAlerts({ hours: 24, limit: 5 });
         if (Array.isArray(alerts)) {
           setNotifications(alerts.slice(0, 5));
-          setUnreadCount(alerts.filter(a => !a.is_read).length);
         }
       } catch (err) {
         console.error("Failed to load notifications", err);
@@ -97,6 +97,14 @@ export default function Header({ isSidebarOpen, setSidebarOpen }) {
     const interval = setInterval(loadNotifications, 30000); // Refresh every 30s
     return () => clearInterval(interval);
   }, []);
+
+  // Recalculate unread badge count based on active area focus
+  useEffect(() => {
+    if (!showNotifications) {
+      setUnreadCount(notifications.filter(a => !a.is_read).length);
+    }
+  }, [notifications, showNotifications]);
+
 
   useEffect(() => {
     const query = searchQuery.trim().toLowerCase();
@@ -123,6 +131,9 @@ export default function Header({ isSidebarOpen, setSidebarOpen }) {
   const scenarioNameByKey = useMemo(() => {
     return new Map(scenarios.map(s => [s.key, s.name]));
   }, [scenarios]);
+
+
+
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -276,6 +287,8 @@ export default function Header({ isSidebarOpen, setSidebarOpen }) {
             <Search className="w-5 h-5" />
           </button>
 
+
+
           {/* Dark/Light Theme Toggle */}
           <button
             onClick={toggleTheme}
@@ -287,7 +300,7 @@ export default function Header({ isSidebarOpen, setSidebarOpen }) {
               <Moon className={`w-5 h-5 absolute inset-0 transition-all duration-500 ${isDark ? 'opacity-100 rotate-0 scale-100 text-accent' : 'opacity-0 -rotate-90 scale-0'}`} />
             </div>
           </button>
-
+ 
           <div className="relative" ref={notificationRef}>
             <button
               onClick={() => {
@@ -303,7 +316,7 @@ export default function Header({ isSidebarOpen, setSidebarOpen }) {
                 </span>
               )}
             </button>
-
+ 
             {showNotifications && (
               <div className="absolute top-full right-0 mt-2 w-80 bg-card border border-border rounded-xl shadow-premium overflow-hidden z-[60] animate-in fade-in slide-in-from-top-2 duration-200">
                 <div className="p-4 border-b border-border bg-surface/30 flex justify-between items-center">

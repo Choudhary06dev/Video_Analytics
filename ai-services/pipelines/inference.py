@@ -38,7 +38,7 @@ INTEREST_CLASSES = [0, 2, 3, 5, 7, 10, 43, 67, 69, 70, 76]
 CONF_THRESHOLD = 0.25
 IOU_THRESHOLD = 0.45
 MIN_STABLE_FRAMES_TO_LOG = 2  # Only 2 consecutive frames needed for fast alerting
-LOG_COOLDOWN = 10.0 # 5s cooldown between duplicate events
+LOG_COOLDOWN = 15.0 # 15s cooldown between duplicate events
 UNAUTHORIZED_ENTRY_KEY = "UNAUTHORIZED_ENTRY_INTO_RESTRICTED_AREAS"
 INFERENCE_IMAGE_SIZE = 640
 STREAM_JPEG_QUALITY = 85
@@ -435,7 +435,7 @@ class InferenceEngine:
             if should_log and time_since_log >= ALERT_COOLDOWN:
                 metadata = {
                     "count": current_count,
-                    "raw_labels": list(data.get("labels", []))
+                    "raw_labels": list(data.get("labels", []))  
                 }
                 if scenario_name == UNAUTHORIZED_ENTRY_KEY:
                     metadata["restricted_entries"] = data.get("restricted_entries", [])

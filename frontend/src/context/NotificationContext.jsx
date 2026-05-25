@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { fetchLogs } from '../services/alertService';
-import { fetchScenarios } from '../services/cameraService';
+import { fetchScenarios, fetchLiveAreas } from '../services/cameraService';
 
 const NotificationContext = createContext();
 
@@ -9,6 +9,10 @@ export const NotificationProvider = ({ children }) => {
   const lastProcessedId = useRef(null);
   const isFirstLoad = useRef(true);
   const scenarioMapRef = useRef({});
+  
+  const [areas, setAreas] = useState([]);
+  const areasRef = useRef([]);
+
 
   // Load scenario name map once on mount
   useEffect(() => {
@@ -24,6 +28,23 @@ export const NotificationProvider = ({ children }) => {
       })
       .catch(() => {});
   }, []);
+
+  // Fetch allowed areas on mount
+  useEffect(() => {
+    const user = localStorage.getItem('user');
+    if (!user) return;
+
+    fetchLiveAreas()
+      .then((data) => {
+        const fetchedAreas = data || [];
+        setAreas(fetchedAreas);
+        areasRef.current = fetchedAreas;
+      })
+      .catch((err) => {
+        console.error("Failed to fetch live areas in NotificationContext", err);
+      });
+  }, []);
+
 
   const addNotification = useCallback((notification) => {
     const id = Date.now() + Math.random();
@@ -68,6 +89,12 @@ export const NotificationProvider = ({ children }) => {
       if (newAlerts.length > 0) {
         const nameMap = scenarioMapRef.current;
         newAlerts.reverse().forEach(alert => {
+          // Filter pop-up notifications by user's allowed areas
+          const allowedAreas = areasRef.current;
+          if (allowedAreas.length > 0 && !allowedAreas.some(a => String(a.id) === String(alert.area_id))) {
+            return;
+          }
+
           const friendlyName = nameMap[alert.scenario_key] || alert.scenario_key.replace(/_/g, ' ');
           addNotification({
             type: 'alert',
@@ -76,7 +103,9 @@ export const NotificationProvider = ({ children }) => {
             message: alert.metadata_json?.detail || `Critical event detected on Camera #${alert.camera_id}`,
             cameraId: alert.camera_id,
             timestamp: alert.timestamp,
-            logId: alert.id
+            logId: alert.id,
+            areaId: alert.area_id,
+            areaName: alert.area_name
           });
         });
         lastProcessedId.current = alerts[0].id;
@@ -93,7 +122,12 @@ export const NotificationProvider = ({ children }) => {
   }, [pollAlerts]);
 
   return (
-    <NotificationContext.Provider value={{ notifications, addNotification, removeNotification }}>
+    <NotificationContext.Provider value={{ 
+      notifications, 
+      addNotification, 
+      removeNotification,
+      areas
+    }}>
       {children}
     </NotificationContext.Provider>
   );
