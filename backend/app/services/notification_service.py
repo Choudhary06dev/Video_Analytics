@@ -13,6 +13,8 @@ from email.mime.multipart import MIMEMultipart
 from datetime import datetime
 
 from app.core.config import settings
+from twilio.rest import Client
+from twilio.base.exceptions import TwilioRestException
 
 logger = logging.getLogger(__name__)
 
@@ -29,7 +31,7 @@ def _humanize_metadata(metadata: dict) -> dict:
     # Object/person count
     count = metadata.get("count")
     if count is not None:
-        friendly["Objects Detected"] = str(count)
+        friendly["Persons Detected"] = str(count)
 
     # Restricted zone entries — just show how many zones were breached, not coordinates
     entries = metadata.get("restricted_entries")
@@ -327,3 +329,86 @@ def send_alert_email(event_details: dict, recipient_emails: list[str]) -> None:
         logger.error(f"SMTP error while sending alert email: {e}")
     except Exception as e:
         logger.error(f"Unexpected error sending alert email: {e}")
+
+
+def send_whatsapp_alert(event_details: dict, recipient_numbers: list[str]) -> None:
+    """
+    Sends a WhatsApp alert message to the specified recipients using Twilio.
+    Designed to be run as a FastAPI BackgroundTask.
+    
+    Args:
+        event_details: Dict containing scenario_key, camera_name, area_name,
+                       severity, confidence, timestamp, metadata.
+        recipient_numbers: List of phone numbers in E.164 format (e.g., +923001234567).
+    """
+    if not recipient_numbers:
+        logger.warning("No recipient numbers provided. Skipping WhatsApp notification.")
+        return
+
+    scenario = event_details.get("scenario_key", "Detection Alert")
+    severity = event_details.get("severity", "Medium")
+    camera_name = event_details.get("camera_name", f"CAM-{event_details.get('camera_id', '?')}")
+    area_name = event_details.get("area_name", "Unknown Area")
+    timestamp = event_details.get("timestamp", datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+    
+    formatted_scenario = scenario.replace("_", " ").title()
+    
+    # Construct a clean, professional WhatsApp message
+    message_body = (
+        f"🚨 *Shifa AI Security Alert* 🚨\n\n"
+        f"*Event:* {formatted_scenario}\n"
+        f"*Severity:* {severity.upper()}\n"
+        f"*Camera:* {camera_name}\n"
+        f"*Area:* {area_name}\n"
+        f"*Time:* {timestamp}\n"
+    )
+
+    metadata = event_details.get("metadata", {})
+    if metadata:
+        friendly_metadata = _humanize_metadata(metadata)
+        if friendly_metadata:
+            message_body += "\n*Details:*\n"
+            for k, v in friendly_metadata.items():
+                message_body += f"- {k}: {v}\n"
+                
+    message_body += "\n_Please review this incident in the Crisis Center dashboard._"
+
+    # Default to Twilio
+    account_sid = settings.TWILIO_ACCOUNT_SID
+    auth_token = settings.TWILIO_AUTH_TOKEN
+    from_number = settings.TWILIO_WHATSAPP_NUMBER
+    
+    if not account_sid or not auth_token:
+        logger.warning(
+            "Twilio credentials not configured (TWILIO_ACCOUNT_SID / TWILIO_AUTH_TOKEN missing in .env). "
+            "Skipping WhatsApp notification."
+        )
+        return
+
+    try:
+        client = Client(account_sid, auth_token)
+        
+        for number in recipient_numbers:
+            raw_number = str(number).strip()
+            if not raw_number:
+                continue
+
+            # Twilio expects WhatsApp recipients as whatsapp:+<country_code><number>.
+            plain_number = raw_number.replace("whatsapp:", "", 1).strip()
+            if plain_number.startswith("0") and len(plain_number) == 11:
+                plain_number = f"+92{plain_number[1:]}"
+            elif not plain_number.startswith("+"):
+                plain_number = f"+{plain_number}"
+            to_number = f"whatsapp:{plain_number}"
+            
+            message = client.messages.create(
+                from_=from_number,
+                body=message_body,
+                to=to_number
+            )
+            logger.info(f"WhatsApp alert sent successfully to {to_number} via Twilio. SID: {message.sid}")
+            
+    except TwilioRestException as e:
+        logger.error(f"Twilio API Error while sending WhatsApp alert: {e.msg}")
+    except Exception as e:
+        logger.error(f"Unexpected error sending WhatsApp alert: {e}")

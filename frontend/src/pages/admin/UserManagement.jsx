@@ -51,7 +51,7 @@ export default function UserManagement() {
  const [selectedUser, setSelectedUser] = useState(null);
 
  // Form States
- const [formData, setFormData] = useState({ full_name: '', email: '', password: '', role_name: 'operator', is_active: true });
+ const [formData, setFormData] = useState({ full_name: '', email: '', password: '', role_name: 'operator', is_active: true, whatsapp_number: '', whatsapp_alerts_enabled: false });
  const [submitting, setSubmitting] = useState(false);
 
  useEffect(() => {
@@ -82,7 +82,7 @@ export default function UserManagement() {
    setSubmitting(true);
    await createUser(formData);
    setShowAddModal(false);
-   setFormData({ full_name: '', email: '', password: '', role_name: 'operator' });
+   setFormData({ full_name: '', email: '', password: '', role_name: 'operator', is_active: true, whatsapp_number: '', whatsapp_alerts_enabled: false });
    fetchData();
   } catch (err) {
    alert(err.message ||"Failed to create user");
@@ -141,16 +141,12 @@ export default function UserManagement() {
    email: user.email,
    password: '',
    role_name: user.role,
-   is_active: user.is_active !== false
+   is_active: user.is_active !== false,
+   whatsapp_number: user.whatsapp_number || '',
+   whatsapp_alerts_enabled: user.whatsapp_alerts_enabled || false,
   });
   setShowEditModal(true);
  };
-
- const openDeleteModal = (user) => {
-  setSelectedUser(user);
-  setShowDeleteModal(true);
- };
-
 
  const filteredUsers = users.filter(u => 
   u.full_name.toLowerCase().includes(filter.toLowerCase()) || 
@@ -235,6 +231,7 @@ export default function UserManagement() {
         <th className="p-2.5 pl-6">System ID</th>
         <th className="p-2.5">Personnel Info</th>
         <th className="p-2.5">Authorization</th>
+        <th className="p-2.5">WhatsApp</th>
         <th className="p-2.5">Node Status</th>
         <th className="p-2.5">Onboarding</th>
         <th className="p-2.5 pr-6 text-right">Actions</th>
@@ -269,6 +266,14 @@ export default function UserManagement() {
           <div className="flex items-center gap-2">
            <Shield className={`w-3.5 h-3.5 ${user.role === 'super_admin' ? 'text-purple-500' : user.role === 'admin' ? 'text-accent' : 'text-emerald-500'}`} />
            <span className="text-[10px] font-black uppercase tracking-widest text-text-dark">{user.role?.replace('_', ' ')}</span>
+          </div>
+         </td>
+         <td className="p-2.5">
+          <div className="flex flex-col gap-1 text-[10px]">
+            <span className="truncate">{user.whatsapp_number || 'No number'}</span>
+            <span className={`inline-flex items-center justify-center rounded-full px-2 py-1 text-[8px] font-black uppercase tracking-widest ${user.whatsapp_alerts_enabled ? 'bg-success/10 text-success' : 'bg-text-gray/10 text-text-gray'}`}>
+              {user.whatsapp_alerts_enabled ? 'Alerts On' : 'Alerts Off'}
+            </span>
           </div>
          </td>
          <td className="p-2.5">
@@ -356,7 +361,7 @@ export default function UserManagement() {
    {/* Add / Edit User Modal */}
    {(showAddModal || showEditModal) && (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-card w-full max-w-md rounded-lg border border-border overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200">
+      <div className="bg-card w-full max-w-2xl rounded-lg border border-border overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200">
         <div className="p-5 border-b border-border flex items-center justify-between bg-surface/50">
           <h2 className="text-sm font-black uppercase tracking-widest text-text-dark flex items-center gap-2">
             {showEditModal ? <Edit2 className="w-4 h-4 text-accent"/> : <UserPlus className="w-4 h-4 text-accent"/>}
@@ -367,66 +372,82 @@ export default function UserManagement() {
           </button>
         </div>
         <form onSubmit={showEditModal ? handleEditUser : handleCreateUser} className="p-6 space-y-4">
-          
-          <div className="space-y-1.5">
-            <label className="text-[8px] font-black uppercase tracking-widest text-text-gray ml-1">Full Name</label>
-            <input type="text"required value={formData.full_name} onChange={e => setFormData({...formData, full_name: e.target.value})}
-                className="w-full bg-surface border border-border rounded-lg px-4 py-2.5 text-xs font-bold text-text-dark outline-none focus:border-accent focus:ring-2 focus:ring-accent/10 transition-all"
-                placeholder="Enter full name"/>
-          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <label className="text-[8px] font-black uppercase tracking-widest text-text-gray ml-1">Full Name</label>
+              <input type="text"required value={formData.full_name} onChange={e => setFormData({...formData, full_name: e.target.value})}
+                  className="w-full bg-surface border border-border rounded-lg px-4 py-2.5 text-xs font-bold text-text-dark outline-none focus:border-accent focus:ring-2 focus:ring-accent/10 transition-all"
+                  placeholder="Enter full name"/>
+            </div>
 
-          <div className="space-y-1.5">
-            <label className="text-[8px] font-black uppercase tracking-widest text-text-gray ml-1">Comms Uplink (Email)</label>
-            <input type="email"required value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})}
-                className="w-full bg-surface border border-border rounded-lg px-4 py-2.5 text-xs font-bold text-text-dark outline-none focus:border-accent focus:ring-2 focus:ring-accent/10 transition-all"
-                placeholder="Enter email address"/>
-          </div>
+            <div className="space-y-1.5">
+              <label className="text-[8px] font-black uppercase tracking-widest text-text-gray ml-1">Comms Uplink (Email)</label>
+              <input type="email"required value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})}
+                  className="w-full bg-surface border border-border rounded-lg px-4 py-2.5 text-xs font-bold text-text-dark outline-none focus:border-accent focus:ring-2 focus:ring-accent/10 transition-all"
+                  placeholder="Enter email address"/>
+            </div>
 
-          <div className="space-y-1.5">
-            <label className="text-[8px] font-black uppercase tracking-widest text-text-gray ml-1">Access Protocol (Role)</label>
-            <select required value={formData.role_name} onChange={e => setFormData({...formData, role_name: e.target.value})}
-                className="w-full bg-surface border border-border rounded-lg pl-4 pr-16 py-2.5 text-xs font-bold text-text-dark outline-none focus:border-accent focus:ring-2 focus:ring-accent/10 transition-all cursor-pointer">
-              {roles.map(role => (
-                <option key={role.id} value={role.name}>{role.name.replace('_', ' ').toUpperCase()}</option>
-              ))}
-              {roles.length === 0 && (
-                <>
-                  <option value="operator">OPERATOR</option>
-                  <option value="admin">ADMIN</option>
-                  <option value="super_admin">SUPER ADMIN</option>
-                </>
-              )}
-            </select>
-          </div>
+            <div className="space-y-1.5">
+              <label className="text-[8px] font-black uppercase tracking-widest text-text-gray ml-1">Access Protocol (Role)</label>
+              <select required value={formData.role_name} onChange={e => setFormData({...formData, role_name: e.target.value})}
+                  className="w-full bg-surface border border-border rounded-lg pl-4 pr-16 py-2.5 text-xs font-bold text-text-dark outline-none focus:border-accent focus:ring-2 focus:ring-accent/10 transition-all cursor-pointer">
+                {roles.map(role => (
+                  <option key={role.id} value={role.name}>{role.name.replace('_', ' ').toUpperCase()}</option>
+                ))}
+                {roles.length === 0 && (
+                  <>
+                    <option value="operator">OPERATOR</option>
+                    <option value="admin">ADMIN</option>
+                    <option value="super_admin">SUPER ADMIN</option>
+                  </>
+                )}
+              </select>
+            </div>
 
-          <div className="space-y-1.5">
-            <label className="text-[8px] font-black uppercase tracking-widest text-text-gray ml-1">Security Key (Password)</label>
-            <input type={showEditModal ?"password":"text"} required={!showEditModal} value={formData.password} onChange={e => setFormData({...formData, password: e.target.value})}
-                className="w-full bg-surface border border-border rounded-lg px-4 py-2.5 text-xs font-bold text-text-dark outline-none focus:border-accent focus:ring-2 focus:ring-accent/10 transition-all"
-                placeholder={showEditModal ?"Leave blank to keep unchanged":"Set secure password"} />
-          </div>
+            <div className="space-y-1.5">
+              <label className="text-[8px] font-black uppercase tracking-widest text-text-gray ml-1">Security Key (Password)</label>
+              <input type={showEditModal ?"password":"text"} required={!showEditModal} value={formData.password} onChange={e => setFormData({...formData, password: e.target.value})}
+                  className="w-full bg-surface border border-border rounded-lg px-4 py-2.5 text-xs font-bold text-text-dark outline-none focus:border-accent focus:ring-2 focus:ring-accent/10 transition-all"
+                  placeholder={showEditModal ?"Leave blank to keep unchanged":"Set secure password"} />
+            </div>
 
-          <div className="space-y-1.5">
-            <label className="text-[8px] font-black uppercase tracking-widest text-text-gray ml-1">Node Status</label>
-            <div className="flex items-center gap-3">
-              <button type="button"onClick={() => setFormData({...formData, is_active: true})}
-                  className={`flex-1 py-2.5 px-3 rounded-lg text-[9px] font-black uppercase tracking-widest border transition-all ${formData.is_active ? 'bg-success/10 text-success border-success/20' : 'bg-surface border-border text-text-gray'}`}>
-                Active
+            <div className="space-y-1.5">
+              <label className="text-[8px] font-black uppercase tracking-widest text-text-gray ml-1">WhatsApp Number</label>
+              <input type="text" value={formData.whatsapp_number} onChange={e => setFormData({...formData, whatsapp_number: e.target.value})}
+                  className="w-full bg-surface border border-border rounded-lg px-4 py-2.5 text-xs font-bold text-text-dark outline-none focus:border-accent focus:ring-2 focus:ring-accent/10 transition-all"
+                  placeholder="whatsapp:+1234567890" />
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-[8px] font-black uppercase tracking-widest text-text-gray ml-1">WhatsApp Alerts</label>
+              <button type="button" onClick={() => setFormData({...formData, whatsapp_alerts_enabled: !formData.whatsapp_alerts_enabled})}
+                  className={`w-full py-2.5 rounded-lg text-[9px] font-black uppercase tracking-widest border transition-all ${formData.whatsapp_alerts_enabled ? 'bg-success/10 text-success border-success/20' : 'bg-surface border-border text-text-gray'}`}>
+                {formData.whatsapp_alerts_enabled ? 'Enabled' : 'Disabled'}
               </button>
-              <button type="button"onClick={() => setFormData({...formData, is_active: false})}
-                  className={`flex-1 py-2.5 px-3 rounded-lg text-[9px] font-black uppercase tracking-widest border transition-all ${!formData.is_active ? 'bg-danger/10 text-danger border-danger/20' : 'bg-surface border-border text-text-gray'}`}>
-                Suspended
-              </button>
+            </div>
+
+            <div className="space-y-1.5 md:col-span-2">
+              <label className="text-[8px] font-black uppercase tracking-widest text-text-gray ml-1">Node Status</label>
+              <div className="flex items-center gap-3">
+                <button type="button"onClick={() => setFormData({...formData, is_active: true})}
+                    className={`flex-1 py-2.5 px-3 rounded-lg text-[9px] font-black uppercase tracking-widest border transition-all ${formData.is_active ? 'bg-success/10 text-success border-success/20' : 'bg-surface border-border text-text-gray'}`}>
+                  Active
+                </button>
+                <button type="button"onClick={() => setFormData({...formData, is_active: false})}
+                    className={`flex-1 py-2.5 px-3 rounded-lg text-[9px] font-black uppercase tracking-widest border transition-all ${!formData.is_active ? 'bg-danger/10 text-danger border-danger/20' : 'bg-surface border-border text-text-gray'}`}>
+                  Suspended
+                </button>
+              </div>
             </div>
           </div>
 
-          <div className="pt-4 flex gap-3">
+          <div className="pt-4 border-t border-border flex justify-end gap-3">
             <button type="button"onClick={() => { setShowAddModal(false); setShowEditModal(false); }}
-                className="flex-1 py-2.5 bg-surface border border-border rounded-lg text-[8px] font-black uppercase tracking-widest text-text-gray hover:text-text-dark transition-all">
+                className="px-6 py-2.5 bg-surface border border-border rounded-lg text-[8px] font-black uppercase tracking-widest text-text-gray hover:text-text-dark transition-all">
               Cancel
             </button>
             <button type="submit"disabled={submitting}
-                className="flex-1 py-2.5 bg-accent text-white rounded-lg text-[10px] font-black uppercase tracking-widest shadow-md hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:hover:translate-y-0">
+                className="px-6 py-2.5 bg-accent text-white rounded-lg text-[10px] font-black uppercase tracking-widest shadow-md hover:-translate-y-0.5 transition-all disabled:opacity-50 disabled:hover:translate-y-0">
               {submitting ? 'Processing...' : 'Confirm'}
             </button>
           </div>

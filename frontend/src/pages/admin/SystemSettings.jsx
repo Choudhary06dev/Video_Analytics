@@ -12,7 +12,9 @@ import {
   Zap,
   RefreshCcw,
   Power,
-  Database
+  Database,
+  Mail,
+  MessageCircle
 } from 'lucide-react';
 
 export default function SystemSettings() {
@@ -28,7 +30,9 @@ export default function SystemSettings() {
     publicEnrollment: true,
     retentionLogs: 30,
     retentionVideo: 7,
-    autoPurge: true
+    autoPurge: true,
+    emailAlertsEnabled: true,
+    whatsappAlertsEnabled: true
   });
 
   const fetchData = async () => {
@@ -42,7 +46,9 @@ export default function SystemSettings() {
           publicEnrollment: settingsData.public_enrollment ?? settingsData.publicEnrollment ?? true,
           retentionLogs: settingsData.retention_logs ?? settingsData.retentionLogs ?? 30,
           retentionVideo: settingsData.retention_video ?? settingsData.retentionVideo ?? 7,
-          autoPurge: settingsData.auto_purge ?? settingsData.autoPurge ?? true
+          autoPurge: settingsData.auto_purge ?? settingsData.autoPurge ?? true,
+          emailAlertsEnabled: settingsData.email_alerts_enabled ?? settingsData.emailAlertsEnabled ?? true,
+          whatsappAlertsEnabled: settingsData.whatsapp_alerts_enabled ?? settingsData.whatsappAlertsEnabled ?? true
         });
       }
     } catch (err) {
@@ -172,7 +178,7 @@ export default function SystemSettings() {
                 </div>
                 <button
                   onClick={() => handleToggle(item.id)}
-                  className={`w-10 h-5 sm:w-12 sm:h-6 rounded-full relative transition-all duration-300 shrink-0 ${settings[item.id] ? 'bg-accent' : 'bg-border'}`}>
+                  className={`w-10 h-5 sm:w-12 sm:h-6 rounded-full relative transition-all duration-300 shrink-0 border ${settings[item.id] ? 'bg-accent border-accent' : 'bg-slate-700 border-slate-600'}`}>
                   <div className={`absolute top-0.5 sm:top-1 w-4 h-4 bg-white rounded-full transition-all duration-300 ${settings[item.id] ? 'left-5.5 sm:left-7' : 'left-0.5 sm:left-1'}`} />
                 </button>
               </div>
@@ -209,13 +215,43 @@ export default function SystemSettings() {
               </div>
               <button
                 onClick={() => handleToggle('autoPurge')}
-                className={`w-12 h-6 rounded-full relative transition-all duration-300 ${settings.autoPurge ? 'bg-accent' : 'bg-border'}`}>
+                className={`w-12 h-6 rounded-full relative transition-all duration-300 border ${settings.autoPurge ? 'bg-accent border-accent' : 'bg-slate-700 border-slate-600'}`}>
                 <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all duration-300 ${settings.autoPurge ? 'left-7' : 'left-1'}`} />
               </button>
             </div>
             <p className="text-[9px] font-bold text-text-gray uppercase leading-relaxed tracking-wider">
               Automatically decommission data when storage exceeds critical thresholds (90%+).
             </p>
+          </div>
+        </div>
+
+        {/* Notification Channels */}
+        <div className="bg-card border border-border rounded-lg p-4 sm:p-8 shadow-sm lg:col-span-2">
+          <SectionHeader icon={Mail} title="Notification Channels" subtitle="Global Alert Delivery Switches" />
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {[
+              { id: 'emailAlertsEnabled', title: 'Email Alerts', desc: 'Send alerts to eligible users by role and area', icon: Mail, iconClass: 'bg-accent/10 text-accent', toggleClass: 'bg-accent border-accent' },
+              { id: 'whatsappAlertsEnabled', title: 'WhatsApp Alerts', desc: 'Send WhatsApp only to eligible users with WhatsApp enabled', icon: MessageCircle, iconClass: 'bg-success/10 text-success', toggleClass: 'bg-success border-success' },
+            ].map(item => (
+              <div key={item.id} className="flex items-center justify-between p-3 sm:p-4 bg-surface/30 rounded-xl border border-border group hover:border-accent/30 transition-all">
+                <div className="flex items-center gap-3 sm:gap-4 min-w-0">
+                  <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center shrink-0 ${settings[item.id] ? item.iconClass : 'bg-card text-text-gray'}`}>
+                    <item.icon className="w-4 h-4 sm:w-5 sm:h-5" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-[10px] sm:text-[11px] font-black uppercase text-text-dark truncate">{item.title}</p>
+                    <p className="text-[8px] sm:text-[9px] font-bold text-text-gray uppercase tracking-wider truncate">{item.desc}</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => handleToggle(item.id)}
+                  className={`w-10 h-5 sm:w-12 sm:h-6 rounded-full relative transition-all duration-300 shrink-0 border ${settings[item.id] ? item.toggleClass : 'bg-slate-700 border-slate-600'}`}
+                >
+                  <div className={`absolute top-0.5 sm:top-1 w-4 h-4 bg-white rounded-full transition-all duration-300 ${settings[item.id] ? 'left-5.5 sm:left-7' : 'left-0.5 sm:left-1'}`} />
+                </button>
+              </div>
+            ))}
           </div>
         </div>
 

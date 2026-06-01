@@ -70,6 +70,8 @@ class AdminUserCreate(BaseModel):
     email: str
     password: str
     role_name: str
+    whatsapp_number: str | None = None
+    whatsapp_alerts_enabled: bool | None = None
 
     @field_validator('password')
     @classmethod
@@ -88,6 +90,8 @@ class AdminUserUpdate(BaseModel):
     password: str | None = None
     role_name: str | None = None
     is_active: bool | None = None
+    whatsapp_number: str | None = None
+    whatsapp_alerts_enabled: bool | None = None
 
 
 class RoleUpdate(BaseModel):

@@ -23,19 +23,10 @@ load_dotenv()
 # access to the values within the .ini file in use.
 config = context.config
 
-# Dynamically set the sqlalchemy.url from environment variables
-db_url = os.getenv("DATABASE_URL")
-if not db_url:
-    # Build from components if DATABASE_URL is not set directly
-    user = os.getenv("DB_USER", "postgres")
-    password = os.getenv("DB_PASSWORD", "")
-    host = os.getenv("DB_HOST", "localhost")
-    port = os.getenv("DB_PORT", "5432")
-    db_name = os.getenv("DB_NAME", "video_analytics")
-    
-    # Escape password to handle special characters like '@'
-    safe_password = urllib.parse.quote_plus(password)
-    db_url = f"postgresql://{user}:{safe_password}@{host}:{port}/{db_name}"
+# Dynamically set the sqlalchemy.url from environment variables or app settings
+# Use the same URL formatting as the backend app to ensure passwords with
+# special characters are escaped correctly.
+db_url = os.getenv("DATABASE_URL") or settings.database_url
 
 # Escape '%' for configparser interpolation
 config.set_main_option("sqlalchemy.url", db_url.replace("%", "%%"))

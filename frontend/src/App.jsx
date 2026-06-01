@@ -25,7 +25,6 @@ const AIScenarios = lazy(() => import('./pages/AIScenarios'));
 const ActivityVault = lazy(() => import('./pages/ActivityVault'));
 const SystemHealth = lazy(() => import('./pages/SystemHealth'));
 const Alerts = lazy(() => import('./pages/Alerts'));
-const Settings = lazy(() => import('./pages/Settings'));
 const Maintenance = lazy(() => import('./pages/Maintenance'));
 
 // Sub Admin Pages
@@ -78,7 +77,7 @@ function AppContent() {
               <Route path="/vault" element={<ActivityVault />} />
               <Route path="/health" element={<SystemHealth />} />
               <Route path="/alerts" element={<Alerts />} />
-              <Route path="/settings" element={<Settings />} />
+              <Route path="/settings" element={<Navigate to="/admin/settings" replace />} />
             </Route>
           </Route>
 

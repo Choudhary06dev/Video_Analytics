@@ -93,7 +93,9 @@ def get_all_users(skip: int = 0, limit: int = 20, session: Session = Depends(get
             "email": u.email,
             "role": role_obj.name if role_obj else "unknown",
             "is_active": u.is_active,
-            "created_at": u.created_at
+            "created_at": u.created_at,
+            "whatsapp_number": u.whatsapp_number,
+            "whatsapp_alerts_enabled": u.whatsapp_alerts_enabled,
         })
     return {"total": total_count, "users": result}
 
@@ -113,7 +115,9 @@ def create_user_by_admin(user_data: AdminUserCreate, session: Session = Depends(
             full_name=user_data.full_name,
             email=user_data.email,
             hashed_password=get_password_hash(user_data.password),
-            role_id=role.id
+            role_id=role.id,
+            whatsapp_number=user_data.whatsapp_number,
+            whatsapp_alerts_enabled=user_data.whatsapp_alerts_enabled if user_data.whatsapp_alerts_enabled is not None else False,
         )
         session.add(new_user)
         session.commit()
@@ -189,6 +193,12 @@ def update_user_by_admin(user_id: int, user_data: AdminUserUpdate, session: Sess
 
     if user_data.is_active is not None:
         user.is_active = user_data.is_active
+
+    if user_data.whatsapp_number is not None:
+        user.whatsapp_number = user_data.whatsapp_number
+
+    if user_data.whatsapp_alerts_enabled is not None:
+        user.whatsapp_alerts_enabled = user_data.whatsapp_alerts_enabled
 
     try:
         record_audit_log(session, admin_data.get("id"), "UPDATE", "Personnel Matrix", f"Synchronized identity protocol for node {user.email}")

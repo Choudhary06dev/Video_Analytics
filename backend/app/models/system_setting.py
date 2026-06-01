@@ -16,6 +16,8 @@ class SystemSetting(SQLModel, table=True):
     retention_video: int = Field(default=30)
     retention_metadata: int = Field(default=180)
     auto_purge: bool = Field(default=True)
+    email_alerts_enabled: bool = Field(default=True)
+    whatsapp_alerts_enabled: bool = Field(default=True)
     mfa_required: bool = Field(default=True)
     ip_lockdown: bool = Field(default=False)
     session_timeout: int = Field(default=60)

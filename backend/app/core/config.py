@@ -34,6 +34,11 @@ class Settings(BaseModel):
     ALERT_NOTIFY_SEVERITIES: str = os.getenv("ALERT_NOTIFY_SEVERITIES", "Critical,High")
     ALERT_NOTIFY_ROLES: str = os.getenv("ALERT_NOTIFY_ROLES", "super_admin,admin")
 
+    # Twilio WhatsApp Settings
+    TWILIO_ACCOUNT_SID: str | None = os.getenv("TWILIO_ACCOUNT_SID", None)
+    TWILIO_AUTH_TOKEN: str | None = os.getenv("TWILIO_AUTH_TOKEN", None)
+    TWILIO_WHATSAPP_NUMBER: str | None = os.getenv("TWILIO_WHATSAPP_NUMBER", "whatsapp:+14155238886")
+
     @property
     def alert_notify_severities_list(self) -> list[str]:
         return [s.strip() for s in self.ALERT_NOTIFY_SEVERITIES.split(",") if s.strip()]

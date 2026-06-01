@@ -59,6 +59,8 @@ class User(SQLModel, table=True):
     email: str = Field(index=True, unique=True)
     hashed_password: str
     role_id: int = Field(default=3, foreign_key="role.id")
+    whatsapp_number: Optional[str] = Field(default=None)
+    whatsapp_alerts_enabled: bool = Field(default=False)
     is_active: bool = Field(default=True)
     created_at: datetime = Field(default_factory=datetime.now)
 

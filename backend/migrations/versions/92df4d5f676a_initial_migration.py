@@ -36,6 +36,14 @@ def upgrade() -> None:
     # Drop the redundant junction table if it exists
     op.execute(sa.text("DROP TABLE IF EXISTS camerascenarioassignment CASCADE"))
 
+    # Add WhatsApp fields to user table
+    op.execute(sa.text("ALTER TABLE \"user\" ADD COLUMN IF NOT EXISTS whatsapp_number VARCHAR"))
+    op.execute(sa.text("ALTER TABLE \"user\" ADD COLUMN IF NOT EXISTS whatsapp_alerts_enabled BOOLEAN DEFAULT FALSE"))
+
+    # Global notification channel switches
+    op.execute(sa.text("ALTER TABLE systemsetting ADD COLUMN IF NOT EXISTS email_alerts_enabled BOOLEAN DEFAULT TRUE"))
+    op.execute(sa.text("ALTER TABLE systemsetting ADD COLUMN IF NOT EXISTS whatsapp_alerts_enabled BOOLEAN DEFAULT TRUE"))
+
     # 3. Create BlacklistPerson table
     op.execute(sa.text("""
         CREATE TABLE IF NOT EXISTS blacklistperson (

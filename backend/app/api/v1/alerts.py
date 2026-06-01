@@ -1,10 +1,12 @@
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, Header
 from fastapi.responses import StreamingResponse
+from sqlalchemy import text
 from sqlmodel import Session, select
 from typing import Optional
 import httpx
 import json
 import asyncio
+import logging
 from datetime import datetime
 from pydantic import BaseModel
 from app.core.database import get_session
@@ -14,9 +16,10 @@ from app.api.v1.auth import get_current_user
 from app.api.v1.users import verify_module_access, get_allowed_area_ids
 from app.models import DetectionEvent, Camera, Area
 from app.services.alert_service import get_alerts, get_logs, get_logs_summary, get_scenario_camera_matrix
-from app.services.notification_service import send_alert_email
+from app.services.notification_service import send_alert_email, send_whatsapp_alert
 
 router = APIRouter(prefix="", tags=["Intelligence & Alerts"])
+logger = logging.getLogger(__name__)
 
 # Global state to keep track of latest intelligence across the backend
 # This will be updated by polling the AI service or via Webhooks
@@ -85,7 +88,7 @@ async def receive_events(
     person_count = 0
 
     from sqlmodel import select
-    from app.models import AIScenario, User, Role
+    from app.models import AIScenario, User, Role, SystemSetting
     from app.models.user import RoleAreaPermission
     scenarios = session.exec(select(AIScenario)).all()
     scenario_severity_map = {s.key: s.default_severity for s in scenarios}
@@ -118,6 +121,12 @@ async def receive_events(
 
     # Custom alert receiver from .env (always receives all alerts regardless of area)
     custom_receiver = config_settings.ALERT_RECEIVER_EMAIL
+
+    session.execute(text("ALTER TABLE systemsetting ADD COLUMN IF NOT EXISTS email_alerts_enabled BOOLEAN DEFAULT TRUE"))
+    session.execute(text("ALTER TABLE systemsetting ADD COLUMN IF NOT EXISTS whatsapp_alerts_enabled BOOLEAN DEFAULT TRUE"))
+    system_setting = session.exec(select(SystemSetting)).first()
+    email_alerts_enabled = system_setting.email_alerts_enabled if system_setting else True
+    whatsapp_alerts_enabled = system_setting.whatsapp_alerts_enabled if system_setting else True
 
     # Pre-fetch camera and area info for email context
     all_cameras = session.exec(select(Camera)).all()
@@ -157,17 +166,39 @@ async def receive_events(
 
             # Filter users: only those whose role has can_view permission for this area
             filtered_emails = []
+            whatsapp_numbers = []
             for u in notify_users:
-                if u.email and alert_area_id is not None:
+                if alert_area_id is not None:
                     user_allowed_areas = role_area_map.get(u.role_id, set())
                     if alert_area_id in user_allowed_areas:
-                        filtered_emails.append(u.email)
+                        if u.email:
+                            filtered_emails.append(u.email)
+                        if u.whatsapp_alerts_enabled and u.whatsapp_number:
+                            whatsapp_numbers.append(u.whatsapp_number)
 
             # Always add custom receiver from .env (global override)
             if custom_receiver and custom_receiver not in filtered_emails:
                 filtered_emails.append(custom_receiver)
 
-            if filtered_emails:
+            if not email_alerts_enabled:
+                filtered_emails = []
+            if not whatsapp_alerts_enabled:
+                whatsapp_numbers = []
+
+            logger.info(
+                "Alert notification recipients: scenario=%s severity=%s camera_id=%s area_id=%s "
+                "email_enabled=%s whatsapp_enabled=%s emails=%s whatsapp_numbers=%s",
+                ev.scenario_key,
+                severity,
+                ev.camera_id,
+                alert_area_id,
+                email_alerts_enabled,
+                whatsapp_alerts_enabled,
+                len(filtered_emails),
+                len(whatsapp_numbers),
+            )
+
+            if filtered_emails or whatsapp_numbers:
                 email_details = {
                     "scenario_key": ev.scenario_key,
                     "camera_id": ev.camera_id,
@@ -179,7 +210,10 @@ async def receive_events(
                     "metadata": ev.metadata,
                     "image_base64": ev.image_base64,
                 }
-                background_tasks.add_task(send_alert_email, email_details, filtered_emails)
+                if filtered_emails:
+                    background_tasks.add_task(send_alert_email, email_details, filtered_emails)
+                if whatsapp_numbers:
+                    background_tasks.add_task(send_whatsapp_alert, email_details, whatsapp_numbers)
 
     session.commit()
 

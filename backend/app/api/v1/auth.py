@@ -71,7 +71,7 @@ def login_user(login_data: UserLogin, response: Response, session: Session = Dep
     return {
         "access_token": access_token, 
         "token_type": "bearer",
-        "user": {"id": user.id, "email": user.email, "name": user.full_name, "role": role_name, "role_id": user.role_id}
+        "user": {"id": user.id, "email": user.email, "name": user.full_name, "role": role_name, "role_id": user.role_id, "whatsapp_number": user.whatsapp_number or "", "whatsapp_alerts_enabled": user.whatsapp_alerts_enabled or False}
     }
 
 @router.post("/logout")
