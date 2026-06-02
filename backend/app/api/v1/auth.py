@@ -41,7 +41,8 @@ def register_user(user_data: UserRegister, session: Session = Depends(get_sessio
         session.refresh(new_user)
         return {"message": "User created successfully", "user_id": new_user.id}
     except Exception as e:
-        print(f"Registration Error: {str(e)}")
+        from app.core.logger import logger
+        logger.error(f"Registration Error: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail="Registration failed. Please try again later.")
 
 @router.post("/login", response_model=Token)

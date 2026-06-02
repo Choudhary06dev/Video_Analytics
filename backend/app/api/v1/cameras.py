@@ -294,7 +294,8 @@ async def notify_ai_service_reload(camera_id: int, enabled_names: list, scenario
                 "scenario_configs": scenario_configs
             }, timeout=5.0)
     except Exception as e:
-        print(f"Failed to notify AI service in background: {e}")
+        from app.core.logger import logger
+        logger.error(f"Failed to notify AI service in background: {e}", exc_info=True)
     
 
 # --- AI SCENARIOS (CRUD) ---
@@ -409,7 +410,10 @@ async def video_feed(camera_id: int, session: Session = Depends(get_session)):
                             yield chunk
                 return
             except Exception as exc:
-                print(f"AI stream attempt {attempt+1}/{max_retries} failed for camera {camera_id}: {exc}")
+                from app.core.logger import logger
+                logger.warning(
+                    f"AI stream attempt {attempt+1}/{max_retries} failed for camera {camera_id}: {exc}"
+                )
                 if attempt < max_retries - 1:
                     await asyncio.sleep(2)
 

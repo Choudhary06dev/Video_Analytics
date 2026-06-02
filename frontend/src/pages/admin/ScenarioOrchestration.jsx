@@ -138,7 +138,13 @@ export default function ScenarioOrchestration() {
     setLoadingScenarios(true);
     try {
       const data = await fetchCameraScenarios(camera.id);
-      setScenarioData(data);
+      // Ensure UNAUTHORIZED_ENTRY_KEY is always sorted to be the last element
+      const sorted = [...data].sort((a, b) => {
+        if (a.key === UNAUTHORIZED_ENTRY_KEY) return 1;
+        if (b.key === UNAUTHORIZED_ENTRY_KEY) return -1;
+        return 0;
+      });
+      setScenarioData(sorted);
     } catch (err) {
       console.error("Failed to load scenarios", err);
     } finally {
@@ -348,14 +354,22 @@ export default function ScenarioOrchestration() {
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 overflow-y-auto pr-2 custom-scrollbar max-h-[380px]">
-                    {scenarioData.map(scenario => (
-                      <div
-                        key={scenario.id}
+                    {[...scenarioData]
+                      .sort((a, b) => {
+                        const aBig = a.is_enabled && a.key === UNAUTHORIZED_ENTRY_KEY;
+                        const bBig = b.is_enabled && b.key === UNAUTHORIZED_ENTRY_KEY;
+                        if (aBig && !bBig) return 1;
+                        if (!aBig && bBig) return -1;
+                        return 0;
+                      })
+                      .map(scenario => (
+                        <div
+                          key={scenario.id}
                         className={`group flex flex-col p-4 rounded-lg border transition-all duration-200
-             ${scenario.is_enabled
+                          ${scenario.is_enabled
                             ? 'bg-accent/5 border-accent/20 shadow-sm'
                             : 'bg-card border-border hover:border-accent/30 hover:bg-surface'}
-             ${scenario.is_enabled && scenario.key === UNAUTHORIZED_ENTRY_KEY ? 'md:col-span-2 xl:col-span-2' : ''}`}
+                          ${scenario.is_enabled && scenario.key === UNAUTHORIZED_ENTRY_KEY ? 'md:col-span-2 xl:col-span-2' : ''}`}
                       >
                         <div className="flex items-center justify-between cursor-pointer" onClick={() => toggleScenarioInState(scenario.id)}>
                           <div className="flex items-center gap-3 max-w-[85%]">
@@ -365,7 +379,7 @@ export default function ScenarioOrchestration() {
                               <div className="w-4 h-4 rounded-full border-2 border-border group-hover:border-accent/30 shrink-0" />
                             )}
                             <span className={`text-[11px] font-black uppercase tracking-tight truncate 
-                ${scenario.is_enabled ? 'text-accent font-bold' : 'text-text-gray'}`}>
+                              ${scenario.is_enabled ? 'text-accent font-bold' : 'text-text-gray'}`}>
                               {scenario.name}
                             </span>
                           </div>

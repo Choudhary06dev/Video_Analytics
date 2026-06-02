@@ -1,3 +1,4 @@
+from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.responses import StreamingResponse
 import asyncio
@@ -8,8 +9,20 @@ import uvicorn
 from config import BACKEND_URL, AI_PORT, WEBHOOK_SECRET
 from pipelines.inference import InferenceEngine
 from typing import Dict
+from logger import logger
 
-app = FastAPI(title="AI Inference Service")
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Initialize persistent HTTPX client on startup
+    limits = httpx.Limits(max_keepalive_connections=20, max_connections=100)
+    app.state.http_client = httpx.AsyncClient(limits=limits, timeout=10.0)
+    logger.info("Persistent HTTPX client initialized for AI webhook notifications.")
+    yield
+    # Shutdown & close connections cleanly
+    await app.state.http_client.aclose()
+    logger.info("Persistent HTTPX client shutdown successfully.")
+
+app = FastAPI(title="AI Inference Service", lifespan=lifespan)
 
 active_engines: Dict[int, InferenceEngine] = {}
 
@@ -23,6 +36,7 @@ def empty_intelligence():
 
 async def get_engine(camera_id: int, source: str) -> InferenceEngine:
     if camera_id not in active_engines:
+        logger.info(f"Initializing new inference engine for camera {camera_id} with source {source}")
         active_engines[camera_id] = InferenceEngine(camera_id, source)
     return active_engines[camera_id]
 
@@ -41,14 +55,16 @@ async def send_events_to_backend(camera_id: int, events: list, snapshot_bytes: b
             "image_base64": image_base64
         })
     try:
-        async with httpx.AsyncClient() as client:
-            await client.post(
-                f"{BACKEND_URL}/webhook/events",
-                json=payload,
-                headers={"X-Webhook-Secret": WEBHOOK_SECRET},
-            )
+        # Use shared persistent HTTPX AsyncClient from app state
+        client = app.state.http_client
+        response = await client.post(
+            f"{BACKEND_URL}/webhook/events",
+            json=payload,
+            headers={"X-Webhook-Secret": WEBHOOK_SECRET},
+        )
+        response.raise_for_status()
     except Exception as e:
-        print("Webhook error:", e)
+        logger.error(f"Webhook connection error sending events for camera {camera_id}: {e}", exc_info=True)
 
 @app.get("/stream/{camera_id}")
 async def stream_camera(camera_id: int, source: str):
@@ -86,6 +102,7 @@ async def reload_camera_config(camera_id: int, config: dict):
     if camera_id in active_engines:
         enabled_scenarios = config.get("enabled_scenarios", [])
         scenario_configs = config.get("scenario_configs", {})
+        logger.info(f"Reloading configuration for camera {camera_id}: enabled_scenarios={enabled_scenarios}")
         active_engines[camera_id].update_config(enabled_scenarios, scenario_configs)
         return {"status": "success", "reloaded": enabled_scenarios}
     return {"status": "skipped", "message": "Engine not active"}

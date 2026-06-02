@@ -102,6 +102,11 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
                 last_attempt = attempts[-1]
                 lockout_remaining = LOCKOUT_DURATION - (now - last_attempt)
                 if lockout_remaining > 0:
+                    from app.core.logger import logger
+                    logger.warning(
+                        f"Rate limit triggered. Fingerprint: {fingerprint} blocked for {int(lockout_remaining)}s. "
+                        f"Path: {path}, IP: {request.client.host if request.client else 'unknown'}"
+                    )
                     return JSONResponse(
                         status_code=429,
                         content={
@@ -121,6 +126,12 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         if method in ("POST", "PUT", "PATCH"):
             content_length = request.headers.get("content-length")
             if content_length and int(content_length) > MAX_REQUEST_BODY_SIZE:
+                from app.core.logger import logger
+                logger.warning(
+                    f"Request body size limit exceeded. "
+                    f"Length: {content_length} bytes (Max: {MAX_REQUEST_BODY_SIZE} bytes). "
+                    f"Path: {path}, IP: {request.client.host if request.client else 'unknown'}"
+                )
                 return JSONResponse(
                     status_code=413,
                     content={"detail": "Request body too large"},

@@ -126,7 +126,8 @@ def create_user_by_admin(user_data: AdminUserCreate, session: Session = Depends(
         session.commit()
         return {"message": "User created successfully", "user_id": new_user.id, "role": role.name}
     except Exception as e:
-        print(f"Admin Registration Error: {str(e)}")
+        from app.core.logger import logger
+        logger.error(f"Admin Registration Error: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail="User creation failed. Please try again later.")
 
 @router.get("/audit-logs")
@@ -203,7 +204,8 @@ def update_user_by_admin(user_id: int, user_data: AdminUserUpdate, session: Sess
     try:
         record_audit_log(session, admin_data.get("id"), "UPDATE", "Personnel Matrix", f"Synchronized identity protocol for node {user.email}")
     except Exception as e:
-        print(f"Audit log error: {e}")
+        from app.core.logger import logger
+        logger.error(f"Audit log error during user update: {e}", exc_info=True)
 
     session.add(user)
     session.commit()
@@ -240,7 +242,8 @@ def toggle_user_status(user_id: int, status_data: dict, session: Session = Depen
     try:
         record_audit_log(session, admin_data.get("id"), "STATUS_CHANGE", "Personnel Matrix", f"Node {user.email} session status set to {'ACTIVE' if user.is_active else 'SUSPENDED'}")
     except Exception as e:
-        print(f"Audit log error: {e}")
+        from app.core.logger import logger
+        logger.error(f"Audit log error during status toggle: {e}", exc_info=True)
 
     session.commit()
     return {"message": "User status updated", "is_active": user.is_active}
