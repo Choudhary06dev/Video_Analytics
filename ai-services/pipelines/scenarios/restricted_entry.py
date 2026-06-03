@@ -89,7 +89,7 @@ class UnauthorizedEntryScenario(BaseScenario):
                 max_count_seen = 0
 
         # Cooldown management
-        ALERT_COOLDOWN = 15.0
+        ALERT_COOLDOWN = self.get_cooldown_period(scenario_configs)
         time_since_log = current_time - prev["last_logged"]
 
         if should_log and time_since_log >= ALERT_COOLDOWN:

@@ -6,3 +6,4 @@ ultralytics
 httpx
 requests
 torch
+facenet-pytorch

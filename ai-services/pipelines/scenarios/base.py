@@ -1,14 +1,16 @@
 import time
 
 class BaseScenario:
-    def __init__(self, key: str, labels: list[str]):
+    def __init__(self, key: str, labels: list[str], required_model: str = "yolov8n.pt"):
         """
         Initializes the base scenario.
         :param key: The unique database string key for the scenario (e.g. 'WEAPON_DETECTION_GUN_KNIFE')
         :param labels: List of YOLO/COCO text labels that this scenario detects (e.g. ['knife', 'scissors'])
+        :param required_model: The AI model weights file required by this scenario (default: 'yolov8n.pt')
         """
         self.key = key
         self.labels = labels
+        self.required_model = required_model
 
     def get_min_confidence(self, label: str) -> float:
         """Returns the specific threshold for each label."""
@@ -44,6 +46,11 @@ class BaseScenario:
             "WEAPON_DETECTION_GUN_KNIFE": 1,  # Log immediately for weapons
         }
         return SCENARIO_MIN_STABLE_FRAMES.get(self.key, 2)  # Default: 2 frames
+
+    def get_cooldown_period(self, scenario_configs: dict) -> float:
+        """Returns the alert cooldown period in seconds (default: 30.0)."""
+        config = scenario_configs.get(self.key, {})
+        return float(config.get("cooldown_period", 30.0))
 
     def process(self, boxes, names, frame, annotated_frame, snapshot_frame, enabled_scenarios, scenario_configs, scene_state, current_time) -> tuple[dict | None, dict]:
         """
@@ -94,8 +101,8 @@ class BaseScenario:
             present = False
             max_count_seen = 0
 
-        # Alert cooldown handling (default 15.0 seconds)
-        ALERT_COOLDOWN = 15.0
+        # Alert cooldown handling
+        ALERT_COOLDOWN = self.get_cooldown_period(scenario_configs)
         time_since_log = current_time - prev["last_logged"]
 
         if should_log and time_since_log >= ALERT_COOLDOWN:

@@ -8,6 +8,7 @@ import base64
 import uvicorn
 from config import BACKEND_URL, AI_PORT, WEBHOOK_SECRET
 from pipelines.inference import InferenceEngine
+from pipelines.blacklist_manager import BlacklistManager
 from typing import Dict
 from logger import logger
 
@@ -17,10 +18,17 @@ async def lifespan(app: FastAPI):
     limits = httpx.Limits(max_keepalive_connections=20, max_connections=100)
     app.state.http_client = httpx.AsyncClient(limits=limits, timeout=10.0)
     logger.info("Persistent HTTPX client initialized for AI webhook notifications.")
+    
+    # Start the BlacklistManager background sync
+    BlacklistManager().start()
+    
     yield
     # Shutdown & close connections cleanly
     await app.state.http_client.aclose()
     logger.info("Persistent HTTPX client shutdown successfully.")
+    
+    # Stop the BlacklistManager background sync
+    BlacklistManager().stop()
 
 app = FastAPI(title="AI Inference Service", lifespan=lifespan)
 
