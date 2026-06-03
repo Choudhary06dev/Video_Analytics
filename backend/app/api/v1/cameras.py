@@ -395,7 +395,7 @@ async def video_feed(camera_id: int, session: Session = Depends(get_session)):
     
     import urllib.parse
     source_url_encoded = urllib.parse.quote(camera_data.source_url, safe="")
-    ai_service_url = f"http://localhost:8001/stream/{camera_id}?source={source_url_encoded}"
+    ai_service_url = f"{settings.AI_SERVICE_URL}/stream/{camera_id}?source={source_url_encoded}"
     
     async def stream_proxy():
         import asyncio

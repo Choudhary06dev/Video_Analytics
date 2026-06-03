@@ -1,6 +1,5 @@
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, Header
 from fastapi.responses import StreamingResponse
-from sqlalchemy import text
 from sqlmodel import Session, select
 from typing import Optional
 import httpx
@@ -122,8 +121,6 @@ async def receive_events(
     # Custom alert receiver from .env (always receives all alerts regardless of area)
     custom_receiver = config_settings.ALERT_RECEIVER_EMAIL
 
-    session.execute(text("ALTER TABLE systemsetting ADD COLUMN IF NOT EXISTS email_alerts_enabled BOOLEAN DEFAULT TRUE"))
-    session.execute(text("ALTER TABLE systemsetting ADD COLUMN IF NOT EXISTS whatsapp_alerts_enabled BOOLEAN DEFAULT TRUE"))
     system_setting = session.exec(select(SystemSetting)).first()
     email_alerts_enabled = system_setting.email_alerts_enabled if system_setting else True
     whatsapp_alerts_enabled = system_setting.whatsapp_alerts_enabled if system_setting else True

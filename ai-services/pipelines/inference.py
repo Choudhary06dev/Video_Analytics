@@ -14,10 +14,10 @@ os.environ["OPENCV_FFMPEG_CAPTURE_OPTIONS"] = (
     "max_delay;0|stimeout;10000000"
 )
 
-# Mission-Critical Class IDs (COCO mapping for YOLOv8)
-# 0: person, 2: car, 3: motorcycle, 5: bus, 7: truck, 10: fire hydrant (used for fire), 
-# 43: knife, 67: cell phone, 69: oven, 70: toaster, 76: scissors
-INTEREST_CLASSES = [0, 2, 3, 5, 7, 10, 43, 67, 69, 70, 76]
+import torch
+
+# Select device automatically
+device = "cuda" if torch.cuda.is_available() else "cpu"
 
 CONF_THRESHOLD = 0.25
 IOU_THRESHOLD = 0.45
@@ -26,8 +26,44 @@ STREAM_JPEG_QUALITY = 85
 SNAPSHOT_JPEG_QUALITY = 98
 STREAM_MAX_WIDTH = 1280
 
-# Global AI Engine Model
-model = YOLO(os.path.join(os.path.dirname(__file__), "..", "models", "yolov8n.pt"))
+# Determine model path: use custom model if available, otherwise default
+MODELS_DIR = os.path.join(os.path.dirname(__file__), "..", "models")
+custom_model_path = os.path.join(MODELS_DIR, "custom_yolov8.pt")
+default_model_path = os.path.join(MODELS_DIR, "yolov8n.pt")
+
+if os.path.exists(custom_model_path):
+    model_path = custom_model_path
+    from logger import logger
+    logger.info(f"Using Custom YOLOv8 Model: {model_path} on device: {device}")
+else:
+    model_path = default_model_path
+    from logger import logger
+    logger.info(f"Using Default YOLOv8n Model: {model_path} on device: {device}")
+
+model = YOLO(model_path)
+model.to(device)
+
+# Dynamic class interest resolution
+TARGET_CLASS_NAMES = [
+    "person", "car", "motorcycle", "bus", "truck", 
+    "cell phone", "fire", "smoke", "fire hydrant", "oven", "toaster",
+    "gun", "pistol", "revolver", "rifle", "weapon", "knife", "scissors"
+]
+
+INTEREST_CLASSES = []
+for cid, name in model.names.items():
+    if name.lower() in TARGET_CLASS_NAMES:
+        INTEREST_CLASSES.append(cid)
+
+# Run model warm-up to initialize weights in memory
+from logger import logger
+logger.info(f"Warming up YOLO model on {device}...")
+try:
+    dummy_img = np.zeros((640, 640, 3), dtype=np.uint8)
+    model.predict(dummy_img, verbose=False, device=device)
+    logger.info("YOLO model warm-up completed successfully.")
+except Exception as e:
+    logger.error(f"Failed to warm-up YOLO model: {e}")
 
 
 def _resize_for_stream(frame):
@@ -182,6 +218,7 @@ class InferenceEngine:
             classes=INTEREST_CLASSES,
             verbose=False,
             imgsz=INFERENCE_IMAGE_SIZE,
+            device=device,
         )
         frame_h, frame_w = frame.shape[:2]
         

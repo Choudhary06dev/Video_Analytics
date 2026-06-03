@@ -11,7 +11,7 @@ class BaseScenario:
         self.labels = labels
 
     def get_min_confidence(self, label: str) -> float:
-        """Returns the specific threshold for each COCO label."""
+        """Returns the specific threshold for each label."""
         SCENARIO_MIN_CONFIDENCE = {
             "person": 0.50,
             "knife": 0.60,
@@ -26,8 +26,16 @@ class BaseScenario:
             "suitcase": 0.60,
             "bicycle": 0.60,
             "fire hydrant": 0.55,
+            # Custom Model Classes
+            "fire": 0.40,
+            "smoke": 0.40,
+            "gun": 0.55,
+            "pistol": 0.55,
+            "revolver": 0.55,
+            "rifle": 0.55,
+            "weapon": 0.55,
         }
-        return SCENARIO_MIN_CONFIDENCE.get(label, 0.25)
+        return SCENARIO_MIN_CONFIDENCE.get(label.lower(), 0.25)
 
     def get_min_stable_frames(self) -> int:
         """Returns scenario-specific consecutive frame counts required to trigger an alert."""
