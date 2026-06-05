@@ -485,6 +485,22 @@ export default function Alerts() {
                     </div>
                   </div>
                 )}
+                {selectedAlert.metadata_json?.count !== undefined && (
+                  <div className="bg-surface p-3 sm:p-4 rounded-lg border border-border flex items-center justify-between col-span-1 sm:col-span-2">
+                    <div>
+                      <span className="text-[0.6rem] sm:text-[0.65rem] font-bold text-text-gray uppercase tracking-widest block mb-1">Vehicles Count</span>
+                      <span className="text-lg sm:text-xl font-black text-accent">{selectedAlert.metadata_json.count}</span>
+                    </div>
+                    {selectedAlert.metadata_json?.raw_labels && (
+                      <div className="text-right">
+                        <span className="text-[0.6rem] sm:text-[0.65rem] font-bold text-text-gray uppercase tracking-widest block mb-1">Detected Types</span>
+                        <span className="text-xs sm:text-sm font-bold text-text-dark capitalize text-right block">
+                          {selectedAlert.metadata_json.raw_labels.join(', ')}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                )}
                 <div className="bg-surface p-3 sm:p-4 rounded-lg border border-border flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <div>
                     <span className="text-[0.6rem] sm:text-[0.65rem] font-bold text-text-gray uppercase tracking-widest block mb-1">AI Confidence Score</span>

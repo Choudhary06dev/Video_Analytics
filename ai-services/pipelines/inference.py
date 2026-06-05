@@ -290,8 +290,9 @@ class InferenceEngine:
                 from logger import logger
                 logger.error(f"Error running YOLO model {model_name} prediction: {e}")
 
-        # 2. Get overall person count from the base model
+        # 2. Get overall person and vehicle counts from the base model
         person_count = 0
+        vehicle_count = 0
         SCENARIO_MIN_CONFIDENCE = {
             "person": 0.50,
             "knife": 0.60,
@@ -303,6 +304,7 @@ class InferenceEngine:
             "motorcycle": 0.60,
             "fire hydrant": 0.55,
         }
+        VEHICLE_LABELS = {"car", "truck", "bus", "motorcycle"}
         if base_model_name in yolo_results:
             res = yolo_results[base_model_name]
             if res and len(res) > 0:
@@ -313,13 +315,33 @@ class InferenceEngine:
                     
                     if label == "person" and confidence >= SCENARIO_MIN_CONFIDENCE.get("person", CONF_THRESHOLD):
                         person_count += 1
+                    elif label in VEHICLE_LABELS and confidence >= SCENARIO_MIN_CONFIDENCE.get(label, CONF_THRESHOLD):
+                        vehicle_count += 1
 
         # 3. Create copies for annotated video stream & alert snapshots
         annotated_frame = frame.copy()
-        # Plot standard YOLO predictions on frame
+        
+        # Collect active scenario labels and their thresholds to filter boxes to plot
+        enabled_labels = {}
+        for scenario in enabled_objs:
+            if hasattr(scenario, "labels"):
+                for lbl in scenario.labels:
+                    enabled_labels[lbl.lower()] = scenario.get_min_confidence(lbl)
+
+        # Plot standard YOLO predictions on frame (only if they correspond to enabled scenarios)
         for model_name, res in yolo_results.items():
             if res and len(res) > 0:
-                annotated_frame = res[0].plot(img=annotated_frame)
+                indices = []
+                for i, box in enumerate(res[0].boxes):
+                    class_id = int(box.cls[0]) if hasattr(box.cls, "__getitem__") else int(box.cls)
+                    label = res[0].names[class_id]
+                    confidence = float(box.conf[0]) if hasattr(box.conf, "__getitem__") else float(box.conf)
+                    
+                    if label.lower() in enabled_labels and confidence >= enabled_labels[label.lower()]:
+                        indices.append(i)
+                if indices:
+                    filtered_res = res[0][indices]
+                    annotated_frame = filtered_res.plot(img=annotated_frame)
         snapshot_frame = annotated_frame.copy()
 
         # 4. Iterate over modular scenarios to process frame detections
@@ -373,6 +395,9 @@ class InferenceEngine:
         person_count_text = f"PERSONS DETECTED: {person_count}"
         cv2.putText(annotated_frame, person_count_text, (10, frame_h - 15), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2, cv2.LINE_AA)
         cv2.putText(snapshot_frame, person_count_text, (10, frame_h - 15), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2, cv2.LINE_AA)
+        if vehicle_count > 0:
+            vehicle_count_text = f"VEHICLES DETECTED: {vehicle_count}"
+            cv2.putText(snapshot_frame, vehicle_count_text, (10, frame_h - 45), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 0), 2, cv2.LINE_AA)
 
         # 6. Update internal engine states
         if current_objects:
