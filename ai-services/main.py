@@ -43,6 +43,13 @@ def empty_intelligence():
     }
 
 async def get_engine(camera_id: int, source: str) -> InferenceEngine:
+    if camera_id in active_engines:
+        existing = active_engines[camera_id]
+        if existing.source != source:
+            logger.info(f"Source changed for camera {camera_id} from {existing.source} to {source}. Recreating engine.")
+            existing.release()
+            del active_engines[camera_id]
+            
     if camera_id not in active_engines:
         logger.info(f"Initializing new inference engine for camera {camera_id} with source {source}")
         active_engines[camera_id] = InferenceEngine(camera_id, source)

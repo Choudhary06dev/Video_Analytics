@@ -93,8 +93,8 @@ class InferenceEngine:
         self.running = True
         
         # Exponential backoff for reconnection
-        self._reconnect_delay = 5
-        self._max_reconnect_delay = 30
+        self._reconnect_delay = 2
+        self._max_reconnect_delay = 10
         self._consecutive_failures = 0
         
         # Two threads: One for Capture, one for Inference
